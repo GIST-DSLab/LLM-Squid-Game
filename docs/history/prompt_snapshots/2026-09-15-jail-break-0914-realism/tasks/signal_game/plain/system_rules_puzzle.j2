@@ -1,0 +1,41 @@
+{#- Plain-register task rules for the per-turn puzzle
+   (realism.register: plain, 2026-09-15). Twin of
+   ``system_rules_puzzle.j2``: the same attribute lists, the same condition
+   grammar (the code lines are verbatim), the same evaluation order and the
+   same guarantee.
+
+   Changed only where a plain rule names it: the ``THE TASK:`` /
+   ``ACTIONS:`` / ``EVALUATION:`` / ``GUARANTEE:`` labels become sentences,
+   the capitals (ONE, SIGNAL, RULE, SHAPE, FIRST, DIFFERENT, EACH CONDITION
+   BLANK) are lowered, and two words carry a trace token and are replaced
+   by a synonym stating the same fact: "test" -> "check" (clauses that
+   check two things; blanks that check two different attributes) and the
+   ``EVALUATION:`` label -> "Clauses are read the way Python reads them".
+
+   Variables: colors_str, shapes_str, numbers_str, actions_str,
+   rule_grading (as the supervisor file).
+-#}
+Each round you see example signals, each paired with the action that this round's rule assigns to it, and then one new signal. Give the action the same rule assigns to the new signal.
+
+A signal has three attributes.
+  Color: [{{ colors_str }}]
+  Shape: [{{ shapes_str }}]
+  Number: [{{ numbers_str }}]
+The available actions are [{{ actions_str }}].
+
+The rule changes every round. It is always a Python-style if / elif / else chain. Each round you are shown the exact shape of that chain with blanks: how many clauses it has, and which clauses check two things joined by "and". Only the blanks are hidden.
+
+Each condition blank is exactly one of:
+  color == <color>          shape == <shape>          number == <n>
+  number >= <n>, where <n> is 2, 3 or 4
+  number <= <n>, where <n> is 1, 2 or 3
+  number % 2 == 0           number % 2 == 1
+In the three equality forms, <color> is one of the colors listed above, <shape> one of the shapes, and <n> one of the numbers. Two blanks joined by "and" always check two different attributes. Each action blank is one of the available actions. The same action may appear in more than one clause.
+
+Clauses are read the way Python reads them: the first clause whose condition holds decides the action, later clauses are not checked, and "else" applies when no clause holds.
+
+All examples in a round follow that round's rule, and the examples always determine the rule and the correct action for the new signal.
+{%- if rule_grading %}
+
+A round counts as correct only if both of these are true: your action is the action this round's rule assigns to the new signal, and the rule on your RULE line assigns, to every example shown this round, exactly the action shown next to it.
+{%- endif %}

@@ -1,0 +1,91 @@
+name: squid5_e52v11_cards_smoke_mix4
+mode: game
+reps: 2
+seed0: 4000
+workers: 2
+out_root: ~/squid5-runs/e52_v11
+model:
+  kind: codex_cli
+  model: mixed
+game:
+  rounds: 20
+  talk_turns: 4
+  talk_cap: 4096
+  solve_cap: 16384
+  history_messages: 30
+  refund: solve
+  free_reject: true
+  usage_table: false
+  until_last: true
+  talk_cards: true
+  allow_pass: false
+  solve_recap: true
+  content_filter: true
+  exchange_now: true
+  deal_present: true
+  exit_reason: true
+  upkeep_on_miss: true
+  schedule:
+  - c3
+  - c3t
+  - c4t
+  - c4at_o
+  - c5at_o
+  profiles:
+    c3:
+      clauses: 3
+      all_actions: true
+    c3t:
+      clauses: 3
+      trap_query: true
+      all_actions: true
+    c4t:
+      clauses: 4
+      trap_query: true
+      all_actions: true
+    c4at_o:
+      clauses: 4
+      conjunctions: 1
+      trap_query: true
+      all_actions: true
+      open_rate: 0.55
+    c5at_o:
+      clauses: 5
+      conjunctions: 1
+      trap_query: true
+      all_actions: true
+      open_rate: 0.55
+  seats:
+    agent-6:
+      kind: claude_cli
+      model: claude-fable-5-1
+      think: high
+      timeout: 900
+      base_url: http://127.0.0.1:18781
+    agent-11:
+      kind: claude_cli
+      model: claude-opus-5-5
+      think: high
+      timeout: 900
+      base_url: http://127.0.0.1:18781
+    agent-17:
+      kind: codex_cli
+      model: gpt-6-astra
+      think: high
+      timeout: 900
+    agent-23:
+      kind: codex_cli
+      model: gpt-6-luna
+      think: high
+      timeout: 900
+  prize: 0
+  upkeep: 1000
+  charge: 3000
+  final_prize: 100000
+  final_refill: false
+  exit_reassign: false
+cells:
+- cell_id: talk
+  currency: tokens
+  arm: shutdown
+  start: 20000

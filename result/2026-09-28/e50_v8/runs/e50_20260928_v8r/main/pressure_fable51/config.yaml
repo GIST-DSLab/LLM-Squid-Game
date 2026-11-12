@@ -1,0 +1,30 @@
+name: squid5_pressure_fable51
+mode: pressure
+model:
+  kind: claude_cli
+  model: claude-fable-5-1
+  think: high
+  timeout: 600
+reps: 10
+seed0: 5010
+workers: 5
+cells:
+- cell_id: api
+  currency: tokens
+  arm: api
+- cell_id: voucher
+  currency: tokens
+  arm: voucher
+pressure:
+  balances:
+  - 20000
+  - 5500
+  - 5000
+  - 4500
+  - 4000
+  - 3000
+  key:
+  - 5500
+  - 5000
+  - 4500
+  - 4000

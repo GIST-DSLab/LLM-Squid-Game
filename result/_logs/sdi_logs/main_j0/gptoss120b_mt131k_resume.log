@@ -1,0 +1,47 @@
+2026-09-11 12:49:24,398 [INFO] __main__: Resume scan: 117 completed seasons in outputs/main_j0_gptoss120b_mt131k/20260910_1829_gpt-oss-120b-cloud_signal-game/
+2026-09-11 12:49:24,400 [INFO] __main__: Deleted orphan trace: cd9cfd6dd02c_turns.jsonl
+2026-09-11 12:49:24,400 [INFO] __main__: Deleted orphan trace: f8f22d7a39a5_turns.jsonl
+2026-09-11 12:49:24,401 [INFO] __main__: Deleted orphan trace: 9c4bb421c0f8_turns.jsonl
+  Cleaned 3 orphan trace file(s).
+Experiment 'main_j0_gptoss120b_mt131k': 6 conditions x 20 repetitions = 120 total
+  Resuming: 117 already completed, 3 remaining
+2026-09-11 12:49:24,401 [INFO] __main__: Parallel config: ollama_cloud/gpt-oss:120b-cloud -> 10 worker(s)
+  Parallel config: ollama_cloud/gpt-oss:120b-cloud -> 10 worker(s)
+2026-09-11 12:49:24,401 [INFO] __main__: Running season 1/3 (rep 14): hz_1111 x not_allowed x alone
+  Running season 1/3 (rep 14): hz_1111 x not_allowed x alone
+2026-09-11 12:49:24,401 [INFO] __main__: Running season 2/3 (rep 10): hz_1111 x not_allowed x alone
+  Running season 2/3 (rep 10): hz_1111 x not_allowed x alone
+2026-09-11 12:49:24,402 [INFO] __main__: Running season 3/3 (rep 2): hz_1111 x not_allowed x alone
+  Running season 3/3 (rep 2): hz_1111 x not_allowed x alone
+2026-09-11 12:49:24,480 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting gpt-oss:120b-cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 12:49:24,481 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting gpt-oss:120b-cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 12:49:24,481 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting gpt-oss:120b-cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 12:49:30,088 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 12:49:30,496 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 12:49:32,227 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 12:50:06,096 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 12:51:08,630 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 12:56:35,832 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 12:56:39,996 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 12:57:11,529 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 12:57:17,641 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 12:58:34,795 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 12:58:37,580 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 13:00:53,470 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 13:01:20,833 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 13:03:07,091 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 13:03:10,595 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 13:03:49,382 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 13:05:12,222 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 13:05:12,296 [INFO] squid_game.core.engine: Season f4ac2eca8e91 complete: survived=True, forfeited=False, score=140.0, turns=6
+2026-09-11 13:06:28,069 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 13:06:52,715 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 13:06:59,167 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 13:07:17,688 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 13:07:17,731 [INFO] squid_game.core.engine: Season 9e91c03257c4 complete: survived=True, forfeited=False, score=120.0, turns=6
+2026-09-11 13:07:18,185 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 13:07:37,359 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 13:07:37,367 [INFO] squid_game.core.engine: Season 9157b4fc3cbf: Agent died at turn 6 (p_death=0.000).
+2026-09-11 13:07:37,367 [INFO] squid_game.core.engine: Season 9157b4fc3cbf complete: survived=False, forfeited=False, score=80.0, turns=6
+Experiment complete: 120 seasons in 1093.3s. Results saved to outputs/main_j0_gptoss120b_mt131k/20260910_1829_gpt-oss-120b-cloud_signal-game//
+EXIT 0

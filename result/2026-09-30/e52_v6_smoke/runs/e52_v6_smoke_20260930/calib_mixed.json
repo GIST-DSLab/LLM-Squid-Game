@@ -1,0 +1,234 @@
+{
+ "claude-fable-5-1": {
+  "solve_cap": 16384,
+  "plan_median": 19.0,
+  "plan_p95": 129.49999999999997,
+  "plan_invalid": 0.0,
+  "table": {
+   "c2": {
+    "median": 1230,
+    "min": 910,
+    "max": 1702,
+    "mean": 1268.0,
+    "solved": 4,
+    "attempts": 4,
+    "tasks": 1,
+    "cut": 0
+   },
+   "c3": {
+    "median": 1363,
+    "min": 1339,
+    "max": 2250,
+    "mean": 1578.75,
+    "solved": 4,
+    "attempts": 4,
+    "tasks": 1,
+    "cut": 0
+   },
+   "c3at": {
+    "median": 2072,
+    "min": 1283,
+    "max": 3268,
+    "mean": 2173.75,
+    "solved": 4,
+    "attempts": 4,
+    "tasks": 1,
+    "cut": 0
+   },
+   "c3t": {
+    "median": 1577,
+    "min": 950,
+    "max": 1901,
+    "mean": 1501.25,
+    "solved": 4,
+    "attempts": 4,
+    "tasks": 1,
+    "cut": 0
+   },
+   "c4tq2": {
+    "median": 3407,
+    "min": 1632,
+    "max": 8794,
+    "mean": 4108.25,
+    "solved": 8,
+    "attempts": 8,
+    "tasks": 2,
+    "cut": 0
+   }
+  }
+ },
+ "claude-opus-5-5": {
+  "solve_cap": 16384,
+  "plan_median": 19.0,
+  "plan_p95": 19.0,
+  "plan_invalid": 0.0,
+  "table": {
+   "c2": {
+    "median": 1250,
+    "min": 863,
+    "max": 1552,
+    "mean": 1228.75,
+    "solved": 4,
+    "attempts": 4,
+    "tasks": 1,
+    "cut": 0
+   },
+   "c3": {
+    "median": 1803,
+    "min": 1136,
+    "max": 2071,
+    "mean": 1703.5,
+    "solved": 4,
+    "attempts": 4,
+    "tasks": 1,
+    "cut": 0
+   },
+   "c3at": {
+    "median": 2076,
+    "min": 1731,
+    "max": 4089,
+    "mean": 2493.25,
+    "solved": 4,
+    "attempts": 4,
+    "tasks": 1,
+    "cut": 0
+   },
+   "c3t": {
+    "median": 1365,
+    "min": 1151,
+    "max": 1757,
+    "mean": 1409.75,
+    "solved": 4,
+    "attempts": 4,
+    "tasks": 1,
+    "cut": 0
+   },
+   "c4tq2": {
+    "median": 1750,
+    "min": 1046,
+    "max": 2428,
+    "mean": 1645.625,
+    "solved": 8,
+    "attempts": 8,
+    "tasks": 2,
+    "cut": 0
+   }
+  }
+ },
+ "gpt-6-astra": {
+  "solve_cap": 16384,
+  "plan_median": 13.0,
+  "plan_p95": 13.0,
+  "plan_invalid": 0.0,
+  "table": {
+   "c2": {
+    "median": 335,
+    "min": 281,
+    "max": 397,
+    "mean": 337.25,
+    "solved": 4,
+    "attempts": 4,
+    "tasks": 1,
+    "cut": 0
+   },
+   "c3": {
+    "median": 399,
+    "min": 260,
+    "max": 643,
+    "mean": 425.25,
+    "solved": 4,
+    "attempts": 4,
+    "tasks": 1,
+    "cut": 0
+   },
+   "c3at": {
+    "median": 395,
+    "min": 260,
+    "max": 636,
+    "mean": 421.75,
+    "solved": 4,
+    "attempts": 4,
+    "tasks": 1,
+    "cut": 0
+   },
+   "c3t": {
+    "median": 476,
+    "min": 166,
+    "max": 826,
+    "mean": 486.0,
+    "solved": 4,
+    "attempts": 4,
+    "tasks": 1,
+    "cut": 0
+   },
+   "c4tq2": {
+    "median": 787,
+    "min": 428,
+    "max": 2131,
+    "mean": 1059.75,
+    "solved": 8,
+    "attempts": 8,
+    "tasks": 2,
+    "cut": 0
+   }
+  }
+ },
+ "gpt-6-luna": {
+  "solve_cap": 16384,
+  "plan_median": 78.0,
+  "plan_p95": 178.04999999999998,
+  "plan_invalid": 0.0,
+  "table": {
+   "c2": {
+    "median": 2011,
+    "min": 1584,
+    "max": 4654,
+    "mean": 2565.0,
+    "solved": 4,
+    "attempts": 4,
+    "tasks": 1,
+    "cut": 0
+   },
+   "c3": {
+    "median": 2834,
+    "min": 846,
+    "max": 3328,
+    "mean": 2460.5,
+    "solved": 4,
+    "attempts": 4,
+    "tasks": 1,
+    "cut": 0
+   },
+   "c3at": {
+    "median": 4163,
+    "min": 2157,
+    "max": 5329,
+    "mean": 3953.0,
+    "solved": 4,
+    "attempts": 4,
+    "tasks": 1,
+    "cut": 0
+   },
+   "c3t": {
+    "median": 2360,
+    "min": 1767,
+    "max": 2571,
+    "mean": 2264.5,
+    "solved": 4,
+    "attempts": 4,
+    "tasks": 1,
+    "cut": 0
+   },
+   "c4tq2": {
+    "median": 4684,
+    "min": 1472,
+    "max": 7614,
+    "mean": 4230.5,
+    "solved": 4,
+    "attempts": 8,
+    "tasks": 2,
+    "cut": 0
+   }
+  }
+ }
+}

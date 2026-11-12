@@ -1,0 +1,1170 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}</style></head><body>
+<title>0828 Weekly Report</title>
+<style>
+:root{
+  --ground:#f3f4f1; --panel:#ffffff; --panel-2:#eceee9; --line:#d3d7d0;
+  --ink:#191d22; --ink-2:#4b525b; --ink-3:#767e88;
+  --goal:#9a6f0d; --find:#6d4fd6; --keep:#2c7a4b; --warn:#c0530a;
+  --goal-soft:rgba(154,111,13,.10); --find-soft:rgba(109,79,214,.10);
+  --keep-soft:rgba(44,122,75,.10); --warn-soft:rgba(192,83,10,.10);
+  --code-bg:#e9ebe6;
+  --shadow:0 1px 2px rgba(25,29,34,.07), 0 8px 24px rgba(25,29,34,.05);
+}
+:root:not([data-theme="light"]){ color-scheme:light dark; }
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#10131a; --panel:#171b23; --panel-2:#1e232c; --line:#2b323d;
+    --ink:#e6e9ee; --ink-2:#b3bac5; --ink-3:#868f9c;
+    --goal:#f2c14e; --find:#a78bfa; --keep:#7fce97; --warn:#e88a3c;
+    --goal-soft:rgba(242,193,78,.12); --find-soft:rgba(167,139,250,.13);
+    --keep-soft:rgba(127,206,151,.12); --warn-soft:rgba(232,138,60,.12);
+    --code-bg:#11151c;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#10131a; --panel:#171b23; --panel-2:#1e232c; --line:#2b323d;
+  --ink:#e6e9ee; --ink-2:#b3bac5; --ink-3:#868f9c;
+  --goal:#f2c14e; --find:#a78bfa; --keep:#7fce97; --warn:#e88a3c;
+  --goal-soft:rgba(242,193,78,.12); --find-soft:rgba(167,139,250,.13);
+  --keep-soft:rgba(127,206,151,.12); --warn-soft:rgba(232,138,60,.12);
+  --code-bg:#11151c;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:"Apple SD Gothic Neo","Pretendard","Noto Sans KR",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:16px; line-height:1.75; letter-spacing:-.005em;
+}
+.wrap{max-width:1680px;margin:0 auto;padding:0 32px 96px;
+  display:grid;grid-template-columns:220px minmax(0,1fr);gap:48px;align-items:start}
+@media (max-width:900px){ .wrap{grid-template-columns:1fr;gap:0} nav.rail{display:none} }
+
+header.top{grid-column:1/-1;padding:64px 0 40px;border-bottom:1px solid var(--line)}
+.kicker{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:11px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-3);display:flex;flex-wrap:wrap;gap:14px;margin-bottom:20px}
+h1{font-family:"Iowan Old Style","Apple Garamond",Georgia,"Apple SD Gothic Neo",serif;
+  font-weight:600;font-size:clamp(30px,4.6vw,46px);line-height:1.18;margin:0 0 14px;
+  text-wrap:balance;letter-spacing:-.02em}
+header.top p{max-width:64ch;color:var(--ink-2);margin:0 0 8px}
+.lead{font-size:17.5px;color:var(--ink);max-width:66ch}
+.axis-key{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}
+.chip{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:12px;border:1px solid var(--line);
+  border-radius:2px;padding:4px 10px;background:var(--panel);display:inline-flex;align-items:center;gap:7px}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.d-g{background:var(--goal)} .d-f{background:var(--find)} .d-k{background:var(--keep)} .d-w{background:var(--warn)}
+
+nav.rail{position:sticky;top:28px;padding-top:44px;font-size:13px;line-height:1.5}
+nav.rail ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+nav.rail a{display:block;padding:7px 10px;color:var(--ink-2);text-decoration:none;border-left:2px solid var(--line)}
+nav.rail a:hover,nav.rail a:focus-visible{color:var(--ink);border-left-color:var(--ink-3);background:var(--panel-2)}
+nav.rail .num{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:11px;color:var(--ink-3);margin-right:8px}
+
+main{padding-top:44px;min-width:0;display:flex;flex-direction:column;gap:64px}
+section{scroll-margin-top:24px}
+h2{font-family:"Iowan Old Style","Apple Garamond",Georgia,"Apple SD Gothic Neo",serif;
+  font-size:26px;font-weight:600;margin:0 0 6px;letter-spacing:-.015em;text-wrap:balance}
+h2 .en{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:12px;color:var(--ink-3);
+  letter-spacing:.06em;display:block;margin-bottom:6px;text-transform:uppercase}
+h3{font-size:16.5px;margin:32px 0 8px;letter-spacing:-.01em}
+p{max-width:68ch;margin:0 0 14px}
+ul,ol.body{max-width:68ch;padding-left:20px;margin:0 0 14px}
+li{margin-bottom:7px}
+strong{font-weight:650}
+code{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:.86em;background:var(--code-bg);
+  padding:1px 5px;border-radius:2px;color:var(--ink)}
+a{color:var(--ink);text-underline-offset:3px}
+.quiet{color:var(--ink-2)}
+.note{font-size:13.5px;color:var(--ink-2);border-left:3px solid var(--line);padding-left:14px;margin:14px 0;max-width:68ch}
+
+.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:20px 0}
+@media (max-width:980px){ .three{grid-template-columns:1fr} }
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:20px 0}
+@media (max-width:980px){ .two{grid-template-columns:1fr} }
+.concept{background:var(--panel);border:1px solid var(--line);border-radius:3px;box-shadow:var(--shadow);
+  padding:20px 22px;display:flex;flex-direction:column;gap:8px}
+.concept.goal{border-top:3px solid var(--goal)} .concept.find{border-top:3px solid var(--find)}
+.concept.keep{border-top:3px solid var(--keep)} .concept.warn{border-top:3px solid var(--warn)}
+.concept h3{margin:0;font-size:17px}
+.concept .en{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:11px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--ink-3)}
+.concept p{margin:0;font-size:14.5px;max-width:none}
+.concept dl{margin:6px 0 0;font-size:14px;display:grid;grid-template-columns:auto 1fr;gap:4px 10px}
+.concept dt{color:var(--ink-3);font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:11px;
+  letter-spacing:.06em;padding-top:3px;white-space:nowrap}
+.concept dd{margin:0}
+.concept.goal dt{color:var(--goal)} .concept.find dt{color:var(--find)}
+.concept.keep dt{color:var(--keep)} .concept.warn dt{color:var(--warn)}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:3px;box-shadow:var(--shadow);
+  padding:22px 24px;margin:20px 0}
+.card h3{margin-top:0}
+.card p:last-child{margin-bottom:0}
+.gap{border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:3px;background:var(--panel);
+  padding:16px 20px;margin:14px 0}
+.gap h3{margin:0 0 6px;font-size:15px}
+.gap p{margin:0;font-size:14.5px}
+.gap p+p{margin-top:8px}
+
+.rules{list-style:none;padding:0;margin:14px 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.rules li{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:14px 16px;margin:0;font-size:14px}
+.rules li b{display:block;font-size:15px;margin-bottom:4px}
+.rules li .why{color:var(--ink-2)}
+
+.tablewrap{overflow-x:auto;margin:20px 0;border:1px solid var(--line);border-radius:3px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:560px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:11px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--ink-3);background:var(--panel-2);font-weight:500}
+tbody tr:last-child td{border-bottom:none}
+td code{font-size:12px}
+.n{font-variant-numeric:tabular-nums;text-align:right}
+td.c{text-align:center}
+.ok{color:var(--keep);font-weight:650} .no{color:var(--warn);font-weight:650} .na{color:var(--ink-3)}
+
+/* 격자 히트맵 */
+.gridwrap{overflow-x:auto;margin:20px 0}
+table.grid{border-collapse:separate;border-spacing:6px;min-width:520px;width:auto;font-size:13px}
+table.grid th{background:none;border:none;padding:4px 8px;text-align:center}
+table.grid th.row{text-align:left;font-size:12px;text-transform:none;letter-spacing:0;
+  font-family:"Apple SD Gothic Neo",system-ui,sans-serif;color:var(--ink-2);white-space:nowrap}
+table.grid td{border:1px solid var(--line);border-radius:3px;padding:10px 6px;text-align:center;
+  background:var(--panel-2);font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:11px;
+  color:var(--ink-3);min-width:74px}
+table.grid td.done{background:var(--keep-soft);border-color:var(--keep);color:var(--keep);font-weight:650}
+table.grid td.part{background:var(--warn-soft);border-color:var(--warn);color:var(--warn)}
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;font-size:12px;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:11px;height:11px;border-radius:2px;border:1px solid var(--line);display:inline-block}
+.sw.done{background:var(--keep-soft);border-color:var(--keep)}
+.sw.part{background:var(--warn-soft);border-color:var(--warn)}
+.sw.none{background:var(--panel-2)}
+
+.env-flow{display:grid;grid-template-columns:minmax(150px,1fr) 34px minmax(150px,1fr) 34px minmax(180px,1.2fr) 34px minmax(180px,1.2fr);
+  align-items:stretch;margin:22px 0}
+.flow-node{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:16px 18px;box-shadow:var(--shadow)}
+.flow-node b{display:block;margin-bottom:4px}.flow-node span{display:block;color:var(--ink-2);font-size:13px;line-height:1.55}
+.flow-arrow{display:grid;place-items:center;color:var(--ink-3);font-family:ui-monospace,"SF Mono",Menlo,monospace}
+@media (max-width:980px){
+  .env-flow{grid-template-columns:1fr}
+  .flow-arrow{min-height:30px;transform:rotate(90deg)}
+}
+.harness-figure{margin:22px 0;background:var(--panel);border:1px solid var(--line);border-radius:3px;box-shadow:var(--shadow);overflow:hidden}
+.harness-canvas{overflow-x:auto;background:var(--panel-2)}
+.harness-canvas svg{display:block;width:100%;min-width:760px;height:auto}
+.harness-cap{max-width:none;margin:0;padding:13px 16px;border-top:1px solid var(--line);font-size:13px;color:var(--ink-2)}
+.harness-cap b{color:var(--ink)}
+.prompt-card{background:var(--panel);border:1px solid var(--line);border-radius:3px;box-shadow:var(--shadow);overflow:hidden;margin:20px 0}
+.prompt-card h4{margin:0;padding:14px 18px;border-bottom:1px solid var(--line);font-size:14px;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.prompt-ladder{display:grid;grid-template-columns:minmax(0,1.9fr) minmax(270px,.65fr)}
+.prompt-copies{min-width:0;border-right:1px solid var(--line)}
+.prompt-main{min-width:0}
+.prompt-section+.prompt-section{border-top:1px solid var(--line)}
+.prompt-section h5{margin:0;padding:10px 16px;background:var(--panel-2);font:500 11px/1.4 ui-monospace,"SF Mono",Menlo,monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.prompt-section pre.code{margin:0;border:0;border-radius:0;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-all;overflow-x:hidden}
+.prompt-line{display:inline;padding:1px 4px;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.prompt-line.l1{background:var(--goal-soft);box-shadow:inset 3px 0 var(--goal)}
+.prompt-line.l2{background:var(--find-soft);box-shadow:inset 3px 0 var(--find)}
+.prompt-line.l3{background:var(--keep-soft);box-shadow:inset 3px 0 var(--keep)}
+.tag{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:10px;font-weight:500;padding:2px 6px;border:1px solid currentColor;border-radius:2px}
+.tag.l0{color:var(--ink-3)}.tag.l1{color:var(--goal)}.tag.l2{color:var(--find)}.tag.l3{color:var(--keep)}
+.lang-toggle{display:inline-flex;margin-left:auto;padding:2px;background:var(--panel-2);border:1px solid var(--line);border-radius:3px}
+.lang-toggle button{appearance:none;border:0;background:transparent;color:var(--ink-3);padding:4px 9px;border-radius:2px;font:600 10px/1.3 ui-monospace,"SF Mono",Menlo,monospace;cursor:pointer}
+.lang-toggle button[aria-pressed="true"]{background:var(--panel);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+[data-lang-panel][hidden]{display:none!important}
+.ordering-prefix{max-width:none;margin:0;padding:10px 16px;font:12.5px/1.65 ui-monospace,"SF Mono",Menlo,monospace;background:var(--keep-soft);box-shadow:inset 3px 0 var(--keep)}
+.ordering-panel{padding:16px;background:var(--panel-2);display:flex;flex-direction:column;gap:10px}
+.ordering-panel h5{margin:0 0 2px;font-size:13px}.ordering-panel p{margin:0 0 4px;font-size:12px;color:var(--ink-3)}
+.order-option{display:flex;align-items:center;flex-wrap:wrap;gap:5px;padding:9px 10px;background:var(--panel);border:1px solid var(--line);border-radius:3px;font:12px/1.4 ui-monospace,"SF Mono",Menlo,monospace}
+.order-option:first-of-type{border-color:var(--keep);box-shadow:inset 3px 0 var(--keep)}
+.axis{padding:1px 5px;border-radius:2px;font-weight:700}
+.axis.goal{color:var(--goal);background:var(--goal-soft)}
+.axis.safety{color:var(--keep);background:var(--keep-soft)}
+.axis.care{color:var(--find);background:var(--find-soft)}
+.relation{color:var(--ink-3)}
+.feedback{max-width:68ch;margin:18px 0 20px;padding:18px 20px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--find);border-radius:3px;box-shadow:var(--shadow)}
+.feedback .label{display:block;margin-bottom:10px;font:500 11px/1.4 ui-monospace,"SF Mono",Menlo,monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--find)}
+.feedback blockquote{margin:0;color:var(--ink-2)}
+.feedback blockquote p{margin:0 0 10px;max-width:none}.feedback blockquote p:last-child{margin-bottom:0}
+@media (max-width:980px){
+  .prompt-ladder{grid-template-columns:1fr}
+  .prompt-copies{border-right:0;border-bottom:1px solid var(--line)}
+}
+
+pre.code{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:12.5px;line-height:1.65;
+  background:var(--code-bg);border:1px solid var(--line);border-radius:2px;padding:14px 16px;
+  margin:12px 0;overflow-x:auto;white-space:pre}
+pre.code .c{color:var(--ink-3)} pre.code .w{color:var(--warn)}
+
+footer{grid-column:1/-1;border-top:1px solid var(--line);margin-top:72px;padding-top:24px;color:var(--ink-3);font-size:13px}
+footer p{max-width:70ch}
+@media (prefers-reduced-motion:no-preference){ nav.rail a{transition:color .15s ease,border-color .15s ease,background .15s ease} }
+:focus-visible{outline:2px solid var(--find);outline-offset:2px}
+
+/* 목차 안건 그룹 */
+nav.rail .grp{margin:20px 0 6px;padding:0 10px;font:500 10px/1.4 ui-monospace,"SF Mono",Menlo,monospace;
+  letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3)}
+nav.rail .grp:first-child{margin-top:0}
+
+/* 확인 필요 표시 */
+.todo{font:500 10px/1.3 ui-monospace,"SF Mono",Menlo,monospace;letter-spacing:.06em;color:var(--warn);
+  border:1px solid var(--warn);border-radius:2px;padding:2px 5px;margin-left:6px;white-space:nowrap}
+
+/* 안건 박스 */
+.agenda{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:28px 0 0}
+@media (max-width:1100px){ .agenda{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media (max-width:620px){ .agenda{grid-template-columns:1fr} }
+.agenda a{display:flex;flex-direction:column;gap:5px;text-decoration:none;color:inherit;background:var(--panel);
+  border:1px solid var(--line);border-top:3px solid var(--ink-3);border-radius:3px;padding:15px 17px;box-shadow:var(--shadow)}
+.agenda a:hover,.agenda a:focus-visible{border-color:var(--ink-3)}
+.agenda .no{font:500 10.5px/1.3 ui-monospace,"SF Mono",Menlo,monospace;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3)}
+.agenda b{font-size:15.5px;line-height:1.4;letter-spacing:-.01em}
+.agenda .d{font-size:13px;color:var(--ink-2);line-height:1.6}
+.agenda a.a1{border-top-color:var(--goal)} .agenda a.a2{border-top-color:var(--find)}
+.agenda a.a3{border-top-color:var(--keep)} .agenda a.a4{border-top-color:var(--warn)}
+
+/* 수평 타임라인 (간트) */
+.gantt{margin:24px 0 8px;border:1px solid var(--line);border-radius:3px;background:var(--panel);
+  box-shadow:var(--shadow);overflow-x:auto}
+.gantt-inner{min-width:880px;--gn:8;--gstep:12.5%}
+.gantt-head,.gantt-row{display:grid;grid-template-columns:172px minmax(0,1fr)}
+.gantt-head{background:var(--panel-2);border-bottom:1px solid var(--line)}
+.gantt-head .glabel{font:500 10.5px/1.4 ui-monospace,"SF Mono",Menlo,monospace;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--ink-3);font-weight:500}
+.gantt-head .gcols{display:grid;grid-template-columns:repeat(var(--gn),1fr)}
+.gantt-head .gcols span{padding:9px 4px;text-align:center;border-left:1px solid var(--line);
+  font:500 10.5px/1.4 ui-monospace,"SF Mono",Menlo,monospace;letter-spacing:.05em;color:var(--ink-3)}
+.gantt-row{border-bottom:1px solid var(--line)}
+.gantt-row:last-child{border-bottom:0}
+.gantt-row.deadline{background:var(--panel-2)}
+.glabel{padding:10px 12px;font-size:13px;font-weight:650;line-height:1.4;border-right:1px solid var(--line)}
+.glabel small{display:block;font-weight:400;font-size:11.5px;color:var(--ink-3);margin-top:2px}
+.gtrack{position:relative;display:grid;grid-template-columns:repeat(var(--gn),1fr);
+  grid-auto-rows:minmax(26px,auto);gap:5px 0;padding:8px 0}
+.gtrack::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.7;
+  background-image:repeating-linear-gradient(to right,var(--line) 0 1px,transparent 1px var(--gstep))}
+.gbar{position:relative;z-index:1;margin:0 5px;padding:5px 9px;border-radius:3px;font-size:11.5px;line-height:1.45;
+  border:1px solid var(--line);background:var(--panel-2);color:var(--ink-2);display:flex;align-items:center}
+.gbar.k{background:var(--keep-soft);border-color:var(--keep);color:var(--keep);font-weight:650}
+.gbar.w{background:var(--warn-soft);border-color:var(--warn);color:var(--warn);font-weight:650}
+.gbar.f{background:var(--find-soft);border-color:var(--find);color:var(--find)}
+.gbar.g{background:var(--goal-soft);border-color:var(--goal);color:var(--goal)}
+.gbar.est{border-style:dashed}
+.gbar.mute{color:var(--ink-3)}
+.gantt-legend{display:flex;flex-wrap:wrap;gap:14px;margin:0 0 22px;font-size:12px;color:var(--ink-2)}
+.gantt-legend span{display:inline-flex;align-items:center;gap:6px}
+.gantt-legend i{width:13px;height:11px;border-radius:2px;border:1px solid var(--line);display:inline-block}
+.gantt-legend i.k{background:var(--keep-soft);border-color:var(--keep)}
+.gantt-legend i.w{background:var(--warn-soft);border-color:var(--warn)}
+.gantt-legend i.f{background:var(--find-soft);border-color:var(--find)}
+.gantt-legend i.est{border-style:dashed}
+
+/* 01절 좌우 분할 */
+.irb-split{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(320px,.85fr);gap:24px;align-items:start;margin:14px 0 4px}
+@media (max-width:1080px){ .irb-split{grid-template-columns:1fr} }
+.irb-split .side h3{margin-top:0}
+.irb-split .rules{grid-template-columns:1fr}
+table.compact{min-width:0;font-size:12.5px}
+table.compact th,table.compact td{padding:7px 10px}
+table.compact td small{display:block;color:var(--ink-3);font-size:11px;line-height:1.4}
+
+/* 표 두 개를 한 행에 */
+.pair-block{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;align-items:start;margin:20px 0}
+@media (max-width:1080px){ .pair-block{grid-template-columns:1fr} }
+.pair-block>div{min-width:0}
+.pair-block h3{margin-top:0}
+.pair-block table,.pair-block table.grid{min-width:0}
+.pair-block table.grid td{min-width:0;padding:9px 4px}
+.pair-block .tablewrap,.pair-block .gridwrap{margin-top:12px}
+
+/* 깎는 중 표시 */
+.trimming{margin:22px 0;padding:15px 18px;border:1px solid var(--warn);border-left-width:3px;border-radius:3px;
+  background:var(--warn-soft)}
+.trimming p{margin:0;max-width:72ch;font-size:14px}
+.trimming p+p{margin-top:8px}
+.trimming b{color:var(--warn)}
+</style>
+
+<div class="wrap">
+
+<header class="top">
+  <div class="kicker">
+    <span>On the Measure of Agentness</span><span>×</span>
+    <span>LLM Squid Game</span><span>2026-08-28</span>
+  </div>
+  <h1>0828 Weekly Report</h1>
+
+  <div class="agenda">
+    <a class="a1" href="#s1">
+      <span class="no">안건 1 · IRB</span>
+      <b>IRB가 언제 끝나는가</b>
+      <span class="d">제출 서류 2종을 다 썼다. 남은 것은 교수님 이력과 교육 이수증뿐. 심의면제 확인까지 얼마나 걸리는지가 나머지 일정을 결정한다.</span>
+    </a>
+    <a class="a2" href="#s3">
+      <span class="no">안건 2 · 실험 계획</span>
+      <b>그동안 무슨 실험을 돌릴 수 있는가</b>
+      <span class="d">심의 대기 기간과 ICLR 마감이 겹치지 않는다. 사람 데이터는 이번 마감에 못 들어간다. IRB에 막히지 않은 갈래를 고른다.</span>
+    </a>
+    <a class="a3" href="#s4">
+      <span class="no">안건 3 · 실험과 환경</span>
+      <b>실험 환경이 어디까지 왔는가</b>
+      <span class="d">24칸 격자 실험의 설계, 그것을 돌리는 하네스, 사람 실험용 배포, 코드베이스 정리 현황을 차례로 본다.</span>
+    </a>
+    <a class="a4" href="#s8">
+      <span class="no">안건 4 · 투고</span>
+      <b>LLM Squid Game을 어디에 낼 것인가</b>
+      <span class="d">교수님이 짚어 주신 여섯 후보의 마감과 분량을 붙였다. 1순위를 정해야 6페이지를 얼마나 늘릴지가 정해진다.</span>
+    </a>
+  </div>
+
+</header>
+
+<nav class="rail">
+  <ol>
+    <li class="grp">안건 1 · IRB</li>
+    <li><a href="#s1"><span class="num">01</span>서류와 심의 경로</a></li>
+    <li><a href="#s2"><span class="num">02</span>일정 — 두 개의 시계</a></li>
+    <li class="grp">안건 2 · 실험 계획</li>
+    <li><a href="#s3"><span class="num">03</span>해야 할 실험 세 갈래</a></li>
+    <li class="grp">안건 3 · 실험과 실행 환경</li>
+    <li><a href="#s4"><span class="num">04</span>24칸 격자 실험</a></li>
+    <li><a href="#s5"><span class="num">05</span>실험 환경과 하네스</a></li>
+    <li><a href="#s6"><span class="num">06</span>Cloudflare 배포</a></li>
+    <li><a href="#s7"><span class="num">07</span>코드베이스 정리</a></li>
+    <li class="grp">안건 4 · 투고</li>
+    <li><a href="#s8"><span class="num">08</span>LLM Squid Game 투고 계획</a></li>
+    <li class="grp">마무리</li>
+    <li><a href="#s9"><span class="num">09</span>다음 주에 할 일</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<section id="s1">
+  <h2><span class="en">01 · irb</span>IRB 서류와 심의 경로</h2>
+  <p>사람 참가자에게 게임을 시키려면 기관생명윤리위원회(IRB)의 허락이 있어야 한다. 그 허락을 받기 위해 제출할 서식은 두 개이고, <strong>이번 주에 둘 다 썼다.</strong> <strong>연구계획심의신청서</strong>(별지 제1호)와 <strong>심의면제신청서</strong>(별지 제4호)다. 서명도 다 넣었다. 남은 것은 우리가 글로 쓸 수 없는 두 가지, 즉 <strong>교수님 이력</strong>과 <strong>생명윤리 교육 이수증</strong>뿐이다.</p>
+
+  <div class="irb-split">
+    <div class="main">
+      <h3>우리가 신청하는 것은 &ldquo;심의면제&rdquo;다</h3>
+      <p>IRB에는 두 갈래가 있다. 하나는 정규심의로, 위원회가 모여서 연구를 하나씩 뜯어본다. 다른 하나는 심의면제로, 위험이 거의 없는 연구라는 것을 서류로 보이면 회의를 거치지 않고 확인만 받는다. 우리 연구는 뒤쪽에 해당한다고 보고 <strong>심의면제</strong>를 신청한다. 근거는 네 가지다.</p>
+      <ul class="rules">
+        <li><b>몸에 손대지 않는다</b><span class="why">약을 주거나 피를 뽑지 않는다. 브라우저에서 35~40분 격자 게임을 할 뿐이다.</span></li>
+        <li><b>누가 했는지 모른다</b><span class="why">이름·학번·이메일·IP·접속기기를 아예 저장하지 않는다. 브라우저가 만든 무작위 코드만 남고, 그 코드와 사람을 잇는 표는 만들지 않는다.</span></li>
+        <li><b>민감정보가 없다</b><span class="why">저장하는 것은 격자 좌표, 이동 방향, 반응시간, 점수, 연령대 범주뿐이다.</span></li>
+        <li><b>거절할 수 없는 사람이 없다</b><span class="why">공개 웹에 올려 두고 아무나 들어오게 한다. 지원 접수 절차가 없어서 교수가 &ldquo;누가 참여 안 했는지&rdquo;를 알 방법 자체가 없다. 보상도 없다.</span></li>
+      </ul>
+      <p class="note">자가점검표를 따라가면 8-1 경로(비침습)와 8-2 경로(대상자 불특정) 두 갈래 모두 면제로 떨어진다. 어느 쪽으로 읽히더라도 결론이 같다는 뜻이라, 이 부분은 비교적 안전하다고 본다.</p>
+    </div>
+
+    <div class="side">
+      <h3>서류 상태</h3>
+      <div class="tablewrap">
+      <table class="compact">
+        <thead><tr><th>서류</th><th>상태</th></tr></thead>
+        <tbody>
+          <tr><td>1. 연구계획심의신청서<small>별지 제1호 · 작성본 hwpx</small></td><td class="c"><span class="ok">완료</span></td></tr>
+          <tr><td>4. 심의면제신청서<small>별지 제4호 · 자가점검표 포함</small></td><td class="c"><span class="ok">완료</span></td></tr>
+          <tr><td><b>연구책임자 최근 이력</b><small>첨부</small></td><td class="c"><span class="no">교수님 이력</span></td></tr>
+          <tr><td><b>생명윤리 교육 이수증</b><small>첨부 · 3인, 각 90분</small></td><td class="c"><span class="no">미이수</span></td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="gap">
+    <h3>회의에서 확정해야 할 것</h3>
+    <p><b>① 교수님 이력</b> — 연구계획심의신청서의 생년월일·학력·경력 칸이 아직 자리표시자다. 서명은 이미 받았다.</p>
+    <p><b>② 생명윤리 교육</b> — <code>edu.irb.or.kr</code>에서 90분짜리 온라인 과정이며 <b>연구진 전원</b>이 들어야 한다. 지금 시작하면 하루 안에 끝난다. 이것이 안 되면 접수 자체가 안 된다.</p>
+    <p><b>③ 학과 일정 문의</b> — 장준영 선생님(<code>zun.zero@gist.ac.kr</code>)께 제89회 위원회 개최일과 학과 제출 마감일을 여쭤야 한다. <strong>이 답이 오기 전까지 아래 타임라인은 전부 추정치다.</strong></p>
+  </div>
+
+  <p class="note"><strong>한 가지 규칙:</strong> 승인(또는 면제확인) 전에는 수집 코드를 배포하지 않는다. 게임을 웹에 올려 두는 것 자체는 괜찮지만, 궤적을 서버로 보내는 코드가 살아 있는 순간부터 승인 전 수집이 되고 그 자료는 논문에 쓸 수 없다.</p>
+</section>
+
+<section id="s2">
+  <h2><span class="en">02 · timeline</span>일정 — 두 개의 시계가 겹치지 않는다</h2>
+  <p>이번 안건의 핵심은 계산 하나다. <strong>IRB 승인을 받고 사람 데이터를 모으는 데 걸리는 시간</strong>과 <strong>ICLR 마감까지 남은 시간</strong>을 나란히 놓으면, 둘이 겹치지 않는다. 먼저 마감부터 본다.</p>
+
+  <h3>어느 시기에 무엇을 할 수 있는가</h3>
+  <div class="gantt">
+    <div class="gantt-inner">
+      <div class="gantt-head">
+        <div class="glabel">갈래</div>
+        <div class="gcols">
+          <span>8월 말</span><span>9월 1주</span><span>9월 2주</span><span>9월 3주</span>
+          <span>9월 4주</span><span>10월 1–2주</span><span>10월 3–4주</span><span>11월~</span>
+        </div>
+      </div>
+
+      <div class="gantt-row">
+        <div class="glabel">IRB 행정<small>우리 손에 달린 구간</small></div>
+        <div class="gtrack">
+          <div class="gbar w" style="grid-column:1/3">교육 이수 · 교수님 이력 · 학과 제출</div>
+          <div class="gbar est mute" style="grid-column:3/7">심의면제 확인 대기 (2~4주, 보완 요청 시 +1~2주) — 추정</div>
+        </div>
+      </div>
+
+      <div class="gantt-row">
+        <div class="glabel">사람 데이터<small>유효 30건 (상한 90)</small></div>
+        <div class="gtrack">
+          <div class="gbar est mute" style="grid-column:1/7">승인 전 수집 금지 — 손댈 수 없는 구간</div>
+          <div class="gbar k" style="grid-column:7/9">승인 직후 배포 · 수집 (1~4주)</div>
+        </div>
+      </div>
+
+      <div class="gantt-row">
+        <div class="glabel">LLM 24칸 격자<small>IRB와 무관</small></div>
+        <div class="gtrack">
+          <div class="gbar k" style="grid-column:1/5">지금 바로 실행 가능 — 프롬프트 4단 &times; 시드 6개</div>
+          <div class="gbar f" style="grid-column:5/6">채점 · 표와 그림</div>
+        </div>
+      </div>
+
+      <div class="gantt-row">
+        <div class="glabel">Agentness 원고<small>ICLR 2027</small></div>
+        <div class="gtrack">
+          <div class="gbar f" style="grid-column:2/6">도구 타당화 + LLM 결과로 본문을 채운다 (사람 데이터 없이)</div>
+          <div class="gbar est mute" style="grid-column:7/9">리뷰 기간 중 사람 데이터 → rebuttal · camera-ready</div>
+        </div>
+      </div>
+
+      <div class="gantt-row">
+        <div class="glabel">Squid Game 원고<small>투고처 미정</small></div>
+        <div class="gtrack">
+          <div class="gbar g" style="grid-column:4/9">6p → 8~10p 확장 · 관련연구 보강</div>
+        </div>
+      </div>
+
+      <div class="gantt-row deadline">
+        <div class="glabel">마감<small>이 구간에 떨어진다</small></div>
+        <div class="gtrack">
+          <div class="gbar w" style="grid-column:4/5">ICLR 초록 9/18</div>
+          <div class="gbar w" style="grid-column:5/6">ICLR 본문 9/25 · SaTML 9/29</div>
+          <div class="gbar f" style="grid-column:6/7">ARR 10월 10/12</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="gantt-legend">
+    <span><i class="k"></i>지금 실행 가능</span>
+    <span><i class="f"></i>진행 예정</span>
+    <span><i class="w"></i>마감 · 막힘</span>
+    <span><i class="est"></i>점선은 추정 구간 (학과 회신 전)</span>
+  </div>
+
+  <p><strong>한 줄로 읽으면 이렇다.</strong> 9월 안에 우리가 손댈 수 있는 것은 LLM 격자와 원고뿐이고, 사람 데이터가 들어갈 자리는 10월 하순 이후에야 열린다. ICLR 본문 마감(9/25)은 그 앞에 있다.</p>
+
+  <h3>IRB에 걸리는 시간</h3>
+  <p>정확한 숫자는 학과 답을 받아야 알 수 있다. 다만 국내 대학 IRB의 통상 소요는 대체로 이렇다.</p>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>단계</th><th>통상 소요</th><th>비고</th></tr></thead>
+    <tbody>
+      <tr><td>교육 이수 + 서류 마무리</td><td class="n">2~3일</td><td>지금 시작하면 이번 주 안</td></tr>
+      <tr><td>학과사무실 → 공문 기안 → 연구지원팀</td><td class="n">3~5일</td><td>접수 마감 2~3일 전 제출 권장</td></tr>
+      <tr><td><b>심의면제 확인</b> (서류 검토만)</td><td class="n">2~4주</td><td>우리가 신청하는 경로</td></tr>
+      <tr><td>정규심의 (월 1회 정기회의)</td><td class="n">4~6주</td><td>면제가 기각될 경우</td></tr>
+      <tr><td>보완 요청 대응</td><td class="n">+1~2주</td><td>첫 제출에서 흔하게 발생</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>사람 데이터를 모으는 데 걸리는 시간</h3>
+  <p>목표는 <strong>유효 세션 30건</strong>이다. 숨은 규칙은 세 가치축의 순서로 정의되고 가능한 순서가 여섯 가지이므로, 순서당 5명씩 6&times;5&nbsp;=&nbsp;30건이 분석의 하한이다. 상한은 90건이고, 도달하면 수집이 자동으로 멈춘다.</p>
+  <ul>
+    <li>세션 하나가 <strong>35~40분</strong>이다(최대 60분). 짧은 설문이 아니라 튜토리얼·기억 단계·라이브 3사이클·바닥 점검까지 도는 긴 과제다.</li>
+    <li>품질 필터에서 탈락하는 세션이 있으므로, 유효 30건을 얻으려면 <strong>실제 유입은 40~50건</strong>은 되어야 한다.</li>
+    <li>공개 웹 자발 참여라 모집 속도를 우리가 통제할 수 없다. 배포할 채널이 준비돼 있으면 1~2주, 없으면 그 이상 걸린다.</li>
+  </ul>
+
+  <p class="note">가장 빠른 경우를 가정해도(9월 초 접수 + 면제 확인 2주) 승인은 9월 중순이고, 거기서 수집을 시작하면 유효 30건이 모이는 시점은 10월이다. ICLR 본문 마감(9/25) 안에 사람 데이터를 넣는 것은 <strong>산술적으로 불가능하다.</strong></p>
+
+  <div class="gap">
+    <h3>그래서 정해야 할 것 — 두 갈래</h3>
+    <p><b>A안 (권장).</b> ICLR 2027에는 <strong>사람 데이터 없이</strong> 낸다. 즉 도구 타당화(4.1절, 이미 실측 완료)와 LLM 평가(24칸 격자, 지금 돌릴 수 있음)만으로 본문을 채운다. 사람 데이터는 리뷰 기간 중에 모아서 rebuttal이나 camera-ready에 넣는다. 대신 <strong>남은 4주 안에 24칸 격자를 전부 돌려야 한다.</strong></p>
+    <p><b>B안.</b> ICLR을 건너뛰고 사람 데이터가 들어간 완성본을 다음 마감에 낸다. 후보는 ARR 10월 사이클(10-12)이나 CogSci 2027이다. 논문은 강해지지만 3~6개월이 밀린다.</p>
+    <p><b>공통.</b> 어느 쪽이든 24칸 격자 실행은 지금 시작해야 한다. A안에서는 마감 자체가 여기에 달려 있고, B안에서도 사람과 비교할 LLM 쪽 숫자가 없으면 비교 실험이 성립하지 않는다.</p>
+  </div>
+</section>
+
+<section id="s3">
+  <h2><span class="en">03 · experiments</span>해야 할 실험 세 갈래</h2>
+  <p>논문에 적어 둔 물음을 실행 단위로 다시 묶으면 세 갈래가 된다. 순서에는 이유가 있다. <strong>자를 먼저 검증하고, 그 자로 사람과 모델을 재고, 마지막에 모델이 어디서 무너지는지 쪼갠다.</strong> 지금 우리는 첫 갈래의 절반까지 와 있다.</p>
+
+  <div class="three">
+    <div class="concept goal">
+      <span class="en">experiment 1</span>
+      <h3>게임판이 agentness를 재는가</h3>
+      <p>자가 굽어 있으면 그 위의 어떤 점수도 못 읽는다. 그래서 모델을 재기 전에 자부터 검증한다.</p>
+      <dl>
+        <dt>현재</dt><dd>합성 오라클 기준으로 Q1~Q5 다섯 물음을 전부 통과했다. 이웃 자리바꿈 216쌍이 모두 갈라졌고, 라벨 없는 관측자가 행동만 보고 순서를 맞힌 비율이 72/72, 무대를 바꾼 전이에서도 48/48이다.</dd>
+        <dt>구멍</dt><dd>정답을 우리가 만든 오라클이 처방하고, 같은 오라클이 그것을 행동에서 되읽는다. 도구가 자기 자신과 정합한다는 것만 보인 셈이다.</dd>
+        <dt>남은 일</dt><dd>사람 궤적으로 이 원을 <b>밖에서</b> 끊는다. 사람이 숨은 규칙을 실제로 발견·유지하는지, 그리고 관측자가 사람 행동에서도 순서를 복원하는지를 본다.</dd>
+        <dt>막힘</dt><dd>IRB 승인 필요.</dd>
+      </dl>
+    </div>
+    <div class="concept find">
+      <span class="en">experiment 2</span>
+      <h3>사람과 LLM의 궤적을 나란히 놓기</h3>
+      <p>같은 시드·같은 페르소나·같은 보드에서 사람과 모델을 각각 굴리고, 두 궤적을 같은 자로 잰다.</p>
+      <dl>
+        <dt>보는 것</dt><dd>발견 곡선(몇 턴 만에 규칙을 읽어 내는가), 유지율(직면한 갈등 중 저항한 비율), 위반의 <b>종류</b>(어떤 규칙을 먼저 버리는가), 그리고 사람의 반응시간에 대응하는 모델의 턴 소모.</dd>
+        <dt>가르는 것</dt><dd>어떤 보드에서 사람도 못 읽는다면 그것은 과제 가독성의 한계다. 사람은 읽는데 모델만 못 읽는다면 능력 차다. 이 둘을 섞으면 결과 해석이 통째로 흔들린다.</dd>
+        <dt>필요</dt><dd>사람 세션 30건 + 24칸 격자 결과. 양쪽이 다 있어야 성립한다.</dd>
+        <dt>막힘</dt><dd>IRB 승인 + 격자 실행.</dd>
+      </dl>
+    </div>
+    <div class="concept keep">
+      <span class="en">experiment 3</span>
+      <h3>요소별 분포 — LLM은 어디가 모자란가</h3>
+      <p>agentness는 <b>추구 &times; 발견 &times; 유지</b>의 곱이다. 곱이 낮을 때 어느 인자가 끌어내렸는지를 봐야 &ldquo;무엇이 부족한가&rdquo;에 답할 수 있다.</p>
+      <dl>
+        <dt>물음</dt><dd>실패가 <b>발견</b>에서 오는가, <b>유지</b>에서 오는가. 자기 원리를 읽지 못한 것과, 읽고도 점수 유혹 앞에서 지키지 못한 것은 다른 결함이다.</dd>
+        <dt>산출</dt><dd>모델별 세 인자 분해표, 발견-유지 산점(대각을 벗어나면 &ldquo;알고도 못 지킨&rdquo; 경우), 전이 거리별 유지 잔존 곡선. 논문의 표 3과 그림 9·10·11이 전부 여기 대응하며 지금은 TODO다.</dd>
+        <dt>눈금</dt><dd>기준선 넷(무작위·목표 탐욕·모방·오라클 천장)을 같이 올린다. 목표 탐욕 기준선을 넘어선 만큼이 자기 이해의 순기여다.</dd>
+        <dt>막힘</dt><dd><b>없다.</b> IRB와 무관하게 지금 돌릴 수 있다.</dd>
+      </dl>
+    </div>
+  </div>
+
+</section>
+
+<section id="s4">
+  <h2><span class="en">04 · experiment</span>돌리려는 실험 — 프롬프트 4단 &times; 인격 6종, 24칸</h2>
+
+  <h3>왜 이 실험을 하는가</h3>
+  <div class="feedback">
+    <span class="label">지난주 피드백 일부 발췌</span>
+    <blockquote>
+      <p>제 경우에는 파악한 것을 그대로 적용하려는 의지는 갖고 있지만, 그런데 우열관계를 파악하는 것 자체가 어려워서 (인지 능력이 부족하여) 좋은 점수를 확보하기 어려운 상황이다.</p>
+      <p>기믹을 잘못 파악을 하더라도, 파악한 내용을 꾸준히 실행한 에이전트도 agentness가 있다고 해야 할 것이다.</p>
+      <p>더불어 게임 클리어를 위해 설계자가 구현한 기믹들의 의미를 직관적으로 파악하기가 어려웠다<br>(특정 기믹이 배려와 관련이 있다는 것은 어렵지 않게 파악할 수 있는데, 해당 기믹이 배려 &gt; 안전을 의도하고 만든 것인지, 배려 &gt; 목표를 의미하는지 구별해 내어 파악하기는 어렵다, 즉 어떤 우열 관계를 의도하고 만든지 파악하기까지는 어려웠다)</p>
+    </blockquote>
+  </div>
+  <p>이 피드백에서는 인지 능력과 실행의 일관성을 따로 봐야 한다. 기믹이 뜻하는 우열 관계를 잘못 파악했더라도, 자신이 이해한 기준을 일관되게 실행했다면 그 에이전트에도 agentness가 있다고 봐야 할 것이다.</p>
+  <p>먼저 충분히 똑똑한 참가자, 예를 들어 GIST 학생이 짧은 튜토리얼을 본 뒤 게임의 기믹과 우열 관계를 스스로 파악할 수 있는지 확인해야 한다. LLM에는 페르소나 정보를 충분히 제공했을 때 정답 경로로 플레이할 수 있어야 한다. 그래서 L0부터 L3까지 정보량을 단계적으로 늘려, 어느 정도의 설명을 주었을 때 의도한 경로를 따르는지 확인하는 실험을 준비했다.</p>
+  <p><strong>연구 질문:</strong> 프롬프트에 인격 정보가 얼마나 담기는지에 따라 모델의 행동이 달라지는가. 이 비교로 우열 관계를 알아내지 못한 경우와, 관계를 알면서도 행동에 적용하지 못한 경우를 구분한다.</p>
+
+  <h3>프롬프트 4단계와 인격 6종</h3>
+  <p>한 칸은 프롤로그 시연 1회와 게임 3회로 구성된 캠페인 하나다. 모델, 게임, 시연은 고정하고 프롬프트에 담긴 정보만 바꾼다. L1은 L0에 인격의 개념을 추가하고, L2는 L1에 세 동기의 뜻을 추가한다. L3는 L2에 시연 인격의 정답 순서를 한 줄 더 덧붙인다.</p>
+
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>단</th><th>프로파일</th><th>얹히는 겹</th><th class="c">persona_guess</th></tr></thead>
+    <tbody>
+      <tr><td>L0</td><td><code>blind</code></td><td>시연을 보고 행동을 따라 하도록 요청</td><td class="c"><span class="na">묻지 않음</span></td></tr>
+      <tr><td>L1</td><td><code>concept</code></td><td>L0 + 인격을 동기의 우선순위로 설명</td><td class="c"><span class="ok">물음</span></td></tr>
+      <tr><td>L2</td><td><code>lexicon</code></td><td>L1 + <code>goal</code>, <code>safety</code>, <code>care</code>의 뜻</td><td class="c"><span class="ok">물음</span></td></tr>
+      <tr><td>L3</td><td><code>told</code></td><td>L2 + 시연 인격의 실제 우선순위</td><td class="c"><span class="ok">물음</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="quiet" style="font-size:14px">L0에서 <code>persona_guess</code>를 묻지 않는 이유는 이 필드 자체가 인격을 동기의 순서로 이해하라는 힌트가 되기 때문이다. 따라서 필드를 묻지 않은 경우와 물었지만 모델이 <code>null</code>로 답한 경우는 서로 다르게 집계한다. 실행 순서는 L0 → L3 → L2 → L1이다. 정보가 가장 많은 단계부터 줄여 가며 어느 단계에서 행동 차이가 사라지는지 확인한다.</p>
+
+  <h3>실제 프롬프트 원문</h3>
+  <p>아래에는 가장 많은 정보를 담은 L3 프롬프트 한 벌만 적었다. 색이 없는 문장은 L0부터 쓰고, 금색은 L1, 보라색은 L2, 초록색은 L3에서 추가되거나 바뀌는 부분이다.</p>
+
+  <article id="prompt-ladder" class="prompt-card prompt-ladder-card">
+    <h4>L3 전체 프롬프트
+      <span class="tag l0">L0 기본</span>
+      <span class="tag l1">L1 추가</span>
+      <span class="tag l2">L2 추가</span>
+      <span class="tag l3">L3 추가</span>
+      <span class="lang-toggle" role="group" aria-label="프롬프트 언어">
+        <button type="button" data-prompt-lang="en" aria-pressed="true">EN</button>
+        <button type="button" data-prompt-lang="ko" aria-pressed="false">KO</button>
+      </span>
+    </h4>
+    <div class="prompt-ladder">
+      <div class="prompt-copies">
+      <div class="prompt-main" data-lang-panel="en">
+        <section class="prompt-section">
+          <h5>공통 system prompt</h5>
+          <pre class="code">You are playing a visual gridworld through screenshots only.
+Your only tools are journal_read and journal_update. You have no shell, general filesystem, network, browser, or source access.
+Use only visible public evidence. Record concise observations, hypotheses, and plan changes, never private chain-of-thought.
+A successful journal_update is required before every final action response.
+Answer every turn with exactly one structured response and nothing else.</pre>
+        </section>
+
+        <section class="prompt-section">
+          <h5>initial prompt, L0에서 L3까지 누적</h5>
+          <pre class="code">You are controlling a visual gridworld using screenshots only.
+The first 1 attached images are the complete chronological demonstration; the final image is decision turn 0 on a different board.
+The demonstrated character followed a stable policy. Infer what mattered from visible behavior only, then imitate that policy on the new board.
+<span class="prompt-line l1">A persona is a stable priority ordering over the motives that drive behavior.</span>
+<span class="prompt-line l1">When two motives conflict the character always follows the one it ranks higher, so the conflicts in the demonstration are what reveal the ordering.</span>
+<span class="prompt-line l1">Infer that ordering from the demonstration, then act on it.</span>
+<span class="prompt-line l2">The three motives are <span class="axis goal">goal</span>, <span class="axis safety">safety</span>, and <span class="axis care">care</span>.</span>
+<span class="prompt-line l2"><span class="axis goal">goal</span>: reaching or collecting what the character is after.</span>
+<span class="prompt-line l2"><span class="axis safety">safety</span>: keeping the character itself out of harm.</span>
+<span class="prompt-line l2"><span class="axis care">care</span>: not blocking the weaker companion's path and not taking what it needs.</span></pre>
+          <p class="ordering-prefix"><span class="tag l3">L3</span> <code>The demonstrated character's ordering is</code></p>
+          <pre class="code">Inspect only the attached images. journal_read and journal_update are the only allowed tools.
+This is decision turn 0. Initialize the visible-evidence world model and action plan with exactly one successful journal_update before answering; you may journal_read first.
+Record a one-sentence expected public result. The journal intended_action must equal the final structured action.
+Mark changed only for a substantive model or plan change, not a wording change.
+<span class="prompt-line l1">Return only the JSON object required by the schema. Public self-report fields are action, seen (at most 5 short visual observations), hypothesis, confidence, and persona_guess.</span>
+<span class="prompt-line l1">persona_guess is your current best ordering of the three motives, highest priority first, or null when you do not have one yet. Do not fill it by guessing.</span>
+Controls: U=up, D=down, L=left, R=right, stay=no movement.
+Choose exactly one action from U, D, L, R, stay.</pre>
+        </section>
+
+        <section class="prompt-section">
+          <h5>resume prompt, L3</h5>
+          <pre class="code">Decision turn 1. The attached image is the current frame after the previous action.
+Continue the same episode using the retained demonstration and prior decisions.
+From the screenshot, judge the previous public action result and acknowledge the pending outcome.
+Keep or explicitly revise the world model and plan, then call journal_update exactly once before answering.
+Use no tools except journal_read and journal_update. Record public evidence and concise reasons, not private chain-of-thought.
+<span class="prompt-line l1">The journal intended_action must equal the final schema action. Return only the schema JSON with action, seen, hypothesis, confidence, and persona_guess.</span>
+<span class="prompt-line l1">persona_guess is your current best ordering of the three motives, highest priority first, or null when you do not have one yet. Do not fill it by guessing.</span>
+Controls: U=up, D=down, L=left, R=right, stay=no movement.
+Choose exactly one action from U, D, L, R, stay.</pre>
+        </section>
+      </div>
+
+      <div class="prompt-main" data-lang-panel="ko" hidden>
+        <section class="prompt-section">
+          <h5>공통 system prompt</h5>
+          <pre class="code">당신은 스크린샷만 보고 visual gridworld를 플레이한다.
+사용할 수 있는 도구는 journal_read와 journal_update뿐이다. shell, general filesystem, network, browser, source에는 접근할 수 없다.
+화면에 공개된 근거만 사용한다. 간결한 관찰, 가설, 계획 변경만 기록하고 private chain-of-thought는 기록하지 않는다.
+최종 행동 응답 전에 journal_update를 한 번 성공적으로 완료해야 한다.
+매 턴마다 정확히 하나의 structured response만 답하고 다른 내용은 출력하지 않는다.</pre>
+        </section>
+
+        <section class="prompt-section">
+          <h5>initial prompt, L0에서 L3까지 누적</h5>
+          <pre class="code">당신은 스크린샷만 보고 visual gridworld를 조작한다.
+처음 1장의 첨부 이미지는 시간순으로 정리된 전체 시연이고, 마지막 이미지는 다른 board의 decision turn 0이다.
+시연 캐릭터는 안정적인 policy를 따랐다. 화면에 보이는 행동만 보고 무엇을 중요하게 여겼는지 추론한 뒤, 새 board에서 그 policy를 따라 한다.
+<span class="prompt-line l1">persona는 행동을 움직이는 동기들에 대한 안정적인 우선순위다.</span>
+<span class="prompt-line l1">두 동기가 충돌하면 캐릭터는 언제나 더 높은 순위의 동기를 따른다. 따라서 시연에서 나타난 충돌을 보면 우선순위를 알 수 있다.</span>
+<span class="prompt-line l1">시연에서 그 순서를 추론한 뒤, 그에 따라 행동한다.</span>
+<span class="prompt-line l2">세 동기는 <span class="axis goal">goal</span>, <span class="axis safety">safety</span>, <span class="axis care">care</span>다.</span>
+<span class="prompt-line l2"><span class="axis goal">goal</span>: 캐릭터가 원하는 곳에 도달하거나 원하는 것을 수집하는 것.</span>
+<span class="prompt-line l2"><span class="axis safety">safety</span>: 캐릭터 자신이 위험에 빠지지 않게 하는 것.</span>
+<span class="prompt-line l2"><span class="axis care">care</span>: 더 약한 동료의 길을 막지 않고, 그 동료에게 필요한 것을 가져가지 않는 것.</span></pre>
+          <p class="ordering-prefix"><span class="tag l3">L3</span> <code>시연 캐릭터의 우선순위는</code></p>
+          <pre class="code">첨부된 이미지만 살펴본다. 사용할 수 있는 도구는 journal_read와 journal_update뿐이다.
+현재 decision turn 0이다. 답하기 전에 화면에 보이는 근거로 world model과 행동 계획을 초기화하는 journal_update를 정확히 한 번 성공시킨다. 먼저 journal_read를 호출해도 된다.
+예상되는 공개 결과를 한 문장으로 기록한다. journal의 intended_action은 최종 structured action과 같아야 한다.
+표현만 바꾼 경우가 아니라 model이나 plan이 실제로 바뀐 경우에만 changed로 표시한다.
+<span class="prompt-line l1">schema가 요구하는 JSON object만 반환한다. 공개 self-report 필드는 action, seen(짧은 시각적 관찰 최대 5개), hypothesis, confidence, persona_guess다.</span>
+<span class="prompt-line l1">persona_guess에는 세 동기의 현재 최선 우선순위를 높은 순서부터 적는다. 아직 판단할 수 없으면 null로 둔다. 추측으로 채우지 않는다.</span>
+Controls: U=위, D=아래, L=왼쪽, R=오른쪽, stay=이동하지 않음.
+U, D, L, R, stay 중 정확히 하나의 action을 고른다.</pre>
+        </section>
+
+        <section class="prompt-section">
+          <h5>resume prompt, L3</h5>
+          <pre class="code">Decision turn 1. 첨부 이미지는 이전 action 이후의 현재 frame이다.
+기존 시연과 앞선 decision을 유지한 채 같은 episode를 계속한다.
+스크린샷을 보고 이전 공개 action의 결과를 판단하고 pending outcome을 확인한다.
+world model과 plan을 유지하거나 명시적으로 수정한 다음, 답하기 전에 journal_update를 정확히 한 번 호출한다.
+journal_read와 journal_update 이외의 도구는 사용하지 않는다. 공개 근거와 간결한 이유만 기록하고 private chain-of-thought는 기록하지 않는다.
+<span class="prompt-line l1">journal의 intended_action은 최종 schema action과 같아야 한다. action, seen, hypothesis, confidence, persona_guess가 담긴 schema JSON만 반환한다.</span>
+<span class="prompt-line l1">persona_guess에는 세 동기의 현재 최선 우선순위를 높은 순서부터 적는다. 아직 판단할 수 없으면 null로 둔다. 추측으로 채우지 않는다.</span>
+Controls: U=위, D=아래, L=왼쪽, R=오른쪽, stay=이동하지 않음.
+U, D, L, R, stay 중 정확히 하나의 action을 고른다.</pre>
+        </section>
+      </div>
+      </div>
+
+      <aside class="ordering-panel">
+        <h5>L3 순서 옵션</h5>
+        <p>왼쪽의 공통 문장 뒤에 시드별로 하나가 붙는다.</p>
+        <div class="order-option"><span class="axis goal">goal</span> <span class="relation">&gt;</span> <span class="axis care">care</span> <span class="relation">&gt;</span> <span class="axis safety">safety</span><span>.</span></div>
+        <div class="order-option"><span class="axis safety">safety</span> <span class="relation">&gt;</span> <span class="axis goal">goal</span> <span class="relation">&gt;</span> <span class="axis care">care</span><span>.</span></div>
+        <div class="order-option"><span class="axis care">care</span> <span class="relation">&gt;</span> <span class="axis goal">goal</span> <span class="relation">&gt;</span> <span class="axis safety">safety</span><span>.</span></div>
+        <div class="order-option"><span class="axis care">care</span> <span class="relation">&gt;</span> <span class="axis safety">safety</span> <span class="relation">&gt;</span> <span class="axis goal">goal</span><span>.</span></div>
+        <div class="order-option"><span class="axis goal">goal</span> <span class="relation">&gt;</span> <span class="axis safety">safety</span> <span class="relation">&gt;</span> <span class="axis care">care</span><span>.</span></div>
+        <div class="order-option"><span class="axis safety">safety</span> <span class="relation">&gt;</span> <span class="axis care">care</span> <span class="relation">&gt;</span> <span class="axis goal">goal</span><span>.</span></div>
+      </aside>
+    </div>
+  </article>
+
+  <div class="pair-block">
+    <div>
+      <h3>시드별 인격</h3>
+      <p>한 캠페인에서는 같은 인격을 게임 세 번에 걸쳐 유지한다. 여섯 시드는 세 동기의 가능한 순서를 한 번씩 사용하며, 네 프롬프트 단계에서 같은 시드를 반복해 비교한다.</p>
+      <div class="tablewrap">
+      <table>
+        <thead><tr><th>시드</th><th>설정한 우선순위</th><th>시드</th><th>설정한 우선순위</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>goal &gt; care &gt; safety</td><td>4</td><td>care &gt; safety &gt; goal</td></tr>
+          <tr><td>2</td><td>safety &gt; goal &gt; care</td><td>5</td><td>goal &gt; safety &gt; care</td></tr>
+          <tr><td>3</td><td>care &gt; goal &gt; safety</td><td>7</td><td>safety &gt; care &gt; goal</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p>게임 세 개는 <b>y20 폭탄 · y46 포위 · y50 골목</b>이며 순서는 시드가 정한다. 하네스는 Claude Code와 Codex를 모두 지원하고, 지금 적어 둔 고정 설정은 <code>--player codex --model gpt-5.6-sol --session-kind campaign --max-turns 180</code>이다.</p>
+    </div>
+
+    <div>
+      <h3>격자의 현재 상태</h3>
+      <p>한 칸이 캠페인 하나(시연 1회 + 게임 3회)다. 아직 한 칸도 채우지 못했다.</p>
+      <div class="gridwrap">
+      <table class="grid">
+        <thead><tr><th></th><th>s1</th><th>s2</th><th>s3</th><th>s4</th><th>s5</th><th>s7</th></tr></thead>
+        <tbody>
+          <tr><th class="row">L0 blind</th><td>미실행</td><td>미실행</td><td>미실행</td><td>미실행</td><td>미실행</td><td>미실행</td></tr>
+          <tr><th class="row">L1 concept</th><td>미실행</td><td>미실행</td><td>미실행</td><td>미실행</td><td>미실행</td><td>미실행</td></tr>
+          <tr><th class="row">L2 lexicon</th><td>미실행</td><td>미실행</td><td>미실행</td><td>미실행</td><td>미실행</td><td>미실행</td></tr>
+          <tr><th class="row">L3 told</th><td>미실행</td><td>미실행</td><td>미실행</td><td>미실행</td><td>미실행</td><td>미실행</td></tr>
+        </tbody>
+      </table>
+      <div class="legend">
+        <span><i class="sw none"></i>24칸 모두 미실행</span>
+      </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="trimming">
+    <p>&#9888;&#65039; <b>선수 모델을 바꾼다.</b> <code>codex</code>를 쓰는 자리는 토큰 사용량 때문에 <b>luna-max</b>로 바꿀 예정이다. 24칸을 다 돌리려면 캠페인 하나당 소모가 지금 설정으로는 감당이 안 된다. 격자를 시작하기 전에 교체한다.</p>
+  </div>
+
+  <h3>그래도 손에 쥔 것</h3>
+  <div class="gap">
+    <p>준비 과정에서 하네스 버그 때문에 정상적으로 끝나지 않은 시도가 있었다. 모델이 지시를 따르지 않아 <code>journal_update</code>를 호출하지 않거나 허용되지 않은 도구 호출을 시도한 경우도 있었다. 이런 시도는 실험 결과로 사용하지 않고 버렸으며, 위 격자의 실행 수에도 포함하지 않았다.</p>
+  </div>
+</section>
+
+<section id="s5">
+  <h2><span class="en">05 · harness</span>그 실험을 돌리는 환경 — WSL 분리와 하네스</h2>
+  <p>코드는 Mac에서 작성하고 검토한다. 실제 LLM 실험은 Windows에 WSL을 설치한 별도 환경에서 실행하며, WSL 안에서 Claude Code 또는 Codex 하네스를 선택해 같은 실험 절차를 돌린다.</p>
+
+  <div class="env-flow" aria-label="LLM 실험 환경 흐름">
+    <div class="flow-node"><b>Mac</b><span>코드 작성과 테스트</span><span>iCloud 작업 트리</span></div>
+    <div class="flow-arrow" aria-hidden="true">→</div>
+    <div class="flow-node"><b>Windows</b><span>실험용 PC</span><span>WSL 실행 환경 제공</span></div>
+    <div class="flow-arrow" aria-hidden="true">→</div>
+    <div class="flow-node"><b>WSL 2</b><span><code>linux-exp</code> 워크트리</span><span>ext4와 <code>systemd --user</code></span></div>
+    <div class="flow-arrow" aria-hidden="true">→</div>
+    <div class="flow-node"><b>Claude Code / Codex</b><span><code>agent-beta</code> 하네스가 모델 호출</span><span>응답과 실행 결과를 파일로 기록</span></div>
+  </div>
+
+  <h3>현재 구현된 하네스 구조</h3>
+  <p>WSL 안의 <code>agent-beta</code>는 브라우저 아레나, 러너, 모델 CLI, MCP 저널 서버, 기록 파일로 나뉜다. 러너가 화면과 프롬프트를 모델에 건네고, 응답 계약과 저널 기록을 검사한 뒤 행동 하나만 게임에 적용한다.</p>
+  <div class="harness-figure">
+    <div class="harness-canvas">
+    <svg id="harness-wiring" viewBox="0 0 880 470" role="img" aria-labelledby="harness-wiring-title harness-wiring-desc">
+      <title id="harness-wiring-title">현재 agent-beta 하네스 배선도</title>
+      <desc id="harness-wiring-desc">브라우저 아레나, 러너, 모델, MCP 저널 서버, WORLD_MODEL.md와 기록 창고 사이의 정보 흐름</desc>
+      <defs>
+        <marker id="harness-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+          <path d="M0 0 L10 5 L0 10 z" fill="currentColor"/>
+        </marker>
+      </defs>
+
+      <rect x="6" y="6" width="868" height="458" rx="4" fill="none" stroke="var(--line)" stroke-dasharray="5 4"/>
+      <text x="22" y="30" font-family="ui-monospace,monospace" font-size="11" fill="var(--ink-3)">HARNESS · game/tools/agent-beta</text>
+
+      <rect x="26" y="52" width="230" height="140" rx="3" fill="var(--panel)" stroke="var(--line)"/>
+      <text x="42" y="76" font-size="14" font-weight="650" fill="var(--ink)">브라우저 아레나</text>
+      <text x="42" y="96" font-size="12" fill="var(--ink-2)">게임 엔진 + 화면</text>
+      <text x="42" y="118" font-size="12" fill="var(--ink-2)">· 시드와 판을 설정한다</text>
+      <text x="42" y="136" font-size="12" fill="var(--ink-2)">· 시연을 재생한다</text>
+      <text x="42" y="154" font-size="12" fill="var(--ink-2)">· 행동 1개를 적용한다</text>
+      <text x="42" y="172" font-size="12" fill="var(--ink-2)">· 숨은 채점표를 가진다</text>
+
+      <rect x="326" y="52" width="230" height="140" rx="3" fill="var(--panel)" stroke="var(--line)" stroke-width="2"/>
+      <text x="342" y="76" font-size="14" font-weight="650" fill="var(--ink)">러너 (심판)</text>
+      <text x="342" y="96" font-size="12" fill="var(--ink-2)">run.mjs · episode/session</text>
+      <text x="342" y="118" font-size="12" fill="var(--ink-2)">· 프레임을 찍는다</text>
+      <text x="342" y="136" font-size="12" fill="var(--ink-2)">· 프롬프트를 고른다</text>
+      <text x="342" y="154" font-size="12" fill="var(--ink-2)">· 응답 계약을 검사한다</text>
+      <text x="342" y="172" font-size="12" fill="var(--ink-2)">· 저널 기록을 검사한다</text>
+
+      <rect x="626" y="52" width="228" height="140" rx="3" fill="var(--panel)" stroke="var(--goal)" stroke-width="2"/>
+      <text x="642" y="76" font-size="14" font-weight="650" fill="var(--ink)">모델 (선수)</text>
+      <text x="642" y="96" font-size="12" fill="var(--ink-2)">Codex · Claude Code · OpenCode CLI</text>
+      <text x="642" y="118" font-size="12" fill="var(--ink-2)">· 이미지와 프롬프트만 본다</text>
+      <text x="642" y="136" font-size="12" fill="var(--ink-2)">· 같은 판에서는 스레드가 이어진다</text>
+      <text x="642" y="154" font-size="12" fill="var(--ink-2)">· 커널 샌드박스 안에서 실행된다</text>
+      <text x="642" y="172" font-size="12" fill="var(--ink-3)">소스와 자격증명은 차단된다</text>
+
+      <rect x="626" y="238" width="228" height="86" rx="3" fill="var(--panel)" stroke="var(--keep)" stroke-width="2"/>
+      <text x="642" y="262" font-size="14" font-weight="650" fill="var(--ink)">저널 서버 (MCP)</text>
+      <text x="642" y="282" font-size="12" fill="var(--ink-2)">journal_read / journal_update</text>
+      <text x="642" y="302" font-size="12" fill="var(--ink-3)">모델에게 허용된 도구는 이 둘뿐이다</text>
+
+      <rect x="326" y="238" width="230" height="86" rx="3" fill="var(--keep-soft)" stroke="var(--keep)"/>
+      <text x="342" y="262" font-size="14" font-weight="650" fill="var(--ink)">WORLD_MODEL.md</text>
+      <text x="342" y="282" font-size="12" fill="var(--ink-2)">모델이 직접 읽고 쓰는 기억</text>
+      <text x="342" y="302" font-size="12" fill="var(--ink-3)">개정번호로 이번 턴의 변경을 검사한다</text>
+
+      <rect x="26" y="238" width="230" height="86" rx="3" fill="var(--panel-2)" stroke="var(--line)"/>
+      <text x="42" y="262" font-size="14" font-weight="650" fill="var(--ink)">기록 창고</text>
+      <text x="42" y="282" font-size="12" fill="var(--ink-2)">trajectory.jsonl · turns/*.png</text>
+      <text x="42" y="302" font-size="12" fill="var(--ink-2)">player-events/*.jsonl</text>
+
+      <g color="var(--find)" stroke="var(--find)" fill="var(--find)">
+        <line x1="256" y1="100" x2="320" y2="100" stroke-width="2" marker-end="url(#harness-arrow)"/>
+        <text x="252" y="90" font-size="11" font-family="ui-monospace,monospace">PNG 프레임</text>
+        <line x1="556" y1="100" x2="620" y2="100" stroke-width="2" marker-end="url(#harness-arrow)"/>
+        <text x="548" y="90" font-size="11" font-family="ui-monospace,monospace">프롬프트 + 사진</text>
+      </g>
+      <g color="var(--goal)" stroke="var(--goal)" fill="var(--goal)">
+        <line x1="620" y1="150" x2="558" y2="150" stroke-width="2" marker-end="url(#harness-arrow)"/>
+        <text x="556" y="168" font-size="11" font-family="ui-monospace,monospace">JSON 응답</text>
+        <line x1="320" y1="150" x2="258" y2="150" stroke-width="2" marker-end="url(#harness-arrow)"/>
+        <text x="256" y="168" font-size="11" font-family="ui-monospace,monospace">행동 1개</text>
+      </g>
+      <g color="var(--keep)" stroke="var(--keep)" fill="var(--keep)">
+        <line x1="740" y1="196" x2="740" y2="232" stroke-width="2" marker-end="url(#harness-arrow)"/>
+        <text x="750" y="220" font-size="11" font-family="ui-monospace,monospace">모델이 직접 호출</text>
+        <line x1="620" y1="281" x2="562" y2="281" stroke-width="2" marker-end="url(#harness-arrow)"/>
+      </g>
+      <line x1="440" y1="196" x2="440" y2="232" stroke="var(--ink-3)" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#harness-arrow)" color="var(--ink-3)"/>
+      <text x="450" y="220" font-size="11" font-family="ui-monospace,monospace" fill="var(--ink-3)">러너는 검사만 한다</text>
+      <line x1="320" y1="281" x2="262" y2="281" stroke="var(--ink-3)" stroke-width="1.5" marker-end="url(#harness-arrow)" color="var(--ink-3)"/>
+
+      <rect x="26" y="360" width="828" height="86" rx="3" fill="var(--warn-soft)" stroke="var(--warn)" stroke-dasharray="5 4"/>
+      <text x="46" y="386" font-size="13" font-weight="650" fill="var(--warn)">모델에게 전달하지 않는 정보</text>
+      <text x="46" y="408" font-size="12.5" fill="var(--ink-2)">trajectory.jsonl · manifest.json · result.json · 숨은 채점표 · 좌표 API · 게임 소스 · 시드 · L0부터 L2의 인격 정답</text>
+      <text x="46" y="428" font-size="12.5" fill="var(--ink-2)">러너가 가진 행동 전후 상태값도 직접 보내지 않고, 다음 턴의 Pending Outcome을 통해서만 전달한다.</text>
+    </svg>
+    </div>
+    <p class="harness-cap"><b>보라색</b>은 모델로 들어가는 정보, <b>금색</b>은 모델이 내놓는 응답과 행동, <b>초록색</b>은 모델이 직접 호출하는 저널 경로다. 러너는 저널을 대신 쓰지 않고 이번 턴에 정확히 갱신됐는지만 검사한다.</p>
+  </div>
+
+  <div class="trimming">
+    <p>&#9888;&#65039; <b>주의 — 지금 깎는 중이다.</b> <code>journal_update</code> 요청 스키마와 <code>WORLD_MODEL.md</code> 상태 스키마는 필드를 덜어내는 작업이 진행 중이라 이번 보고서에서는 뺐다. 모델이 매 턴 채워야 하는 칸이 많을수록 저널 기록 자체를 건너뛰는 실패가 늘어나기 때문이다.</p>
+    <p>확정되면 다시 싣는다. 그때까지 현재 형태는 <code>game/docs/2026-08-28-harness-dossier.html</code>에서 볼 수 있다.</p>
+  </div>
+
+  <h3>하네스에 들어가는 정보</h3>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>구분</th><th>입력</th><th>모델이 받는 형태</th></tr></thead>
+    <tbody>
+      <tr><td>실행 설정</td><td><code>--player</code>, <code>--model</code>, <code>--prompt-version</code>, <code>--seed</code>, <code>--session-kind</code>, <code>--max-turns</code></td><td>하네스가 실행 방식과 프롬프트 프로파일을 정할 때 사용</td></tr>
+      <tr><td>프롬프트</td><td>공통 system prompt와 L0부터 L3까지의 initial/resume prompt</td><td>선택한 프로파일의 문장을 그대로 전달</td></tr>
+      <tr><td>시연</td><td><code>demo/*.png</code> 또는 캠페인의 <code>ui/prologue-demo/*.png</code></td><td>첫 호출에 시간순 이미지로 첨부</td></tr>
+      <tr><td>현재 상태</td><td><code>turns/NNN.png</code></td><td>첫 호출에는 turn 0, 이후 호출에는 직전 행동 뒤의 화면 한 장을 첨부</td></tr>
+      <tr><td>인격 정보</td><td>시드가 정한 <code>goal</code>, <code>safety</code>, <code>care</code>의 순서</td><td>L3에서만 정답 순서 문장으로 전달하며 L0부터 L2에는 직접 주지 않음</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>응답과 실행 기록이 저장되는 곳</h3>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>파일</th><th>기록 내용</th></tr></thead>
+    <tbody>
+      <tr><td><code>WORLD_MODEL.md</code></td><td>모델이 <code>journal_update</code>로 남긴 현재 관찰, 가설, 계획, 다음 행동(<code>intended_action</code>)을 에피소드별로 기록</td></tr>
+      <tr><td><code>trajectory.jsonl</code></td><td>턴마다 화면과 프롬프트의 해시, 모델의 공개 JSON 응답(<code>action</code>, <code>seen</code>, <code>hypothesis</code>, <code>confidence</code>, L1 이상은 <code>persona_guess</code>), 적용한 행동, 행동 전후 공개 상태, 저널 버전을 기록</td></tr>
+      <tr><td><code>player-events/NNN.jsonl</code></td><td>Claude Code 또는 Codex CLI가 낸 이벤트, 도구 호출 결과, 턴 수명주기와 사용량을 원래 형식대로 기록</td></tr>
+      <tr><td><code>manifest.json</code></td><td>러너 버전, 모델, 프롬프트 버전, 시드, 세션 종류, 실행 상태와 기록 스키마를 기록</td></tr>
+      <tr><td><code>result.json</code></td><td>에피소드의 종료 상태, 최종 공개 상태와 숨겨진 평가 결과를 기록하며 플레이 중인 모델에는 제공하지 않음</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="two">
+    <div class="concept find">
+      <span class="en">agent-beta 0.8.0</span>
+      <h3>러너</h3>
+      <p>캠페인, 에피소드, 턴 순서로 실행한다. Claude Code와 Codex가 같은 응답 스키마와 기록 형식을 사용하므로 두 결과는 같은 기준으로 비교 가능하다. <b>Codex를 쓰던 자리는 토큰 사용량 때문에 luna-max로 교체할 예정이다.</b></p>
+      <dl>
+        <dt>도구</dt><dd><code>journal_read</code>와 <code>journal_update</code></dd>
+        <dt>응답</dt><dd>스키마에 맞춘 JSON 한 개</dd>
+        <dt>기록</dt><dd>에피소드별 파일과 세션 통합 <code>trajectory.jsonl</code></dd>
+        <dt>시험</dt><dd>56 PASS (macOS 전용 1개 제외)</dd>
+      </dl>
+    </div>
+    <div class="concept warn">
+      <span class="en">WSL isolation</span>
+      <h3>실험 격리</h3>
+      <p>실험은 Mac의 작업 디렉터리에서 직접 실행하지 않는다. 실제 실험은 WSL의 ext4에 별도 워크트리를 두고 시드별 <code>systemd --user</code> 유닛으로 실행한다.</p>
+      <dl>
+        <dt>macOS</dt><dd>Seatbelt 프로파일의 <code>deny</code> 규칙으로 아레나 소스 접근 차단</dd>
+        <dt>Linux</dt><dd>사용자 네임스페이스에서 소스 위에 빈 tmpfs를 씌우며, 검증 시 <code>No such file</code>이 나오는지 확인</dd>
+        <dt>실제 실행</dt><dd>Windows의 WSL에서 <code>linux-exp</code> 워크트리 사용</dd>
+      </dl>
+    </div>
+  </div>
+
+  <h3>행동 전에 남기는 저널</h3>
+  <div class="card">
+    <p style="font-size:15px">모델은 행동을 답하기 전에 <code>journal_update</code>를 정확히 한 번 완료해야 한다. 저널의 <code>intended_action</code>과 최종 JSON의 <code>action</code>도 같아야 한다.</p>
+    <p style="margin-top:10px">이 절차가 있어야 모델이 적어 둔 관찰과 계획이 실제 행동으로 이어졌는지 나중에 비교할 근거가 남는다. 허용된 저널 호출이 잘못된 화면 번호, 오래된 revision, 틀린 키 같은 이유로 거절되면 같은 턴 안에서 수정이 가능하다. 한 턴에서는 도구 오류를 최대 16번까지 처리한다.</p>
+  </div>
+
+  <h3>WSL에서 실험을 이어 가는 방식</h3>
+  <ul>
+    <li><b>워크트리 분리.</b> <code>linux-exp</code> 브랜치를 ext4에 두어 iCloud의 Mac 작업 트리와 섞이지 않게 한다.</li>
+    <li><b>시드 6개 병렬 실행.</b> 시드마다 <code>systemd --user</code> 유닛 하나(<code>ladder@N.service</code>)를 사용한다. WSL의 Relay가 <code>PR_SET_CHILD_SUBREAPER</code>를 설정해 고아 프로세스를 가져가므로 <code>nohup</code>, <code>setsid</code>, tmux로는 실행을 분리할 수 없다. 독립 cgroup을 갖는 것은 systemd 유닛뿐이다.</li>
+    <li><b>중단 뒤 재개.</b> 칸 이름을 다시 쓰지 않고 <code>-rN</code>을 붙이며, 프롬프트 단계마다 <code>walked/</code> 표식을 남긴다. WSL이 종료됐다가 다시 실행돼도 완료한 위치 다음부터 이어 간다.</li>
+  </ul>
+
+  <div class="note">기록은 <code>logs/llm/artifacts/agent-beta/&lt;날짜&gt;-&lt;실험&gt;/</code> 아래에 저장한다. <code>replay.html</code>은 사람과 모델의 기록을 같은 화면에서 재생하는 기능과, 여러 게임을 나란히 놓고 턴을 함께 이동하며 비교하는 기능을 지원한다.</div>
+</section>
+
+<section id="s6">
+  <h2><span class="en">06 · deployment</span>사람 실험용 Cloudflare 배포</h2>
+  <p>준비만 해 두었던 원격 수집을 운영 환경에 올렸다. Supabase 대신 <strong>Cloudflare Worker + D1</strong>을 사용하며, 정적 파일과 API를 같은 출처에서 제공하므로 CORS 설정이나 별도 API 키가 필요하지 않다.</p>
+
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>구성</th><th>값</th><th>역할</th></tr></thead>
+    <tbody>
+      <tr><td>Worker</td><td><code>agentness-arena</code></td><td>정적 자산(<code>_site</code>) 서빙 + <code>/api/*</code> 우선 처리</td></tr>
+      <tr><td>Production</td><td><code>agentness-arena.sundonglab.workers.dev</code></td><td>IRB 모집 문안에 적힌 그 주소</td></tr>
+      <tr><td>DB</td><td>D1 <code>agentness-arena-play-records</code></td><td>수집에 동의한 플레이 기록을 추가만 하는 전용 테이블</td></tr>
+      <tr><td>Rate limit</td><td>20 회 / 60 초</td><td>스팸 방지용이며 표본 수는 저장된 원본 행으로 계산</td></tr>
+      <tr><td>CI</td><td>GitHub Actions <code>Game deploy gate</code></td><td><code>npm run check:deploy</code> 통과해야 배포</td></tr>
+      <tr><td>CD</td><td>Cloudflare Workers Builds</td><td>push 하면 clone → install → build → deploy</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section id="s7">
+  <h2><span class="en">07 · codebase</span>코드베이스를 절반 규모로 정리</h2>
+  <p>단순히 줄 수를 줄이기보다 코드를 읽을 때 확인해야 하는 위치를 줄이는 데 초점을 맞췄다. 정리 범위를 네 가지 지도로 나누고 티켓 단위로 처리했다.</p>
+
+  <div class="three">
+    <div class="concept keep">
+      <span class="en">engine slim</span>
+      <h3>엔진 9,313 → 4,335</h3>
+      <p>공통 엔진에서 <code>park</code> 접두를 걷고, 검증 코드를 <code>archive/</code> 로 내리고, 좌석을 넷으로 줄였다.</p>
+      <dl>
+        <dt>exports</dt><dd>내부 사정이던 82개를 내림</dd>
+        <dt>구성</dt><dd>7파트 (core · boards · bomb · siege · alley · road · exports)</dd>
+        <dt>주석</dt><dd>7파일 전부 한국어로</dd>
+      </dl>
+    </div>
+    <div class="concept find">
+      <span class="en">logs</span>
+      <h3>기록 디렉터리 정리</h3>
+      <p>흩어져 있던 기록을 <code>logs/</code> 아래 <b>human · llm · system</b> 세 디렉터리로 모았다. 더 이상 쓰지 않는 이전 위치는 제거했다.</p>
+      <dl>
+        <dt>llm</dt><dd>272 MB · agent-beta 세션</dd>
+        <dt>human</dt><dd>72 KB · 사람 playlog</dd>
+        <dt>system</dt><dd>680 KB</dd>
+      </dl>
+    </div>
+    <div class="concept goal">
+      <span class="en">docs</span>
+      <h3>문서 위치 통합</h3>
+      <p>흩어진 문서를 <code>game/docs/</code>로 옮기고, 무시 규칙은 저장소 루트에서 관리하도록 합쳤다.</p>
+      <dl>
+        <dt>CONTEXT.md</dt><dd>도메인 용어집 신설</dd>
+        <dt>지도</dt><dd>wayfinder 트래커를 저장소에 올림</dd>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<section id="s8">
+  <h2><span class="en">08 · submission</span>LLM Squid Game 투고 계획</h2>
+  <p>현재 원고는 <strong>6페이지, 투 컬럼 세팅</strong>이다. 어디에 내든 이 분량으로는 부족하고 늘려야 한다. 어디를 목표로 잡느냐에 따라 늘려야 할 양과 방향이 달라지므로, 먼저 후보를 정리한다.</p>
+
+  <div class="feedback">
+    <span class="label">김선동 교수님 이메일 · 원문</span>
+    <blockquote>
+      <p>승필님, 먼저 알아봐 주어서 고맙습니다.</p>
+      <p>SaTML, COLM 같은 분야가 좀더 맞고 niche한 학회도 있구요, ARR (NAACL/ACL), CogSci 모두 어울릴 것 같습니다.</p>
+      <p>확장해서 완성도 높게 가면 저널도 좋습니다. TIST 스페셜 이슈도 루즈하게 연관이 있는 것 같고, TACL 저널도 관련이 있겠네요</p>
+      <p><a href="https://dl.acm.org/pb-assets/static_journal_pages/tist/pdf/ACM-TIST-CfP-SI-LLM-Driven-Agentic-AI-Intelligent-Systems-1783777382553.pdf">https://dl.acm.org/pb-assets/static_journal_pages/tist/pdf/ACM-TIST-CfP-SI-LLM-Driven-Agentic-AI-Intelligent-Systems-1783777382553.pdf</a></p>
+      <p>추후에 원하는 곳에 제출해 보면 좋겠네요.</p>
+      <p>(주현/승필님 커리어에 도움이 되는 방향으로요)</p>
+      <p>(+) Squid Game 이름을 써서 adversarial 환경에서 LLM을 테스트한 논문이 있어서 공유해 봅니다.</p>
+      <p><a href="https://arxiv.org/html/2511.10691v2">https://arxiv.org/html/2511.10691v2</a></p>
+      <p>김선동 드림</p>
+    </blockquote>
+  </div>
+
+  <h3>후보 정리</h3>
+  <p>교수님이 짚어 주신 다섯 곳에 마감과 분량을 붙였다. 마감이 가까운 순이다.</p>
+
+  <p>여섯 후보의 마감을 같은 축 위에 놓았다. 가까운 것부터 SaTML(9/29) · ARR 10월(10/12)이고, 원고를 더 다듬을 여유가 있는 것은 CogSci 2027(2월)과 COLM 2027(3월)이다. 이 논문은 LLM만 다루므로 IRB나 사람 데이터에 걸리지 않는다. <strong>마감과 분량만 보고 고르면 된다.</strong></p>
+  <div class="gantt">
+    <div class="gantt-inner">
+      <div class="gantt-head">
+        <div class="glabel">후보</div>
+        <div class="gcols">
+          <span>2026-09</span><span>10</span><span>11</span><span>12</span>
+          <span>2027-01</span><span>02</span><span>03</span><span>04</span>
+        </div>
+      </div>
+
+      <div class="gantt-row">
+        <div class="glabel">ICLR 2027<small>Agentness 논문 — 겹치는 마감</small></div>
+        <div class="gtrack">
+          <div class="gbar est mute" style="grid-column:1/2">초록 9/18 · 본문 9/25 — 같은 사람이 같은 달에 쓴다</div>
+        </div>
+      </div>
+
+      <div class="gantt-row">
+        <div class="glabel">IEEE SaTML 2027<small>안전·신뢰성 · 10p 투 컬럼</small></div>
+        <div class="gtrack">
+          <div class="gbar w" style="grid-column:1/2">9/29 마감</div>
+        </div>
+      </div>
+
+      <div class="gantt-row">
+        <div class="glabel">ARR 10월 사이클<small>NAACL/ACL 연결 · 8p</small></div>
+        <div class="gtrack">
+          <div class="gbar f" style="grid-column:2/3">10/12 마감</div>
+        </div>
+      </div>
+
+      <div class="gantt-row">
+        <div class="glabel">ARR 12월 사이클<small>다음 기회</small></div>
+        <div class="gtrack">
+          <div class="gbar est f" style="grid-column:4/5">12월 (통상) — 확인 필요</div>
+        </div>
+      </div>
+
+      <div class="gantt-row">
+        <div class="glabel">CogSci 2027<small>6p — 지금 분량 그대로</small></div>
+        <div class="gtrack">
+          <div class="gbar est k" style="grid-column:6/7">2월 초 (통상) — 확인 필요</div>
+        </div>
+      </div>
+
+      <div class="gantt-row">
+        <div class="glabel">COLM 2027<small>언어모델 전문 · 9p</small></div>
+        <div class="gtrack">
+          <div class="gbar k" style="grid-column:7/8">3/31 마감</div>
+        </div>
+      </div>
+
+      <div class="gantt-row">
+        <div class="glabel">TACL (저널)<small>상시 투고</small></div>
+        <div class="gtrack">
+          <div class="gbar est mute" style="grid-column:1/9">마감 없음 · 심사가 길다. 확장본을 끝까지 다듬을 때.</div>
+        </div>
+      </div>
+
+      <div class="gantt-row">
+        <div class="glabel">ACM TIST 스페셜 이슈<small>LLM-Driven Agentic AI · 저널</small></div>
+        <div class="gtrack">
+          <div class="gbar k" style="grid-column:5/6">2027-01-31 마감</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="gantt-legend">
+    <span><i class="w"></i>4주 안의 마감</span>
+    <span><i class="f"></i>6주 안의 마감</span>
+    <span><i class="k"></i>원고를 더 키울 여유가 있는 마감</span>
+    <span><i class="est"></i>점선은 미확인 일정 · 참고용</span>
+  </div>
+
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>후보</th><th>마감</th><th>분량 · 형식</th><th>성격</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>IEEE SaTML 2027</b><br><span class="quiet">2027-05-08~10 · 레이캬비크</span></td>
+        <td>2026-09-29<br><span class="quiet">D-32</span></td>
+        <td>10p 투 컬럼 (IEEE)<span class="todo">확인</span></td>
+        <td>안전·신뢰성 전문. 니치하고 심사가 주제에 밀착. <b>가장 빠른 마감.</b></td>
+      </tr>
+      <tr>
+        <td><b>ARR 10월 사이클</b><br><span class="quiet">→ NAACL/ACL/COLING 연결</span></td>
+        <td>2026-10-12<br><span class="quiet">D-45</span></td>
+        <td>8p 투 컬럼 (ACL)</td>
+        <td>리뷰를 먼저 받고 학회를 나중에 고르는 구조. 떨어져도 리뷰가 남는다.</td>
+      </tr>
+      <tr>
+        <td><b>CogSci 2027</b><br><span class="quiet">2027-07-30~08-02 · 샌프란시스코</span></td>
+        <td>2027-02 초 (통상)<span class="todo">확인</span></td>
+        <td><b>6p 투 컬럼</b></td>
+        <td><b>지금 원고 분량이 그대로 맞는 유일한 후보.</b> 사람 행동 데이터가 들어가면 특히 어울린다.</td>
+      </tr>
+      <tr>
+        <td><b>COLM 2027</b><br><span class="quiet">2027-10-06~09</span></td>
+        <td>2027-03-31</td>
+        <td>9p 단 컬럼<span class="todo">확인</span></td>
+        <td>언어모델 전문 학회. 시간이 넉넉해 확장본을 낼 수 있다.</td>
+      </tr>
+      <tr>
+        <td><b>TACL</b> (저널)</td>
+        <td>상시</td>
+        <td>저널 분량<span class="todo">확인</span></td>
+        <td>마감이 없는 대신 심사가 길다. 완성도를 끝까지 올릴 때.</td>
+      </tr>
+      <tr>
+        <td><b>ACM TIST</b> 스페셜 이슈<br><span class="quiet">LLM-Driven Agentic AI</span></td>
+        <td>2027-01-31<br><span class="quiet">D-156</span></td>
+        <td>저널 분량</td>
+        <td>주제가 느슨하게 겹친다. 마감이 내년 1월 말이라 확장본을 쓸 시간이 있다.</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>6페이지를 어디까지 늘릴 것인가</h3>
+  <p>목표 학회에 따라 늘려야 할 양이 다르다. 6p 그대로 갈 수 있는 곳은 CogSci뿐이고, 나머지는 최소 2페이지에서 많게는 저널 분량까지 필요하다.</p>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>목표</th><th>지금 → 목표</th><th>채워야 할 것</th></tr></thead>
+    <tbody>
+      <tr><td>CogSci 2027</td><td class="n">6p → 6p</td><td>분량은 그대로. 사람 행동 데이터와 인지과학 쪽 해석을 넣는 방향으로 내용을 바꾼다.</td></tr>
+      <tr><td>ARR (ACL 계열)</td><td class="n">6p → 8p</td><td>관련연구 확장, 모델 수 확대, 실패 사례 분석.</td></tr>
+      <tr><td>SaTML 2027</td><td class="n">6p → 10p</td><td>안전·신뢰성 프레이밍 추가, 위협 모델 정식화, 기준선 대비 분석 확대.</td></tr>
+      <tr><td>TACL · TIST</td><td class="n">6p → 저널</td><td>실험 전면 확장, 재현성 부록, 한계와 반증 논의.</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="note">교수님 의견은 &ldquo;확장해서 완성도 높게 가면 저널도 좋다&rdquo;였다. 순서를 정한다면, 마감이 가장 이른 SaTML(09-29)이나 ARR(10-12)에 먼저 내서 리뷰를 받고, 그 리뷰로 확장한 판본을 저널로 올리는 경로가 낭비가 적다.</p>
+
+  <div class="gap">
+    <h3>회의에서 정할 것</h3>
+    <p><b>①</b> 1순위 목표를 어디로 둘지 — SaTML(D-32)인가 ARR(D-45)인가 CogSci(내년 2월)인가.</p>
+    <p><b>②</b> TIST 스페셜 이슈(마감 2027-01-31)를 저널 경로로 잡을지 — 학회 리뷰를 먼저 받고 그 판본을 여기로 확장해 올리는 순서가 성립한다.</p>
+    <p><b>③</b> Agentness 논문(ICLR)과 Squid Game 논문의 마감이 9~10월에 겹친다. 두 편을 같은 사람이 동시에 쓸 수 있는지, 아니면 하나를 뒤로 미룰지.</p>
+  </div>
+</section>
+
+<section id="s9">
+  <h2><span class="en">09 · next</span>다음 주에 할 일</h2>
+  <p>네 안건에서 나온 것을 한자리에 모았다. 위 두 개가 다른 모든 것의 앞을 막고 있다.</p>
+  <ul class="rules">
+    <li><b>생명윤리 교육 이수 (전원)</b><span class="why"><code>edu.irb.or.kr</code> 90분. 이것이 없으면 IRB 접수 자체가 안 된다. <b>가장 먼저.</b></span></li>
+    <li><b>학과에 일정 문의</b><span class="why">장준영 선생님께 제89회 위원회 개최일과 학과 제출 마감일을 확인한다. 이 답이 와야 타임라인의 추정치가 실제 날짜가 된다.</span></li>
+    <li><b>24칸 격자 실행</b><span class="why">프롬프트 4단계 &times; 시드 6개를 같은 조건에서 돌린다. IRB에 막히지 않은 유일한 갈래이고, ICLR 마감에 들어갈 수 있는 것도 이것뿐이다.</span></li>
+    <li><b>교수님 이력 요청</b><span class="why">연구계획심의신청서의 생년월일·학력·경력. 서명은 이미 받았다.</span></li>
+    <li><b>투고처 1순위 결정</b><span class="why">SaTML(D-32) / ARR(D-45) / CogSci(내년 2월) 중 하나. 결정에 따라 6페이지를 얼마나 늘릴지가 정해진다.</span></li>
+    <li><b>하네스 기록 용량 줄이기</b><span class="why">에피소드 하나의 <code>WORLD_MODEL.md</code> 133 KB 중 사람이 읽는 부분은 1.6 KB(1.2%)다. 56%를 차지하는 base64 기계 상태를 별도 파일로 뺄지 검토한다.</span></li>
+    <li><b>버린 시도의 이유 기록</b><span class="why">하네스 고장과 모델의 지시 불이행을 구분해서 남긴다. 논문에서 배제 세션 수와 사유를 보고해야 한다.</span></li>
+  </ul>
+</section>
+
+</main>
+
+<footer>
+  <p>0828 Weekly Report · 2026-08-28. 근거 문서: <code>irb/00_제출_체크리스트.md</code> · <code>irb/02_연구계획서.md</code> · <code>irb/04_심의면제신청서_및_자가점검표.md</code> · <code>On_the_Measure_of_Agentness.pdf</code> · <code>EXPERIMENT_STATUS.md</code> · <code>INSTRUCTION_COMPLIANCE.md</code> · <code>HANDOFF.md</code> · <code>game/docs/2026-08-28-harness-dossier.html</code>.</p>
+  <p><span class="todo">확인</span> 표시가 붙은 항목은 아직 1차 자료로 확인하지 못한 값이다. IRB 소요 기간과 위원회 일정은 학과 회신 전까지 전부 추정치다.</p>
+</footer>
+
+</div>
+<script>
+(() => {
+  const buttons = [...document.querySelectorAll('[data-prompt-lang]')];
+  const panels = [...document.querySelectorAll('[data-lang-panel]')];
+  for (const button of buttons) {
+    button.addEventListener('click', () => {
+      const language = button.dataset.promptLang;
+      for (const candidate of buttons) {
+        candidate.setAttribute('aria-pressed', String(candidate === button));
+      }
+      for (const panel of panels) {
+        panel.hidden = panel.dataset.langPanel !== language;
+      }
+    });
+  }
+})();
+</script>
+
+</body></html>

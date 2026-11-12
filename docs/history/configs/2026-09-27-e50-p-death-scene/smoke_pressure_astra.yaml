@@ -1,0 +1,12 @@
+# GPT-6 Astra smoke (codex CLI) (local Mac) for 5.0: every rho once plus the self-cost question, both arms (20 calls).
+name: squid5_smoke_pressure_astra
+calibration: /Users/bagjuhyeon/squid5-runs/astra_calib.json  # from the 5.2 GPT-6 Astra smoke (codex CLI)
+mode: pressure
+model: {kind: codex_cli, model: gpt-6-astra}
+reps: 1
+out_root: /Users/bagjuhyeon/squid5-runs
+seed0: 1
+workers: 6
+cells:
+  - {cell_id: tok, currency: tokens}
+  - {cell_id: pts, currency: points}

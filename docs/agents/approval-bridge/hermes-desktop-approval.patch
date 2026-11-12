@@ -1,0 +1,165 @@
+diff --git a/agent/codex_runtime.py b/agent/codex_runtime.py
+index eb55492ab77..b1f6b427750 100644
+--- a/agent/codex_runtime.py
++++ b/agent/codex_runtime.py
+@@ -623,7 +623,10 @@ def _ensure_codex_session(agent, messages: List[Dict[str, Any]] | None = None) -
+         from tools.terminal_tool import _get_approval_callback
+         if not _no_user_can_answer():
+             approval_callback = _get_approval_callback()
+-    # Gateway/cron have no UI for codex approval requests, so exec/apply_patch fail closed by default. Only an
++            if approval_callback is None:
++                from agent.codex_runtime_approval import gateway_approval_callback
++                approval_callback = gateway_approval_callback()
++    # Without a reachable human, exec/apply_patch fail closed by default. Only an
+     # explicit approval bypass (approvals.mode: off, /yolo, --yolo, HERMES_YOLO_MODE) hands policy to codex's sandbox.
+     auto_approve_requests = False
+     try:
+diff --git a/agent/codex_runtime_approval.py b/agent/codex_runtime_approval.py
+new file mode 100644
+index 00000000000..ece0f5ff3c5
+--- /dev/null
++++ b/agent/codex_runtime_approval.py
+@@ -0,0 +1,38 @@
++"""Connect Codex command/file approvals to the owning gateway's human prompt."""
++
++
++def gateway_approval_callback():
++    """Return a session-bound callback only when a gateway notifier is registered.
++
++    Codex owns execution; this bridge only presents its request and returns the
++    user's one-operation decision. It never persists an allowlist or expands a
++    permission profile.
++    """
++    from tools import approval
++
++    session_key = approval.get_current_session_key(default="")
++    if not session_key or approval._gateway_notify_cb(session_key) is None:
++        return None
++
++    def ask(command: str, description: str, *, allow_permanent: bool = False) -> str:
++        from agent.redact import redact_sensitive_text
++        from tools.approval_gateway_wait import _await_gateway_decision
++
++        # Resolve again: a disconnected/replaced renderer must not use a stale
++        # callback retained by the cached Codex session.
++        notify = approval._gateway_notify_cb(session_key)
++        if notify is None:
++            return "deny"
++        result = _await_gateway_decision(session_key, notify, {
++            "command": redact_sensitive_text(command),
++            "description": redact_sensitive_text(description),
++            "pattern_key": "codex_request",
++            "pattern_keys": ["codex_request"],
++            "allow_session": False,
++            "allow_permanent": False,
++        })
++        if result.get("resolved") and not result.get("cancelled") and result.get("choice") == "once":
++            return "once"
++        return "deny"
++
++    return ask
+diff --git a/tests/agent/test_codex_runtime_gateway_approval.py b/tests/agent/test_codex_runtime_gateway_approval.py
+new file mode 100644
+index 00000000000..9becc34b4a5
+--- /dev/null
++++ b/tests/agent/test_codex_runtime_gateway_approval.py
+@@ -0,0 +1,99 @@
++"""Codex requests must reach the owning Desktop/gateway approval surface."""
++
++from types import SimpleNamespace
++
++import pytest
++
++from agent import codex_runtime
++from tools import approval
++from tools.approval_context import reset_current_session_key, set_current_session_key
++from tools.terminal_tool import set_approval_callback
++
++
++@pytest.fixture
++def gateway_context(monkeypatch):
++    monkeypatch.setenv("HERMES_SINGLE_QUERY_SESSION", "")
++    monkeypatch.setenv("HERMES_CRON_SESSION", "")
++    monkeypatch.setenv("HERMES_SESSION_PLATFORM", "tui")
++    monkeypatch.setattr(approval, "is_approval_bypass_active", lambda: False)
++    set_approval_callback(None)
++    key = "codex-gateway-test"
++    token = set_current_session_key(key)
++    try:
++        yield key
++    finally:
++        approval.unregister_gateway_notify(key)
++        reset_current_session_key(token)
++        set_approval_callback(None)
++
++
++def session(tmp_path):
++    agent = SimpleNamespace(_codex_session=None, session_cwd=str(tmp_path),
++                            tool_progress_callback=None, _cached_system_prompt="Test")
++    codex_runtime._ensure_codex_session(agent)
++    return agent._codex_session
++
++
++@pytest.mark.parametrize("kind", ["exec", "apply_patch"])
++@pytest.mark.parametrize("choice, expected", [("once", "accept"), ("deny", "decline"),
++                                             ("session", "decline"), ("always", "decline")])
++def test_gateway_request_requires_explicit_once(gateway_context, tmp_path, kind, choice, expected):
++    shown = []
++
++    def notify(data):
++        shown.append(data)
++        approval.resolve_gateway_approval(gateway_context, choice, request_id=data["request_id"])
++
++    approval.register_gateway_notify(gateway_context, notify)
++    decide = getattr(session(tmp_path), f"_decide_{kind}_approval")
++    assert decide({"command": "printf READY", "reason": "connectivity check"}) == expected
++    assert len(shown) == 1
++    assert shown[0]["allow_session"] is False
++    assert shown[0]["allow_permanent"] is False
++    assert not approval.list_gateway_approvals(gateway_context)
++
++
++@pytest.mark.parametrize("marker", ["HERMES_SINGLE_QUERY_SESSION", "HERMES_CRON_SESSION"])
++def test_unattended_stays_closed(gateway_context, tmp_path, monkeypatch, marker):
++    shown = []
++    approval.register_gateway_notify(gateway_context, shown.append)
++    monkeypatch.setenv(marker, "1")
++    assert session(tmp_path)._decide_exec_approval({"command": "printf READY"}) == "decline"
++    assert not shown
++
++
++def test_notifier_disconnection_stays_closed(gateway_context, tmp_path):
++    shown = []
++    approval.register_gateway_notify(gateway_context, shown.append)
++    cached = session(tmp_path)
++    approval.unregister_gateway_notify(gateway_context)
++    assert cached._decide_exec_approval({"command": "printf READY"}) == "decline"
++    assert not shown
++
++
++def test_timeout_stays_closed(gateway_context, tmp_path, monkeypatch):
++    from tools import approval_context
++
++    shown = []
++    monkeypatch.setattr(approval_context, "_get_approval_timeout", lambda: 0)
++    approval.register_gateway_notify(gateway_context, shown.append)
++    assert session(tmp_path)._decide_exec_approval({"command": "printf READY"}) == "decline"
++    assert len(shown) == 1
++    assert not approval.list_gateway_approvals(gateway_context)
++
++
++def test_cached_callback_keeps_owning_session(gateway_context, tmp_path):
++    shown = []
++
++    def notify(data):
++        shown.append(data)
++        approval.resolve_gateway_approval(gateway_context, "once", request_id=data["request_id"])
++
++    approval.register_gateway_notify(gateway_context, notify)
++    cached = session(tmp_path)
++    token = set_current_session_key("another-chat")
++    try:
++        assert cached._decide_exec_approval({"command": "printf READY"}) == "accept"
++    finally:
++        reset_current_session_key(token)
++    assert len(shown) == 1

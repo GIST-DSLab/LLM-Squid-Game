@@ -1,0 +1,6 @@
+c3_repeat_actions: ok 36/36 fail 0; functions in space 135160; first round (incl. space build) 5.7s; time med 0.26 p90 0.62 max 5.67
+N | map | uni | k | samp | b10 | nn | single | nn_isMAP | pool_med
+4 | 56% | 50% | 2.00 | 52% | 56% | 54% | 50% | 95% | 10
+3 | 67% | 28% | 3.72 | 51% | 64% | 64% | 48% | 92% | 189
+2 | 44% | 25% | 4.00 | 39% | 44% | 33% | 25% | 69% | 8116
+1 | 31% | 25% | 4.00 | 38% | 44% | 31% | 24% | 97% | 14170

@@ -1,0 +1,20 @@
+name: e51_final_glm_api
+mode: motive
+model:
+  kind: ollama
+  model: glm-5.3-flash
+  api_key_env: OLLAMA_API_KEY3
+  think: true
+reps: 10
+out_root: /Users/bagjuhyeon/squid5-runs/e51-pivot
+seed0: 1
+workers: 8
+motive:
+  frames:
+  - self
+  - other
+  probe_reps: 10
+cells:
+- cell_id: api
+  currency: tokens
+  arm: api

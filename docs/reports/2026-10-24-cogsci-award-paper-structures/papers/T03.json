@@ -1,0 +1,222 @@
+{
+ "id": "T03",
+ "year": 2024,
+ "group": "tenenbaum",
+ "award": "발표 논문 (수상 아님)",
+ "title": "Grounding Language about Belief in a Bayesian Theory-of-Mind",
+ "authors": [
+  "Lance Ying",
+  "Tan Zhi-Xuan",
+  "Lionel Wong",
+  "Vikash Mansinghka",
+  "Joshua B. Tenenbaum"
+ ],
+ "affiliations": "Massachusetts Institute of Technology, Cambridge, MA, USA (전원); Harvard University, Cambridge, MA, USA (Ying). Ying과 Zhi-Xuan은 공동 제1저자(Equal Contribution 각주).",
+ "url_page": "https://escholarship.org/uc/item/2tk4d5jw",
+ "url_pdf": "https://escholarship.org/content/qt2tk4d5jw/qt2tk4d5jw.pdf",
+ "pdf_source_note": "eScholarship (Proceedings of the 46th Annual Conference of the Cognitive Science Society, vol. 46, pp. 6087-6093; 8쪽 PDF = 표지 1 + 원고 7쪽). 같은 원고가 arXiv 2402.10416으로도 있음 — 여기서는 쓰지 않음.",
+ "abstract_en": "Despite the fact that beliefs are mental states that cannot be directly observed, humans talk about each others’ beliefs on a regular basis, often using rich compositional language to describe what others think and know. What explains this capacity to interpret the hidden epistemic content of other minds? In this paper, we take a step towards an answer by grounding the semantics of belief statements in a Bayesian theory-of-mind: By modeling how humans jointly infer coherent sets of goals, beliefs, and plans that explain an agent’s actions, then evaluating statements about the agent’s beliefs against these inferences via epistemic logic, our framework provides a functional role semantics for belief, explaining the gradedness and compositionality of human belief attributions, as well as their intimate connection with goals and plans. We evaluate this framework by studying how humans attribute goals and evaluate belief sentences while watching an agent solve a doors-and-keys gridworld puzzle that requires instrumental reasoning about hidden objects. In contrast to pure logical deduction, non-mentalizing baselines, and mentalizing that ignores the role of instrumental plans, our model provides a much better fit to human goal and belief attributions, demonstrating the importance of theory-of-mind for modeling how humans understand language about beliefs.",
+ "abstract_ko": "믿음은 직접 관찰할 수 없는 정신 상태인데도, 사람들은 서로의 믿음에 대해 일상적으로 이야기하며, 다른 사람이 무엇을 생각하고 아는지를 풍부한 합성적(compositional) 언어로 묘사하곤 한다. 다른 마음의 숨겨진 인식적(epistemic) 내용을 해석하는 이 능력은 무엇으로 설명되는가? 이 논문은 믿음 진술의 의미론을 베이지안 마음 이론(Bayesian theory-of-mind)에 근거 지음으로써 그 답을 향해 한 걸음 나아간다. 사람들이 에이전트의 행동을 설명하는 목표·믿음·계획의 정합적 집합을 어떻게 함께 추론하는지를 모델링한 뒤, 그 에이전트의 믿음에 관한 진술을 인식 논리(epistemic logic)로 이 추론에 비추어 평가함으로써, 우리의 틀은 믿음에 대한 기능적 역할 의미론(functional role semantics)을 제공하고, 인간의 믿음 귀인이 지닌 정도성(gradedness)과 합성성, 그리고 목표·계획과의 밀접한 연결을 설명한다. 우리는 사람들이 숨겨진 물체에 대한 도구적 추론을 요구하는 문-열쇠(doors-and-keys) 격자 세계 퍼즐을 에이전트가 푸는 모습을 보면서 목표를 귀인하고 믿음 문장을 평가하는 방식을 연구해 이 틀을 평가한다. 순수한 논리적 연역, 마음을 읽지 않는(non-mentalizing) 기준선, 도구적 계획의 역할을 무시하는 마음 읽기와 달리, 우리 모델은 인간의 목표 귀인과 믿음 귀인에 훨씬 더 잘 맞으며, 이는 사람들이 믿음에 관한 언어를 이해하는 방식을 모델링하는 데 마음 이론이 중요함을 보여 준다.",
+ "pages_body": 7,
+ "references_location": "p.7만(전체 한 쪽; 두 단, p.7의 ~95%). 본문은 p.6 오른쪽 단 중간에서 Discussion으로 끝나고 그 아래 Acknowledgements.",
+ "extras": "Acknowledgements는 p.6 오른쪽 단 아래(두 문단, 68단어; 자금 출처와 동료 감사). 각주는 p.1의 'Equal Contribution' 하나뿐. 부록·OSF/코드/데이터 링크·사전등록·보충자료 없음. p.1 왼쪽 단 아래에 Proceedings 편집자/CC BY 꼬리말.",
+ "words_body_total": 3321,
+ "words_note": "본문 합계에서 제목 블록, 초록(201단어) + keywords(9단어), 그림/표 캡션, 그림 안 글자, Table 1 내용, 별행 수식(번호 붙은 Eq. 1-8, PDDL 문법 φ ::= ..., 가중치 갱신식, 기댓값 식), 각주, 쪽 번호, 꼬리말, Acknowledgements(68단어), 참고문헌(~690단어)은 뺌. 문장 안 인라인 수식 기호는 글자나 숫자가 든 토큰마다 한 단어로 셈. pdftotext로 단마다 잘라(x 0-306 / 306-612) 줄 범위를 손으로 골라 셈.",
+ "sections": [
+  {
+   "level": 1,
+   "title": "Introduction",
+   "page_start": 1,
+   "words": 662,
+   "share": 0.199,
+   "role": "intro",
+   "children": []
+  },
+  {
+   "level": 1,
+   "title": "Computational Model",
+   "page_start": 2,
+   "words": 1214,
+   "share": 0.366,
+   "role": "method",
+   "children": [
+    {
+     "level": 2,
+     "title": "(untitled lead-in, before first subheading)",
+     "page_start": 2,
+     "words": 83
+    },
+    {
+     "level": 2,
+     "title": "Representing Belief Statements",
+     "page_start": 2,
+     "words": 272
+    },
+    {
+     "level": 2,
+     "title": "Modeling the Functional Role of Belief",
+     "page_start": 2,
+     "words": 309
+    },
+    {
+     "level": 2,
+     "title": "Joint Inference of Goals and Beliefs",
+     "page_start": 3,
+     "words": 240
+    },
+    {
+     "level": 2,
+     "title": "Quantitatively Interpreting Belief Statements",
+     "page_start": 3,
+     "words": 310
+    }
+   ]
+  },
+  {
+   "level": 1,
+   "title": "Experiments",
+   "page_start": 4,
+   "words": 536,
+   "share": 0.161,
+   "role": "method",
+   "children": [
+    {
+     "level": 2,
+     "title": "(untitled lead-in, before first subheading)",
+     "page_start": 4,
+     "words": 93
+    },
+    {
+     "level": 2,
+     "title": "Scenario Generation",
+     "page_start": 4,
+     "words": 105
+    },
+    {
+     "level": 2,
+     "title": "Experiment Design",
+     "page_start": 4,
+     "words": 106
+    },
+    {
+     "level": 2,
+     "title": "Participants",
+     "page_start": 4,
+     "words": 54
+    },
+    {
+     "level": 2,
+     "title": "Alternative Models",
+     "page_start": 4,
+     "words": 178,
+     "children": [
+      {
+       "level": 3,
+       "title": "(lead paragraph, before run-in headings)",
+       "page_start": 4,
+       "words": 39
+      },
+      {
+       "level": 3,
+       "title": "Omniscient Observer",
+       "page_start": 4,
+       "words": 41
+      },
+      {
+       "level": 3,
+       "title": "Ignorant Observer",
+       "page_start": 4,
+       "words": 35
+      },
+      {
+       "level": 3,
+       "title": "(Uncertain) Non-Mentalizing Observer",
+       "page_start": 4,
+       "words": 24
+      },
+      {
+       "level": 3,
+       "title": "Heuristic Mentalizer",
+       "page_start": 4,
+       "words": 39
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "level": 1,
+   "title": "Results",
+   "page_start": 4,
+   "words": 597,
+   "share": 0.180,
+   "role": "result",
+   "children": [
+    {
+     "level": 2,
+     "title": "Qualitative Analysis",
+     "page_start": 4,
+     "words": 297
+    },
+    {
+     "level": 2,
+     "title": "Quantitative Analysis",
+     "page_start": 4,
+     "words": 300
+    }
+   ]
+  },
+  {
+   "level": 1,
+   "title": "Discussion",
+   "page_start": 6,
+   "words": 312,
+   "share": 0.094,
+   "role": "disc",
+   "children": []
+  }
+ ],
+ "figures": [
+  {
+   "n": 1,
+   "page": 2,
+   "size": "전체 폭(두 단 걸침), 쪽 위 ~0.3쪽(캡션 포함 y ~75-305pt); 모델 개요 도식 3칸((a) LLM 문장 번역, (b) 베이지안 역계획, (c) 공식 평가)",
+   "section": "Introduction 끝 / Computational Model 앞 (Introduction에서 처음 인용)"
+  },
+  {
+   "n": 2,
+   "page": 5,
+   "size": "전체 한 쪽(p.5 전부가 그림 + 캡션); 예시 시나리오 6개 x (격자 지도 + 목표 평정 막대 + 믿음 평정 선 그래프, 사람 대 BToM 모델)",
+   "section": "Results > Qualitative Analysis (Experiments > Scenario Generation에서도 인용)"
+  },
+  {
+   "n": 3,
+   "page": 6,
+   "size": "전체 폭, ~0.2쪽(Table 1 바로 아래, y ~195-330pt); 상관 산점도 패널 5개(BToM, Heuristic Mentalizer, Non-Mentalizer, Omniscient Observer, Ignorant Observer; 사람 대 모델 믿음 평정)",
+   "section": "Results > Quantitative Analysis"
+  }
+ ],
+ "tables": [
+  {
+   "n": 1,
+   "page": 6,
+   "size": "전체 폭, 쪽 위 ~0.15쪽(y ~73-190pt); 모델 7행 x (Belief Prior, 목표 귀인 상관, 믿음 진술 상관 + 부트스트랩 95% CI)",
+   "section": "Results > Quantitative Analysis"
+  }
+ ],
+ "observations": {
+  "intro_subheadings": false,
+  "related_work_section": false,
+  "experiments_as_top_level": false,
+  "experiments_note": "실험이 하나다. 'Experiments'라는 1단계 절이 있지만 내용은 방법(시나리오 생성, 실험 설계, 참가자, 비교 모델)뿐이고, 결과는 별도 1단계 절 'Results'(Qualitative / Quantitative Analysis)로 나뉜다. 'Experiment 1' 같은 번호 붙은 실험 절은 없다.",
+  "final_section_name": "Discussion",
+  "final_section_subheadings": [],
+  "discussion_structure": "Discussion에 소제목 없음, 두 문단: 요약 문단(언어 해석과 마음 이론의 연결, 믿음의 기능적 역할) → 한계·향후 과제 문단(결정론적 믿음만 다룸; 불확실한 믿음·거짓 믿음·무지·추상적 믿음을 다루려면 더 풍부한 마음 이론이 필요). 별도 결론 문단 없이 한계 문단으로 끝남.",
+  "ends_with_conclusion_paragraph": false,
+  "model_description_location": "Introduction 바로 뒤 독립 1단계 절 'Computational Model'(p.2-3, 본문의 37%로 가장 큼): (i)-(iv) 구성 요소를 예고하는 도입 문단 + 2단계 넷(인식 논리를 더한 PDDL 표현, 생성 모델 Eq. 1-5와 Boltzmann 행동 선택 Eq. 6, 목표·믿음 결합 추론 Eq. 7-8과 정확한 베이지안 필터링, LLM 번역 + 기댓값으로 믿음 진술 평가와 두 사전분포 US0 / Uψ). 번호 붙은 별행 수식 8개가 모두 이 절에 있음.",
+  "first_page_use": "제목 + 저자 5명/소속 두 줄이 p.1 위 ~15%; 초록(201단어 + keywords)이 왼쪽 단 위 ~45%; Introduction은 왼쪽 단 아래에서 시작해 오른쪽 단 전체를 채움. p.1의 약 1/3이 초록, ~1/2이 Introduction. Introduction은 p.2 왼쪽 단 위(Fig. 1 아래) 9줄까지 이어지고 같은 단에서 Computational Model이 시작.",
+  "links": "없음. 사전등록·OSF·코드·데이터 링크 없음(본문에 Gen 확률 프로그래밍 시스템 등 도구 인용만 있음)."
+ },
+ "structure_summary_ko": "1수준 절이 Introduction-Computational Model-Experiments-Results-Discussion 다섯 개인 모델 중심 단일 실험 논문이다. 서론은 약 660단어(본문의 20%)로 소제목 없이 네 문단(일상의 믿음 언어 예시 -> 철학·논리학과 BToM 선행연구의 빈틈 -> 'In this paper' 기여: 기능적 역할 의미론 + LLM 번역 + 역계획 -> 실험 예고)으로 짜이고, 관련 연구는 별도 절 없이 둘째 문단에 녹아 있다. 가장 큰 절은 Computational Model(37%)로, 도입 문단의 (i)-(iv) 예고 뒤 2수준 네 소절에 번호 붙은 별행 수식 8개를 모두 몰아 두며, 그림 1(전폭 모델 개요)이 이 절 직전에 놓여 모델의 세 단계를 먼저 보여 준다. Experiments(16%)는 방법만 담은 2수준 넷(Scenario Generation, Experiment Design, Participants, Alternative Models)이고, 비교 모델 넷은 굵은 run-in 이름으로 나열되며, 결과는 별도 1수준 Results(18%)가 Qualitative/Quantitative Analysis로 나눠 받는다. 그림 2가 p.5 한 쪽 전체를, Table 1과 그림 3이 p.6 위쪽을 차지해 결과를 운반하고, 소제목 없는 두 문단짜리 Discussion(9%)은 요약 뒤 한계·향후 과제로 끝나며 결론 문단은 없다. 참고문헌은 p.7 한 쪽에 들어가 본문은 6쪽을 쓴다.",
+ "text_pages": 6
+}

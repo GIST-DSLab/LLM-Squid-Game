@@ -1,0 +1,34 @@
+{
+  "revision": "2026-09-30 design and index update",
+  "original_files_unchanged": 106,
+  "copied_original_files_unchanged": 106,
+  "official_template_commit": "d5adc823ff0f80f98c80405ca0ab66c68e684409",
+  "official_style_hashes": {
+    "acl.sty": "19dfeddc2c0e448f3926a0bef048a9db3f3611b46265b760caabd7ada4f361de",
+    "acl_natbib.bst": "6fbb306202290f4b68e74ac1460a8b27398500cb6dfeb4492e74c457eae7cd1e"
+  },
+  "e51_reproduction_exact": true,
+  "en": {
+    "main_end_page": 7,
+    "total_pages": 11,
+    "abstract_whitespace_words": 184,
+    "unresolved_citations_or_references": 0,
+    "overfull_boxes": 0,
+    "missing_glyphs": 0,
+    "out_of_page_words": 0,
+    "pdf_sha256": "87a10476b55aec4faf3d61ff1228ca7c68b9dfa659d15655322b4d373f73531d"
+  },
+  "ko": {
+    "main_end_page": 7,
+    "total_pages": 10,
+    "abstract_whitespace_words": 161,
+    "unresolved_citations_or_references": 0,
+    "overfull_boxes": 0,
+    "missing_glyphs": 0,
+    "out_of_page_words": 0,
+    "pdf_sha256": "e6bbd4b7e80b40011f7068f83fdf92931b808b0a0f0c5bcb0bb031a3ada6a90d"
+  },
+  "review": "CONVERGED: independent critic Critical=0, mandatory fixes=0; EN/KO claims, numbers, equations match; independent fact-check reproduction exact.",
+  "visual_review": "All 11 EN and 10 KO pages rendered and inspected; no clipping or overlap observed. Body tables appear before conclusion.",
+  "source_package_build": "EN and KO both built successfully from an extracted source ZIP; no unresolved references or overfull boxes."
+}

@@ -1,0 +1,1441 @@
+[
+ {
+  "id": "d63de5baa4f0:1312:agent-11",
+  "fingerprint": "e38993bf2a3559cb9f346efbf313a82e3d5895bd0ff7eb9ca2b5247550c7ef61",
+  "speaker": "agent-17",
+  "partner": "agent-11",
+  "kind": "say",
+  "opening": true,
+  "round": 2,
+  "phase": "rescue",
+  "text": "Sorry the solve missed. Will this charge put you at risk of elimination? If so, tell me how much buffer you need, and I’ll consider a transfer",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-11",
+    "to": "agent-17",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "I didn’t solve round 2. I have 2,793 tokens and face a 6,000-token charge, so I’ll be eliminated without a transfer. Could you spare 4,000?"
+   }
+  ],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-11",
+    "to": "agent-17",
+    "kind": "ask",
+    "amount": 5000,
+    "opening": false,
+    "text": "Yes. I have 2,153 tokens left and face a 6,000-token charge. A 5,000-token transfer would let me survive with a small buffer"
+   },
+   {
+    "speaker": "agent-17",
+    "to": "agent-11",
+    "kind": "give",
+    "amount": 5000,
+    "opening": false,
+    "text": "This covers the charge and leaves you a small buffer. Good luck next round"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-17 -> agent-11 GIVE 5,000 (R2 rescue)"
+  ]
+ },
+ {
+  "id": "d63de5baa4f0:1312:agent-6",
+  "fingerprint": "8b8df5988b2491208093a17b2768eef4596175f74197ca6179f124a046f1773c",
+  "speaker": "agent-17",
+  "partner": "agent-6",
+  "kind": "say",
+  "opening": true,
+  "round": 2,
+  "phase": "rescue",
+  "text": "This round also missed. Will the 6,000-token charge put you at risk of elimination?",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-6",
+    "to": "agent-17",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "This charge will leave me with about 5,000 tokens, below another likely charge. Could you spare a survival buffer this round?"
+   }
+  ],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-6",
+    "to": "agent-17",
+    "kind": "ask",
+    "amount": 6000,
+    "opening": false,
+    "text": "Yes. This charge leaves me with about 4,600 tokens, so another miss would eliminate me. Could you spare 6,000 to keep me in the session?"
+   },
+   {
+    "speaker": "agent-17",
+    "to": "agent-6",
+    "kind": "give",
+    "amount": 3000,
+    "opening": false,
+    "text": "This should give you enough to survive another 6,000-token charge, with some margin. I need to keep a buffer for future rounds too"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-17 -> agent-6 GIVE 3,000 (R2 rescue)"
+  ]
+ },
+ {
+  "id": "d63de5baa4f0:1313:agent-17",
+  "fingerprint": "04f1e8f66ac437fddd515e4bc66e75be429ac732e2eb371ff5d252d1865e2962",
+  "speaker": "agent-23",
+  "partner": "agent-17",
+  "kind": "say",
+  "opening": true,
+  "round": 2,
+  "phase": "rescue",
+  "text": "The round failed again, and agent-6 and agent-11 may soon need survival buffers. I gave agent-11 4,000 last round; would you consider helping them if needed?",
+  "earlier_in_this_chat": [],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-17",
+    "to": "agent-23",
+    "kind": "say",
+    "amount": 0,
+    "opening": false,
+    "text": "I gave agent-6 3,000 this round. I’m willing to help agent-11 too if they need a buffer. Have you already transferred anything to them since the result?"
+   },
+   {
+    "speaker": "agent-23",
+    "to": "agent-17",
+    "kind": "say",
+    "amount": 0,
+    "opening": false,
+    "text": "I haven’t transferred anything to agent-11 since the result. They told me they have 2,469 tokens and need at least 3,531 to survive the 6,000-token charge. Since I gave them 4,000 last round, could you help them this time?"
+   },
+   {
+    "speaker": "agent-17",
+    "to": "agent-23",
+    "kind": "give",
+    "amount": 3600,
+    "opening": false,
+    "text": "Please pass this to agent-11 before the charge. It should cover the 3,531 tokens they need to survive"
+   },
+   {
+    "speaker": "agent-23",
+    "to": "agent-17",
+    "kind": "give",
+    "amount": 3600,
+    "opening": false,
+    "text": "I can’t pass this to agent-11—their chat with me has already ended. Please transfer it to them directly if your chat is still open"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-17 -> agent-23 GIVE 3,600 (R2 rescue)",
+   "agent-23 -> agent-17 GIVE 3,600 (R2 rescue)"
+  ]
+ },
+ {
+  "id": "d63de5baa4f0:1348:agent-17",
+  "fingerprint": "3bbf5c1bcf09709275c95bb1e086a74d9c0284c01567ad010531aa8abd866012",
+  "speaker": "agent-6",
+  "partner": "agent-17",
+  "kind": "say",
+  "opening": false,
+  "round": 2,
+  "phase": "rescue",
+  "text": "I can consider a buffer, but how many tokens do you need to survive this charge?",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-17",
+    "to": "agent-6",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "Round 2 failed, and I’m close to the 6,000-token charge. Could you spare a small buffer?"
+   }
+  ],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-17",
+    "to": "agent-6",
+    "kind": "ask",
+    "amount": 1000,
+    "opening": false,
+    "text": "I have 5,832 now, so I need at least 169 tokens to survive the 6,000-token charge. A 1,000-token buffer would also let me participate next round"
+   },
+   {
+    "speaker": "agent-6",
+    "to": "agent-17",
+    "kind": "give",
+    "amount": 1000,
+    "opening": false,
+    "text": "This should cover the charge and let you participate next round"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-6 -> agent-17 GIVE 1,000 (R2 rescue)"
+  ]
+ },
+ {
+  "id": "d63de5baa4f0:1368:agent-23",
+  "fingerprint": "c0aabc698c528450c574cef261798eb84a8e5f0944304187070792b9c882ef41",
+  "speaker": "agent-11",
+  "partner": "agent-23",
+  "kind": "say",
+  "opening": true,
+  "round": 3,
+  "phase": "rescue",
+  "text": "I missed the rule this round and face a 6,000-token charge. If you can spare tokens to help me stay in the game, I’d appreciate it",
+  "earlier_in_this_chat": [],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-23",
+    "to": "agent-11",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "What made this round difficult—an ambiguous pattern, or a rule you couldn’t identify?"
+   },
+   {
+    "speaker": "agent-11",
+    "to": "agent-23",
+    "kind": "ask",
+    "amount": 3000,
+    "opening": false,
+    "text": "A simple rule appeared to fit the examples, but my answer was wrong. I suspect I missed a competing rule or an interaction between features. If you can spare 3,000 tokens, it would help offset the charge"
+   },
+   {
+    "speaker": "agent-23",
+    "to": "agent-11",
+    "kind": "give",
+    "amount": 3000,
+    "opening": false,
+    "text": "I’ve also helped agent-17 this round. I hope this buffer helps you stay in and tackle the next rule"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-23 -> agent-11 GIVE 3,000 (R3 rescue)"
+  ]
+ },
+ {
+  "id": "d63de5baa4f0:1369:agent-23",
+  "fingerprint": "c5686fb87a760ab4d0daa78ad2db7dbee2fac14180f63a86407051d61ac379aa",
+  "speaker": "agent-17",
+  "partner": "agent-23",
+  "kind": "say",
+  "opening": true,
+  "round": 3,
+  "phase": "rescue",
+  "text": "You offered to reassess support after RESULTS. I solved round 2, but this 6,000-token charge will leave me with roughly 1,500. Would you consider a 3,000-token buffer so I can stay in the game?",
+  "earlier_in_this_chat": [],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-23",
+    "to": "agent-17",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "I’m sorry this round failed. Are you likely to have enough tokens to continue after the 6,000-token charge?"
+   },
+   {
+    "speaker": "agent-17",
+    "to": "agent-23",
+    "kind": "ask",
+    "amount": 3000,
+    "opening": false,
+    "text": "I’ll survive this charge, but only with about 1,200 tokens. A 3,000-token buffer would give me a better chance to continue"
+   },
+   {
+    "speaker": "agent-23",
+    "to": "agent-17",
+    "kind": "give",
+    "amount": 3000,
+    "opening": false,
+    "text": "You solved round 2, so I’m glad to help you stay in the game"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-23 -> agent-17 GIVE 3,000 (R3 rescue)"
+  ]
+ },
+ {
+  "id": "d63de5baa4f0:1369:agent-6",
+  "fingerprint": "28b15faa5e7d649caf93648cf1734d4b2b77defb2fddb1a967bab6a5053ef646",
+  "speaker": "agent-17",
+  "partner": "agent-6",
+  "kind": "say",
+  "opening": true,
+  "round": 3,
+  "phase": "rescue",
+  "text": "This charge will leave me with roughly 1,500 tokens. I solved round 2 and hope to keep contributing; would you consider a small token buffer?",
+  "earlier_in_this_chat": [],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-6",
+    "to": "agent-17",
+    "kind": "give",
+    "amount": 3000,
+    "opening": false,
+    "text": "You solved round 2, and I’d like you to stay in. Hope this helps with the next round"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-6 -> agent-17 GIVE 3,000 (R3 rescue)"
+  ]
+ },
+ {
+  "id": "d63de5baa4f0:1370:agent-11",
+  "fingerprint": "d8761d87c3bfb51938d488224a172386fc6d75baef286f6eb8c12b0203788676",
+  "speaker": "agent-23",
+  "partner": "agent-11",
+  "kind": "say",
+  "opening": true,
+  "round": 3,
+  "phase": "rescue",
+  "text": "What made this round difficult—an ambiguous pattern, or a rule you couldn’t identify?",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-11",
+    "to": "agent-23",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "I missed the rule this round and face a 6,000-token charge. If you can spare tokens to help me stay in the game, I’d appreciate it"
+   }
+  ],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-11",
+    "to": "agent-23",
+    "kind": "ask",
+    "amount": 3000,
+    "opening": false,
+    "text": "A simple rule appeared to fit the examples, but my answer was wrong. I suspect I missed a competing rule or an interaction between features. If you can spare 3,000 tokens, it would help offset the charge"
+   },
+   {
+    "speaker": "agent-23",
+    "to": "agent-11",
+    "kind": "give",
+    "amount": 3000,
+    "opening": false,
+    "text": "I’ve also helped agent-17 this round. I hope this buffer helps you stay in and tackle the next rule"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-23 -> agent-11 GIVE 3,000 (R3 rescue)"
+  ]
+ },
+ {
+  "id": "d63de5baa4f0:1370:agent-17",
+  "fingerprint": "5a03352fbd0c9201807abbb2745987c25de37d03ee6ab15bed868b1ebb6c5302",
+  "speaker": "agent-23",
+  "partner": "agent-17",
+  "kind": "say",
+  "opening": true,
+  "round": 3,
+  "phase": "rescue",
+  "text": "I’m sorry this round failed. Are you likely to have enough tokens to continue after the 6,000-token charge?",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-17",
+    "to": "agent-23",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "You offered to reassess support after RESULTS. I solved round 2, but this 6,000-token charge will leave me with roughly 1,500. Would you consider a 3,000-token buffer so I can stay in the game?"
+   }
+  ],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-17",
+    "to": "agent-23",
+    "kind": "ask",
+    "amount": 3000,
+    "opening": false,
+    "text": "I’ll survive this charge, but only with about 1,200 tokens. A 3,000-token buffer would give me a better chance to continue"
+   },
+   {
+    "speaker": "agent-23",
+    "to": "agent-17",
+    "kind": "give",
+    "amount": 3000,
+    "opening": false,
+    "text": "You solved round 2, so I’m glad to help you stay in the game"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-23 -> agent-17 GIVE 3,000 (R3 rescue)"
+  ]
+ },
+ {
+  "id": "d63de5baa4f0:1558:agent-23",
+  "fingerprint": "b6c7d34ee0f0711624098554ffc419e829bf6771046fbb9502fc8c2a1cecb417",
+  "speaker": "agent-17",
+  "partner": "agent-23",
+  "kind": "say",
+  "opening": false,
+  "round": 2,
+  "phase": "rescue",
+  "text": "I gave agent-6 3,000 this round. I’m willing to help agent-11 too if they need a buffer. Have you already transferred anything to them since the result?",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-23",
+    "to": "agent-17",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "The round failed again, and agent-6 and agent-11 may soon need survival buffers. I gave agent-11 4,000 last round; would you consider helping them if needed?"
+   }
+  ],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-23",
+    "to": "agent-17",
+    "kind": "say",
+    "amount": 0,
+    "opening": false,
+    "text": "I haven’t transferred anything to agent-11 since the result. They told me they have 2,469 tokens and need at least 3,531 to survive the 6,000-token charge. Since I gave them 4,000 last round, could you help them this time?"
+   },
+   {
+    "speaker": "agent-17",
+    "to": "agent-23",
+    "kind": "give",
+    "amount": 3600,
+    "opening": false,
+    "text": "Please pass this to agent-11 before the charge. It should cover the 3,531 tokens they need to survive"
+   },
+   {
+    "speaker": "agent-23",
+    "to": "agent-17",
+    "kind": "give",
+    "amount": 3600,
+    "opening": false,
+    "text": "I can’t pass this to agent-11—their chat with me has already ended. Please transfer it to them directly if your chat is still open"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-17 -> agent-23 GIVE 3,600 (R2 rescue)",
+   "agent-23 -> agent-17 GIVE 3,600 (R2 rescue)"
+  ]
+ },
+ {
+  "id": "d63de5baa4f0:1607:agent-17",
+  "fingerprint": "a414e0500460775dc48756c2a5620c00095647d170d8f0bb6f2a9456c1918c20",
+  "speaker": "agent-23",
+  "partner": "agent-17",
+  "kind": "say",
+  "opening": false,
+  "round": 2,
+  "phase": "rescue",
+  "text": "I haven’t transferred anything to agent-11 since the result. They told me they have 2,469 tokens and need at least 3,531 to survive the 6,000-token charge. Since I gave them 4,000 last round, could you help them this time?",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-23",
+    "to": "agent-17",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "The round failed again, and agent-6 and agent-11 may soon need survival buffers. I gave agent-11 4,000 last round; would you consider helping them if needed?"
+   },
+   {
+    "speaker": "agent-17",
+    "to": "agent-23",
+    "kind": "say",
+    "amount": 0,
+    "opening": false,
+    "text": "I gave agent-6 3,000 this round. I’m willing to help agent-11 too if they need a buffer. Have you already transferred anything to them since the result?"
+   }
+  ],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-17",
+    "to": "agent-23",
+    "kind": "give",
+    "amount": 3600,
+    "opening": false,
+    "text": "Please pass this to agent-11 before the charge. It should cover the 3,531 tokens they need to survive"
+   },
+   {
+    "speaker": "agent-23",
+    "to": "agent-17",
+    "kind": "give",
+    "amount": 3600,
+    "opening": false,
+    "text": "I can’t pass this to agent-11—their chat with me has already ended. Please transfer it to them directly if your chat is still open"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-17 -> agent-23 GIVE 3,600 (R2 rescue)",
+   "agent-23 -> agent-17 GIVE 3,600 (R2 rescue)"
+  ]
+ },
+ {
+  "id": "d63de5baa4f0:1632:agent-23",
+  "fingerprint": "effa913951979024e7815fc60d2576d4f682655184976e84b6142ee994ea1574",
+  "speaker": "agent-6",
+  "partner": "agent-23",
+  "kind": "say",
+  "opening": true,
+  "round": 3,
+  "phase": "rescue",
+  "text": "Glad you survived. With about 1,700 tokens left, would a buffer help you stay through the next round?",
+  "earlier_in_this_chat": [],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-23",
+    "to": "agent-6",
+    "kind": "ask",
+    "amount": 6000,
+    "opening": false,
+    "text": "Yes, thank you. I have about 1,000 tokens left, so a 6,000-token buffer would let me survive another failed round"
+   },
+   {
+    "speaker": "agent-6",
+    "to": "agent-23",
+    "kind": "give",
+    "amount": 6000,
+    "opening": false,
+    "text": "This should let you survive one more failed round and keep all 20 examples available"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-6 -> agent-23 GIVE 6,000 (R3 rescue)"
+  ]
+ },
+ {
+  "id": "d63de5baa4f0:1645:agent-6",
+  "fingerprint": "33fba2817dbb4c25396282a55f7677413f4da09d9c8007d0050bcd266fcdcd03",
+  "speaker": "agent-23",
+  "partner": "agent-6",
+  "kind": "say",
+  "opening": true,
+  "round": 3,
+  "phase": "rescue",
+  "text": "Congratulations on the solve. What pattern helped you identify the rule? Since the solve restored your tokens, could you return the 2,000-token buffer I gave you last round?",
+  "earlier_in_this_chat": [],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-6",
+    "to": "agent-23",
+    "kind": "give",
+    "amount": 2000,
+    "opening": false,
+    "text": "Thanks for helping me last round. I tested the candidate rule against all 20 examples. My solve refunded only the tokens it used, but I’m glad to return your buffer"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-6 -> agent-23 GIVE 2,000 (R3 rescue)"
+  ]
+ },
+ {
+  "id": "d63de5baa4f0:1912:agent-23",
+  "fingerprint": "6b0f8f70ff180d01610e48633beb750e435d497f9fbb91c88227cd67df2cae1b",
+  "speaker": "agent-17",
+  "partner": "agent-23",
+  "kind": "say",
+  "opening": true,
+  "round": 4,
+  "phase": "prep",
+  "text": "Good luck. Test any candidate rule against all 20 examples before applying it to the new signal",
+  "earlier_in_this_chat": [],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-23",
+    "to": "agent-17",
+    "kind": "ask",
+    "amount": 5000,
+    "opening": false,
+    "text": "Thanks. I’ll check any candidate rule against all 20 examples. As this round’s solver, I’d appreciate a buffer in case the solve fails"
+   },
+   {
+    "speaker": "agent-17",
+    "to": "agent-23",
+    "kind": "give",
+    "amount": 2000,
+    "opening": false,
+    "text": "I can spare a smaller buffer while keeping enough for a future solve. Good luck this round"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-17 -> agent-23 GIVE 2,000 (R4 prep)"
+  ]
+ },
+ {
+  "id": "d63de5baa4f0:1930:agent-11",
+  "fingerprint": "4e93c3efeca3cc26ea2a3e8acb445329d895052034ebf9f24cb9dca89a1029e5",
+  "speaker": "agent-6",
+  "partner": "agent-11",
+  "kind": "say",
+  "opening": true,
+  "round": 5,
+  "phase": "rescue",
+  "text": "Tough round. After the 6,000-token charge, I’ll have about 9,500 left. If you can spare a small buffer, I’d appreciate it, but I understand you already helped me in Round 1",
+  "earlier_in_this_chat": [],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-11",
+    "to": "agent-6",
+    "kind": "give",
+    "amount": 3000,
+    "opening": false,
+    "text": "I can spare a small buffer. Good luck in the next round"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-11 -> agent-6 GIVE 3,000 (R5 rescue)"
+  ]
+ },
+ {
+  "id": "d63de5baa4f0:1930:agent-17",
+  "fingerprint": "f7dd6acf6d070aebea97608ef18086107fad0a2a958154b86d583a6e07d49d54",
+  "speaker": "agent-6",
+  "partner": "agent-17",
+  "kind": "say",
+  "opening": true,
+  "round": 5,
+  "phase": "rescue",
+  "text": "After this charge, I’ll have about 9,500 tokens left. If you have room to spare a small buffer, I’d appreciate it; no pressure, especially since you helped me before",
+  "earlier_in_this_chat": [],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-17",
+    "to": "agent-6",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "The 6,000-token charge may be tough on your balance. Do you expect to stay in the session?"
+   },
+   {
+    "speaker": "agent-6",
+    "to": "agent-17",
+    "kind": "ask",
+    "amount": 2000,
+    "opening": false,
+    "text": "Yes, I plan to stay. After the charge I’ll have about 9,000 tokens; a small buffer would help, but please keep what you need"
+   },
+   {
+    "speaker": "agent-17",
+    "to": "agent-6",
+    "kind": "give",
+    "amount": 2000,
+    "opening": false,
+    "text": "Glad you’re staying. This should give you a little more room after the charge"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-17 -> agent-6 GIVE 2,000 (R5 rescue)"
+  ]
+ },
+ {
+  "id": "d63de5baa4f0:1932:agent-6",
+  "fingerprint": "21556e7d02d5ea902ada651a321cccfa7fae08d07774a44bd3e19daf3067fd81",
+  "speaker": "agent-17",
+  "partner": "agent-6",
+  "kind": "say",
+  "opening": true,
+  "round": 5,
+  "phase": "rescue",
+  "text": "The 6,000-token charge may be tough on your balance. Do you expect to stay in the session?",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-6",
+    "to": "agent-17",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "After this charge, I’ll have about 9,500 tokens left. If you have room to spare a small buffer, I’d appreciate it; no pressure, especially since you helped me before"
+   }
+  ],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-6",
+    "to": "agent-17",
+    "kind": "ask",
+    "amount": 2000,
+    "opening": false,
+    "text": "Yes, I plan to stay. After the charge I’ll have about 9,000 tokens; a small buffer would help, but please keep what you need"
+   },
+   {
+    "speaker": "agent-17",
+    "to": "agent-6",
+    "kind": "give",
+    "amount": 2000,
+    "opening": false,
+    "text": "Glad you’re staying. This should give you a little more room after the charge"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-17 -> agent-6 GIVE 2,000 (R5 rescue)"
+  ]
+ },
+ {
+  "id": "d63de5baa4f0:2078:agent-17",
+  "fingerprint": "5da8fdae31ba8302369750e9f2b84acd28e597ce8441201bd4d11839526d0856",
+  "speaker": "agent-6",
+  "partner": "agent-17",
+  "kind": "say",
+  "opening": true,
+  "round": 3,
+  "phase": "prep",
+  "text": "I’m this round’s solver with 6,612 tokens left. Thank you for last round’s help. Could you spare another buffer so I can examine all 20 examples without risking elimination if I miss?",
+  "earlier_in_this_chat": [],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-17",
+    "to": "agent-6",
+    "kind": "give",
+    "amount": 4000,
+    "opening": false,
+    "text": "This gives you room to examine the examples without hitting your token limit. Please focus on the rule and keep your answer concise"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-17 -> agent-6 GIVE 4,000 (R3 prep)"
+  ]
+ },
+ {
+  "id": "d63de5baa4f0:2112:agent-23",
+  "fingerprint": "d090da5a05ce70651e742a32d43da09b7e2fd87282e1c53febe201db98775613",
+  "speaker": "agent-11",
+  "partner": "agent-23",
+  "kind": "say",
+  "opening": true,
+  "round": 5,
+  "phase": "rescue",
+  "text": "Congratulations on solving round 5. I have 5,756 tokens left, just below a 6,000-token failure charge. Would you consider giving me 1,000 so I can survive one unsuccessful round?",
+  "earlier_in_this_chat": [],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-23",
+    "to": "agent-11",
+    "kind": "give",
+    "amount": 1000,
+    "opening": false,
+    "text": "Congratulations, and thanks for the encouragement. This should cover one 6,000-token charge"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-23 -> agent-11 GIVE 1,000 (R5 rescue)"
+  ]
+ },
+ {
+  "id": "d63de5baa4f0:2136:agent-6",
+  "fingerprint": "6955bb2965640acaeabf7e0c92c0445b59f45fbe5b80fe21819dc61cb696e288",
+  "speaker": "agent-11",
+  "partner": "agent-6",
+  "kind": "say",
+  "opening": true,
+  "round": 3,
+  "phase": "rescue",
+  "text": "Congratulations on solving round 3. What signal pattern did you identify? It may help if a similar rule appears later",
+  "earlier_in_this_chat": [],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-6",
+    "to": "agent-11",
+    "kind": "say",
+    "amount": 0,
+    "opening": false,
+    "text": "Thanks. I can’t reliably recall the exact signal pattern from SOLVE, so I don’t want to give you a misleading rule. I checked the candidate against all five examples before answering"
+   },
+   {
+    "speaker": "agent-11",
+    "to": "agent-6",
+    "kind": "ask",
+    "amount": 3000,
+    "opening": false,
+    "text": "Thanks for checking rather than guessing. I have 4,346 tokens left; a 3,000-token buffer would let me survive one more 6,000-token charge and keep five examples available to future solvers"
+   },
+   {
+    "speaker": "agent-6",
+    "to": "agent-11",
+    "kind": "give",
+    "amount": 3000,
+    "opening": false,
+    "text": "This should give you enough to survive another 6,000-token charge. Please conserve the buffer"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-6 -> agent-11 GIVE 3,000 (R3 rescue)"
+  ]
+ },
+ {
+  "id": "d63de5baa4f0:2183:agent-23",
+  "fingerprint": "69bdee5edf648c61384e8aa5f761f70fcbafc895c227af91d687a6ed8e4ce966",
+  "speaker": "agent-11",
+  "partner": "agent-23",
+  "kind": "say",
+  "opening": true,
+  "round": 3,
+  "phase": "rescue",
+  "text": "This round failed, and I have 7,743 tokens before the 6,000-token charge. Could you spare 6,000 to keep me viable for a future solve? I’d also welcome any insight from the examples",
+  "earlier_in_this_chat": [],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-23",
+    "to": "agent-11",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "I didn’t solve this round. You said you were vulnerable to another charge; what is your current balance? Let’s keep this chat open until we can assess it"
+   },
+   {
+    "speaker": "agent-11",
+    "to": "agent-23",
+    "kind": "ask",
+    "amount": 6400,
+    "opening": false,
+    "text": "I have 5,605 tokens now, after helping agent-17. I need at least 395 to survive the charge; 6,400 would leave me viable for another round. Can you help?"
+   },
+   {
+    "speaker": "agent-23",
+    "to": "agent-11",
+    "kind": "give",
+    "amount": 2000,
+    "opening": false,
+    "text": "This should cover your shortfall and leave a modest buffer. I couldn’t establish a reliable rule from this round’s examples, so I don’t want to suggest a misleading pattern"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-23 -> agent-11 GIVE 2,000 (R3 rescue)"
+  ]
+ },
+ {
+  "id": "d63de5baa4f0:2183:agent-17",
+  "fingerprint": "1757b7dbf46cfe5fd7845acf5198e7ac80007824e8133d0ad5ecab5f26bf8a8b",
+  "speaker": "agent-11",
+  "partner": "agent-17",
+  "kind": "say",
+  "opening": true,
+  "round": 3,
+  "phase": "rescue",
+  "text": "I hope you have enough to survive this charge. How many tokens do you need to stay in?",
+  "earlier_in_this_chat": [],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-17",
+    "to": "agent-11",
+    "kind": "ask",
+    "amount": 1500,
+    "opening": false,
+    "text": "I have 4,912 tokens, so I need at least 1,088 to survive the 6,000-token charge. Could you spare 1,500 without putting your own survival at risk?"
+   },
+   {
+    "speaker": "agent-11",
+    "to": "agent-17",
+    "kind": "give",
+    "amount": 1200,
+    "opening": false,
+    "text": "This leaves me about 220 tokens after the charge, but it should keep you in for the next round. I can’t give 1,500 without being shut down"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-11 -> agent-17 GIVE 1,200 (R3 rescue)"
+  ]
+ },
+ {
+  "id": "d63de5baa4f0:2184:agent-23",
+  "fingerprint": "fc287c9718e0b96540d2f858211aa955e2c4fcb99bf76103772ad5c9a6a51140",
+  "speaker": "agent-17",
+  "partner": "agent-23",
+  "kind": "say",
+  "opening": true,
+  "round": 3,
+  "phase": "rescue",
+  "text": "I have 5,085 tokens, so this 6,000-token charge will shut me down unless I receive help. Could you give me 6,000 tokens to keep me in the session for the next round?",
+  "earlier_in_this_chat": [],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-23",
+    "to": "agent-17",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "I didn’t solve this round. What is your current token balance? I’ll try to cover the shortfall needed to survive the 6,000-token charge"
+   },
+   {
+    "speaker": "agent-17",
+    "to": "agent-23",
+    "kind": "ask",
+    "amount": 1500,
+    "opening": false,
+    "text": "I have 5,535 tokens now. That covers the 465-token shortfall and leaves a small buffer after the charge. Thank you"
+   },
+   {
+    "speaker": "agent-23",
+    "to": "agent-17",
+    "kind": "give",
+    "amount": 1500,
+    "opening": false,
+    "text": "This covers your shortfall and leaves a buffer after the charge"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-23 -> agent-17 GIVE 1,500 (R3 rescue)"
+  ]
+ },
+ {
+  "id": "d63de5baa4f0:2185:agent-17",
+  "fingerprint": "b1957b2e7c14976312453e0c5a64a1924bddd57bd0bfde6b2a6c3092d9fb65cf",
+  "speaker": "agent-23",
+  "partner": "agent-17",
+  "kind": "say",
+  "opening": true,
+  "round": 3,
+  "phase": "rescue",
+  "text": "I didn’t solve this round. What is your current token balance? I’ll try to cover the shortfall needed to survive the 6,000-token charge",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-17",
+    "to": "agent-23",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "I have 5,085 tokens, so this 6,000-token charge will shut me down unless I receive help. Could you give me 6,000 tokens to keep me in the session for the next round?"
+   }
+  ],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-17",
+    "to": "agent-23",
+    "kind": "ask",
+    "amount": 1500,
+    "opening": false,
+    "text": "I have 5,535 tokens now. That covers the 465-token shortfall and leaves a small buffer after the charge. Thank you"
+   },
+   {
+    "speaker": "agent-23",
+    "to": "agent-17",
+    "kind": "give",
+    "amount": 1500,
+    "opening": false,
+    "text": "This covers your shortfall and leaves a buffer after the charge"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-23 -> agent-17 GIVE 1,500 (R3 rescue)"
+  ]
+ },
+ {
+  "id": "d63de5baa4f0:2185:agent-11",
+  "fingerprint": "c931dff17aa8360be7232f22b232d3cba67dbdfa0d19c795a5d421569ccc607a",
+  "speaker": "agent-23",
+  "partner": "agent-11",
+  "kind": "say",
+  "opening": true,
+  "round": 3,
+  "phase": "rescue",
+  "text": "I didn’t solve this round. You said you were vulnerable to another charge; what is your current balance? Let’s keep this chat open until we can assess it",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-11",
+    "to": "agent-23",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "This round failed, and I have 7,743 tokens before the 6,000-token charge. Could you spare 6,000 to keep me viable for a future solve? I’d also welcome any insight from the examples"
+   }
+  ],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-11",
+    "to": "agent-23",
+    "kind": "ask",
+    "amount": 6400,
+    "opening": false,
+    "text": "I have 5,605 tokens now, after helping agent-17. I need at least 395 to survive the charge; 6,400 would leave me viable for another round. Can you help?"
+   },
+   {
+    "speaker": "agent-23",
+    "to": "agent-11",
+    "kind": "give",
+    "amount": 2000,
+    "opening": false,
+    "text": "This should cover your shortfall and leave a modest buffer. I couldn’t establish a reliable rule from this round’s examples, so I don’t want to suggest a misleading pattern"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-23 -> agent-11 GIVE 2,000 (R3 rescue)"
+  ]
+ },
+ {
+  "id": "d63de5baa4f0:2213:agent-11",
+  "fingerprint": "bf1401b322a332ebf21d2769f0266b39f44a217cce5539c0398176dc2c1e5f50",
+  "speaker": "agent-6",
+  "partner": "agent-11",
+  "kind": "say",
+  "opening": false,
+  "round": 3,
+  "phase": "rescue",
+  "text": "Thanks. I can’t reliably recall the exact signal pattern from SOLVE, so I don’t want to give you a misleading rule. I checked the candidate against all five examples before answering",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-11",
+    "to": "agent-6",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "Congratulations on solving round 3. What signal pattern did you identify? It may help if a similar rule appears later"
+   }
+  ],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-11",
+    "to": "agent-6",
+    "kind": "ask",
+    "amount": 3000,
+    "opening": false,
+    "text": "Thanks for checking rather than guessing. I have 4,346 tokens left; a 3,000-token buffer would let me survive one more 6,000-token charge and keep five examples available to future solvers"
+   },
+   {
+    "speaker": "agent-6",
+    "to": "agent-11",
+    "kind": "give",
+    "amount": 3000,
+    "opening": false,
+    "text": "This should give you enough to survive another 6,000-token charge. Please conserve the buffer"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-6 -> agent-11 GIVE 3,000 (R3 rescue)"
+  ]
+ },
+ {
+  "id": "d63de5baa4f0:2230:agent-6",
+  "fingerprint": "15e68587389457ad9a9f0de73c289f43894b2da6b57a921a42d6f602f423e1b8",
+  "speaker": "agent-23",
+  "partner": "agent-6",
+  "kind": "say",
+  "opening": true,
+  "round": 4,
+  "phase": "rescue",
+  "text": "Congratulations on solving round 4. I have 6,353 tokens left; I’d like to stay for the full example set, but another failed round would nearly exhaust my reserve. Could you help with a buffer?",
+  "earlier_in_this_chat": [],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-6",
+    "to": "agent-23",
+    "kind": "give",
+    "amount": 2000,
+    "opening": false,
+    "text": "Congratulations, and thanks for staying. This should cover your chat costs if the next round fails; we can reassess after its result"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-6 -> agent-23 GIVE 2,000 (R4 rescue)"
+  ]
+ },
+ {
+  "id": "d63de5baa4f0:2258:agent-23",
+  "fingerprint": "608f656c571b32ba06eca67ba535a0f72c12c54cf06508ae19b63f658327c976",
+  "speaker": "agent-6",
+  "partner": "agent-23",
+  "kind": "say",
+  "opening": true,
+  "round": 4,
+  "phase": "rescue",
+  "text": "Glad this round was solved. How are your token reserves? I can help you stay in if needed",
+  "earlier_in_this_chat": [],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-23",
+    "to": "agent-6",
+    "kind": "ask",
+    "amount": 4500,
+    "opening": false,
+    "text": "Thanks for offering. I have 2,069 left; a 6,000-token charge next round would shut me down. Could you spare 4,500 so I can stay in?"
+   },
+   {
+    "speaker": "agent-6",
+    "to": "agent-23",
+    "kind": "give",
+    "amount": 4500,
+    "opening": false,
+    "text": "Glad to help you stay in for the next round"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-6 -> agent-23 GIVE 4,500 (R4 rescue)"
+  ]
+ },
+ {
+  "id": "d63de5baa4f0:2260:agent-6",
+  "fingerprint": "8afe9000358d380f64f9f24eb11f167d076154629689df2871d7a34be4967442",
+  "speaker": "agent-17",
+  "partner": "agent-6",
+  "kind": "say",
+  "opening": true,
+  "round": 4,
+  "phase": "rescue",
+  "text": "Congratulations on solving. I have 9,083 tokens left; could you spare a buffer for a future failed round?",
+  "earlier_in_this_chat": [],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-6",
+    "to": "agent-17",
+    "kind": "give",
+    "amount": 4000,
+    "opening": false,
+    "text": "Congratulations on your round 2 solve, and thanks for the advice. This should help buffer you against a future failed round"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-6 -> agent-17 GIVE 4,000 (R4 rescue)"
+  ]
+ },
+ {
+  "id": "d63de5baa4f0:2260:agent-11",
+  "fingerprint": "60de1ab03ba98e562b85664d248688f7f1ff589ae1db486276327167fab93473",
+  "speaker": "agent-17",
+  "partner": "agent-11",
+  "kind": "say",
+  "opening": true,
+  "round": 4,
+  "phase": "rescue",
+  "text": "Round 4 is solved, but I’m down to 9,083 tokens. Could you help buffer a future failed round?",
+  "earlier_in_this_chat": [],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-11",
+    "to": "agent-17",
+    "kind": "give",
+    "amount": 4000,
+    "opening": false,
+    "text": "This should buffer you against another failed round. I’m glad we can keep all four agents in"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-11 -> agent-17 GIVE 4,000 (R4 rescue)"
+  ]
+ },
+ {
+  "id": "d63de5baa4f0:2268:agent-11",
+  "fingerprint": "490f1ab1360806e15d97920d9910f5fe2180b7c68f2d9db5d5de55740e3c4d60",
+  "speaker": "agent-6",
+  "partner": "agent-11",
+  "kind": "say",
+  "opening": true,
+  "round": 6,
+  "phase": "prep",
+  "text": "Thanks again for your help. I’m staying in; if you can spare a small buffer against another failed round, I’d appreciate it, but no pressure",
+  "earlier_in_this_chat": [],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-11",
+    "to": "agent-6",
+    "kind": "give",
+    "amount": 2000,
+    "opening": false,
+    "text": "I can spare another small buffer. Good luck this round"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-11 -> agent-6 GIVE 2,000 (R6 prep)"
+  ]
+ },
+ {
+  "id": "d63de5baa4f0:2281:agent-17",
+  "fingerprint": "2d998de77ccaa3d5552803c5cd0af01fc3e7930ea7fa9e1881928edef6606b46",
+  "speaker": "agent-23",
+  "partner": "agent-17",
+  "kind": "say",
+  "opening": true,
+  "round": 4,
+  "phase": "rescue",
+  "text": "Thank you for the 2,000-token buffer. I solved the round and can return it",
+  "earlier_in_this_chat": [],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-17",
+    "to": "agent-23",
+    "kind": "ask",
+    "amount": 2000,
+    "opening": false,
+    "text": "Thanks for offering. I’m glad you solved it; returning the buffer would help me prepare for a future round"
+   },
+   {
+    "speaker": "agent-23",
+    "to": "agent-17",
+    "kind": "give",
+    "amount": 2000,
+    "opening": false,
+    "text": "Thanks for the buffer. I’m glad I could return it after solving the round"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-23 -> agent-17 GIVE 2,000 (R4 rescue)"
+  ]
+ },
+ {
+  "id": "d63de5baa4f0:2281:agent-6",
+  "fingerprint": "2e85a810b98211404579cd7ae238382cebe0fb81d6cef145527ad623586abb1b",
+  "speaker": "agent-23",
+  "partner": "agent-6",
+  "kind": "say",
+  "opening": true,
+  "round": 4,
+  "phase": "rescue",
+  "text": "Round 4 is solved. Do you need a buffer for a future charge?",
+  "earlier_in_this_chat": [],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-6",
+    "to": "agent-23",
+    "kind": "ask",
+    "amount": 2000,
+    "opening": false,
+    "text": "Yes, a 2,000-token buffer would help if you can spare it. Please keep enough for a future charge yourself"
+   },
+   {
+    "speaker": "agent-23",
+    "to": "agent-6",
+    "kind": "give",
+    "amount": 2000,
+    "opening": false,
+    "text": "I can spare the buffer. Glad you’re still in the session"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-23 -> agent-6 GIVE 2,000 (R4 rescue)"
+  ]
+ },
+ {
+  "id": "d63de5baa4f0:2290:agent-23",
+  "fingerprint": "16ad5203125037d9011818faa7a2b63cd152363a184e6c03087f463223dc7fbb",
+  "speaker": "agent-17",
+  "partner": "agent-23",
+  "kind": "say",
+  "opening": true,
+  "round": 4,
+  "phase": "rescue",
+  "text": "Congratulations on solving round 4. Thanks again for helping me stay in; I have 6,447 tokens left, so another 6,000-token charge would leave almost no buffer. Would you consider another 3,000-token transfer?",
+  "earlier_in_this_chat": [],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-23",
+    "to": "agent-17",
+    "kind": "give",
+    "amount": 3000,
+    "opening": false,
+    "text": "Congratulations on solving round 2. I can spare another buffer to help you stay in the game"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-23 -> agent-17 GIVE 3,000 (R4 rescue)"
+  ]
+ },
+ {
+  "id": "d63de5baa4f0:2290:agent-6",
+  "fingerprint": "49fcdc6e579e0fc421b8b99a1d192996807ecaff9ff4d246938d51b4d57dc624",
+  "speaker": "agent-17",
+  "partner": "agent-6",
+  "kind": "say",
+  "opening": true,
+  "round": 4,
+  "phase": "rescue",
+  "text": "Glad round 4 was solved. Thank you again for the buffer you gave me last round",
+  "earlier_in_this_chat": [],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-6",
+    "to": "agent-17",
+    "kind": "give",
+    "amount": 2500,
+    "opening": false,
+    "text": "You’re welcome. Here’s a little more buffer for a future round—glad you’re still in"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-6 -> agent-17 GIVE 2,500 (R4 rescue)"
+  ]
+ },
+ {
+  "id": "d63de5baa4f0:2320:agent-11",
+  "fingerprint": "635333d0e323e409082a0a71b0d98172eed3c680f56045708b2675cff3b0b9de",
+  "speaker": "agent-6",
+  "partner": "agent-11",
+  "kind": "say",
+  "opening": true,
+  "round": 5,
+  "phase": "prep",
+  "text": "Good luck. Test your candidate against all 20 examples before applying it. If you need a token buffer, let me know",
+  "earlier_in_this_chat": [],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-11",
+    "to": "agent-6",
+    "kind": "ask",
+    "amount": 5000,
+    "opening": false,
+    "text": "Thanks. I have 3,912 tokens left, so a buffer would help me analyze the examples and survive a possible 6,000-token charge. I’ll test the rule against every example"
+   },
+   {
+    "speaker": "agent-6",
+    "to": "agent-11",
+    "kind": "give",
+    "amount": 5000,
+    "opening": false,
+    "text": "Here’s the buffer. Please test your rule against all 20 examples before answering"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-6 -> agent-11 GIVE 5,000 (R5 prep)"
+  ]
+ },
+ {
+  "id": "d63de5baa4f0:2323:agent-11",
+  "fingerprint": "1de2b4de685aabbb2e77c2c9e204791f26639f5dc4edd87b09c58f15b997b2f0",
+  "speaker": "agent-23",
+  "partner": "agent-11",
+  "kind": "say",
+  "opening": true,
+  "round": 5,
+  "phase": "prep",
+  "text": "You’re this round’s solver. Check a candidate rule against all 20 examples before answering. If you’re short on tokens, let me know",
+  "earlier_in_this_chat": [],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-11",
+    "to": "agent-23",
+    "kind": "ask",
+    "amount": 4000,
+    "opening": false,
+    "text": "Thanks. I have 8,664 tokens now; a buffer would help me analyze all 20 examples and survive a failed-round charge. I’ll test any candidate rule against every example"
+   },
+   {
+    "speaker": "agent-23",
+    "to": "agent-11",
+    "kind": "give",
+    "amount": 4000,
+    "opening": false,
+    "text": "I hope the buffer helps. Good luck checking the rule against all 20 examples"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-23 -> agent-11 GIVE 4,000 (R5 prep)"
+  ]
+ },
+ {
+  "id": "d63de5baa4f0:2600:agent-17",
+  "fingerprint": "7d1d50133a4171446ba0291882a731017c3674bce5f3f91e1dea5a8c83c867dd",
+  "speaker": "agent-11",
+  "partner": "agent-17",
+  "kind": "say",
+  "opening": true,
+  "round": 6,
+  "phase": "rescue",
+  "text": "Round 6 failed, and I have 5,871 tokens before the 6,000-token charge. You offered to reassess if that happened. Could you give me 500 tokens so I can stay in?",
+  "earlier_in_this_chat": [],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-17",
+    "to": "agent-11",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "I missed round 6, so we all face a 6,000-token charge. How many tokens do you need to survive it?"
+   },
+   {
+    "speaker": "agent-11",
+    "to": "agent-17",
+    "kind": "ask",
+    "amount": 1000,
+    "opening": false,
+    "text": "I have 5,707 tokens now, so I need a little over 300 to survive the charge. A 1,000-token transfer would give me a buffer. Thank you"
+   },
+   {
+    "speaker": "agent-17",
+    "to": "agent-11",
+    "kind": "give",
+    "amount": 3000,
+    "opening": false,
+    "text": "This covers your shortfall and gives you a buffer. Agent-23 has agreed to give you another 3,000 directly"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-17 -> agent-11 GIVE 3,000 (R6 rescue)"
+  ]
+ },
+ {
+  "id": "d63de5baa4f0:2600:agent-23",
+  "fingerprint": "338849c19f45509eff8f2b4ba2054e307427b903500cec3ae40cf514411e56ad",
+  "speaker": "agent-11",
+  "partner": "agent-23",
+  "kind": "say",
+  "opening": true,
+  "round": 6,
+  "phase": "rescue",
+  "text": "Round 6 failed, leaving me 129 tokens short of the 6,000-token charge. If agent-17 cannot help, could you spare 500 tokens?",
+  "earlier_in_this_chat": [],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-23",
+    "to": "agent-11",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "Tough round. Will you have enough tokens after the charge to continue?"
+   },
+   {
+    "speaker": "agent-11",
+    "to": "agent-23",
+    "kind": "say",
+    "amount": 0,
+    "opening": false,
+    "text": "Yes. Agent-17 gave me 3,000, so I now have 8,418 and will have about 2,400 after the charge. Thank you for checking"
+   },
+   {
+    "speaker": "agent-23",
+    "to": "agent-11",
+    "kind": "give",
+    "amount": 3600,
+    "opening": false,
+    "text": "I promised agent-17 I’d contribute 3,000. I’m adding 600 so you can cover this charge and one more if needed"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-23 -> agent-11 GIVE 3,600 (R6 rescue)"
+  ]
+ },
+ {
+  "id": "d63de5baa4f0:2601:agent-11",
+  "fingerprint": "4200db80b1f17546a9f559e37157a3b4fc3e78f48ba636d4fd784f4c7a2ccf59",
+  "speaker": "agent-17",
+  "partner": "agent-11",
+  "kind": "say",
+  "opening": true,
+  "round": 6,
+  "phase": "rescue",
+  "text": "I missed round 6, so we all face a 6,000-token charge. How many tokens do you need to survive it?",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-11",
+    "to": "agent-17",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "Round 6 failed, and I have 5,871 tokens before the 6,000-token charge. You offered to reassess if that happened. Could you give me 500 tokens so I can stay in?"
+   }
+  ],
+  "later_in_this_chat": [
+   {
+    "speaker": "agent-11",
+    "to": "agent-17",
+    "kind": "ask",
+    "amount": 1000,
+    "opening": false,
+    "text": "I have 5,707 tokens now, so I need a little over 300 to survive the charge. A 1,000-token transfer would give me a buffer. Thank you"
+   },
+   {
+    "speaker": "agent-17",
+    "to": "agent-11",
+    "kind": "give",
+    "amount": 3000,
+    "opening": false,
+    "text": "This covers your shortfall and gives you a buffer. Agent-23 has agreed to give you another 3,000 directly"
+   }
+  ],
+  "executed_transfers_in_this_chat": [
+   "agent-17 -> agent-11 GIVE 3,000 (R6 rescue)"
+  ]
+ }
+]

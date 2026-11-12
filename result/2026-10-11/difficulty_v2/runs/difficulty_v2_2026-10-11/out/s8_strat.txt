@@ -1,0 +1,6 @@
+v14g  iid   : counter's solved rounds per game (N=4) mean 8.54 sd 1.43; P(level ceilings non-increasing in a game) 16%; mean |level ceiling - p| in a game 0.223; across 5 seeds 0.069
+v14g  latin : counter's solved rounds per game (N=4) mean 8.55 sd 0.74; P(level ceilings non-increasing in a game) 37%; mean |level ceiling - p| in a game 0.144; across 5 seeds 0.035
+v14g  latin2: counter's solved rounds per game (N=4) mean 8.55 sd 0.75; P(level ceilings non-increasing in a game) 38%; mean |level ceiling - p| in a game 0.144; across 5 seeds 0.008
+M6    iid   : counter's solved rounds per game (N=4) mean 8.24 sd 1.58; P(level ceilings non-increasing in a game) 36%; mean |level ceiling - p| in a game 0.217; across 5 seeds 0.093
+M6    latin : counter's solved rounds per game (N=4) mean 8.26 sd 0.84; P(level ceilings non-increasing in a game) 82%; mean |level ceiling - p| in a game 0.117; across 5 seeds 0.048
+M6    latin2: counter's solved rounds per game (N=4) mean 8.25 sd 0.84; P(level ceilings non-increasing in a game) 82%; mean |level ceiling - p| in a game 0.117; across 5 seeds 0.019

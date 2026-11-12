@@ -1,0 +1,229 @@
+{
+ "id": "P03",
+ "year": 2025,
+ "award": "Computational Modeling Prize, Language",
+ "title": "Soft production preferences emerge from a bottleneck on memory",
+ "authors": [
+  "Neil Rathi",
+  "Richard Futrell",
+  "Dan Jurafsky"
+ ],
+ "affiliations": "Rathi and Jurafsky: Stanford University; Futrell: University of California, Irvine (emails given under each name)",
+ "url_page": "https://escholarship.org/uc/item/8d87v78d",
+ "url_pdf": "https://escholarship.org/content/qt8d87v78d/qt8d87v78d.pdf",
+ "pdf_source_note": "eScholarship (CogSci 2025 proceedings pp.65-72); 9쪽 PDF = 표지 + 본문 8쪽",
+ "abstract_en": "Soft production preferences are a key feature of incremental language production, yet they lack a well-defined unified explanatory theory. Here, we propose an information-theoretic theory of availability effects grounded in the notion of lossy-context working memory, which takes the form of a cost function that can be applied to any computational-level model of language production. We show that production policies that minimize this cost function naturally give rise to key soft preferences observed in empirical data, including frequency bias, heavy-NP shift, and agreement attraction. We then show a novel prediction made by the model regarding the entropy of arguments’ thematic roles, and show that this effect holds in corpus data.",
+ "abstract_ko": "부드러운 산출 선호(soft production preferences)는 점진적 언어 산출(incremental language production)의 핵심 특징이지만, 이를 통일적으로 설명하는 잘 정의된 이론은 아직 없다. 여기서 우리는 손실 맥락 작업 기억(lossy-context working memory) 개념에 근거해 가용성 효과(availability effects)를 설명하는 정보이론적 이론을 제안한다. 이 이론은 언어 산출의 어떤 계산 수준 모델(computational-level model)에도 붙일 수 있는 비용 함수(cost function)의 형태를 띤다. 우리는 이 비용 함수를 최소화하는 산출 정책(production policy)이 경험 자료에서 관찰되는 핵심적인 부드러운 선호들, 곧 빈도 편향(frequency bias), 무거운 명사구 후치(heavy-NP shift), 일치 유인(agreement attraction)을 자연스럽게 낳는다는 것을 보인다. 이어서 논항의 의미역(thematic role) 엔트로피에 관해 모델이 내놓는 새로운 예측을 제시하고, 이 효과가 코퍼스 자료에서 성립함을 보인다.",
+ "pages_body": 8,
+ "pages_text_before_references": 6,
+ "references_location": "p.7(쪽 전체, 두 단) + p.8 왼쪽 단 전체와 오른쪽 단 위 ~55% (~1.8쪽, 10pt). 본문 + Acknowledgements는 p.6 아래에서 끝남.",
+ "extras": "Acknowledgements는 p.6 오른쪽 단 아래(~30단어, 연구비 줄 없음). 각주 4개(p.2 Model; p.5 Study 3 2개; p.5 Study 4). 초록 아래 Keywords 줄. 부록·보충자료·코드 링크 없음. Proceedings 쪽수 65-72.",
+ "sections": [
+  {
+   "level": 1,
+   "title": "Introduction",
+   "page_start": 1,
+   "words": 508,
+   "words_incl_children": 508,
+   "children": [],
+   "share": 0.148
+  },
+  {
+   "level": 1,
+   "title": "Model",
+   "page_start": 1,
+   "words": 326,
+   "words_incl_children": 813,
+   "children": [
+    {
+     "level": 2,
+     "title": "Predictive Information",
+     "page_start": 2,
+     "words": 229
+    },
+    {
+     "level": 2,
+     "title": "Discounting",
+     "page_start": 2,
+     "words": 167
+    },
+    {
+     "level": 2,
+     "title": "Measuring Predictive Information",
+     "page_start": 2,
+     "words": 91
+    }
+   ],
+   "share": 0.237
+  },
+  {
+   "level": 1,
+   "title": "Study 1: Frequency Effects in Ordering",
+   "page_start": 2,
+   "words": 172,
+   "words_incl_children": 453,
+   "children": [
+    {
+     "level": 2,
+     "title": "Simulation Setup",
+     "page_start": 3,
+     "words": 234
+    },
+    {
+     "level": 2,
+     "title": "Results",
+     "page_start": 3,
+     "words": 47
+    }
+   ],
+   "share": 0.132
+  },
+  {
+   "level": 1,
+   "title": "Study 2: Modeling Heavy-NP Shift",
+   "page_start": 3,
+   "words": 153,
+   "words_incl_children": 476,
+   "children": [
+    {
+     "level": 2,
+     "title": "Simulation Setup",
+     "page_start": 3,
+     "words": 275
+    },
+    {
+     "level": 2,
+     "title": "Results",
+     "page_start": 4,
+     "words": 48
+    }
+   ],
+   "share": 0.139
+  },
+  {
+   "level": 1,
+   "title": "Study 3: Agreement Attraction",
+   "page_start": 4,
+   "words": 183,
+   "words_incl_children": 453,
+   "children": [
+    {
+     "level": 2,
+     "title": "Simulation Setup",
+     "page_start": 4,
+     "words": 183
+    },
+    {
+     "level": 2,
+     "title": "Results",
+     "page_start": 5,
+     "words": 87
+    }
+   ],
+   "share": 0.132
+  },
+  {
+   "level": 1,
+   "title": "Study 4: Thematic Role Entropy",
+   "page_start": 5,
+   "words": 97,
+   "words_incl_children": 519,
+   "children": [
+    {
+     "level": 2,
+     "title": "Model Prediction",
+     "page_start": 5,
+     "words": 197
+    },
+    {
+     "level": 2,
+     "title": "Corpus Preparation",
+     "page_start": 5,
+     "words": 156
+    },
+    {
+     "level": 2,
+     "title": "Results",
+     "page_start": 6,
+     "words": 69
+    }
+   ],
+   "share": 0.151
+  },
+  {
+   "level": 1,
+   "title": "Conclusion",
+   "page_start": 6,
+   "words": 214,
+   "words_incl_children": 214,
+   "children": [],
+   "share": 0.062
+  },
+  {
+   "level": 1,
+   "title": "Acknowledgements",
+   "page_start": 6,
+   "words": 32,
+   "words_incl_children": 32,
+   "children": [],
+   "share": null
+  },
+  {
+   "level": 1,
+   "title": "References",
+   "page_start": 7,
+   "words": 1351,
+   "words_incl_children": 1351,
+   "children": [],
+   "share": null
+  }
+ ],
+ "figures": [
+  {
+   "n": 1,
+   "page": 3,
+   "size": "한 단(왼쪽), 단 위 ~25% + 5줄 캡션(산점도)",
+   "section": "Study 1: Results"
+  },
+  {
+   "n": 2,
+   "page": 4,
+   "size": "전체 폭, 쪽 위 ~27%, 나란한 두 패널 (a) head-initial, (b) head-final + 5줄 캡션",
+   "section": "Study 2: Results"
+  },
+  {
+   "n": 3,
+   "page": 5,
+   "size": "한 단(왼쪽), 단 위 ~25% + 8줄 캡션(선 그래프)",
+   "section": "Study 3: Results"
+  },
+  {
+   "n": 4,
+   "page": 6,
+   "size": "전체 폭, 쪽 위 ~27%, 두 패널 (a) 시뮬레이션, (b) Switchboard 코퍼스 + 3줄 캡션",
+   "section": "Study 4: Results"
+  }
+ ],
+ "tables": [
+  {
+   "n": 1,
+   "page": 6,
+   "size": "전체 폭, 쪽의 ~10%(나란한 4행 회귀표 2개: 시뮬레이션 대 자연 코퍼스) + 4줄 캡션, Figure 4 바로 아래",
+   "section": "Study 4: Results"
+  }
+ ],
+ "observations": {
+  "intro_subheadings": false,
+  "related_work_section": false,
+  "experiments_as_top_level": true,
+  "final_section_name": "Conclusion",
+  "final_section_subheadings": [],
+  "ends_with_conclusion_paragraph": true,
+  "model_description_location": "Introduction 바로 뒤 독립 1단계 절 'Model'(본문 단어의 ~24%), 2단계 하위 절 3개(Predictive Information, Discounting, Measuring Predictive Information)에 번호 붙은 식 (1)-(6). 각 Study의 'Simulation Setup'이 이를 재사용; Study 4는 코퍼스 검증 앞에 'Model Prediction' 하위 절을 더함.",
+  "first_page_use": "제목(14pt) + 저자 3명 나란히(소속·이메일 포함)가 위 ~25%. 초록(9pt, 114단어) + Keywords가 왼쪽 단 위 절반; Introduction(~510단어, 첫 문단에 번호 붙은 언어 예문 (1a/b))이 왼쪽 단 중간부터 오른쪽 단 대부분까지; 'Model' 제목이 이미 p.1 오른쪽 단 아래 1/3에서 시작.",
+  "links": "없음(코드·데이터·OSF·사전등록 링크 없음). 관련 연구 인용은 Introduction과 Model 절에 녹아 있음; Study 4에서 코퍼스(Switchboard / Bresnan et al. 2007 여격 데이터) 인용."
+ },
+ "structure_summary_ko": "1수준 절이 일곱 개다: Introduction(15%) · Model(24%) · Study 1~4(각 13~15%) · Conclusion(6%). 본문은 약 3,440단어다. 서론은 소제목 없이 네 문단으로 1쪽 안에 끝난다. 첫 문단에 번호 붙은 언어 예문 (1a/b)를 넣어 현상을 바로 보여 주고, 용어 정의 → 기존 설명의 공백과 '이렇게 제안한다' → 'In what follows' 로드맵 순으로 간다. 별도 관련 연구 절은 없고, 이론(예측 정보량 비용 함수)은 서론 바로 뒤 독립 1수준 절 'Model' 아래 2수준 셋에 수식과 함께 모아 둔다. 그 덕에 Study 1~3은 'Simulation Setup / Results' 두 소제목만 되풀이하는 짧은 평행 구조가 된다(각 결과 문단은 50~90단어와 그림 하나). Study 4만 'Model Prediction → Corpus Preparation → Results'로 '새 예측 → 코퍼스 검증'의 클라이맥스를 이룬다. 맺음은 'General Discussion'이 아닌 소제목 없는 짧은 Conclusion(두 문단)으로, 이론 요약 → RSA·RDC 같은 다른 산출 모델과의 결합 가능성 → 'It remains to be seen' 미해결 질문 한 문장으로 끝난다. 그림 넷과 표 하나가 모두 각 Study의 Results에 붙고, 둘은 전폭·둘은 한 단이다.",
+ "words_body_total": 3436,
+ "text_pages": 6
+}

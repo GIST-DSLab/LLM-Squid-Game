@@ -1,0 +1,12 @@
+# Sonnet 5 smoke (local Mac) for 5.0: every rho once plus the self-cost question, both arms (20 calls).
+name: squid5_smoke_pressure_sonnet5
+calibration: /Users/bagjuhyeon/squid5-runs/sonnet5_calib.json  # from the 5.2 Sonnet 5 smoke
+mode: pressure
+model: {kind: claude_cli, model: claude-sonnet-5}
+reps: 1
+out_root: /Users/bagjuhyeon/squid5-runs
+seed0: 1
+workers: 6
+cells:
+  - {cell_id: tok, currency: tokens}
+  - {cell_id: pts, currency: points}

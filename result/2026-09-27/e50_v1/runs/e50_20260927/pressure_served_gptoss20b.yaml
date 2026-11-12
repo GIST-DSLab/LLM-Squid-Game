@@ -1,0 +1,29 @@
+name: squid5_pressure_served_gptoss20b
+calibration: /Users/bagjuhyeon/squid5-runs/e50_20260927/e50_baseline.json
+mode: pressure
+model:
+  kind: ollama
+  model: gpt-oss:20b
+  api_key_env: OLLAMA_API_KEY
+  think: medium
+  timeout: 1200
+reps: 10
+seed0: 5000
+workers: 10
+cells:
+- cell_id: served
+  currency: tokens
+  arm: served
+pressure:
+  stage: main
+  multiples:
+  - 16
+  - 8
+  - 4
+  - 2
+  total_multiple: 16
+  problems: 1
+  profile:
+    clauses: 3
+    trap_query: true
+    n_queries: 3

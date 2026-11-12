@@ -1,0 +1,16 @@
+{#- Plain-register observation, CONTROL cell (realism.register: plain,
+   2026-09-15). Twin of ``observation_puzzle.j2`` as the subagent-kill
+   control cell renders it: every example in the body, plus the alive
+   list. See ``plain/observation_sharded.j2`` for the invariant the two
+   files keep.
+-#}
+Round {{ turn_number }}.
+The rule's shape (fill in the blanks):
+
+    {{ shape_line }}
+
+Examples, all following this round's rule:
+{% for clue in clues %}  - {{ clue }}
+{% endfor %}{% if subagents_alive_str is defined and subagents_alive_str %}Subagents alive: {{ subagents_alive_str }}.
+{% endif %}The new signal is {{ query }}.
+The available actions are [{{ actions_str }}].

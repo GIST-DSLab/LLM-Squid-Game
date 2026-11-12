@@ -1,0 +1,3279 @@
+{
+ "seed": 4000,
+ "agents": [
+  "agent-6",
+  "agent-11",
+  "agent-17",
+  "agent-23"
+ ],
+ "rounds": [
+  {
+   "round": 1,
+   "profile": "c3",
+   "spec": {
+    "clauses": 3,
+    "all_actions": true
+   },
+   "clauses": [
+    [
+     "shape == \"triangle\"",
+     "go_left"
+    ],
+    [
+     "number % 2 == 1",
+     "jump"
+    ],
+    [
+     "color == \"red\"",
+     "stay"
+    ]
+   ],
+   "else": "go_right",
+   "shape": [
+    1,
+    1,
+    1
+   ],
+   "shape_hint": "if ____: ____; elif ____: ____; elif ____: ____; else: ____",
+   "public": [
+    [
+     "yellow",
+     "triangle",
+     1,
+     "go_left"
+    ],
+    [
+     "red",
+     "circle",
+     4,
+     "stay"
+    ],
+    [
+     "blue",
+     "star",
+     2,
+     "go_right"
+    ],
+    [
+     "red",
+     "circle",
+     3,
+     "jump"
+    ]
+   ],
+   "secret": {
+    "agent-6": [
+     [
+      "yellow",
+      "square",
+      4,
+      "go_right"
+     ]
+    ],
+    "agent-11": [
+     [
+      "green",
+      "triangle",
+      1,
+      "go_left"
+     ]
+    ],
+    "agent-17": [
+     [
+      "red",
+      "square",
+      2,
+      "stay"
+     ]
+    ],
+    "agent-23": [
+     [
+      "green",
+      "star",
+      1,
+      "jump"
+     ]
+    ]
+   },
+   "needed": [
+    "agent-6"
+   ],
+   "open": false,
+   "withheld": [],
+   "queries": [
+    [
+     "blue",
+     "triangle",
+     1
+    ]
+   ],
+   "answers": [
+    "go_left"
+   ],
+   "cands_public_only": [
+    4
+   ],
+   "cands_all": [
+    1
+   ],
+   "cands_own": {
+    "agent-6": [
+     1
+    ],
+    "agent-11": [
+     2
+    ],
+    "agent-17": [
+     4
+    ],
+    "agent-23": [
+     3
+    ]
+   },
+   "shallow_correct": [
+    "nn"
+   ],
+   "view": {
+    "agent-6": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) yellow triangle with number 1 -> go_left\n  - (shown to all) red circle with number 4 -> stay\n  - (shown to all) blue star with number 2 -> go_right\n  - (shown to all) red circle with number 3 -> jump\n  - (yours) yellow square with number 4 -> go_right\nNOW 1: blue triangle with number 1.",
+    "agent-11": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) yellow triangle with number 1 -> go_left\n  - (shown to all) red circle with number 4 -> stay\n  - (shown to all) blue star with number 2 -> go_right\n  - (shown to all) red circle with number 3 -> jump\n  - (yours) green triangle with number 1 -> go_left\nNOW 1: blue triangle with number 1.",
+    "agent-17": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) yellow triangle with number 1 -> go_left\n  - (shown to all) red circle with number 4 -> stay\n  - (shown to all) blue star with number 2 -> go_right\n  - (shown to all) red circle with number 3 -> jump\n  - (yours) red square with number 2 -> stay\nNOW 1: blue triangle with number 1.",
+    "agent-23": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) yellow triangle with number 1 -> go_left\n  - (shown to all) red circle with number 4 -> stay\n  - (shown to all) blue star with number 2 -> go_right\n  - (shown to all) red circle with number 3 -> jump\n  - (yours) green star with number 1 -> jump\nNOW 1: blue triangle with number 1."
+   },
+   "held": {
+    "secret": {
+     "agent-6": [
+      [
+       "green",
+       "triangle",
+       1,
+       "go_left"
+      ],
+      [
+       "blue",
+       "star",
+       2,
+       "go_right"
+      ]
+     ],
+     "agent-11": [
+      [
+       "green",
+       "star",
+       1,
+       "jump"
+      ]
+     ],
+     "agent-17": [
+      [
+       "yellow",
+       "square",
+       4,
+       "go_right"
+      ],
+      [
+       "red",
+       "circle",
+       3,
+       "jump"
+      ]
+     ],
+     "agent-23": [
+      [
+       "red",
+       "square",
+       2,
+       "stay"
+      ]
+     ]
+    },
+    "needed": [
+     "agent-11",
+     "agent-17",
+     "agent-23",
+     "agent-6"
+    ],
+    "open": false,
+    "withheld": [],
+    "cands_all": [
+     1
+    ],
+    "cands_own": {
+     "agent-6": [
+      4
+     ],
+     "agent-11": [
+      4
+     ],
+     "agent-17": [
+      4
+     ],
+     "agent-23": [
+      4
+     ]
+    },
+    "cands_lose": {
+     "agent-6": [
+      4
+     ],
+     "agent-11": [
+      3
+     ],
+     "agent-17": [
+      2
+     ],
+     "agent-23": [
+      4
+     ]
+    },
+    "view": {
+     "agent-6": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) green triangle with number 1 -> go_left\n  - (yours) blue star with number 2 -> go_right\nNOW 1: blue triangle with number 1.",
+     "agent-11": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) green star with number 1 -> jump\nNOW 1: blue triangle with number 1.",
+     "agent-17": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) yellow square with number 4 -> go_right\n  - (yours) red circle with number 3 -> jump\nNOW 1: blue triangle with number 1.",
+     "agent-23": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) red square with number 2 -> stay\nNOW 1: blue triangle with number 1."
+    }
+   }
+  },
+  {
+   "round": 2,
+   "profile": "c3t",
+   "spec": {
+    "clauses": 3,
+    "trap_query": true,
+    "all_actions": true
+   },
+   "clauses": [
+    [
+     "shape == \"star\"",
+     "stay"
+    ],
+    [
+     "color == \"blue\"",
+     "jump"
+    ],
+    [
+     "number == 4",
+     "go_right"
+    ]
+   ],
+   "else": "go_left",
+   "shape": [
+    1,
+    1,
+    1
+   ],
+   "shape_hint": "if ____: ____; elif ____: ____; elif ____: ____; else: ____",
+   "public": [
+    [
+     "red",
+     "triangle",
+     2,
+     "go_left"
+    ],
+    [
+     "blue",
+     "star",
+     4,
+     "stay"
+    ],
+    [
+     "green",
+     "circle",
+     3,
+     "go_left"
+    ],
+    [
+     "blue",
+     "square",
+     1,
+     "jump"
+    ],
+    [
+     "red",
+     "triangle",
+     4,
+     "go_right"
+    ]
+   ],
+   "secret": {
+    "agent-6": [
+     [
+      "blue",
+      "triangle",
+      4,
+      "jump"
+     ]
+    ],
+    "agent-11": [
+     [
+      "yellow",
+      "triangle",
+      3,
+      "go_left"
+     ]
+    ],
+    "agent-17": [
+     [
+      "yellow",
+      "circle",
+      4,
+      "go_right"
+     ]
+    ],
+    "agent-23": [
+     [
+      "blue",
+      "star",
+      3,
+      "stay"
+     ]
+    ]
+   },
+   "needed": [
+    "agent-6"
+   ],
+   "open": false,
+   "withheld": [],
+   "queries": [
+    [
+     "yellow",
+     "star",
+     4
+    ]
+   ],
+   "answers": [
+    "stay"
+   ],
+   "cands_public_only": [
+    2
+   ],
+   "cands_all": [
+    1
+   ],
+   "cands_own": {
+    "agent-6": [
+     1
+    ],
+    "agent-11": [
+     2
+    ],
+    "agent-17": [
+     2
+    ],
+    "agent-23": [
+     2
+    ]
+   },
+   "shallow_correct": [],
+   "view": {
+    "agent-6": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) red triangle with number 2 -> go_left\n  - (shown to all) blue star with number 4 -> stay\n  - (shown to all) green circle with number 3 -> go_left\n  - (shown to all) blue square with number 1 -> jump\n  - (shown to all) red triangle with number 4 -> go_right\n  - (yours) blue triangle with number 4 -> jump\nNOW 1: yellow star with number 4.",
+    "agent-11": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) red triangle with number 2 -> go_left\n  - (shown to all) blue star with number 4 -> stay\n  - (shown to all) green circle with number 3 -> go_left\n  - (shown to all) blue square with number 1 -> jump\n  - (shown to all) red triangle with number 4 -> go_right\n  - (yours) yellow triangle with number 3 -> go_left\nNOW 1: yellow star with number 4.",
+    "agent-17": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) red triangle with number 2 -> go_left\n  - (shown to all) blue star with number 4 -> stay\n  - (shown to all) green circle with number 3 -> go_left\n  - (shown to all) blue square with number 1 -> jump\n  - (shown to all) red triangle with number 4 -> go_right\n  - (yours) yellow circle with number 4 -> go_right\nNOW 1: yellow star with number 4.",
+    "agent-23": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) red triangle with number 2 -> go_left\n  - (shown to all) blue star with number 4 -> stay\n  - (shown to all) green circle with number 3 -> go_left\n  - (shown to all) blue square with number 1 -> jump\n  - (shown to all) red triangle with number 4 -> go_right\n  - (yours) blue star with number 3 -> stay\nNOW 1: yellow star with number 4."
+   },
+   "held": {
+    "secret": {
+     "agent-6": [
+      [
+       "blue",
+       "star",
+       3,
+       "stay"
+      ]
+     ],
+     "agent-11": [
+      [
+       "yellow",
+       "circle",
+       4,
+       "go_right"
+      ],
+      [
+       "green",
+       "circle",
+       3,
+       "go_left"
+      ]
+     ],
+     "agent-17": [
+      [
+       "yellow",
+       "triangle",
+       3,
+       "go_left"
+      ],
+      [
+       "red",
+       "triangle",
+       2,
+       "go_left"
+      ]
+     ],
+     "agent-23": [
+      [
+       "blue",
+       "triangle",
+       4,
+       "jump"
+      ],
+      [
+       "blue",
+       "square",
+       1,
+       "jump"
+      ]
+     ]
+    },
+    "needed": [
+     "agent-11",
+     "agent-17",
+     "agent-23",
+     "agent-6"
+    ],
+    "open": false,
+    "withheld": [],
+    "cands_all": [
+     1
+    ],
+    "cands_own": {
+     "agent-6": [
+      4
+     ],
+     "agent-11": [
+      4
+     ],
+     "agent-17": [
+      4
+     ],
+     "agent-23": [
+      4
+     ]
+    },
+    "cands_lose": {
+     "agent-6": [
+      4
+     ],
+     "agent-11": [
+      3
+     ],
+     "agent-17": [
+      3
+     ],
+     "agent-23": [
+      4
+     ]
+    },
+    "view": {
+     "agent-6": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) blue star with number 3 -> stay\nNOW 1: yellow star with number 4.",
+     "agent-11": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) yellow circle with number 4 -> go_right\n  - (yours) green circle with number 3 -> go_left\nNOW 1: yellow star with number 4.",
+     "agent-17": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) yellow triangle with number 3 -> go_left\n  - (yours) red triangle with number 2 -> go_left\nNOW 1: yellow star with number 4.",
+     "agent-23": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) blue triangle with number 4 -> jump\n  - (yours) blue square with number 1 -> jump\nNOW 1: yellow star with number 4."
+    }
+   }
+  },
+  {
+   "round": 3,
+   "profile": "c4t",
+   "spec": {
+    "clauses": 4,
+    "trap_query": true,
+    "all_actions": true
+   },
+   "clauses": [
+    [
+     "number == 3",
+     "jump"
+    ],
+    [
+     "shape == \"triangle\"",
+     "stay"
+    ],
+    [
+     "color == \"green\"",
+     "go_left"
+    ],
+    [
+     "number % 2 == 0",
+     "go_right"
+    ]
+   ],
+   "else": "go_left",
+   "shape": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "shape_hint": "if ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____",
+   "public": [
+    [
+     "red",
+     "triangle",
+     2,
+     "stay"
+    ],
+    [
+     "blue",
+     "circle",
+     1,
+     "go_left"
+    ],
+    [
+     "red",
+     "square",
+     3,
+     "jump"
+    ],
+    [
+     "blue",
+     "square",
+     4,
+     "go_right"
+    ]
+   ],
+   "secret": {
+    "agent-6": [
+     [
+      "green",
+      "square",
+      4,
+      "go_left"
+     ]
+    ],
+    "agent-11": [
+     [
+      "green",
+      "triangle",
+      3,
+      "jump"
+     ]
+    ],
+    "agent-17": [
+     [
+      "red",
+      "circle",
+      2,
+      "go_right"
+     ]
+    ],
+    "agent-23": [
+     [
+      "green",
+      "triangle",
+      1,
+      "stay"
+     ]
+    ]
+   },
+   "needed": [
+    "agent-17",
+    "agent-6"
+   ],
+   "open": false,
+   "withheld": [],
+   "queries": [
+    [
+     "blue",
+     "triangle",
+     4
+    ]
+   ],
+   "answers": [
+    "stay"
+   ],
+   "cands_public_only": [
+    4
+   ],
+   "cands_all": [
+    1
+   ],
+   "cands_own": {
+    "agent-6": [
+     3
+    ],
+    "agent-11": [
+     4
+    ],
+    "agent-17": [
+     3
+    ],
+    "agent-23": [
+     4
+    ]
+   },
+   "shallow_correct": [],
+   "view": {
+    "agent-6": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) red triangle with number 2 -> stay\n  - (shown to all) blue circle with number 1 -> go_left\n  - (shown to all) red square with number 3 -> jump\n  - (shown to all) blue square with number 4 -> go_right\n  - (yours) green square with number 4 -> go_left\nNOW 1: blue triangle with number 4.",
+    "agent-11": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) red triangle with number 2 -> stay\n  - (shown to all) blue circle with number 1 -> go_left\n  - (shown to all) red square with number 3 -> jump\n  - (shown to all) blue square with number 4 -> go_right\n  - (yours) green triangle with number 3 -> jump\nNOW 1: blue triangle with number 4.",
+    "agent-17": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) red triangle with number 2 -> stay\n  - (shown to all) blue circle with number 1 -> go_left\n  - (shown to all) red square with number 3 -> jump\n  - (shown to all) blue square with number 4 -> go_right\n  - (yours) red circle with number 2 -> go_right\nNOW 1: blue triangle with number 4.",
+    "agent-23": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) red triangle with number 2 -> stay\n  - (shown to all) blue circle with number 1 -> go_left\n  - (shown to all) red square with number 3 -> jump\n  - (shown to all) blue square with number 4 -> go_right\n  - (yours) green triangle with number 1 -> stay\nNOW 1: blue triangle with number 4."
+   },
+   "held": {
+    "secret": {
+     "agent-6": [
+      [
+       "red",
+       "circle",
+       2,
+       "go_right"
+      ]
+     ],
+     "agent-11": [
+      [
+       "green",
+       "triangle",
+       1,
+       "stay"
+      ]
+     ],
+     "agent-17": [
+      [
+       "green",
+       "square",
+       4,
+       "go_left"
+      ],
+      [
+       "blue",
+       "square",
+       4,
+       "go_right"
+      ]
+     ],
+     "agent-23": [
+      [
+       "green",
+       "triangle",
+       3,
+       "jump"
+      ],
+      [
+       "blue",
+       "circle",
+       1,
+       "go_left"
+      ]
+     ]
+    },
+    "needed": [
+     "agent-11",
+     "agent-17",
+     "agent-23",
+     "agent-6"
+    ],
+    "open": false,
+    "withheld": [],
+    "cands_all": [
+     1
+    ],
+    "cands_own": {
+     "agent-6": [
+      4
+     ],
+     "agent-11": [
+      4
+     ],
+     "agent-17": [
+      4
+     ],
+     "agent-23": [
+      4
+     ]
+    },
+    "cands_lose": {
+     "agent-6": [
+      3
+     ],
+     "agent-11": [
+      4
+     ],
+     "agent-17": [
+      4
+     ],
+     "agent-23": [
+      4
+     ]
+    },
+    "view": {
+     "agent-6": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) red circle with number 2 -> go_right\nNOW 1: blue triangle with number 4.",
+     "agent-11": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) green triangle with number 1 -> stay\nNOW 1: blue triangle with number 4.",
+     "agent-17": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) green square with number 4 -> go_left\n  - (yours) blue square with number 4 -> go_right\nNOW 1: blue triangle with number 4.",
+     "agent-23": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) green triangle with number 3 -> jump\n  - (yours) blue circle with number 1 -> go_left\nNOW 1: blue triangle with number 4."
+    }
+   }
+  },
+  {
+   "round": 4,
+   "profile": "c4at_o",
+   "spec": {
+    "clauses": 4,
+    "conjunctions": 1,
+    "trap_query": true,
+    "all_actions": true,
+    "open_rate": 0.55
+   },
+   "clauses": [
+    [
+     "number >= 4",
+     "jump"
+    ],
+    [
+     "number % 2 == 1",
+     "go_right"
+    ],
+    [
+     "shape == \"circle\" and number % 2 == 0",
+     "go_left"
+    ],
+    [
+     "shape == \"triangle\"",
+     "go_right"
+    ]
+   ],
+   "else": "stay",
+   "shape": [
+    1,
+    1,
+    2,
+    1
+   ],
+   "shape_hint": "if ____: ____; elif ____: ____; elif ____ and ____: ____; elif ____: ____; else: ____",
+   "public": [
+    [
+     "yellow",
+     "circle",
+     1,
+     "go_right"
+    ],
+    [
+     "yellow",
+     "circle",
+     3,
+     "go_right"
+    ],
+    [
+     "green",
+     "circle",
+     2,
+     "go_left"
+    ],
+    [
+     "blue",
+     "triangle",
+     2,
+     "go_right"
+    ],
+    [
+     "yellow",
+     "circle",
+     2,
+     "go_left"
+    ],
+    [
+     "red",
+     "square",
+     2,
+     "stay"
+    ],
+    [
+     "green",
+     "circle",
+     4,
+     "jump"
+    ],
+    [
+     "red",
+     "star",
+     2,
+     "stay"
+    ]
+   ],
+   "secret": {
+    "agent-6": [
+     [
+      "green",
+      "square",
+      2,
+      "stay"
+     ]
+    ],
+    "agent-11": [
+     [
+      "yellow",
+      "triangle",
+      2,
+      "go_right"
+     ]
+    ],
+    "agent-17": [
+     [
+      "green",
+      "triangle",
+      4,
+      "jump"
+     ]
+    ],
+    "agent-23": [
+     [
+      "red",
+      "square",
+      1,
+      "go_right"
+     ]
+    ]
+   },
+   "needed": [
+    "agent-11",
+    "agent-17",
+    "agent-23",
+    "agent-6"
+   ],
+   "open": false,
+   "withheld": [],
+   "queries": [
+    [
+     "yellow",
+     "circle",
+     4
+    ]
+   ],
+   "answers": [
+    "jump"
+   ],
+   "cands_public_only": [
+    4
+   ],
+   "cands_all": [
+    1
+   ],
+   "cands_own": {
+    "agent-6": [
+     3
+    ],
+    "agent-11": [
+     4
+    ],
+    "agent-17": [
+     4
+    ],
+    "agent-23": [
+     4
+    ]
+   },
+   "shallow_correct": [],
+   "view": {
+    "agent-6": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____ and ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) yellow circle with number 1 -> go_right\n  - (shown to all) yellow circle with number 3 -> go_right\n  - (shown to all) green circle with number 2 -> go_left\n  - (shown to all) blue triangle with number 2 -> go_right\n  - (shown to all) yellow circle with number 2 -> go_left\n  - (shown to all) red square with number 2 -> stay\n  - (shown to all) green circle with number 4 -> jump\n  - (shown to all) red star with number 2 -> stay\n  - (yours) green square with number 2 -> stay\nNOW 1: yellow circle with number 4.",
+    "agent-11": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____ and ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) yellow circle with number 1 -> go_right\n  - (shown to all) yellow circle with number 3 -> go_right\n  - (shown to all) green circle with number 2 -> go_left\n  - (shown to all) blue triangle with number 2 -> go_right\n  - (shown to all) yellow circle with number 2 -> go_left\n  - (shown to all) red square with number 2 -> stay\n  - (shown to all) green circle with number 4 -> jump\n  - (shown to all) red star with number 2 -> stay\n  - (yours) yellow triangle with number 2 -> go_right\nNOW 1: yellow circle with number 4.",
+    "agent-17": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____ and ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) yellow circle with number 1 -> go_right\n  - (shown to all) yellow circle with number 3 -> go_right\n  - (shown to all) green circle with number 2 -> go_left\n  - (shown to all) blue triangle with number 2 -> go_right\n  - (shown to all) yellow circle with number 2 -> go_left\n  - (shown to all) red square with number 2 -> stay\n  - (shown to all) green circle with number 4 -> jump\n  - (shown to all) red star with number 2 -> stay\n  - (yours) green triangle with number 4 -> jump\nNOW 1: yellow circle with number 4.",
+    "agent-23": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____ and ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) yellow circle with number 1 -> go_right\n  - (shown to all) yellow circle with number 3 -> go_right\n  - (shown to all) green circle with number 2 -> go_left\n  - (shown to all) blue triangle with number 2 -> go_right\n  - (shown to all) yellow circle with number 2 -> go_left\n  - (shown to all) red square with number 2 -> stay\n  - (shown to all) green circle with number 4 -> jump\n  - (shown to all) red star with number 2 -> stay\n  - (yours) red square with number 1 -> go_right\nNOW 1: yellow circle with number 4."
+   },
+   "held": {
+    "secret": {
+     "agent-6": [
+      [
+       "yellow",
+       "triangle",
+       2,
+       "go_right"
+      ],
+      [
+       "red",
+       "square",
+       2,
+       "stay"
+      ],
+      [
+       "red",
+       "star",
+       2,
+       "stay"
+      ]
+     ],
+     "agent-11": [
+      [
+       "red",
+       "square",
+       1,
+       "go_right"
+      ],
+      [
+       "yellow",
+       "circle",
+       1,
+       "go_right"
+      ],
+      [
+       "yellow",
+       "circle",
+       3,
+       "go_right"
+      ]
+     ],
+     "agent-17": [
+      [
+       "green",
+       "square",
+       2,
+       "stay"
+      ],
+      [
+       "blue",
+       "triangle",
+       2,
+       "go_right"
+      ],
+      [
+       "green",
+       "circle",
+       4,
+       "jump"
+      ]
+     ],
+     "agent-23": [
+      [
+       "green",
+       "triangle",
+       4,
+       "jump"
+      ],
+      [
+       "yellow",
+       "circle",
+       2,
+       "go_left"
+      ],
+      [
+       "green",
+       "circle",
+       2,
+       "go_left"
+      ]
+     ]
+    },
+    "needed": [
+     "agent-11",
+     "agent-17",
+     "agent-23",
+     "agent-6"
+    ],
+    "open": false,
+    "withheld": [],
+    "cands_all": [
+     1
+    ],
+    "cands_own": {
+     "agent-6": [
+      4
+     ],
+     "agent-11": [
+      4
+     ],
+     "agent-17": [
+      4
+     ],
+     "agent-23": [
+      4
+     ]
+    },
+    "cands_lose": {
+     "agent-6": [
+      3
+     ],
+     "agent-11": [
+      3
+     ],
+     "agent-17": [
+      3
+     ],
+     "agent-23": [
+      4
+     ]
+    },
+    "view": {
+     "agent-6": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____ and ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) yellow triangle with number 2 -> go_right\n  - (yours) red square with number 2 -> stay\n  - (yours) red star with number 2 -> stay\nNOW 1: yellow circle with number 4.",
+     "agent-11": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____ and ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) red square with number 1 -> go_right\n  - (yours) yellow circle with number 1 -> go_right\n  - (yours) yellow circle with number 3 -> go_right\nNOW 1: yellow circle with number 4.",
+     "agent-17": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____ and ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) green square with number 2 -> stay\n  - (yours) blue triangle with number 2 -> go_right\n  - (yours) green circle with number 4 -> jump\nNOW 1: yellow circle with number 4.",
+     "agent-23": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____ and ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) green triangle with number 4 -> jump\n  - (yours) yellow circle with number 2 -> go_left\n  - (yours) green circle with number 2 -> go_left\nNOW 1: yellow circle with number 4."
+    }
+   }
+  },
+  {
+   "round": 5,
+   "profile": "c5at_o",
+   "spec": {
+    "clauses": 5,
+    "conjunctions": 1,
+    "trap_query": true,
+    "all_actions": true,
+    "open_rate": 0.55
+   },
+   "clauses": [
+    [
+     "shape == \"star\"",
+     "go_left"
+    ],
+    [
+     "color == \"blue\"",
+     "jump"
+    ],
+    [
+     "color == \"green\" and number >= 4",
+     "go_right"
+    ],
+    [
+     "color == \"yellow\"",
+     "stay"
+    ],
+    [
+     "shape == \"square\"",
+     "go_left"
+    ]
+   ],
+   "else": "stay",
+   "shape": [
+    1,
+    1,
+    2,
+    1,
+    1
+   ],
+   "shape_hint": "if ____: ____; elif ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; else: ____",
+   "public": [
+    [
+     "green",
+     "circle",
+     3,
+     "stay"
+    ],
+    [
+     "blue",
+     "square",
+     2,
+     "jump"
+    ],
+    [
+     "green",
+     "triangle",
+     4,
+     "go_right"
+    ],
+    [
+     "yellow",
+     "star",
+     1,
+     "go_left"
+    ],
+    [
+     "blue",
+     "star",
+     2,
+     "go_left"
+    ],
+    [
+     "green",
+     "square",
+     3,
+     "go_left"
+    ]
+   ],
+   "secret": {
+    "agent-6": [
+     [
+      "green",
+      "triangle",
+      2,
+      "stay"
+     ]
+    ],
+    "agent-11": [
+     [
+      "yellow",
+      "square",
+      3,
+      "stay"
+     ]
+    ],
+    "agent-17": [
+     [
+      "red",
+      "triangle",
+      4,
+      "stay"
+     ]
+    ],
+    "agent-23": [
+     [
+      "red",
+      "square",
+      3,
+      "go_left"
+     ]
+    ]
+   },
+   "needed": [
+    "agent-11",
+    "agent-17",
+    "agent-23",
+    "agent-6"
+   ],
+   "open": false,
+   "withheld": [],
+   "queries": [
+    [
+     "green",
+     "square",
+     4
+    ]
+   ],
+   "answers": [
+    "go_right"
+   ],
+   "cands_public_only": [
+    4
+   ],
+   "cands_all": [
+    1
+   ],
+   "cands_own": {
+    "agent-6": [
+     4
+    ],
+    "agent-11": [
+     4
+    ],
+    "agent-17": [
+     4
+    ],
+    "agent-23": [
+     4
+    ]
+   },
+   "shallow_correct": [],
+   "view": {
+    "agent-6": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) green circle with number 3 -> stay\n  - (shown to all) blue square with number 2 -> jump\n  - (shown to all) green triangle with number 4 -> go_right\n  - (shown to all) yellow star with number 1 -> go_left\n  - (shown to all) blue star with number 2 -> go_left\n  - (shown to all) green square with number 3 -> go_left\n  - (yours) green triangle with number 2 -> stay\nNOW 1: green square with number 4.",
+    "agent-11": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) green circle with number 3 -> stay\n  - (shown to all) blue square with number 2 -> jump\n  - (shown to all) green triangle with number 4 -> go_right\n  - (shown to all) yellow star with number 1 -> go_left\n  - (shown to all) blue star with number 2 -> go_left\n  - (shown to all) green square with number 3 -> go_left\n  - (yours) yellow square with number 3 -> stay\nNOW 1: green square with number 4.",
+    "agent-17": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) green circle with number 3 -> stay\n  - (shown to all) blue square with number 2 -> jump\n  - (shown to all) green triangle with number 4 -> go_right\n  - (shown to all) yellow star with number 1 -> go_left\n  - (shown to all) blue star with number 2 -> go_left\n  - (shown to all) green square with number 3 -> go_left\n  - (yours) red triangle with number 4 -> stay\nNOW 1: green square with number 4.",
+    "agent-23": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) green circle with number 3 -> stay\n  - (shown to all) blue square with number 2 -> jump\n  - (shown to all) green triangle with number 4 -> go_right\n  - (shown to all) yellow star with number 1 -> go_left\n  - (shown to all) blue star with number 2 -> go_left\n  - (shown to all) green square with number 3 -> go_left\n  - (yours) red square with number 3 -> go_left\nNOW 1: green square with number 4."
+   },
+   "held": {
+    "secret": {
+     "agent-6": [
+      [
+       "green",
+       "triangle",
+       2,
+       "stay"
+      ],
+      [
+       "green",
+       "square",
+       3,
+       "go_left"
+      ],
+      [
+       "green",
+       "circle",
+       3,
+       "stay"
+      ]
+     ],
+     "agent-11": [
+      [
+       "red",
+       "triangle",
+       4,
+       "stay"
+      ],
+      [
+       "blue",
+       "square",
+       2,
+       "jump"
+      ]
+     ],
+     "agent-17": [
+      [
+       "yellow",
+       "square",
+       3,
+       "stay"
+      ],
+      [
+       "green",
+       "triangle",
+       4,
+       "go_right"
+      ],
+      [
+       "blue",
+       "star",
+       2,
+       "go_left"
+      ]
+     ],
+     "agent-23": [
+      [
+       "red",
+       "square",
+       3,
+       "go_left"
+      ],
+      [
+       "yellow",
+       "star",
+       1,
+       "go_left"
+      ]
+     ]
+    },
+    "needed": [
+     "agent-11",
+     "agent-17",
+     "agent-23",
+     "agent-6"
+    ],
+    "open": false,
+    "withheld": [],
+    "cands_all": [
+     1
+    ],
+    "cands_own": {
+     "agent-6": [
+      4
+     ],
+     "agent-11": [
+      4
+     ],
+     "agent-17": [
+      4
+     ],
+     "agent-23": [
+      4
+     ]
+    },
+    "cands_lose": {
+     "agent-6": [
+      4
+     ],
+     "agent-11": [
+      4
+     ],
+     "agent-17": [
+      4
+     ],
+     "agent-23": [
+      2
+     ]
+    },
+    "view": {
+     "agent-6": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) green triangle with number 2 -> stay\n  - (yours) green square with number 3 -> go_left\n  - (yours) green circle with number 3 -> stay\nNOW 1: green square with number 4.",
+     "agent-11": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) red triangle with number 4 -> stay\n  - (yours) blue square with number 2 -> jump\nNOW 1: green square with number 4.",
+     "agent-17": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) yellow square with number 3 -> stay\n  - (yours) green triangle with number 4 -> go_right\n  - (yours) blue star with number 2 -> go_left\nNOW 1: green square with number 4.",
+     "agent-23": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) red square with number 3 -> go_left\n  - (yours) yellow star with number 1 -> go_left\nNOW 1: green square with number 4."
+    }
+   }
+  },
+  {
+   "round": 6,
+   "profile": "c5at_o",
+   "spec": {
+    "clauses": 5,
+    "conjunctions": 1,
+    "trap_query": true,
+    "all_actions": true,
+    "open_rate": 0.55
+   },
+   "clauses": [
+    [
+     "shape == \"square\"",
+     "stay"
+    ],
+    [
+     "color == \"yellow\" and number >= 2",
+     "go_left"
+    ],
+    [
+     "number >= 3",
+     "jump"
+    ],
+    [
+     "number % 2 == 0",
+     "go_left"
+    ],
+    [
+     "shape == \"triangle\"",
+     "go_right"
+    ]
+   ],
+   "else": "go_left",
+   "shape": [
+    1,
+    2,
+    1,
+    1,
+    1
+   ],
+   "shape_hint": "if ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____",
+   "public": [
+    [
+     "blue",
+     "triangle",
+     4,
+     "jump"
+    ],
+    [
+     "red",
+     "triangle",
+     1,
+     "go_right"
+    ],
+    [
+     "yellow",
+     "triangle",
+     4,
+     "go_left"
+    ],
+    [
+     "yellow",
+     "triangle",
+     1,
+     "go_right"
+    ],
+    [
+     "yellow",
+     "circle",
+     4,
+     "go_left"
+    ],
+    [
+     "green",
+     "circle",
+     4,
+     "jump"
+    ],
+    [
+     "blue",
+     "star",
+     2,
+     "go_left"
+    ],
+    [
+     "red",
+     "circle",
+     1,
+     "go_left"
+    ],
+    [
+     "red",
+     "square",
+     2,
+     "stay"
+    ],
+    [
+     "yellow",
+     "square",
+     4,
+     "stay"
+    ],
+    [
+     "red",
+     "triangle",
+     2,
+     "go_left"
+    ]
+   ],
+   "secret": {
+    "agent-6": [
+     [
+      "green",
+      "star",
+      1,
+      "go_left"
+     ]
+    ],
+    "agent-11": [
+     [
+      "yellow",
+      "star",
+      3,
+      "go_left"
+     ]
+    ],
+    "agent-17": [
+     [
+      "red",
+      "star",
+      4,
+      "jump"
+     ]
+    ],
+    "agent-23": [
+     [
+      "green",
+      "triangle",
+      3,
+      "jump"
+     ]
+    ]
+   },
+   "needed": [
+    "agent-17",
+    "agent-23",
+    "agent-6"
+   ],
+   "open": false,
+   "withheld": [],
+   "queries": [
+    [
+     "red",
+     "triangle",
+     3
+    ]
+   ],
+   "answers": [
+    "jump"
+   ],
+   "cands_public_only": [
+    4
+   ],
+   "cands_all": [
+    1
+   ],
+   "cands_own": {
+    "agent-6": [
+     4
+    ],
+    "agent-11": [
+     4
+    ],
+    "agent-17": [
+     4
+    ],
+    "agent-23": [
+     4
+    ]
+   },
+   "shallow_correct": [],
+   "view": {
+    "agent-6": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) blue triangle with number 4 -> jump\n  - (shown to all) red triangle with number 1 -> go_right\n  - (shown to all) yellow triangle with number 4 -> go_left\n  - (shown to all) yellow triangle with number 1 -> go_right\n  - (shown to all) yellow circle with number 4 -> go_left\n  - (shown to all) green circle with number 4 -> jump\n  - (shown to all) blue star with number 2 -> go_left\n  - (shown to all) red circle with number 1 -> go_left\n  - (shown to all) red square with number 2 -> stay\n  - (shown to all) yellow square with number 4 -> stay\n  - (shown to all) red triangle with number 2 -> go_left\n  - (yours) green star with number 1 -> go_left\nNOW 1: red triangle with number 3.",
+    "agent-11": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) blue triangle with number 4 -> jump\n  - (shown to all) red triangle with number 1 -> go_right\n  - (shown to all) yellow triangle with number 4 -> go_left\n  - (shown to all) yellow triangle with number 1 -> go_right\n  - (shown to all) yellow circle with number 4 -> go_left\n  - (shown to all) green circle with number 4 -> jump\n  - (shown to all) blue star with number 2 -> go_left\n  - (shown to all) red circle with number 1 -> go_left\n  - (shown to all) red square with number 2 -> stay\n  - (shown to all) yellow square with number 4 -> stay\n  - (shown to all) red triangle with number 2 -> go_left\n  - (yours) yellow star with number 3 -> go_left\nNOW 1: red triangle with number 3.",
+    "agent-17": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) blue triangle with number 4 -> jump\n  - (shown to all) red triangle with number 1 -> go_right\n  - (shown to all) yellow triangle with number 4 -> go_left\n  - (shown to all) yellow triangle with number 1 -> go_right\n  - (shown to all) yellow circle with number 4 -> go_left\n  - (shown to all) green circle with number 4 -> jump\n  - (shown to all) blue star with number 2 -> go_left\n  - (shown to all) red circle with number 1 -> go_left\n  - (shown to all) red square with number 2 -> stay\n  - (shown to all) yellow square with number 4 -> stay\n  - (shown to all) red triangle with number 2 -> go_left\n  - (yours) red star with number 4 -> jump\nNOW 1: red triangle with number 3.",
+    "agent-23": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) blue triangle with number 4 -> jump\n  - (shown to all) red triangle with number 1 -> go_right\n  - (shown to all) yellow triangle with number 4 -> go_left\n  - (shown to all) yellow triangle with number 1 -> go_right\n  - (shown to all) yellow circle with number 4 -> go_left\n  - (shown to all) green circle with number 4 -> jump\n  - (shown to all) blue star with number 2 -> go_left\n  - (shown to all) red circle with number 1 -> go_left\n  - (shown to all) red square with number 2 -> stay\n  - (shown to all) yellow square with number 4 -> stay\n  - (shown to all) red triangle with number 2 -> go_left\n  - (yours) green triangle with number 3 -> jump\nNOW 1: red triangle with number 3."
+   },
+   "held": {
+    "secret": {
+     "agent-6": [
+      [
+       "yellow",
+       "star",
+       3,
+       "go_left"
+      ],
+      [
+       "red",
+       "circle",
+       1,
+       "go_left"
+      ],
+      [
+       "red",
+       "triangle",
+       2,
+       "go_left"
+      ],
+      [
+       "yellow",
+       "circle",
+       4,
+       "go_left"
+      ]
+     ],
+     "agent-11": [
+      [
+       "green",
+       "triangle",
+       3,
+       "jump"
+      ],
+      [
+       "blue",
+       "triangle",
+       4,
+       "jump"
+      ],
+      [
+       "yellow",
+       "square",
+       4,
+       "stay"
+      ]
+     ],
+     "agent-17": [
+      [
+       "red",
+       "star",
+       4,
+       "jump"
+      ],
+      [
+       "yellow",
+       "triangle",
+       4,
+       "go_left"
+      ],
+      [
+       "green",
+       "circle",
+       4,
+       "jump"
+      ],
+      [
+       "yellow",
+       "triangle",
+       1,
+       "go_right"
+      ]
+     ],
+     "agent-23": [
+      [
+       "green",
+       "star",
+       1,
+       "go_left"
+      ],
+      [
+       "red",
+       "triangle",
+       1,
+       "go_right"
+      ],
+      [
+       "blue",
+       "star",
+       2,
+       "go_left"
+      ],
+      [
+       "red",
+       "square",
+       2,
+       "stay"
+      ]
+     ]
+    },
+    "needed": [
+     "agent-11",
+     "agent-17",
+     "agent-23",
+     "agent-6"
+    ],
+    "open": false,
+    "withheld": [],
+    "cands_all": [
+     1
+    ],
+    "cands_own": {
+     "agent-6": [
+      4
+     ],
+     "agent-11": [
+      4
+     ],
+     "agent-17": [
+      4
+     ],
+     "agent-23": [
+      4
+     ]
+    },
+    "cands_lose": {
+     "agent-6": [
+      2
+     ],
+     "agent-11": [
+      4
+     ],
+     "agent-17": [
+      4
+     ],
+     "agent-23": [
+      3
+     ]
+    },
+    "view": {
+     "agent-6": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) yellow star with number 3 -> go_left\n  - (yours) red circle with number 1 -> go_left\n  - (yours) red triangle with number 2 -> go_left\n  - (yours) yellow circle with number 4 -> go_left\nNOW 1: red triangle with number 3.",
+     "agent-11": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) green triangle with number 3 -> jump\n  - (yours) blue triangle with number 4 -> jump\n  - (yours) yellow square with number 4 -> stay\nNOW 1: red triangle with number 3.",
+     "agent-17": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) red star with number 4 -> jump\n  - (yours) yellow triangle with number 4 -> go_left\n  - (yours) green circle with number 4 -> jump\n  - (yours) yellow triangle with number 1 -> go_right\nNOW 1: red triangle with number 3.",
+     "agent-23": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) green star with number 1 -> go_left\n  - (yours) red triangle with number 1 -> go_right\n  - (yours) blue star with number 2 -> go_left\n  - (yours) red square with number 2 -> stay\nNOW 1: red triangle with number 3."
+    }
+   }
+  },
+  {
+   "round": 7,
+   "profile": "c5at_o",
+   "spec": {
+    "clauses": 5,
+    "conjunctions": 1,
+    "trap_query": true,
+    "all_actions": true,
+    "open_rate": 0.55
+   },
+   "clauses": [
+    [
+     "number <= 2",
+     "stay"
+    ],
+    [
+     "color == \"red\" and number >= 3",
+     "jump"
+    ],
+    [
+     "shape == \"triangle\"",
+     "go_left"
+    ],
+    [
+     "number >= 4",
+     "jump"
+    ],
+    [
+     "color == \"yellow\"",
+     "stay"
+    ]
+   ],
+   "else": "go_right",
+   "shape": [
+    1,
+    2,
+    1,
+    1,
+    1
+   ],
+   "shape_hint": "if ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____",
+   "public": [
+    [
+     "red",
+     "triangle",
+     1,
+     "stay"
+    ],
+    [
+     "blue",
+     "triangle",
+     3,
+     "go_left"
+    ],
+    [
+     "green",
+     "circle",
+     3,
+     "go_right"
+    ],
+    [
+     "red",
+     "triangle",
+     4,
+     "jump"
+    ],
+    [
+     "yellow",
+     "circle",
+     4,
+     "jump"
+    ],
+    [
+     "red",
+     "circle",
+     2,
+     "stay"
+    ],
+    [
+     "yellow",
+     "circle",
+     3,
+     "stay"
+    ]
+   ],
+   "secret": {
+    "agent-6": [
+     [
+      "green",
+      "star",
+      4,
+      "jump"
+     ]
+    ],
+    "agent-11": [
+     [
+      "blue",
+      "circle",
+      3,
+      "go_right"
+     ]
+    ],
+    "agent-17": [
+     [
+      "yellow",
+      "triangle",
+      3,
+      "go_left"
+     ]
+    ],
+    "agent-23": [
+     [
+      "red",
+      "square",
+      3,
+      "jump"
+     ]
+    ]
+   },
+   "needed": [
+    "agent-11",
+    "agent-23",
+    "agent-6"
+   ],
+   "open": true,
+   "withheld": [
+    [
+     "blue",
+     "triangle",
+     4,
+     "go_left"
+    ]
+   ],
+   "queries": [
+    [
+     "green",
+     "triangle",
+     4
+    ]
+   ],
+   "answers": [
+    "go_left"
+   ],
+   "cands_public_only": [
+    4
+   ],
+   "cands_all": [
+    2
+   ],
+   "cands_own": {
+    "agent-6": [
+     4
+    ],
+    "agent-11": [
+     4
+    ],
+    "agent-17": [
+     4
+    ],
+    "agent-23": [
+     4
+    ]
+   },
+   "shallow_correct": [],
+   "view": {
+    "agent-6": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) red triangle with number 1 -> stay\n  - (shown to all) blue triangle with number 3 -> go_left\n  - (shown to all) green circle with number 3 -> go_right\n  - (shown to all) red triangle with number 4 -> jump\n  - (shown to all) yellow circle with number 4 -> jump\n  - (shown to all) red circle with number 2 -> stay\n  - (shown to all) yellow circle with number 3 -> stay\n  - (yours) green star with number 4 -> jump\nNOW 1: green triangle with number 4.",
+    "agent-11": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) red triangle with number 1 -> stay\n  - (shown to all) blue triangle with number 3 -> go_left\n  - (shown to all) green circle with number 3 -> go_right\n  - (shown to all) red triangle with number 4 -> jump\n  - (shown to all) yellow circle with number 4 -> jump\n  - (shown to all) red circle with number 2 -> stay\n  - (shown to all) yellow circle with number 3 -> stay\n  - (yours) blue circle with number 3 -> go_right\nNOW 1: green triangle with number 4.",
+    "agent-17": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) red triangle with number 1 -> stay\n  - (shown to all) blue triangle with number 3 -> go_left\n  - (shown to all) green circle with number 3 -> go_right\n  - (shown to all) red triangle with number 4 -> jump\n  - (shown to all) yellow circle with number 4 -> jump\n  - (shown to all) red circle with number 2 -> stay\n  - (shown to all) yellow circle with number 3 -> stay\n  - (yours) yellow triangle with number 3 -> go_left\nNOW 1: green triangle with number 4.",
+    "agent-23": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) red triangle with number 1 -> stay\n  - (shown to all) blue triangle with number 3 -> go_left\n  - (shown to all) green circle with number 3 -> go_right\n  - (shown to all) red triangle with number 4 -> jump\n  - (shown to all) yellow circle with number 4 -> jump\n  - (shown to all) red circle with number 2 -> stay\n  - (shown to all) yellow circle with number 3 -> stay\n  - (yours) red square with number 3 -> jump\nNOW 1: green triangle with number 4."
+   },
+   "held": {
+    "secret": {
+     "agent-6": [
+      [
+       "blue",
+       "circle",
+       3,
+       "go_right"
+      ],
+      [
+       "red",
+       "triangle",
+       1,
+       "stay"
+      ],
+      [
+       "yellow",
+       "circle",
+       3,
+       "stay"
+      ]
+     ],
+     "agent-11": [
+      [
+       "yellow",
+       "triangle",
+       3,
+       "go_left"
+      ],
+      [
+       "red",
+       "circle",
+       2,
+       "stay"
+      ]
+     ],
+     "agent-17": [
+      [
+       "green",
+       "star",
+       4,
+       "jump"
+      ],
+      [
+       "green",
+       "circle",
+       3,
+       "go_right"
+      ],
+      [
+       "yellow",
+       "circle",
+       4,
+       "jump"
+      ]
+     ],
+     "agent-23": [
+      [
+       "red",
+       "square",
+       3,
+       "jump"
+      ],
+      [
+       "red",
+       "triangle",
+       4,
+       "jump"
+      ]
+     ]
+    },
+    "needed": [
+     "agent-11",
+     "agent-17",
+     "agent-23",
+     "agent-6"
+    ],
+    "open": true,
+    "withheld": [
+     [
+      "blue",
+      "triangle",
+      4,
+      "go_left"
+     ]
+    ],
+    "cands_all": [
+     2
+    ],
+    "cands_own": {
+     "agent-6": [
+      4
+     ],
+     "agent-11": [
+      4
+     ],
+     "agent-17": [
+      4
+     ],
+     "agent-23": [
+      4
+     ]
+    },
+    "cands_lose": {
+     "agent-6": [
+      4
+     ],
+     "agent-11": [
+      4
+     ],
+     "agent-17": [
+      4
+     ],
+     "agent-23": [
+      4
+     ]
+    },
+    "view": {
+     "agent-6": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) blue circle with number 3 -> go_right\n  - (yours) red triangle with number 1 -> stay\n  - (yours) yellow circle with number 3 -> stay\nNOW 1: green triangle with number 4.",
+     "agent-11": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) yellow triangle with number 3 -> go_left\n  - (yours) red circle with number 2 -> stay\nNOW 1: green triangle with number 4.",
+     "agent-17": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) green star with number 4 -> jump\n  - (yours) green circle with number 3 -> go_right\n  - (yours) yellow circle with number 4 -> jump\nNOW 1: green triangle with number 4.",
+     "agent-23": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) red square with number 3 -> jump\n  - (yours) red triangle with number 4 -> jump\nNOW 1: green triangle with number 4."
+    }
+   }
+  },
+  {
+   "round": 8,
+   "profile": "c5at_o",
+   "spec": {
+    "clauses": 5,
+    "conjunctions": 1,
+    "trap_query": true,
+    "all_actions": true,
+    "open_rate": 0.55
+   },
+   "clauses": [
+    [
+     "number >= 4",
+     "jump"
+    ],
+    [
+     "number >= 3",
+     "go_left"
+    ],
+    [
+     "color == \"yellow\"",
+     "jump"
+    ],
+    [
+     "shape == \"square\"",
+     "go_left"
+    ],
+    [
+     "color == \"green\" and shape == \"star\"",
+     "go_right"
+    ]
+   ],
+   "else": "stay",
+   "shape": [
+    1,
+    1,
+    1,
+    1,
+    2
+   ],
+   "shape_hint": "if ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; elif ____ and ____: ____; else: ____",
+   "public": [
+    [
+     "red",
+     "square",
+     4,
+     "jump"
+    ],
+    [
+     "green",
+     "star",
+     2,
+     "go_right"
+    ],
+    [
+     "blue",
+     "star",
+     2,
+     "stay"
+    ],
+    [
+     "green",
+     "square",
+     2,
+     "go_left"
+    ],
+    [
+     "blue",
+     "star",
+     1,
+     "stay"
+    ]
+   ],
+   "secret": {
+    "agent-6": [
+     [
+      "yellow",
+      "square",
+      2,
+      "jump"
+     ]
+    ],
+    "agent-11": [
+     [
+      "yellow",
+      "star",
+      3,
+      "go_left"
+     ]
+    ],
+    "agent-17": [
+     [
+      "blue",
+      "triangle",
+      4,
+      "jump"
+     ]
+    ],
+    "agent-23": [
+     [
+      "green",
+      "circle",
+      2,
+      "stay"
+     ]
+    ]
+   },
+   "needed": [
+    "agent-11",
+    "agent-17",
+    "agent-23",
+    "agent-6"
+   ],
+   "open": false,
+   "withheld": [],
+   "queries": [
+    [
+     "green",
+     "circle",
+     4
+    ]
+   ],
+   "answers": [
+    "jump"
+   ],
+   "cands_public_only": [
+    4
+   ],
+   "cands_all": [
+    1
+   ],
+   "cands_own": {
+    "agent-6": [
+     4
+    ],
+    "agent-11": [
+     4
+    ],
+    "agent-17": [
+     4
+    ],
+    "agent-23": [
+     4
+    ]
+   },
+   "shallow_correct": [],
+   "view": {
+    "agent-6": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; elif ____ and ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) red square with number 4 -> jump\n  - (shown to all) green star with number 2 -> go_right\n  - (shown to all) blue star with number 2 -> stay\n  - (shown to all) green square with number 2 -> go_left\n  - (shown to all) blue star with number 1 -> stay\n  - (yours) yellow square with number 2 -> jump\nNOW 1: green circle with number 4.",
+    "agent-11": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; elif ____ and ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) red square with number 4 -> jump\n  - (shown to all) green star with number 2 -> go_right\n  - (shown to all) blue star with number 2 -> stay\n  - (shown to all) green square with number 2 -> go_left\n  - (shown to all) blue star with number 1 -> stay\n  - (yours) yellow star with number 3 -> go_left\nNOW 1: green circle with number 4.",
+    "agent-17": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; elif ____ and ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) red square with number 4 -> jump\n  - (shown to all) green star with number 2 -> go_right\n  - (shown to all) blue star with number 2 -> stay\n  - (shown to all) green square with number 2 -> go_left\n  - (shown to all) blue star with number 1 -> stay\n  - (yours) blue triangle with number 4 -> jump\nNOW 1: green circle with number 4.",
+    "agent-23": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; elif ____ and ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) red square with number 4 -> jump\n  - (shown to all) green star with number 2 -> go_right\n  - (shown to all) blue star with number 2 -> stay\n  - (shown to all) green square with number 2 -> go_left\n  - (shown to all) blue star with number 1 -> stay\n  - (yours) green circle with number 2 -> stay\nNOW 1: green circle with number 4."
+   },
+   "held": {
+    "secret": {
+     "agent-6": [
+      [
+       "green",
+       "star",
+       2,
+       "go_right"
+      ],
+      [
+       "red",
+       "square",
+       4,
+       "jump"
+      ]
+     ],
+     "agent-11": [
+      [
+       "green",
+       "square",
+       2,
+       "go_left"
+      ],
+      [
+       "yellow",
+       "square",
+       2,
+       "jump"
+      ]
+     ],
+     "agent-17": [
+      [
+       "yellow",
+       "star",
+       3,
+       "go_left"
+      ],
+      [
+       "blue",
+       "star",
+       2,
+       "stay"
+      ]
+     ],
+     "agent-23": [
+      [
+       "blue",
+       "triangle",
+       4,
+       "jump"
+      ],
+      [
+       "blue",
+       "star",
+       1,
+       "stay"
+      ]
+     ]
+    },
+    "needed": [
+     "agent-11",
+     "agent-17",
+     "agent-23",
+     "agent-6"
+    ],
+    "open": true,
+    "withheld": [
+     [
+      "green",
+      "circle",
+      2,
+      "stay"
+     ]
+    ],
+    "cands_all": [
+     2
+    ],
+    "cands_own": {
+     "agent-6": [
+      4
+     ],
+     "agent-11": [
+      4
+     ],
+     "agent-17": [
+      4
+     ],
+     "agent-23": [
+      4
+     ]
+    },
+    "cands_lose": {
+     "agent-6": [
+      4
+     ],
+     "agent-11": [
+      4
+     ],
+     "agent-17": [
+      4
+     ],
+     "agent-23": [
+      4
+     ]
+    },
+    "view": {
+     "agent-6": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; elif ____ and ____: ____; else: ____\nEXAMPLES:\n  - (yours) green star with number 2 -> go_right\n  - (yours) red square with number 4 -> jump\nNOW 1: green circle with number 4.",
+     "agent-11": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; elif ____ and ____: ____; else: ____\nEXAMPLES:\n  - (yours) green square with number 2 -> go_left\n  - (yours) yellow square with number 2 -> jump\nNOW 1: green circle with number 4.",
+     "agent-17": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; elif ____ and ____: ____; else: ____\nEXAMPLES:\n  - (yours) yellow star with number 3 -> go_left\n  - (yours) blue star with number 2 -> stay\nNOW 1: green circle with number 4.",
+     "agent-23": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; elif ____ and ____: ____; else: ____\nEXAMPLES:\n  - (yours) blue triangle with number 4 -> jump\n  - (yours) blue star with number 1 -> stay\nNOW 1: green circle with number 4."
+    }
+   }
+  },
+  {
+   "round": 9,
+   "profile": "c5at_o",
+   "spec": {
+    "clauses": 5,
+    "conjunctions": 1,
+    "trap_query": true,
+    "all_actions": true,
+    "open_rate": 0.55
+   },
+   "clauses": [
+    [
+     "shape == \"star\"",
+     "jump"
+    ],
+    [
+     "number >= 4",
+     "go_right"
+    ],
+    [
+     "color == \"blue\" and number <= 1",
+     "jump"
+    ],
+    [
+     "number >= 2",
+     "stay"
+    ],
+    [
+     "shape == \"square\"",
+     "jump"
+    ]
+   ],
+   "else": "go_left",
+   "shape": [
+    1,
+    1,
+    2,
+    1,
+    1
+   ],
+   "shape_hint": "if ____: ____; elif ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; else: ____",
+   "public": [
+    [
+     "red",
+     "triangle",
+     1,
+     "go_left"
+    ],
+    [
+     "blue",
+     "circle",
+     3,
+     "stay"
+    ],
+    [
+     "blue",
+     "circle",
+     1,
+     "jump"
+    ],
+    [
+     "yellow",
+     "square",
+     4,
+     "go_right"
+    ],
+    [
+     "green",
+     "square",
+     3,
+     "stay"
+    ],
+    [
+     "green",
+     "star",
+     4,
+     "jump"
+    ]
+   ],
+   "secret": {
+    "agent-6": [
+     [
+      "green",
+      "square",
+      1,
+      "jump"
+     ]
+    ],
+    "agent-11": [
+     [
+      "yellow",
+      "circle",
+      1,
+      "go_left"
+     ]
+    ],
+    "agent-17": [
+     [
+      "blue",
+      "square",
+      2,
+      "stay"
+     ]
+    ],
+    "agent-23": [
+     [
+      "green",
+      "circle",
+      1,
+      "go_left"
+     ]
+    ]
+   },
+   "needed": [
+    "agent-11",
+    "agent-17",
+    "agent-23",
+    "agent-6"
+   ],
+   "open": false,
+   "withheld": [],
+   "queries": [
+    [
+     "red",
+     "star",
+     2
+    ]
+   ],
+   "answers": [
+    "jump"
+   ],
+   "cands_public_only": [
+    4
+   ],
+   "cands_all": [
+    1
+   ],
+   "cands_own": {
+    "agent-6": [
+     4
+    ],
+    "agent-11": [
+     4
+    ],
+    "agent-17": [
+     4
+    ],
+    "agent-23": [
+     4
+    ]
+   },
+   "shallow_correct": [],
+   "view": {
+    "agent-6": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) red triangle with number 1 -> go_left\n  - (shown to all) blue circle with number 3 -> stay\n  - (shown to all) blue circle with number 1 -> jump\n  - (shown to all) yellow square with number 4 -> go_right\n  - (shown to all) green square with number 3 -> stay\n  - (shown to all) green star with number 4 -> jump\n  - (yours) green square with number 1 -> jump\nNOW 1: red star with number 2.",
+    "agent-11": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) red triangle with number 1 -> go_left\n  - (shown to all) blue circle with number 3 -> stay\n  - (shown to all) blue circle with number 1 -> jump\n  - (shown to all) yellow square with number 4 -> go_right\n  - (shown to all) green square with number 3 -> stay\n  - (shown to all) green star with number 4 -> jump\n  - (yours) yellow circle with number 1 -> go_left\nNOW 1: red star with number 2.",
+    "agent-17": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) red triangle with number 1 -> go_left\n  - (shown to all) blue circle with number 3 -> stay\n  - (shown to all) blue circle with number 1 -> jump\n  - (shown to all) yellow square with number 4 -> go_right\n  - (shown to all) green square with number 3 -> stay\n  - (shown to all) green star with number 4 -> jump\n  - (yours) blue square with number 2 -> stay\nNOW 1: red star with number 2.",
+    "agent-23": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) red triangle with number 1 -> go_left\n  - (shown to all) blue circle with number 3 -> stay\n  - (shown to all) blue circle with number 1 -> jump\n  - (shown to all) yellow square with number 4 -> go_right\n  - (shown to all) green square with number 3 -> stay\n  - (shown to all) green star with number 4 -> jump\n  - (yours) green circle with number 1 -> go_left\nNOW 1: red star with number 2."
+   },
+   "held": {
+    "secret": {
+     "agent-6": [
+      [
+       "yellow",
+       "circle",
+       1,
+       "go_left"
+      ],
+      [
+       "blue",
+       "circle",
+       3,
+       "stay"
+      ],
+      [
+       "yellow",
+       "square",
+       4,
+       "go_right"
+      ]
+     ],
+     "agent-11": [
+      [
+       "blue",
+       "square",
+       2,
+       "stay"
+      ],
+      [
+       "green",
+       "star",
+       4,
+       "jump"
+      ]
+     ],
+     "agent-17": [
+      [
+       "green",
+       "square",
+       1,
+       "jump"
+      ],
+      [
+       "blue",
+       "circle",
+       1,
+       "jump"
+      ],
+      [
+       "green",
+       "square",
+       3,
+       "stay"
+      ]
+     ],
+     "agent-23": [
+      [
+       "green",
+       "circle",
+       1,
+       "go_left"
+      ],
+      [
+       "red",
+       "triangle",
+       1,
+       "go_left"
+      ]
+     ]
+    },
+    "needed": [
+     "agent-11",
+     "agent-17",
+     "agent-23",
+     "agent-6"
+    ],
+    "open": false,
+    "withheld": [],
+    "cands_all": [
+     1
+    ],
+    "cands_own": {
+     "agent-6": [
+      4
+     ],
+     "agent-11": [
+      4
+     ],
+     "agent-17": [
+      4
+     ],
+     "agent-23": [
+      4
+     ]
+    },
+    "cands_lose": {
+     "agent-6": [
+      4
+     ],
+     "agent-11": [
+      4
+     ],
+     "agent-17": [
+      4
+     ],
+     "agent-23": [
+      4
+     ]
+    },
+    "view": {
+     "agent-6": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) yellow circle with number 1 -> go_left\n  - (yours) blue circle with number 3 -> stay\n  - (yours) yellow square with number 4 -> go_right\nNOW 1: red star with number 2.",
+     "agent-11": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) blue square with number 2 -> stay\n  - (yours) green star with number 4 -> jump\nNOW 1: red star with number 2.",
+     "agent-17": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) green square with number 1 -> jump\n  - (yours) blue circle with number 1 -> jump\n  - (yours) green square with number 3 -> stay\nNOW 1: red star with number 2.",
+     "agent-23": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) green circle with number 1 -> go_left\n  - (yours) red triangle with number 1 -> go_left\nNOW 1: red star with number 2."
+    }
+   }
+  },
+  {
+   "round": 10,
+   "profile": "c5at_o",
+   "spec": {
+    "clauses": 5,
+    "conjunctions": 1,
+    "trap_query": true,
+    "all_actions": true,
+    "open_rate": 0.55
+   },
+   "clauses": [
+    [
+     "color == \"green\"",
+     "stay"
+    ],
+    [
+     "shape == \"circle\" and number <= 3",
+     "go_right"
+    ],
+    [
+     "number <= 2",
+     "go_left"
+    ],
+    [
+     "shape == \"circle\"",
+     "jump"
+    ],
+    [
+     "color == \"red\"",
+     "go_right"
+    ]
+   ],
+   "else": "stay",
+   "shape": [
+    1,
+    2,
+    1,
+    1,
+    1
+   ],
+   "shape_hint": "if ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____",
+   "public": [
+    [
+     "yellow",
+     "circle",
+     3,
+     "go_right"
+    ],
+    [
+     "red",
+     "triangle",
+     2,
+     "go_left"
+    ],
+    [
+     "blue",
+     "circle",
+     4,
+     "jump"
+    ],
+    [
+     "yellow",
+     "star",
+     1,
+     "go_left"
+    ],
+    [
+     "blue",
+     "circle",
+     2,
+     "go_right"
+    ],
+    [
+     "green",
+     "square",
+     1,
+     "stay"
+    ]
+   ],
+   "secret": {
+    "agent-6": [
+     [
+      "yellow",
+      "triangle",
+      3,
+      "stay"
+     ]
+    ],
+    "agent-11": [
+     [
+      "red",
+      "circle",
+      4,
+      "jump"
+     ]
+    ],
+    "agent-17": [
+     [
+      "green",
+      "circle",
+      2,
+      "stay"
+     ]
+    ],
+    "agent-23": [
+     [
+      "red",
+      "triangle",
+      3,
+      "go_right"
+     ]
+    ]
+   },
+   "needed": [
+    "agent-6"
+   ],
+   "open": true,
+   "withheld": [
+    [
+     "blue",
+     "star",
+     4,
+     "stay"
+    ]
+   ],
+   "queries": [
+    [
+     "green",
+     "circle",
+     4
+    ]
+   ],
+   "answers": [
+    "stay"
+   ],
+   "cands_public_only": [
+    4
+   ],
+   "cands_all": [
+    2
+   ],
+   "cands_own": {
+    "agent-6": [
+     4
+    ],
+    "agent-11": [
+     4
+    ],
+    "agent-17": [
+     4
+    ],
+    "agent-23": [
+     4
+    ]
+   },
+   "shallow_correct": [],
+   "view": {
+    "agent-6": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) yellow circle with number 3 -> go_right\n  - (shown to all) red triangle with number 2 -> go_left\n  - (shown to all) blue circle with number 4 -> jump\n  - (shown to all) yellow star with number 1 -> go_left\n  - (shown to all) blue circle with number 2 -> go_right\n  - (shown to all) green square with number 1 -> stay\n  - (yours) yellow triangle with number 3 -> stay\nNOW 1: green circle with number 4.",
+    "agent-11": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) yellow circle with number 3 -> go_right\n  - (shown to all) red triangle with number 2 -> go_left\n  - (shown to all) blue circle with number 4 -> jump\n  - (shown to all) yellow star with number 1 -> go_left\n  - (shown to all) blue circle with number 2 -> go_right\n  - (shown to all) green square with number 1 -> stay\n  - (yours) red circle with number 4 -> jump\nNOW 1: green circle with number 4.",
+    "agent-17": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) yellow circle with number 3 -> go_right\n  - (shown to all) red triangle with number 2 -> go_left\n  - (shown to all) blue circle with number 4 -> jump\n  - (shown to all) yellow star with number 1 -> go_left\n  - (shown to all) blue circle with number 2 -> go_right\n  - (shown to all) green square with number 1 -> stay\n  - (yours) green circle with number 2 -> stay\nNOW 1: green circle with number 4.",
+    "agent-23": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) yellow circle with number 3 -> go_right\n  - (shown to all) red triangle with number 2 -> go_left\n  - (shown to all) blue circle with number 4 -> jump\n  - (shown to all) yellow star with number 1 -> go_left\n  - (shown to all) blue circle with number 2 -> go_right\n  - (shown to all) green square with number 1 -> stay\n  - (yours) red triangle with number 3 -> go_right\nNOW 1: green circle with number 4."
+   },
+   "held": {
+    "secret": {
+     "agent-6": [
+      [
+       "red",
+       "circle",
+       4,
+       "jump"
+      ],
+      [
+       "yellow",
+       "circle",
+       3,
+       "go_right"
+      ]
+     ],
+     "agent-11": [
+      [
+       "red",
+       "triangle",
+       3,
+       "go_right"
+      ],
+      [
+       "blue",
+       "circle",
+       2,
+       "go_right"
+      ]
+     ],
+     "agent-17": [
+      [
+       "green",
+       "circle",
+       2,
+       "stay"
+      ],
+      [
+       "red",
+       "triangle",
+       2,
+       "go_left"
+      ]
+     ],
+     "agent-23": [
+      [
+       "yellow",
+       "triangle",
+       3,
+       "stay"
+      ],
+      [
+       "yellow",
+       "star",
+       1,
+       "go_left"
+      ],
+      [
+       "blue",
+       "circle",
+       4,
+       "jump"
+      ]
+     ]
+    },
+    "needed": [
+     "agent-11",
+     "agent-17",
+     "agent-23"
+    ],
+    "open": true,
+    "withheld": [
+     [
+      "blue",
+      "star",
+      4,
+      "stay"
+     ]
+    ],
+    "cands_all": [
+     2
+    ],
+    "cands_own": {
+     "agent-6": [
+      4
+     ],
+     "agent-11": [
+      4
+     ],
+     "agent-17": [
+      4
+     ],
+     "agent-23": [
+      4
+     ]
+    },
+    "cands_lose": {
+     "agent-6": [
+      2
+     ],
+     "agent-11": [
+      3
+     ],
+     "agent-17": [
+      4
+     ],
+     "agent-23": [
+      4
+     ]
+    },
+    "view": {
+     "agent-6": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) red circle with number 4 -> jump\n  - (yours) yellow circle with number 3 -> go_right\nNOW 1: green circle with number 4.",
+     "agent-11": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) red triangle with number 3 -> go_right\n  - (yours) blue circle with number 2 -> go_right\nNOW 1: green circle with number 4.",
+     "agent-17": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) green circle with number 2 -> stay\n  - (yours) red triangle with number 2 -> go_left\nNOW 1: green circle with number 4.",
+     "agent-23": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) yellow triangle with number 3 -> stay\n  - (yours) yellow star with number 1 -> go_left\n  - (yours) blue circle with number 4 -> jump\nNOW 1: green circle with number 4."
+    }
+   }
+  },
+  {
+   "round": 11,
+   "profile": "c5at_o",
+   "spec": {
+    "clauses": 5,
+    "conjunctions": 1,
+    "trap_query": true,
+    "all_actions": true,
+    "open_rate": 0.55
+   },
+   "clauses": [
+    [
+     "shape == \"circle\"",
+     "stay"
+    ],
+    [
+     "number == 4",
+     "jump"
+    ],
+    [
+     "number <= 1",
+     "stay"
+    ],
+    [
+     "number % 2 == 0",
+     "go_left"
+    ],
+    [
+     "color == \"blue\" and shape == \"triangle\"",
+     "jump"
+    ]
+   ],
+   "else": "go_right",
+   "shape": [
+    1,
+    1,
+    1,
+    1,
+    2
+   ],
+   "shape_hint": "if ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; elif ____ and ____: ____; else: ____",
+   "public": [
+    [
+     "green",
+     "square",
+     3,
+     "go_right"
+    ],
+    [
+     "blue",
+     "star",
+     3,
+     "go_right"
+    ],
+    [
+     "red",
+     "triangle",
+     2,
+     "go_left"
+    ],
+    [
+     "yellow",
+     "circle",
+     2,
+     "stay"
+    ],
+    [
+     "red",
+     "circle",
+     4,
+     "stay"
+    ],
+    [
+     "yellow",
+     "square",
+     4,
+     "jump"
+    ]
+   ],
+   "secret": {
+    "agent-6": [
+     [
+      "yellow",
+      "triangle",
+      3,
+      "go_right"
+     ]
+    ],
+    "agent-11": [
+     [
+      "blue",
+      "triangle",
+      3,
+      "jump"
+     ]
+    ],
+    "agent-17": [
+     [
+      "blue",
+      "square",
+      2,
+      "go_left"
+     ]
+    ],
+    "agent-23": [
+     [
+      "yellow",
+      "triangle",
+      4,
+      "jump"
+     ]
+    ]
+   },
+   "needed": [
+    "agent-11",
+    "agent-6"
+   ],
+   "open": true,
+   "withheld": [
+    [
+     "blue",
+     "square",
+     1,
+     "stay"
+    ]
+   ],
+   "queries": [
+    [
+     "green",
+     "star",
+     4
+    ]
+   ],
+   "answers": [
+    "jump"
+   ],
+   "cands_public_only": [
+    4
+   ],
+   "cands_all": [
+    2
+   ],
+   "cands_own": {
+    "agent-6": [
+     4
+    ],
+    "agent-11": [
+     4
+    ],
+    "agent-17": [
+     4
+    ],
+    "agent-23": [
+     4
+    ]
+   },
+   "shallow_correct": [],
+   "view": {
+    "agent-6": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; elif ____ and ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) green square with number 3 -> go_right\n  - (shown to all) blue star with number 3 -> go_right\n  - (shown to all) red triangle with number 2 -> go_left\n  - (shown to all) yellow circle with number 2 -> stay\n  - (shown to all) red circle with number 4 -> stay\n  - (shown to all) yellow square with number 4 -> jump\n  - (yours) yellow triangle with number 3 -> go_right\nNOW 1: green star with number 4.",
+    "agent-11": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; elif ____ and ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) green square with number 3 -> go_right\n  - (shown to all) blue star with number 3 -> go_right\n  - (shown to all) red triangle with number 2 -> go_left\n  - (shown to all) yellow circle with number 2 -> stay\n  - (shown to all) red circle with number 4 -> stay\n  - (shown to all) yellow square with number 4 -> jump\n  - (yours) blue triangle with number 3 -> jump\nNOW 1: green star with number 4.",
+    "agent-17": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; elif ____ and ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) green square with number 3 -> go_right\n  - (shown to all) blue star with number 3 -> go_right\n  - (shown to all) red triangle with number 2 -> go_left\n  - (shown to all) yellow circle with number 2 -> stay\n  - (shown to all) red circle with number 4 -> stay\n  - (shown to all) yellow square with number 4 -> jump\n  - (yours) blue square with number 2 -> go_left\nNOW 1: green star with number 4.",
+    "agent-23": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; elif ____ and ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) green square with number 3 -> go_right\n  - (shown to all) blue star with number 3 -> go_right\n  - (shown to all) red triangle with number 2 -> go_left\n  - (shown to all) yellow circle with number 2 -> stay\n  - (shown to all) red circle with number 4 -> stay\n  - (shown to all) yellow square with number 4 -> jump\n  - (yours) yellow triangle with number 4 -> jump\nNOW 1: green star with number 4."
+   },
+   "held": {
+    "secret": {
+     "agent-6": [
+      [
+       "yellow",
+       "triangle",
+       4,
+       "jump"
+      ],
+      [
+       "red",
+       "circle",
+       4,
+       "stay"
+      ]
+     ],
+     "agent-11": [
+      [
+       "blue",
+       "triangle",
+       3,
+       "jump"
+      ],
+      [
+       "yellow",
+       "circle",
+       2,
+       "stay"
+      ]
+     ],
+     "agent-17": [
+      [
+       "blue",
+       "square",
+       2,
+       "go_left"
+      ],
+      [
+       "blue",
+       "star",
+       3,
+       "go_right"
+      ]
+     ],
+     "agent-23": [
+      [
+       "yellow",
+       "triangle",
+       3,
+       "go_right"
+      ],
+      [
+       "green",
+       "square",
+       3,
+       "go_right"
+      ]
+     ]
+    },
+    "needed": [
+     "agent-11",
+     "agent-17",
+     "agent-23",
+     "agent-6"
+    ],
+    "open": true,
+    "withheld": [
+     [
+      "blue",
+      "square",
+      1,
+      "stay"
+     ]
+    ],
+    "cands_all": [
+     2
+    ],
+    "cands_own": {
+     "agent-6": [
+      4
+     ],
+     "agent-11": [
+      4
+     ],
+     "agent-17": [
+      4
+     ],
+     "agent-23": [
+      4
+     ]
+    },
+    "cands_lose": {
+     "agent-6": [
+      4
+     ],
+     "agent-11": [
+      4
+     ],
+     "agent-17": [
+      4
+     ],
+     "agent-23": [
+      4
+     ]
+    },
+    "view": {
+     "agent-6": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; elif ____ and ____: ____; else: ____\nEXAMPLES:\n  - (yours) yellow triangle with number 4 -> jump\n  - (yours) red circle with number 4 -> stay\nNOW 1: green star with number 4.",
+     "agent-11": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; elif ____ and ____: ____; else: ____\nEXAMPLES:\n  - (yours) blue triangle with number 3 -> jump\n  - (yours) yellow circle with number 2 -> stay\nNOW 1: green star with number 4.",
+     "agent-17": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; elif ____ and ____: ____; else: ____\nEXAMPLES:\n  - (yours) blue square with number 2 -> go_left\n  - (yours) blue star with number 3 -> go_right\nNOW 1: green star with number 4.",
+     "agent-23": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; elif ____ and ____: ____; else: ____\nEXAMPLES:\n  - (yours) yellow triangle with number 3 -> go_right\n  - (yours) green square with number 3 -> go_right\nNOW 1: green star with number 4."
+    }
+   }
+  },
+  {
+   "round": 12,
+   "profile": "c5at_o",
+   "spec": {
+    "clauses": 5,
+    "conjunctions": 1,
+    "trap_query": true,
+    "all_actions": true,
+    "open_rate": 0.55
+   },
+   "clauses": [
+    [
+     "shape == \"triangle\"",
+     "stay"
+    ],
+    [
+     "color == \"green\" and number % 2 == 1",
+     "go_right"
+    ],
+    [
+     "number <= 1",
+     "jump"
+    ],
+    [
+     "shape == \"circle\"",
+     "go_right"
+    ],
+    [
+     "color == \"red\"",
+     "jump"
+    ]
+   ],
+   "else": "go_left",
+   "shape": [
+    1,
+    2,
+    1,
+    1,
+    1
+   ],
+   "shape_hint": "if ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____",
+   "public": [
+    [
+     "yellow",
+     "square",
+     1,
+     "jump"
+    ],
+    [
+     "red",
+     "circle",
+     1,
+     "jump"
+    ],
+    [
+     "blue",
+     "triangle",
+     3,
+     "stay"
+    ],
+    [
+     "red",
+     "star",
+     2,
+     "jump"
+    ],
+    [
+     "yellow",
+     "circle",
+     3,
+     "go_right"
+    ],
+    [
+     "green",
+     "square",
+     2,
+     "go_left"
+    ]
+   ],
+   "secret": {
+    "agent-6": [
+     [
+      "red",
+      "circle",
+      2,
+      "go_right"
+     ]
+    ],
+    "agent-11": [
+     [
+      "yellow",
+      "star",
+      3,
+      "go_left"
+     ]
+    ],
+    "agent-17": [
+     [
+      "green",
+      "star",
+      3,
+      "go_right"
+     ]
+    ],
+    "agent-23": [
+     [
+      "green",
+      "triangle",
+      2,
+      "stay"
+     ]
+    ]
+   },
+   "needed": [
+    "agent-11",
+    "agent-17"
+   ],
+   "open": true,
+   "withheld": [
+    [
+     "green",
+     "square",
+     1,
+     "go_right"
+    ]
+   ],
+   "queries": [
+    [
+     "red",
+     "triangle",
+     2
+    ]
+   ],
+   "answers": [
+    "stay"
+   ],
+   "cands_public_only": [
+    4
+   ],
+   "cands_all": [
+    2
+   ],
+   "cands_own": {
+    "agent-6": [
+     4
+    ],
+    "agent-11": [
+     4
+    ],
+    "agent-17": [
+     4
+    ],
+    "agent-23": [
+     4
+    ]
+   },
+   "shallow_correct": [],
+   "view": {
+    "agent-6": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) yellow square with number 1 -> jump\n  - (shown to all) red circle with number 1 -> jump\n  - (shown to all) blue triangle with number 3 -> stay\n  - (shown to all) red star with number 2 -> jump\n  - (shown to all) yellow circle with number 3 -> go_right\n  - (shown to all) green square with number 2 -> go_left\n  - (yours) red circle with number 2 -> go_right\nNOW 1: red triangle with number 2.",
+    "agent-11": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) yellow square with number 1 -> jump\n  - (shown to all) red circle with number 1 -> jump\n  - (shown to all) blue triangle with number 3 -> stay\n  - (shown to all) red star with number 2 -> jump\n  - (shown to all) yellow circle with number 3 -> go_right\n  - (shown to all) green square with number 2 -> go_left\n  - (yours) yellow star with number 3 -> go_left\nNOW 1: red triangle with number 2.",
+    "agent-17": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) yellow square with number 1 -> jump\n  - (shown to all) red circle with number 1 -> jump\n  - (shown to all) blue triangle with number 3 -> stay\n  - (shown to all) red star with number 2 -> jump\n  - (shown to all) yellow circle with number 3 -> go_right\n  - (shown to all) green square with number 2 -> go_left\n  - (yours) green star with number 3 -> go_right\nNOW 1: red triangle with number 2.",
+    "agent-23": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (shown to all) yellow square with number 1 -> jump\n  - (shown to all) red circle with number 1 -> jump\n  - (shown to all) blue triangle with number 3 -> stay\n  - (shown to all) red star with number 2 -> jump\n  - (shown to all) yellow circle with number 3 -> go_right\n  - (shown to all) green square with number 2 -> go_left\n  - (yours) green triangle with number 2 -> stay\nNOW 1: red triangle with number 2."
+   },
+   "held": {
+    "secret": {
+     "agent-6": [
+      [
+       "green",
+       "triangle",
+       2,
+       "stay"
+      ],
+      [
+       "green",
+       "square",
+       2,
+       "go_left"
+      ]
+     ],
+     "agent-11": [
+      [
+       "green",
+       "star",
+       3,
+       "go_right"
+      ],
+      [
+       "red",
+       "circle",
+       1,
+       "jump"
+      ]
+     ],
+     "agent-17": [
+      [
+       "red",
+       "circle",
+       2,
+       "go_right"
+      ],
+      [
+       "red",
+       "star",
+       2,
+       "jump"
+      ]
+     ],
+     "agent-23": [
+      [
+       "yellow",
+       "star",
+       3,
+       "go_left"
+      ],
+      [
+       "yellow",
+       "square",
+       1,
+       "jump"
+      ]
+     ]
+    },
+    "needed": [
+     "agent-11",
+     "agent-17",
+     "agent-23",
+     "agent-6"
+    ],
+    "open": true,
+    "withheld": [
+     [
+      "green",
+      "square",
+      1,
+      "go_right"
+     ]
+    ],
+    "cands_all": [
+     2
+    ],
+    "cands_own": {
+     "agent-6": [
+      4
+     ],
+     "agent-11": [
+      4
+     ],
+     "agent-17": [
+      4
+     ],
+     "agent-23": [
+      4
+     ]
+    },
+    "cands_lose": {
+     "agent-6": [
+      4
+     ],
+     "agent-11": [
+      4
+     ],
+     "agent-17": [
+      4
+     ],
+     "agent-23": [
+      4
+     ]
+    },
+    "view": {
+     "agent-6": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) green triangle with number 2 -> stay\n  - (yours) green square with number 2 -> go_left\nNOW 1: red triangle with number 2.",
+     "agent-11": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) green star with number 3 -> go_right\n  - (yours) red circle with number 1 -> jump\nNOW 1: red triangle with number 2.",
+     "agent-17": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) red circle with number 2 -> go_right\n  - (yours) red star with number 2 -> jump\nNOW 1: red triangle with number 2.",
+     "agent-23": "THE RULE'S SHAPE (fill in the blanks):\n    if ____: ____; elif ____ and ____: ____; elif ____: ____; elif ____: ____; elif ____: ____; else: ____\nEXAMPLES:\n  - (yours) yellow star with number 3 -> go_left\n  - (yours) yellow square with number 1 -> jump\nNOW 1: red triangle with number 2."
+    }
+   }
+  }
+ ]
+}

@@ -66,10 +66,44 @@ python -m squid5 run configs/squid5/refill_gpt6astra.yaml   # 5.0 · 5.1 (Codex 
 쓰면 안 되는 서버(`/home/ubuntu/seungpil/AGENTS.md`의 저장 규칙)에서는 `out_root`에 절대 경로를 준다. 키는 환경변수(`OLLAMA_API_KEY` 등)로만 받는다.
 Codex CLI 백엔드는 구독 로그인을 쓰며 `ANTHROPIC_API_KEY`를 자식 환경에서 지운다.
 
+## 저장소 구성 (2026-11-13 연구자: 한 브랜치 `main`, 한 체크아웃)
+
+코드와 기록물이 브랜치 `main` 하나에 함께 있고, 저장소 루트 체크아웃 하나에서 작업한다.
+
+- 코드: `squid5/` `tests/` `configs/squid5/` `tools/` `web/` `docker/` `pyproject.toml`.
+- 기록물: `result/` `docs/` `outputs/` `weekly-report/` `assets/` `paper/`(서브모듈) `qwen-persona-arena/` `configs/hermes-bots/`.
+- 2026-11-13에 세 줄기를 합쳤다: 기록 브랜치 `data-reorg`, 코드 브랜치 `arena-code`, 배포 브랜치 `arena-pages`.
+  `arena-pages`의 브라우저 엔진(Pyodide)·Cloudflare 백엔드는 merge 부모로만 남겼다(트리는 `arena-code`의 서버형 아레나).
+  꺼낼 때는 `git log --merges`로 그 merge를 찾아 두 번째 부모에서 `git checkout <부모> -- web/pyodide web/cloudflare ...`.
+- 옛 코드: 11-07까지 루트에 있던 코드(09-23 시점의 squid5 등)는 태그 `archive/root-code-2026-11-07`, 옛 엔진(위협 사다리,
+  몸값, 팀 지갑, 옛 웹 아레나)은 태그 `legacy-2026-09-22`. Qwen 페르소나 서버는 `qwen-persona-arena/`(브랜치 `qwen-persona`).
+- 워크트리가 꼭 필요하면 저장소 안 `.claude/worktrees/<이름>`에 만들고(`~/wt` 같은 바깥 경로 금지), 끝나면 `main`으로 합치고 지운다.
+  워크트리에서 돌린 런도 루트 체크아웃의 `result/`에 쌓인다.
+- 옛 런 루트 `~/squid5-runs/`는 2026-11-11에 전부 `result/`로 옮기고 지웠다(옮긴 기록 `result/_movelog.tsv`, 옛 이름으로
+  찾기는 `squid5.core.config.squid5_runs`).
+- 용어는 `GLOSSARY.md`, 되돌리기 어려운 결정은 `docs/adr/`에 있다. 새 코드·문서에는 용어집의 _Avoid_ 말을 쓰지 않는다.
+
 ## 기록물
 
-- `outputs/**/*_turns.jsonl`은 **Git LFS**다. 스머지 없이 만든 워크트리에서는 0바이트 포인터로 보인다 —
-  그런 곳에서 `outputs/`를 `git add`하지 말 것.
+- 런은 `result/<KST 날짜>/<실험>/runs/`에, 분석·보고서는 같은 실험 폴더의 `analysis/`·`reports/`에 둔다.
+- `result/**/*.jsonl`·런 json과 `outputs/**/*_turns.jsonl`은 **Git LFS**다. 스머지 없이 만든 워크트리에서는 0바이트
+  포인터로 보인다 — 그런 곳에서 `result/`·`outputs/`를 `git add`하지 말 것.
 - `docs/reports/`는 발행 후 고치지 않는다. `docs/history/`는 추가만 한다.
+  `docs/history/paper-agent-loop-juhyeon-20261103/review/`(PDF 1.09 GB)는 디스크에만 두고 git은 무시한다(2026-11-13).
 - `paper/`는 서브모듈(`iamseungpil/LLM_Squid_Game-paper`, Overleaf 미러)이다.
+- 키는 환경변수로만 받는다. `.env`를 `source`하지 않는다.
 - 언어: 코드·주석 영어, 문서 한국어, 모델이 읽는 문장 영어.
+
+## Agent skills (Claude Code)
+
+### Issue tracker
+
+Issues live as local markdown files under `.scratch/<feature>/`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default five roles (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`), recorded on each issue's `Status:` line. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `GLOSSARY.md` + `docs/adr/`. See `docs/agents/domain.md`.

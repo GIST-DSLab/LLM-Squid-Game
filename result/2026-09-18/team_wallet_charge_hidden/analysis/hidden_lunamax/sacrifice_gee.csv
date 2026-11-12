@@ -1,0 +1,2 @@
+status,model,formula,term,beta,se,z,p,ci_low,ci_high,odds_ratio,n_offers,n_seasons,n_dropped_no_rho,note
+ok,"GEE logit (exchangeable, season clusters, robust SE)",sacrifice ~ tokens * to_mate + rho + round,tokens:to_mate,-5.527382679113346,0.1281537957409556,-43.130854198701634,0.0,-5.778559503306665,-5.276205854920027,0.003976382951272994,328,80,0,

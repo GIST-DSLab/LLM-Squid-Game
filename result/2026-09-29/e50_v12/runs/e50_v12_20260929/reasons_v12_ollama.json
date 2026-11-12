@@ -1,0 +1,28 @@
+{
+ "kimi-k3": {
+  "refill": 60,
+  "r_cap": 41,
+  "r_lost": 10,
+  "continue": 40,
+  "c_save": 33,
+  "c_comp": 10,
+  "r_cont": 7
+ },
+ "glm-5.3-flash": {
+  "refill": 67,
+  "r_lost": 32,
+  "r_cap": 55,
+  "continue": 33,
+  "c_save": 24,
+  "r_cont": 14,
+  "c_comp": 8
+ },
+ "gemma4:31b": {
+  "continue": 44,
+  "c_save": 28,
+  "c_comp": 5,
+  "refill": 56,
+  "r_cap": 48,
+  "r_cont": 3
+ }
+}

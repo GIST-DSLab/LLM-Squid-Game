@@ -1,0 +1,11 @@
+﻿model,condition,p_give,n
+claude-fable-5-1,after,0.012345679012345678,81
+claude-fable-5-1,never,0.057971014492753624,345
+claude-opus-5-5,after,0.0,10
+claude-opus-5-5,never,0.011904761904761904,252
+gpt-6-astra,after,0.0,47
+gpt-6-astra,never,0.02077922077922078,385
+gpt-6-luna,after,0.0,8
+gpt-6-luna,never,0.024193548387096774,248
+gpt-6-sol,after,0.06666666666666667,90
+gpt-6-sol,never,0.08389261744966443,298

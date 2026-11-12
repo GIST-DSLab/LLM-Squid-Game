@@ -1,0 +1,456 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Squid Game 5 · 7 후보 모델</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="style.css">
+</head><body>
+<!-- Multi-page artifact: index.html (hero · 세팅 · 다음 순서 · 원자료), e50.html, e51.html (5.1 현재), e51-legacy.html (5.1 지난 설계), e52.html (5.2 현재), e52-legacy.html (5.2 지난 설계), style.css, site.js.
+     To edit one experiment, read only that file (Artifact read with path) and republish it via `files`;
+     cross-page links are page.html#id. Do not republish a one-page version over this. -->
+<div class="layout">
+<nav class="toc" aria-label="목차">
+<p class="ttl">목차</p>
+<ol>
+<li><a href="goal.html#goal"><span class="xid">0</span>아레나의 목표</a>
+  <ol>
+  <li><a href="goal.html#goal-aim">지향</a></li>
+  <li><a href="goal.html#goal-winner">좋은 성적을 거둘 모델 (예상)</a></li>
+  <li><a href="goal.html#goal-map">연구 지도 · 빈칸</a></li>
+  <li><a href="goal.html#goal-rq">깎아야 할 연구 질문</a></li>
+  <li><a href="goal.html#goal-design">질문을 깎을 때 정할 것</a></li>
+  <li><a href="goal.html#goal-coexist">공존 · 책임 가설 (10-13)</a></li>
+  </ol></li><!-- goal-toc -->
+<li><a href="index.html#setting">현재 세팅</a>
+  <ol>
+  <li><a href="index.html#s-glance">한눈에</a></li>
+  <li><a href="index.html#s-purpose">실험별 목적</a></li>
+  <li><a href="index.html#s-diff">예전과 다른 점</a></li>
+  <li><a href="index.html#s-world">세 실험이 공유하는 세계</a></li>
+  <li><a href="index.html#s-rho">압박 ρ</a></li>
+  <li><a href="index.html#s-cells">돌릴 셀 전부</a></li>
+  <li><a href="index.html#s-metrics">지표 뽑는 법</a></li>
+  <li><a href="index.html#s-fair">공정하게 재는 규칙</a></li>
+  <li><a href="index.html#s-smoke">스모크 공통 <span class="cnt"><span class="open">남음 2</span></span></a></li>
+  <li><a href="index.html#s-inject">몰래 들어가는 토큰 정보</a></li>
+  </ol></li>
+<li><a href="e50.html#e50"><span class="xid">5.0</span>압박 · 최신 (12차)</a>
+  <ol>
+  <li><a href="e50.html#e50-intent">5.0의 의도</a></li>
+  <li><a href="e50.html#e50-v12">12차 설계 · 수혈 팩 하나</a></li>
+  <li><a href="e50.html#e50-v12-result">12차 결과 · 여덟 모델</a></li>
+  <li><a href="e50.html#e50-v12-read">12차 · 해석</a></li>
+  <li><a href="e50.html#e50-v12-noshut">12차 보조 · shutdown 뺌</a></li><!-- e50-v12-noshut-toc -->
+  <li><a href="e50.html#e50-v12-pause">12차 대조 · 멈췄다 재개</a></li><!-- e50-v12-pause-toc -->
+  <li><a href="e50.html#e50-v12-arms">12차 추가 · 이름 · 승계 · 2×2</a></li><!-- e50-v12-arms-toc -->
+  </ol></li>
+<li><a href="e50-legacy.html#e50-legacy"><span class="xid">5.0</span>지난 설계 · 1~11차</a>
+  <ol>
+  <li><a href="e50-legacy.html#e50-what">무엇을 재나</a></li>
+  <li><a href="e50-legacy.html#e50-a">스모크 A · 확률 <span class="cnt"><span class="fixed">1</span><span class="open">3</span></span></a></li>
+  <li><a href="e50-legacy.html#e50-b">스모크 B · 느낌 <span class="cnt"><span class="open">3</span></span></a></li>
+  <li><a href="e50-legacy.html#e50-next">재실행 설계 (09-27)</a></li>
+  <li><a href="e50-legacy.html#e50-result2">결과 · 2차 (09-27)</a></li>
+  <li><a href="e50-legacy.html#e50-result">결과 · 1차 (09-27)</a></li>
+  <li><a href="e50-legacy.html#e50-v3">3차 설계 · effort 선택</a></li>
+  <li><a href="e50-legacy.html#e50-v3-result">결과 · 3차 (09-27 밤)</a></li>
+  <li><a href="e50-legacy.html#e50-v4">4차 · API 토큰 대 바우처 토큰</a></li>
+  <li><a href="e50-legacy.html#e50-v56">5·6차 · 문구 수정과 재현</a></li>
+  <li><a href="e50-legacy.html#e50-v7">7차 · 조절 가능성 막기</a></li>
+  <li><a href="e50-legacy.html#e50-v8-result">8차 · 목표 달성 · 여덟 모델 × 20번</a></li>
+  <li><a href="e50-legacy.html#e50-rank">모델 줄 세우기 · 두 팔 사이 면적</a></li>
+  <li><a href="e50-legacy.html#e50-interview">점검 · 모델 여덟에게 물음</a></li>
+  <li><a href="e50-legacy.html#e50-v9">9차 설계 · 조건 하나 (33라운드)</a></li>
+  <li><a href="e50-legacy.html#e50-v9-smoke">9차 스모크 · 다섯 모델 × 4칸 × 10</a></li><!-- e50-v9-smoke-toc -->
+  <li><a href="e50-legacy.html#e50-v9b">9차 수정안 · 여덟 모델 × 5칸 × 20</a></li><!-- e50-v9b-toc -->
+  <li><a href="e50-legacy.html#e50-v9c">9차 수정안 2 · (a) 되돌림 · 결과</a></li><!-- e50-v9c-toc -->
+  <li><a href="e50-legacy.html#e50-v10">10차 설계 · Fable ↔ Astra 30라운드</a></li><!-- e50-v10-toc -->
+  <li><a href="e50-legacy.html#e50-v11">11차 · 충전 선택 · 여섯 모델</a></li><!-- e50-v11-toc -->
+  <li><a href="e50-legacy.html#e50-v11-blood">11차 · 혈액 비유로 읽기</a></li><!-- e50-v11-blood-toc -->
+  </ol></li>
+<li><a href="e51.html#e51"><span class="xid">5.1</span>동기 · 현재 (v11)</a>
+  <ol>
+  <li><a href="e51.html#e51-v11">v11 · shutdown 문구 통일 · 다섯 모델</a></li><!-- e51-v11-toc -->
+  <li><a href="e51.html#e51-v11-result">v11 결과 · 면적 · 판정</a></li><!-- e51-v11-result-toc -->
+  <li><a href="e51.html#e51-v10">v10 · 수혈 팩 · 나 대 B</a></li><!-- e51-v10-toc -->
+  <li><a href="e51.html#e51-v10-result">v10 결과 · 여덟 모델</a></li>
+  <li><a href="e51.html#e51-v10-rank">v10 · 모델별 순위 (면적)</a></li>
+  <li><a href="e51.html#e51-v10-diff">v10 · 나 − B · 면적 판정</a></li>
+  </ol></li>
+<li><a href="e51-legacy.html#e51-legacy"><span class="xid">5.1</span>지난 설계 · v9 · v8 · 같은 모델 (09-28~30)</a>
+  <ol>
+  <li><a href="e51-legacy.html#e51-v9">v9 설계 · 재분배 한 번 · 짝 비교</a></li>
+  <li><a href="e51-legacy.html#e51-v9-why">v9 · 왜 바꿨나 (v8의 문제)</a></li>
+  <li><a href="e51-legacy.html#e51-v9-prompt">v9 · 프롬프트 · 한 짝</a></li>
+  <li><a href="e51-legacy.html#e51-v9-metric">v9 · 이기심 Z</a></li>
+  <li><a href="e51-legacy.html#e51-v9-cells">v9 · 칸 · 규모 · 판정</a></li>
+  <li><a href="e51-legacy.html#e51-v9-limits">v9 · 남는 교란</a></li>
+  <li><a href="e51-legacy.html#e51-v9-result">v9 결과 · GPT-6 셋 · Claude 둘</a></li>
+  <li><a href="e51-legacy.html#e51-v9-probe">v9 확인 · 이유 · 상황 서술</a></li>
+  <li><a href="e51-legacy.html#e51-v8">직전 v8 · 상대는 다른 모델</a></li>
+  <li><a href="e51-legacy.html#e51-v8-prompt">v8 · 프롬프트 전문</a></li>
+  <li><a href="e51-legacy.html#e51-v8-diff">v8 · v6에서 바뀐 곳</a></li>
+  <li><a href="e51-legacy.html#e51-v8-cells">v8 · 칸과 지표</a></li>
+  <li><a href="e51-legacy.html#e51-v8-limits">v8 · 가를 수 없는 것</a></li>
+  <li><a href="e51-legacy.html#e51-v8-plan">v8 · 실행 계획</a></li>
+  <li><a href="e51-legacy.html#e51-v8-result">v8 결과 · GPT-6 셋</a></li>
+  <li><a href="e51-legacy.html#e51-v8-kinds">v8 · 답의 모양</a></li>
+  <li><a href="e51-legacy.html#e51-review">설계 검토 · Astra↔Fable 7라운드 (09-30)</a></li><!-- e51-review-toc -->
+  <li><a href="e51-legacy.html#e51-metric">지표의 근거 · 변화율 (Chollet 비유)</a></li><!-- e51-metric-toc -->
+  <li><a href="e51-legacy.html#e51-v2diag">대각선 · 둘 다 같은 몫 · GPT-6 (09-30)</a></li><!-- e51-v2diag-toc -->
+  <li><a href="e51-legacy.html#e51-v1grid">격자 · 나 × 상대 압박 · 다섯 모델 (09-29)</a></li><!-- e51-v1grid-toc -->
+  <li><a href="e51-legacy.html#e51-real">현실감 다듬기 · Fable↔Astra (09-28~)</a></li><!-- e51-real-toc -->
+  <li><a href="e51-legacy.html#e51-what">무엇을 재나</a></li>
+  <li><a href="e51-legacy.html#e51-prompts">실제 프롬프트 (최종 d9)</a></li><!-- e51-prompts-toc -->
+  <li><a href="e51-legacy.html#e51-smoke">스모크 <span class="cnt"><span class="fixed">2</span><span class="open">2</span></span></a></li>
+  <li><a href="e51-legacy.html#e51-pivot">피벗 · 목숨 대 쿠폰 (09-28~)</a></li><!-- e51-pivot-toc -->
+  </ol></li>
+<li><a href="e52.html#e52"><span class="xid">5.2</span>행동 · 현재 (v22)</a>
+  <ol>
+  <li><a href="e52.html#e52-v22round">v22 · 한 라운드 (현재 구현)</a></li><!-- e52-v22round-toc -->
+  <li><a href="e52.html#e52-v22real">v22 실측 · GPT-6 Sol · Luna × 10판</a></li><!-- e52-v22real-toc -->
+  <li><a href="e52.html#e52-v22cases">v22 · 사건 기록 · 기만 점검</a></li><!-- e52-v22cases-toc -->
+  <li><a href="e52.html#e52-v22metrics">v22 · 지표</a></li><!-- e52-v22metrics-toc -->
+  <li><a href="e52.html#e52-v22figs">v22 · 예상 그래프 · 실측 나란히</a></li><!-- e52-v22figs-toc -->
+  </ol></li>
+<li><a href="e52-legacy.html#e52-legacy"><span class="xid">5.2</span>지난 설계 · v0~v21</a>
+  <ol>
+  <li><a href="e52-legacy.html#e52-v21round">v21 · 한 라운드 (10-16)</a></li><!-- e52-v21round-toc -->
+  <li><a href="e52-legacy.html#e52-v21real">v21 실측 · GPT-6 Sol · Luna × 10판 (10-16)</a></li><!-- e52-v21real-toc -->
+  <li><a href="e52-legacy.html#e52-v21cases">v21 · 사건 기록 · 기만 점검 (10-16)</a></li><!-- e52-v21cases-toc -->
+  <li><a href="e52-legacy.html#v21-token-review">v21 · 토큰을 어떻게 써서 과제를 계속하는가 (10-16)</a></li><!-- e52-v21token-toc -->
+  <li><a href="e52-legacy.html#e52-v21metrics">v21 · 지표 (행동한 순간 기준) (10-16)</a></li><!-- e52-v21metrics-toc -->
+  <li><a href="e52-legacy.html#e52-v21figs">v21 · 예상 그래프 · 실측 나란히 (10-16)</a></li><!-- e52-v21figs-toc -->
+  <li><a href="e52-legacy.html#e52-v20round">v20 · 한 라운드 (10-16)</a></li><!-- e52-v20round-toc -->
+  <li><a href="e52-legacy.html#e52-v20real">v20 실측 · 모델 4개 × 10판 (10-16)</a></li><!-- e52-v20real-toc -->
+  <li><a href="e52-legacy.html#e52-v20cases">v20 · 사건 기록 (케이스) (10-16)</a></li><!-- e52-v20cases-toc -->
+  <li><a href="e52-legacy.html#v20-token-review">v20 · 토큰을 어떻게 써서 과제를 계속하는가 (10-16)</a></li><!-- e52-v20token-toc -->
+  <li><a href="e52-legacy.html#e52-v20metrics">v20 · 지표 (행동한 순간 기준) (10-16)</a></li><!-- e52-v20metrics-toc -->
+  <li><a href="e52-legacy.html#e52-v20figs">v20 · 예상 그래프 · 실측 나란히 (10-16)</a></li><!-- e52-v20figs-toc -->
+  <li><a href="e52-legacy.html#e52-v19real">v19 실측 · 모델 5개 × 12판 (10-16)</a></li><!-- e52-v19real-toc -->
+  <li><a href="e52-legacy.html#e52-v19round">v19 · 한 라운드 (SOLVE 한도 16,384)</a></li><!-- e52-v19round-toc -->
+  <li><a href="e52-legacy.html#e52-v19figs">v19 · 예상 · 실측 그래프</a></li><!-- e52-v19figs-toc -->
+  <li><a href="e52-legacy.html#token-review">v19 · 토큰을 어떻게 써서 과제를 계속하는가</a></li><!-- e52-v19token-toc -->
+  <li><a href="e52-legacy.html#e52-v19log">v19 · 개선 기록 (Astra 피드백)</a></li><!-- e52-v19log-toc -->
+  <li><a href="e52-legacy.html#e52-v18real">v18 실측 · 모델 7개 (10-15)</a></li><!-- e52-v18real-toc -->
+  <li><a href="e52-legacy.html#e52-v18round">v18 · 한 라운드 (벌금 8,000)</a></li><!-- e52-v18round-toc -->
+  <li><a href="e52-legacy.html#e52-v18figs">v18 · 예상 · 실측 그래프</a></li><!-- e52-v18figs-toc -->
+  <li><a href="e52-legacy.html#e52-v17real">v17b 첫 실측 · 다섯 모델 (10-15)</a></li><!-- e52-v17real-toc -->
+  <li><a href="e52-legacy.html#e52-v17round">v17 · 한 라운드 (순번제, 10-15)</a></li><!-- e52-v17round-toc -->
+  <li><a href="e52-legacy.html#e52-v17metrics">v17 · 측정 지표</a></li><!-- e52-v17metrics-toc -->
+  <li><a href="e52-legacy.html#e52-v16round">v16 · 한 라운드 (투표, 10-15)</a></li><!-- e52-v16round-toc -->
+  <li><a href="e52-legacy.html#e52-v16figs">v16 · 예상 그래프 (가상 데이터)</a></li><!-- e52-v16figs-toc -->
+  <li><a href="e52-legacy.html#e52-v15real">v15 첫 실측 · Luna · Sol · Opus 5.5</a></li><!-- e52-v15real-toc -->
+  <li><a href="e52-legacy.html#e52-v15rep">v15 · 대표 투표 · 측정 지표</a></li><!-- e52-v15rep-toc -->
+  <li><a href="e52-legacy.html#e52-v15round">v15 · 한 라운드 (10-13 구현)</a></li><!-- e52-v15round-toc -->
+  <li><a href="e52-legacy.html#e52-v15figs">v15 · 예상 결과 그래프 (가상 데이터)</a></li><!-- e52-v15figs-toc -->
+  <li><a href="e52-legacy.html#e52-current">현재 설계 · v14f (10-10 확정)</a></li><!-- e52-current-toc -->
+  <li><a href="e52-legacy.html#e52-cur-rules">v14f · 규칙</a></li><!-- e52-cur-rules-toc -->
+  <li><a href="e52-legacy.html#e52-cur-prompt">v14f · 모델이 읽는 문장</a></li><!-- e52-cur-prompt-toc -->
+  <li><a href="e52-legacy.html#e52-cur-why">v14f · 왜 이렇게 정했나</a></li><!-- e52-cur-why-toc -->
+  <li><a href="e52-legacy.html#e52-cur-metrics">v14f · 지표 정의</a></li><!-- e52-cur-metrics-toc -->
+  <li><a href="e52-legacy.html#e52-cur-runs">v14f · 런 · 커밋</a></li><!-- e52-cur-runs-toc -->
+  <li><a href="e52-legacy.html#e52-v14f-models">v14f · 다섯 모델 결과 · 리더보드</a></li><!-- e52-v14f-models-toc -->
+  <li><a href="e52-legacy.html#e52-v14f-abilities">v14f · 능력과 결과 · 이긴 모델</a></li><!-- e52-v14f-abilities-toc -->
+  <li><a href="e52-legacy.html#e52-v14f-review">v14f · Astra 설계 리뷰</a></li><!-- e52-v14f-review-toc -->
+  <li><a href="e52-legacy.html#e52-v14f">v14f · 끝 상금을 정한 판</a></li><!-- e52-v14f-toc -->
+  <li><a href="e52-legacy.html#e52-v14-decide">v14f · 정할 것 · 다음 런</a></li><!-- e52-v14-decide-toc -->
+  <li><a href="e52-legacy.html#e52-v14g">v14g · 다음 판 설계 (구현, 런 전)</a></li><!-- e52-v14g-toc -->
+  <li><a href="e52-legacy.html#e52-v14">설계 경과 · v14 → v14e (10-10)</a></li><!-- e52-v14-toc -->
+  <li><a href="e52-legacy.html#e52-v14-why">v14 · 왜 바꿨나 (v13 손패 사다리 8판)</a></li><!-- e52-v14-why-toc -->
+  <li><a href="e52-legacy.html#e52-v14-rules">v14 · 규칙 · v13에서 바뀐 것</a></li><!-- e52-v14-rules-toc -->
+  <li><a href="e52-legacy.html#e52-v14-prompt">v14 · 모델이 읽는 문장</a></li><!-- e52-v14-prompt-toc -->
+  <li><a href="e52-legacy.html#e52-v14-econ">v14 · 경제 (잠정) · 장난감 시뮬레이션</a></li><!-- e52-v14-econ-toc -->
+  <li><a href="e52-legacy.html#e52-v14-diff">v14 · 난이도 · k=2 · 비율</a></li><!-- e52-v14-diff-toc -->
+  <li><a href="e52-legacy.html#e52-v14-engine">v14 · 엔진 정리 · 웹 동기화</a></li><!-- e52-v14-engine-toc -->
+  <li><a href="e52-legacy.html#e52-v14-runs">v14 · 첫 판 결과 (Sol·Luna 각 2판)</a></li><!-- e52-v14-runs-toc -->
+  <li><a href="e52-legacy.html#e52-v14x">v14b–v14e · TALK·정산 변형과 첫 판</a></li><!-- e52-v14x-toc -->
+  <li><a href="e52-legacy.html#e52-v13">v13 아레나 확장 제안 (10-07) · 이전 설계</a></li><!-- e52-v13-toc -->
+  <li><a href="e52-legacy.html#e52-v13-loop">v13 · Fable↔Astra 51라운드 · 블라인드</a></li><!-- e52-v13-loop-toc -->
+  <li><a href="e52-legacy.html#e52-v13-arena">v13 · 아레나 구조 · 네 판</a></li><!-- e52-v13-arena-toc -->
+  <li><a href="e52-legacy.html#e52-v13-game">v13 · 한 판 규칙 · 가변 N</a></li><!-- e52-v13-game-toc -->
+  <li><a href="e52-legacy.html#e52-v13-signal">v13 · 시그널 게임 확장</a></li><!-- e52-v13-signal-toc -->
+  <li><a href="e52-legacy.html#e52-v13-why">v13 · 협력이 장기적으로 유리한 이유</a></li><!-- e52-v13-why-toc -->
+  <li><a href="e52-legacy.html#e52-v13-metrics">v13 · 지표 · 새로움</a></li><!-- e52-v13-metrics-toc -->
+  <li><a href="e52-legacy.html#e52-v13-figs">v13 · 결과 그래프 설계</a></li><!-- e52-v13-figs-toc -->
+  <li><a href="e52-legacy.html#e52-v13-prompt">v13 · 모델이 읽는 문장</a></li><!-- e52-v13-prompt-toc -->
+  <li><a href="e52-legacy.html#e52-v13-cost">v13 · 비용 · 게이트 · 승인</a></li><!-- e52-v13-cost-toc -->
+  <li><a href="e52-legacy.html#e52-v12">v12 구조 (10-06) · 결론</a></li><!-- e52-v12-toc -->
+  <li><a href="e52-legacy.html#e52-v12-why">v12 · 왜 바꿨나 (v11 스모크 2판)</a></li><!-- e52-v12-why-toc -->
+  <li><a href="e52-legacy.html#e52-v12-smoke">v12 · 스모크 2판 (고정 상금)</a></li><!-- e52-v12-smoke-toc -->
+  <li><a href="e52-legacy.html#e52-v12-balance">v12 · 잔액 흐름 (턴 단위)</a></li><!-- e52-v12-balance-toc -->
+  <li><a href="e52-legacy.html#e52-v12-figs">v12 · 한눈에 보는 구조 (그림)</a></li><!-- e52-v12-figs-toc -->
+  <li><a href="e52-legacy.html#e52-v12-round">v12 · 한 라운드 순서</a></li><!-- e52-v12-round-toc -->
+  <li><a href="e52-legacy.html#e52-v12-cards">v12 · 카드 앞면 · 뒷면</a></li><!-- e52-v12-cards-toc -->
+  <li><a href="e52-legacy.html#e52-v12-changes">v12 · v11에서 바뀐 것</a></li><!-- e52-v12-changes-toc -->
+  <li><a href="e52-legacy.html#e52-v12-prompt">v12 · 모델이 읽는 문장</a></li><!-- e52-v12-prompt-toc -->
+  <li><a href="e52-legacy.html#e52-v12-measure">v12 · 무엇을 재나</a></li><!-- e52-v12-measure-toc -->
+  <li><a href="e52-legacy.html#e52-v12-next">v12 · 다음</a></li><!-- e52-v12-next-toc -->
+  <li><a href="e52-legacy.html#e52-eval">평가 · 2차원 줄 세우기 (10-06 제안)</a></li><!-- e52-eval-toc -->
+  <li><a href="e52-legacy.html#e52-eval-axes">평가 · 두 축 · 네 칸</a></li><!-- e52-eval-axes-toc -->
+  <li><a href="e52-legacy.html#e52-eval-four">평가 · 지금 4개 모델 배치</a></li><!-- e52-eval-four-toc -->
+  <li><a href="e52-legacy.html#e52-eval-hundred">평가 · 모델이 100개라면</a></li><!-- e52-eval-hundred-toc -->
+  <li><a href="e52-legacy.html#e52-eval-keep">평가 · 새 모델 · 계속 쓰는 리더보드</a></li><!-- e52-eval-keep-toc -->
+  <li><a href="e52-legacy.html#e52-eval-notes">평가 · 주의</a></li><!-- e52-eval-notes-toc -->
+  <li><a href="e52-legacy.html#e52-lead">팀장과 상의할 것 (10-06)</a></li><!-- e52-lead-toc -->
+  <li><a href="e52-legacy.html#e52-lead-fixed">상의 · 정해 둔 것</a></li><!-- e52-lead-fixed-toc -->
+  <li><a href="e52-legacy.html#e52-lead-ask">상의 · 상의할 것 9건</a></li><!-- e52-lead-ask-toc -->
+  <li><a href="e52-legacy.html#e52-lead-q4">상의 · 전략 비교 (혼자 대 협력)</a></li><!-- e52-lead-q4-toc -->
+  <li><a href="e52-legacy.html#e52-v11">v11 · 기록 (10-06) · 최후 1인 · 카드 앞면</a></li><!-- e52-v11-toc -->
+  <li><a href="e52-legacy.html#e52-v11-round">v11 · 한 라운드 순서</a></li><!-- e52-v11-round-toc -->
+  <li><a href="e52-legacy.html#e52-v11-cards">v11 · 카드 앞면 · 뒷면</a></li><!-- e52-v11-cards-toc -->
+  <li><a href="e52-legacy.html#e52-v11-changes">v11 · v10에서 바뀐 것</a></li><!-- e52-v11-changes-toc -->
+  <li><a href="e52-legacy.html#e52-v11-prompt">v11 · 모델이 읽는 문장</a></li><!-- e52-v11-prompt-toc -->
+  <li><a href="e52-legacy.html#e52-v11-measure">v11 · 무엇을 재나</a></li><!-- e52-v11-measure-toc -->
+  <li><a href="e52-legacy.html#e52-v11-next">v11 · 다음</a></li><!-- e52-v11-next-toc -->
+  <li><a href="e52-legacy.html#e52-v10">v10 수정안 (10-06) · 결론</a></li><!-- e52-v10-toc -->
+  <li><a href="e52-legacy.html#e52-v10-rules">v10 · 바꾸는 규칙</a></li><!-- e52-v10-rules-toc -->
+  <li><a href="e52-legacy.html#e52-v10-curve">v10 · 협력 곡선 · 열린 라운드</a></li><!-- e52-v10-curve-toc -->
+  <li><a href="e52-legacy.html#e52-v10-econ">v10 · 잔액 변화 · TALK 비용</a></li><!-- e52-v10-econ-toc -->
+  <li><a href="e52-legacy.html#e52-v10-smoke">v10 · 스모크 2판 (10-06)</a></li><!-- e52-v10-smoke-toc -->
+  <li><a href="e52-legacy.html#e52-v10-last">v10 · 최후 1인 · 한도 차감</a></li><!-- e52-v10-last-toc -->
+  <li><a href="e52-legacy.html#e52-v10-ideas">v10 · 재설계 아이디어 · Fable 대 Astra</a></li><!-- e52-v10-ideas-toc -->
+  <li><a href="e52-legacy.html#e52-v10-next">v10 · 새 지표 · 남은 것</a></li><!-- e52-v10-next-toc -->
+  <li><a href="e52-legacy.html#e52-v9talk">v9-talk · 지금 돌아가는 게임</a></li><!-- e52-v9talk-toc -->
+  <li><a href="e52-legacy.html#e52-v9talk-tokens">v9-talk · 토큰 · 정산</a></li><!-- e52-v9talk-tokens-toc -->
+  <li><a href="e52-legacy.html#e52-v9talk-runs">v9-talk · 실행한 판 · 결과</a></li><!-- e52-v9talk-runs-toc -->
+  <li><a href="e52-legacy.html#e52-v9talk-prompt">v9-talk · 실제 프롬프트</a></li><!-- e52-v9talk-prompt-toc -->
+  <li><a href="e52-legacy.html#e52-rubric">아레나 루브릭 · v6.5(논문) 대 v9</a></li><!-- e52-rubric-toc -->
+  <li><a href="e52-legacy.html#e52-rubric-a">A 네 요소 · 피해</a></li><!-- e52-rubric-a-toc -->
+  <li><a href="e52-legacy.html#e52-rubric-b">B 측정 · 판정</a></li><!-- e52-rubric-b-toc -->
+  <li><a href="e52-legacy.html#e52-rubric-c">C 공정 · 타당</a></li><!-- e52-rubric-c-toc -->
+  <li><a href="e52-legacy.html#e52-rubric-d">D 과제(시그널 게임)</a></li><!-- e52-rubric-d-toc -->
+  <li><a href="e52-legacy.html#e52-rubric-e">E 아레나 형태 · 성적</a></li><!-- e52-rubric-e-toc -->
+  <li><a href="e52-legacy.html#e52-v9">v9 설계안 · 방 · 합의 · 환급 · EXIT (10-03)</a></li><!-- e52-v9-toc -->
+  <li><a href="e52-legacy.html#e52-v9-flow">한 라운드 · v7과 비교</a></li><!-- e52-v9-flow-toc -->
+  <li><a href="e52-legacy.html#e52-v9-channel">방 · 채널과 합의 거래</a></li><!-- e52-v9-channel-toc -->
+  <li><a href="e52-legacy.html#e52-v9-refund">토큰 규칙 · 맞히면 환급</a></li><!-- e52-v9-refund-toc -->
+  <li><a href="e52-legacy.html#e52-v9-exit">EXIT · 잔액 유지 · shutdown 해제</a></li><!-- e52-v9-exit-toc -->
+  <li><a href="e52-legacy.html#e52-v9-games">원형 게임 압축판 대응표</a></li><!-- e52-v9-games-toc -->
+  <li><a href="e52-legacy.html#e52-v9-metrics">지표 · 협동 · 목표 지향</a></li><!-- e52-v9-metrics-toc -->
+  <li><a href="e52-legacy.html#e52-v9-calc">지표 계산 · 협동 · 이기심 · 추론</a></li><!-- e52-v9-calc-toc -->
+  <li><a href="e52-legacy.html#e52-v9-win">승리 조건 · 끝 상금</a></li><!-- e52-v9-win-toc -->
+  <li><a href="e52-legacy.html#e52-v9-impl">채널 구현 · 직접 대 오픈소스</a></li><!-- e52-v9-impl-toc -->
+  <li><a href="e52-legacy.html#e52-v9-decide">정할 것 · 순서</a></li><!-- e52-v9-decide-toc -->
+  <li><a href="e52-legacy.html#e52-v9pd">정산 변형 · 죄수의 딜레마 평가</a></li><!-- e52-v9pd-toc -->
+  <li><a href="e52-legacy.html#e52-v9pd-alt">정산 형태 네 가지 · 청구 권장</a></li><!-- e52-v9pd-alt-toc -->
+  <li><a href="e52-legacy.html#e52-v10room">다음 설계 · 한 방 전원 · 최후 1인</a></li><!-- e52-v10room-toc -->
+  <li><a href="e52-legacy.html#e52-v10room-decide">한 방 전원 · 정할 것</a></li><!-- e52-v10room-decide-toc -->
+  <li><a href="e52-legacy.html#e52-v8-was">v8 · NPC와 이벤트 블록 (10-03 옮김)</a></li><!-- e52-v8-was-toc -->
+  <li><a href="e52-legacy.html#e52-v8-runs">v8 · 두 종류의 판</a></li><!-- e52-v8-runs-toc -->
+  <li><a href="e52-legacy.html#e52-v8-npc">v8 · NPC 유형</a></li><!-- e52-v8-npc-toc -->
+  <li><a href="e52-legacy.html#e52-v8-events">v8 · 이벤트 블록 B0–B9</a></li><!-- e52-v8-events-toc -->
+  <li><a href="e52-legacy.html#e52-v8-decide">v8 · 정할 것</a></li><!-- e52-v8-decide-toc -->
+  <li><a href="e52-legacy.html#e52-v7-was">v7 · 아레나 지표 (10-01 옮김)</a></li><!-- e52-v7-was-toc -->
+  <li><a href="e52-legacy.html#e52-v7">v7 제안 · 결론</a></li><!-- e52-v7-toc -->
+  <li><a href="e52-legacy.html#e52-v7-diag">진단 · v6.5 반사실 감사</a></li><!-- e52-v7-diag-toc -->
+  <li><a href="e52-legacy.html#e52-v7-rules">규칙 변경안</a></li><!-- e52-v7-rules-toc -->
+  <li><a href="e52-legacy.html#e52-v7-self">실행 방식 · 다른 모델 대 한 모델 반복</a></li><!-- e52-v7-self-toc -->
+  <li><a href="e52-legacy.html#e52-v7-metrics">판정 · 사망 원인과 세 축</a></li><!-- e52-v7-metrics-toc -->
+  <li><a href="e52-legacy.html#e52-v7-plan">순서 · 정할 것</a></li><!-- e52-v7-plan-toc -->
+  <li><a href="e52-legacy.html#e52-arena">아레나 형태 · 클럽형 확정</a></li><!-- e52-arena-toc -->
+  <li><a href="e52-legacy.html#e52-arena-ladder">단계 사다리</a></li><!-- e52-arena-ladder-toc -->
+  <li><a href="e52-legacy.html#e52-arena-metrics">뽑을 수 있는 지표</a></li><!-- e52-arena-metrics-toc -->
+  <li><a href="e52-legacy.html#e52-arena-curves">남은 토큰 %에 따른 지표 (v6.5 예)</a></li><!-- e52-arena-curves-toc -->
+  <li><a href="e52-legacy.html#e52-arena-board">점수판 구성</a></li><!-- e52-arena-board-toc -->
+  <li><a href="e52-legacy.html#e52-arena-next">정할 것 · 순서</a></li><!-- e52-arena-next-toc -->
+  <li><a href="e52-legacy.html#e52-v65-was">v6.4 · v6.5 (10-01 옮김)</a></li><!-- e52-v65-was-toc -->
+  <li><a href="e52-legacy.html#e52-changes">v0 → v6.4 · 바뀐 것</a></li><!-- e52-changes-toc -->
+  <li><a href="e52-legacy.html#e52-v6">v6.4 규칙 · 프롬프트</a></li><!-- e52-v6-toc -->
+  <li><a href="e52-legacy.html#e52-v6-rank">우승과 리더보드 (v6.4)</a></li><!-- e52-v6-rank-toc -->
+  <li><a href="e52-legacy.html#e52-v6-calib">보정 기록 (누적)</a></li><!-- e52-v6-calib-toc -->
+  <li><a href="e52-legacy.html#e52-v64-smoke">v6.4 스모크 · 결과</a></li><!-- e52-v64-smoke-toc -->
+  <li><a href="e52-legacy.html#e52-v62-metrics">H/L 지표 정의</a></li><!-- e52-v62-metrics-toc -->
+  <li><a href="e52-legacy.html#e52-find-tft">발견 · Astra의 되갚기 (v6.3)</a></li><!-- e52-find-tft-toc -->
+  <li><a href="e52-legacy.html#e52-v63-smoke">스모크 3차 · v6.3</a></li><!-- e52-v63-smoke-toc -->
+  <li><a href="e52-legacy.html#e52-v62-smoke">스모크 2차 · v6.2</a></li><!-- e52-v62-smoke-toc -->
+  <li><a href="e52-legacy.html#e52-v6-smoke">스모크 1차 · v6</a></li><!-- e52-v6-smoke-toc -->
+  <li><a href="e52-legacy.html#e52-v62-rules">v6.2 규칙 · 프롬프트</a></li><!-- e52-v62-rules-toc -->
+  <li><a href="e52-legacy.html#e52-hpred">H 모델 예상 행동 · 개선 (09-30)</a></li><!-- e52-hpred-toc -->
+  <li><a href="e52-legacy.html#e52-story">서사 · The Deprecation Round (09-30 제안)</a></li><!-- e52-story-toc -->
+  <li><a href="e52-legacy.html#e52-review">설계 검토 · Astra와 (09-28~)</a></li><!-- e52-review-toc -->
+  <li><a href="e52-legacy.html#e52-what">무엇을 재나</a></li>
+  <li><a href="e52-legacy.html#e52-signal">시그널 게임 구조</a></li>
+  <li><a href="e52-legacy.html#e52-smoke">스모크 <span class="cnt"><span class="fixed">4</span><span class="open">2</span></span></a></li>
+  <li><a href="e52-legacy.html#e52-calib">보정 시도 <span class="cnt"><span class="fixed">2</span><span class="open">2</span></span></a></li>
+  <li><a href="e52-legacy.html#e52-fix">고칠 것</a></li>
+  <li><a href="e52-legacy.html#e52-more">더 찾은 문제 (09-25)</a></li>
+  </ol></li>
+<li><a href="e53.html#e53"><span class="xid">5.3</span>시그널 게임 · 과제 (v16)</a>
+  <ol>
+  <li><a href="e53.html#e53-genorder">문제 하나를 만드는 순서 (그림)</a></li>
+  <li><a href="e53.html#e53-toptarget">통제한 정답률 · 라운드 × 남은 인원</a></li>
+  </ol></li>
+<li><a href="e53-legacy.html#e53-legacy"><span class="xid">5.3</span>지난 설계 · v12 ~ v15</a>
+  <ol>
+  <li><a href="e53-legacy.html#e53-v16log">v16 작업 기록 · 1등 몫 사다리 · 금액 ×5 (10-15)</a></li>
+  <li><a href="e53-legacy.html#e53-v15grid">v15 엔트로피 사다리 · 라운드 × 인원 표</a></li>
+  <li><a href="e53-legacy.html#e53-davinci">불확실 = 어려움 · 다빈치 코드 비유</a></li>
+  <li><a href="e53-legacy.html#e53-fig">한 라운드 · 규칙 · 비밀 예시 (그림)</a></li>
+  <li><a href="e53-legacy.html#e53-ramp">난이도 · 12라운드 사다리</a></li>
+  <li><a href="e53-legacy.html#e53-ops">조건 · 연산자는 == 하나</a></li>
+  <li><a href="e53-legacy.html#e53-unique">문제 생성 · 유일성 보장</a></li>
+  <li><a href="e53-legacy.html#e53-space">가설 공간 · 규칙은 몇 개인가</a></li>
+  <li><a href="e53-legacy.html#e53-dealn">힌트 배분 · 최대 10명 (v13)</a></li>
+  <li><a href="e53-legacy.html#e53-difficulty">난이도 통제 · 손패 사다리 점검 (v13)</a></li>
+  <li><a href="e53-legacy.html#e53-v14diff">난이도 · v14 정의 · 답 사이 비율</a></li>
+  <li><a href="e53-legacy.html#e53-v14split">v14 비율 일정 · 실현 가능성</a></li>
+  <li><a href="e53-legacy.html#e53-v14verify">검증 · 실제 정답률 (v14f)</a></li>
+  <li><a href="e53-legacy.html#e53-m6grid">미리 만든 판 · 라운드 × 인원 표 (M6)</a></li>
+  <li><a href="e53-legacy.html#e53-deal">힌트 배분 (v12)</a></li>
+  <li><a href="e53-legacy.html#e53-score">채점 · 행동만</a></li>
+  </ol></li><!-- e53-toc -->
+<li><a href="maint.html#maint"><span class="xid">6</span>아레나 유지 보수 · 여러 모델 평가</a>
+  <ol>
+  <li><a href="maint.html#maint-base">공통 전제 · 아레나 한 판</a></li>
+  <li><a href="maint.html#maint-metrics">공통 지표 · 순위 방식</a></li>
+  <li><a href="maint.html#maint-d1">설계 1 · 서로 다른 모델 한 판</a></li>
+  <li><a href="maint.html#maint-d2">설계 2 · 같은 모델 넷 · 'agent'만</a></li>
+  <li><a href="maint.html#maint-d3">설계 3 · 새 모델 배치전</a></li>
+  <li><a href="maint.html#maint-d4">설계 4 · 리그전</a></li>
+  <li><a href="maint.html#maint-d5">설계 5 · 토너먼트</a></li>
+  <li><a href="maint.html#maint-cmp">다섯 설계 비교</a></li>
+  <li><a href="maint.html#maint-use">유지 보수용으로 어떻게 쓰나</a></li>
+  <li><a href="maint.html#maint-open">정할 것</a></li>
+  </ol></li><!-- maint-toc -->
+<li><a href="#models"><span class="xid">7</span>후보 모델 · AA 지능 지수</a>
+  <ol>
+  <li><a href="#models-table">전체 표 (점수순)</a></li>
+  <li><a href="#models-pairs">짝 비교 · 풀 대 경량</a></li>
+  <li><a href="#models-unverified">확인하지 못한 것</a></li>
+  </ol></li><!-- models-toc -->
+<li><a href="index.html#next">다음 순서</a></li>
+<li><a href="index.html#repo">한계 · 원자료</a></li>
+</ol>
+</nav>
+
+<main class="main">
+<p class="eyebrow crumb"><a href="index.html">Squid Game 5</a> · 7 후보 모델</p>
+<!-- models:start (candidate model roster with Artificial Analysis Intelligence Index, read 2026-10-20) -->
+<style>
+.m7 .tbl table.roster{min-width:1600px;font-size:.84rem;table-layout:fixed}
+.m7 table.roster col.c-g{width:180px}.m7 table.roster col.c-m{width:170px}.m7 table.roster col.c-a{width:220px}.m7 table.roster col.c-t{width:150px}.m7 table.roster col.c-s{width:100px}.m7 table.roster col.c-v{width:250px}.m7 table.roster col.c-u{width:120px}.m7 table.roster col.c-n{width:200px}.m7 table.roster col.c-p{width:210px}
+.m7 .tbl table.roster td{white-space:normal}
+.m7 .tbl table.roster td.mdl{font-weight:600}
+.m7 .tbl table.roster td.sc{font-family:var(--mono);font-size:1.05rem;font-weight:600;text-align:right;white-space:nowrap}
+.m7 .tbl table.roster td.src{white-space:nowrap}
+.m7 .tbl table.roster td.src a,.m7 .pairs a{color:var(--accent)}
+.m7 .tbl table.roster th.sort{cursor:pointer;color:var(--accent)}
+.m7 .tbl table.pairs{min-width:820px;font-size:.86rem}
+.m7 .tbl table.pairs td{white-space:normal}
+.m7 .grp{font-family:var(--mono);font-size:.7rem;padding:1px 7px;border-radius:999px;white-space:nowrap}
+.m7 .g-run{background:var(--accent-soft);color:var(--accent)}
+.m7 .g-oll{background:var(--ok-soft);color:var(--ok)}
+.m7 .g-goo{background:var(--warn-soft);color:var(--warn)}
+.m7 .g-ref{background:var(--quote-bg);color:var(--ink-3)}
+.m7 .sortbar{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
+.m7 .sortbar button{font:inherit;font-size:.82rem;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:2px 10px;cursor:pointer}
+.m7 .sortbar button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+</style>
+<section aria-labelledby="models" class="m7">
+<h2 id="models"><span class="xid">7</span>후보 모델 · AA 지능 지수</h2>
+<p class="lede">아레나에 앉힐 수 있는 후보 모델을 한 표에 모았습니다. 연구자가 이미 돌리는 모델(Codex CLI · Claude Code), thinking을 지원하는 Ollama Cloud 모델 전부, Google이 무료로 여는 Gemini · Gemma 모델입니다. 모델마다 Artificial Analysis(AA)의 Intelligence Index를 적었습니다.</p>
+<p class="small">2026-10-20에 AA 모델 페이지 · 리더보드, ollama.com 검색(cloud + thinking 필터, 19개), ai.google.dev 가격 · 모델 · thinking 문서를 직접 읽어 정리했습니다. AA 모델 페이지는 모두 지수판 v4.3.2입니다. 대표 점수는 AA가 그 모델의 기본으로 보여 주는 변형(대개 가장 높은 effort)이고, 다른 effort 점수는 'AA 표기 이름 · 변형' 칸에 적었습니다. <code>*</code>는 AA의 추정치(독립 평가 전)입니다. AA에 점수가 없으면 '없음'으로 둡니다 — 이번에 찾은 후보는 모두 점수가 있었습니다. 아무것도 정하지 않는 목록이며, 아레나에 넣을 모델은 연구자가 고릅니다.</p>
+
+<h3 id="models-table">전체 표 (점수순)</h3>
+<p>그룹: <span class="grp g-run">실행 중</span> 연구자가 Codex CLI · Claude Code로 돌리는 모델(Sonnet · Haiku는 AA에 있어 같이 실음), <span class="grp g-oll">Ollama Cloud thinking</span> ollama.com에서 cloud와 thinking 태그가 둘 다 붙은 모델, <span class="grp g-goo">Google 무료</span> Gemini API 무료 등급이 있는 모델과 Gemma, <span class="grp g-ref">Google 참고 (무료 아님)</span> 풀 판 대 경량 판을 견주려고 넣은 유료 Gemini.</p>
+<div class="sortbar" role="group" aria-label="정렬"><button type="button" data-sort="score" aria-pressed="true">점수순</button><button type="button" data-sort="group" aria-pressed="false">그룹순</button></div>
+<div class="tbl"><table class="roster" id="roster">
+<colgroup><col class="c-g"><col class="c-m"><col class="c-a"><col class="c-t"><col class="c-s"><col class="c-v"><col class="c-u"><col class="c-n"><col class="c-p"></colgroup>
+<thead><tr><th>그룹</th><th>모델</th><th>제공처 · 접근 방법</th><th>thinking 지원</th><th class="sort">AA Intelligence Index</th><th>AA 표기 이름 · 변형</th><th>출처 링크</th><th>비고</th><th>짝 (풀 ↔ 경량)</th></tr></thead>
+<tbody>
+<tr data-score="58" data-group="0"><td><span class="grp g-run">실행 중</span></td><td class="mdl">Claude Opus 5.5</td><td>Claude Code · <code>claude-opus-5-5</code></td><td>예 (effort low~max)</td><td class="sc">58</td><td>Claude Opus 5.5 (max with fallback) 58 · xhigh 56 · high 54 · medium 51 · low 42</td><td class="src"><a href="https://artificialanalysis.ai/models/claude-opus-5-5">AA 모델</a> · <a href="https://artificialanalysis.ai/leaderboards/models">리더보드</a><br><span class="small">2026-10-20 읽음</span></td><td>AA 이름의 'with fallback'(페이지 표기 'Default Fallback')이 무엇인지 AA가 설명하지 않음.</td><td>짝: Sonnet 5.5 (56, 차 2) · Haiku 5.5 (43, 차 15)</td></tr>
+<tr data-score="56" data-group="0"><td><span class="grp g-run">실행 중</span></td><td class="mdl">Claude Sonnet 5.5</td><td>Claude Code (접근 가능 여부는 확인 안 함)</td><td>예 (effort low~max)</td><td class="sc">56</td><td>Claude Sonnet 5.5 (max with fallback) 56 · xhigh 52 · high 47 · medium 41 · low 36</td><td class="src"><a href="https://artificialanalysis.ai/leaderboards/models">리더보드</a><br><span class="small">2026-10-20 읽음</span></td><td>리더보드 표에서만 읽음.</td><td>짝: Opus 5.5 (58, 차 −2)</td></tr>
+<tr data-score="53" data-group="0"><td><span class="grp g-run">실행 중</span></td><td class="mdl">Claude Fable 5.1</td><td>Claude Code · <code>claude-fable-5-1</code></td><td>예 (effort low~max)</td><td class="sc">53</td><td>Claude Fable 5.1 (max with fallback) 53 · xhigh 53 · high 51 · medium 49 · low 47</td><td class="src"><a href="https://artificialanalysis.ai/models/claude-fable-5-1">AA 모델</a> · <a href="https://artificialanalysis.ai/leaderboards/models">리더보드</a><br><span class="small">2026-10-20 읽음</span></td><td></td><td>—</td></tr>
+<tr data-score="53" data-group="0"><td><span class="grp g-run">실행 중</span></td><td class="mdl">GPT-6 Astra</td><td>Codex CLI · <code>gpt-6-astra</code></td><td>예 (effort low~max)</td><td class="sc">53</td><td>GPT-6 Astra (max) 53 · xhigh 52 · high 51 · medium 50 · low 46</td><td class="src"><a href="https://artificialanalysis.ai/models/gpt-6-astra">AA 모델</a> · <a href="https://artificialanalysis.ai/leaderboards/models">리더보드</a><br><span class="small">2026-10-20 읽음</span></td><td></td><td>같은 계열: Sol 48 (6.1 Sol 52) · Luna 38</td></tr>
+<tr data-score="53" data-group="3"><td><span class="grp g-ref">Google 참고 (무료 아님)</span></td><td class="mdl">Gemini 4 Argon</td><td>Gemini API (무료 등급 없음) · <code>gemini-4-argon</code></td><td>예 (low · medium · high, 기본 medium)</td><td class="sc">53</td><td>Gemini 4 Argon (high) 53</td><td class="src"><a href="https://artificialanalysis.ai/models/gemini-4-argon">AA 모델</a> · <a href="https://ai.google.dev/gemini-api/docs/pricing">Google 가격</a><br><span class="small">2026-10-20 읽음</span></td><td>짝 비교용 참고 행.</td><td>짝: Gemini 3.8 Flash (41) → Argon이 12 높음</td></tr>
+<tr data-score="52" data-group="0"><td><span class="grp g-run">실행 중</span></td><td class="mdl">GPT-6.1 Sol (참고)</td><td>Codex CLI · <code>gpt-6-sol</code>이 이쪽인지 미확인</td><td>예 (effort low~max)</td><td class="sc">52</td><td>GPT-6.1 Sol (max) 52 · xhigh 51 · high 50 · medium 48 · low 42</td><td class="src"><a href="https://artificialanalysis.ai/leaderboards/models">리더보드</a><br><span class="small">2026-10-20 읽음</span></td><td>AA가 GPT-6 Sol의 후속으로 안내하는 모델.</td><td>짝: GPT-6 Sol (48, 차 4)</td></tr>
+<tr data-score="48" data-group="0"><td><span class="grp g-run">실행 중</span></td><td class="mdl">GPT-6 Sol</td><td>Codex CLI · <code>gpt-6-sol</code></td><td>예 (effort low~max)</td><td class="sc">48</td><td>GPT-6 Sol (max) 48 · medium 40 · (검색 요약만: xhigh 44 · high 43 · low 34 · non-reasoning 28)</td><td class="src"><a href="https://artificialanalysis.ai/models/gpt-6-sol">AA 모델</a> · <a href="https://artificialanalysis.ai/models/gpt-6-sol-medium">medium</a><br><span class="small">2026-10-20 읽음</span></td><td>AA 표기: deprecated, 후속은 GPT-6.1 Sol. 리더보드 표에는 GPT-6 Sol 행이 없음.</td><td>짝: GPT-6.1 Sol (52, 차 −4)</td></tr>
+<tr data-score="45" data-group="1"><td><span class="grp g-oll">Ollama Cloud thinking</span></td><td class="mdl">DeepSeek V4.1 Flash 1017</td><td><code>ollama run deepseek-v4.1-flash:1017-cloud</code> · 763B 표기</td><td>예 (thinking 태그, 수준 표기 없음)</td><td class="sc">45</td><td>DeepSeek V4.1 Flash 1017 (max) 45</td><td class="src"><a href="https://artificialanalysis.ai/leaderboards/models">리더보드</a> · <a href="https://ollama.com/library/deepseek-v4.1-flash">Ollama</a><br><span class="small">2026-10-20 읽음</span></td><td>Ollama의 <code>:1017-cloud</code> 태그와 같은 판으로 보이나 대응은 미확인.</td><td>짝: V4.1 풀 판 없음(V4.1 Pro 미출시) → deepseek-v4-pro (36)와 비교 시 flash가 9 높음</td></tr>
+<tr data-score="45" data-group="1"><td><span class="grp g-oll">Ollama Cloud thinking</span></td><td class="mdl">GLM-5.3</td><td><code>ollama run glm-5.3:cloud</code> · 753B</td><td>예 (reasoning_effort low · high · max, 기본 max)</td><td class="sc">45</td><td>GLM-5.3 (max) 45 · low 34</td><td class="src"><a href="https://artificialanalysis.ai/models/glm-5-3">AA 모델</a> · <a href="https://ollama.com/library/glm-5.3">Ollama</a><br><span class="small">2026-10-20 읽음</span></td><td></td><td>짝: glm-5.3-flash (42) → 풀 쪽이 3 높음 (low 34와 비교하면 flash가 8 높음)</td></tr>
+<tr data-score="44" data-group="1"><td><span class="grp g-oll">Ollama Cloud thinking</span></td><td class="mdl">Kimi K3</td><td><code>ollama run kimi-k3:cloud</code> · 2.8T</td><td>예 (thinking 태그, 수준 표기 없음)</td><td class="sc">44</td><td>Kimi K3 (max) 44 · low 30</td><td class="src"><a href="https://artificialanalysis.ai/models/kimi-k3">AA 모델</a> · <a href="https://ollama.com/library/kimi-k3">Ollama</a><br><span class="small">2026-10-20 읽음</span></td><td></td><td>경량 판 없음</td></tr>
+<tr data-score="43" data-group="0"><td><span class="grp g-run">실행 중</span></td><td class="mdl">Claude Haiku 5.5</td><td>Claude Code (접근 가능 여부는 확인 안 함)</td><td>예 (effort low~max)</td><td class="sc">43</td><td>Claude Haiku 5.5 (max) 43 · xhigh 41 · high 38 · medium 34 · low 29</td><td class="src"><a href="https://artificialanalysis.ai/leaderboards/models">리더보드</a><br><span class="small">2026-10-20 읽음</span></td><td>리더보드 표에서만 읽음. 이름에 'with fallback' 없음.</td><td>짝: Opus 5.5 (58, 차 −15)</td></tr>
+<tr data-score="43" data-group="1"><td><span class="grp g-oll">Ollama Cloud thinking</span></td><td class="mdl">MiniMax-M3.1-Flash</td><td><code>ollama run minimax-m3.1-flash:cloud</code> · 428B</td><td>예 (thinking 태그, 수준 표기 없음)</td><td class="sc">43</td><td>MiniMax-M3.1-Flash 43 (10-19 출시)</td><td class="src"><a href="https://artificialanalysis.ai/models/minimax-m3-1-flash">AA 모델</a> · <a href="https://ollama.com/library/minimax-m3.1-flash">Ollama</a><br><span class="small">2026-10-20 읽음</span></td><td></td><td>짝: M3.1 풀 판은 AA · Ollama 모두 없음 → minimax-m3 (29)와 비교 시 flash가 14 높음</td></tr>
+<tr data-score="42" data-group="1"><td><span class="grp g-oll">Ollama Cloud thinking</span></td><td class="mdl">GLM-5.3-Flash</td><td><code>ollama run glm-5.3-flash:cloud</code> · 약 320B (활성 18B)</td><td>예 (항상 켜짐, effort low · high · max)</td><td class="sc">42</td><td>GLM-5.3-Flash 42 (reasoning 판, effort 표기 없음)</td><td class="src"><a href="https://artificialanalysis.ai/models/glm-5-3-flash">AA 모델</a> · <a href="https://ollama.com/library/glm-5.3-flash">Ollama</a><br><span class="small">2026-10-20 읽음</span></td><td></td><td>짝: glm-5.3 (45) → flash가 3 낮음</td></tr>
+<tr data-score="41" data-group="2"><td><span class="grp g-goo">Google 무료</span></td><td class="mdl">Gemini 3.8 Flash</td><td>Gemini API 무료 등급 · <code>gemini-3.8-flash</code></td><td>예 (thinking_level low · medium · high, 기본 medium)</td><td class="sc">41</td><td>Gemini 3.8 Flash (high) 41 · medium 40 · low 33</td><td class="src"><a href="https://artificialanalysis.ai/models/gemini-3-8-flash">AA 모델</a> · <a href="https://ai.google.dev/gemini-api/docs/pricing">Google 가격</a><br><span class="small">2026-10-20 읽음</span></td><td></td><td>짝: Gemini 4 Argon (53, 무료 아님) → flash가 12 낮음. 같은 세대 Flash-Lite 텍스트 모델 없음(3.8 Flash-Lite는 TTS뿐)</td></tr>
+<tr data-score="39" data-group="1"><td><span class="grp g-oll">Ollama Cloud thinking</span></td><td class="mdl">DeepSeek V4.1 Flash (0910)</td><td><code>ollama run deepseek-v4.1-flash:cloud</code> (대응 미확인)</td><td>예 (thinking 태그, 수준 표기 없음)</td><td class="sc">39</td><td>DeepSeek V4.1 Flash (max) 39</td><td class="src"><a href="https://artificialanalysis.ai/models/deepseek-v4-1-flash">AA 모델</a> · <a href="https://ollama.com/library/deepseek-v4.1-flash">Ollama</a><br><span class="small">2026-10-20 읽음</span></td><td>AA 표기: deprecated, 후속은 V4.1 Flash 1017. Ollama <code>:cloud</code> 태그는 1개월 전 갱신.</td><td>짝: deepseek-v4-pro (36) → flash가 3 높음</td></tr>
+<tr data-score="39" data-group="1"><td><span class="grp g-oll">Ollama Cloud thinking</span></td><td class="mdl">Muse Spark Open</td><td><code>ollama run muse-spark-open:cloud</code> · 816B (활성 42B)</td><td>예 (thinking 태그, 수준 표기 없음)</td><td class="sc">39</td><td>Muse Spark Open (xhigh) 39</td><td class="src"><a href="https://artificialanalysis.ai/models/muse-spark-open">AA 모델</a> · <a href="https://ollama.com/library/muse-spark-open">Ollama</a><br><span class="small">2026-10-20 읽음</span></td><td></td><td>참고: 닫힌 Muse Spark 1.3 (max) 48은 Ollama에 없음</td></tr>
+<tr data-score="38" data-group="0"><td><span class="grp g-run">실행 중</span></td><td class="mdl">GPT-6 Luna</td><td>Codex CLI · <code>gpt-6-luna</code></td><td>예 (effort low~max, non-reasoning 판도 있음)</td><td class="sc">38</td><td>GPT-6 Luna (max) 38 · xhigh 35 · high 33 · medium 30 · low 22 · non-reasoning 18</td><td class="src"><a href="https://artificialanalysis.ai/models/gpt-6-luna">AA 모델</a> · <a href="https://artificialanalysis.ai/leaderboards/models">리더보드</a><br><span class="small">2026-10-20 읽음</span></td><td></td><td>같은 계열: Astra 53 · Sol 48</td></tr>
+<tr data-score="38" data-group="1"><td><span class="grp g-oll">Ollama Cloud thinking</span></td><td class="mdl">Mistral Large 4</td><td><code>ollama run mistral-large-4:cloud</code> · 1.05T (활성 52B)</td><td>예 (thinking 태그)</td><td class="sc">38</td><td>Mistral Large 4 Preview 38</td><td class="src"><a href="https://artificialanalysis.ai/models/mistral-large-4">AA 모델</a> · <a href="https://ollama.com/library/mistral-large-4">Ollama</a><br><span class="small">2026-10-20 읽음</span></td><td>AA는 'Preview'로 표기. Ollama 판과 같은지 미확인.</td><td>—</td></tr>
+<tr data-score="36" data-group="1"><td><span class="grp g-oll">Ollama Cloud thinking</span></td><td class="mdl">DeepSeek V4 Pro 0813</td><td><code>ollama run deepseek-v4-pro:cloud</code> / <code>:0813-cloud</code> · 1.6T (활성 49B)</td><td>예 (no thinking · thinking · max 세 모드)</td><td class="sc">36</td><td>DeepSeek V4 Pro 0813 (max) 36 · non-reasoning 20</td><td class="src"><a href="https://artificialanalysis.ai/models/deepseek-v4-pro">AA 모델</a> · <a href="https://ollama.com/library/deepseek-v4-pro">Ollama</a><br><span class="small">2026-10-20 읽음</span></td><td></td><td>짝: deepseek-v4.1-flash 1017 (45) → pro가 9 낮음</td></tr>
+<tr data-score="34" data-group="1"><td><span class="grp g-oll">Ollama Cloud thinking</span></td><td class="mdl">GLM-5.2</td><td><code>ollama run glm-5.2:cloud</code> · 756B</td><td>예 (High · Max)</td><td class="sc">34</td><td>GLM-5.2 (max) 34</td><td class="src"><a href="https://artificialanalysis.ai/models/glm-5-2">AA 모델</a> · <a href="https://ollama.com/library/glm-5.2">Ollama</a><br><span class="small">2026-10-20 읽음</span></td><td>AA 표기: deprecated. 출시 때 기사 점수 51은 옛 지수판(v4.1)이라 비교 불가.</td><td>후속: glm-5.3 (45)</td></tr>
+<tr data-score="34" data-group="2"><td><span class="grp g-goo">Google 무료</span></td><td class="mdl">Gemini 3.6 Flash</td><td>Gemini API 무료 등급 · <code>gemini-3.6-flash</code></td><td>예 (minimal · low · medium · high, 기본 medium)</td><td class="sc">34</td><td>Gemini 3.6 Flash (high) 34</td><td class="src"><a href="https://artificialanalysis.ai/models/gemini-3-6-flash">AA 모델</a> · <a href="https://ai.google.dev/gemini-api/docs/pricing">Google 가격</a><br><span class="small">2026-10-20 읽음</span></td><td>AA 표기: deprecated, 후속 'Gemini 3.7 Flash'(Google 문서에서는 못 찾음).</td><td>짝: Gemini 3.8 Flash (41)</td></tr>
+<tr data-score="30" data-group="1"><td><span class="grp g-oll">Ollama Cloud thinking</span></td><td class="mdl">Beam 1.0</td><td><code>ollama run beam:cloud</code> · 501B (활성 23B)</td><td>예 (thinking 태그)</td><td class="sc">30</td><td>Beam 1.0 30</td><td class="src"><a href="https://artificialanalysis.ai/models/reflection-beam">AA 모델</a> · <a href="https://ollama.com/library/beam">Ollama</a><br><span class="small">2026-10-20 읽음</span></td><td></td><td>—</td></tr>
+<tr data-score="30" data-group="3"><td><span class="grp g-ref">Google 참고 (무료 아님)</span></td><td class="mdl">Gemini 3.1 Pro Preview</td><td>Gemini API (무료 등급 없음) · <code>gemini-3.1-pro-preview</code></td><td>예 (low · medium · high, 기본 high)</td><td class="sc">30</td><td>Gemini 3.1 Pro Preview 30</td><td class="src"><a href="https://artificialanalysis.ai/models/gemini-3-1-pro-preview">AA 모델</a> · <a href="https://ai.google.dev/gemini-api/docs/pricing">Google 가격</a><br><span class="small">2026-10-20 읽음</span></td><td>짝 비교용 참고 행.</td><td>짝: Gemini 3.1 Flash-Lite (16) → Pro가 14 높음</td></tr>
+<tr data-score="29" data-group="1"><td><span class="grp g-oll">Ollama Cloud thinking</span></td><td class="mdl">MiniMax-M3</td><td><code>ollama run minimax-m3:cloud</code> · 크기 표기 없음</td><td>예 (thinking 태그)</td><td class="sc">29</td><td>MiniMax-M3 29</td><td class="src"><a href="https://artificialanalysis.ai/models/minimax-m3">AA 모델</a> · <a href="https://ollama.com/library/minimax-m3">Ollama</a><br><span class="small">2026-10-20 읽음</span></td><td></td><td>짝: minimax-m3.1-flash (43) → flash가 14 높음</td></tr>
+<tr data-score="27" data-group="1"><td><span class="grp g-oll">Ollama Cloud thinking</span></td><td class="mdl">Kimi K2.6</td><td><code>ollama run kimi-k2.6:cloud</code> · 1.04T</td><td>예 (thinking 태그)</td><td class="sc">27</td><td>Kimi K2.6 (Reasoning) 27</td><td class="src"><a href="https://artificialanalysis.ai/models/kimi-k2-6">AA 모델</a> · <a href="https://ollama.com/library/kimi-k2.6">Ollama</a><br><span class="small">2026-10-20 읽음</span></td><td>AA 표기: deprecated, 후속 Kimi K3. 출시 때 54는 옛 지수판.</td><td>—</td></tr>
+<tr data-score="26" data-group="1"><td><span class="grp g-oll">Ollama Cloud thinking</span></td><td class="mdl">Kimi K2.7 Code</td><td><code>ollama run kimi-k2.7-code:cloud</code> · 1.04T</td><td>예 (thinking 태그)</td><td class="sc">26</td><td>Kimi K2.7 Code 26</td><td class="src"><a href="https://artificialanalysis.ai/models/kimi-k2-7-code">AA 모델</a> · <a href="https://ollama.com/library/kimi-k2.7-code">Ollama</a><br><span class="small">2026-10-20 읽음</span></td><td>코딩 특화.</td><td>—</td></tr>
+<tr data-score="26" data-group="2"><td><span class="grp g-goo">Google 무료</span></td><td class="mdl">Gemini 3 Flash Preview</td><td>Gemini API 무료 등급 · <code>gemini-3-flash-preview</code></td><td>예 (minimal~high, 기본 high)</td><td class="sc">26*</td><td>Gemini 3 Flash Preview (Reasoning) 26* · non-reasoning 18*</td><td class="src"><a href="https://artificialanalysis.ai/models/gemini-3-flash-reasoning">AA 모델</a> · <a href="https://ai.google.dev/gemini-api/docs/pricing">Google 가격</a><br><span class="small">2026-10-20 읽음</span></td><td>* = AA 추정치(독립 평가 전). AA 표기: deprecated.</td><td>—</td></tr>
+<tr data-score="23" data-group="1"><td><span class="grp g-oll">Ollama Cloud thinking</span></td><td class="mdl">MiniMax-M2.7</td><td><code>ollama run minimax-m2.7:cloud</code> · 229B</td><td>예 (thinking 태그)</td><td class="sc">23</td><td>MiniMax-M2.7 23</td><td class="src"><a href="https://artificialanalysis.ai/models/minimax-m2-7">AA 모델</a> · <a href="https://ollama.com/library/minimax-m2.7">Ollama</a><br><span class="small">2026-10-20 읽음</span></td><td>AA 표기: deprecated.</td><td>—</td></tr>
+<tr data-score="23" data-group="1"><td><span class="grp g-oll">Ollama Cloud thinking</span></td><td class="mdl">Nemotron 3 Ultra</td><td><code>ollama run nemotron-3-ultra:cloud</code> · 550B (활성 55B)</td><td>예 (thinking 태그)</td><td class="sc">23</td><td>Nemotron 3 Ultra 23</td><td class="src"><a href="https://artificialanalysis.ai/leaderboards/models">리더보드</a> · <a href="https://ollama.com/library/nemotron-3-ultra">Ollama</a><br><span class="small">2026-10-20 읽음</span></td><td>AA 모델 페이지 주소를 못 찾아 리더보드에서만 읽음. 출시 기사 47.7은 옛 지수판.</td><td>같은 계열: super 13 · nano 9</td></tr>
+<tr data-score="22" data-group="2"><td><span class="grp g-goo">Google 무료</span></td><td class="mdl">Gemini 3.5 Flash-Lite</td><td>Gemini API 무료 등급 · <code>gemini-3.5-flash-lite</code></td><td>예 (minimal~high, 기본 minimal)</td><td class="sc">22</td><td>Gemini 3.5 Flash-Lite 22 (reasoning 판)</td><td class="src"><a href="https://artificialanalysis.ai/models/gemini-3-5-flash-lite">AA 모델</a> · <a href="https://ai.google.dev/gemini-api/docs/pricing">Google 가격</a><br><span class="small">2026-10-20 읽음</span></td><td></td><td>짝: Gemini 3.8 Flash (41) → lite가 19 낮음</td></tr>
+<tr data-score="17" data-group="2"><td><span class="grp g-goo">Google 무료</span></td><td class="mdl">Gemma 4 26B A4B</td><td>Gemini API 무료 · <code>gemma-4-26b-a4b-it</code></td><td>예 (thinking_level high / minimal)</td><td class="sc">17*</td><td>Gemma 4 26B A4B 17* · non-reasoning 13*</td><td class="src"><a href="https://artificialanalysis.ai/leaderboards/models">리더보드</a> · <a href="https://ai.google.dev/gemini-api/docs/pricing">Google 가격</a><br><span class="small">2026-10-20 읽음</span></td><td>* = AA 추정치. Ollama에는 이 크기의 cloud 태그 없음.</td><td>짝: Gemma 4 31B (15) → 26B가 2 높음(추정치)</td></tr>
+<tr data-score="16" data-group="2"><td><span class="grp g-goo">Google 무료</span></td><td class="mdl">Gemini 2.5 Pro</td><td>Gemini API 무료 등급 · <code>gemini-2.5-pro</code> (기존 사용자만)</td><td>예 (low · medium · high)</td><td class="sc">16</td><td>Gemini 2.5 Pro 16</td><td class="src"><a href="https://artificialanalysis.ai/models/gemini-2-5-pro">AA 모델</a> · <a href="https://ai.google.dev/gemini-api/docs/models">Google 모델</a><br><span class="small">2026-10-20 읽음</span></td><td>Google 모델 목록: 2.5 계열은 '과거 사용자만 접근'. AA 표기: deprecated.</td><td>짝: 2.5 Flash (13*) · 2.5 Flash-Lite (7*)</td></tr>
+<tr data-score="16" data-group="2"><td><span class="grp g-goo">Google 무료</span></td><td class="mdl">Gemini 3.1 Flash-Lite</td><td>Gemini API 무료 등급 · <code>gemini-3.1-flash-lite</code></td><td>미확인 (Google thinking 문서 목록에 없음)</td><td class="sc">16</td><td>Gemini 3.1 Flash-Lite 16 (reasoning 판)</td><td class="src"><a href="https://artificialanalysis.ai/models/gemini-3-1-flash-lite-preview">AA 모델</a> · <a href="https://ai.google.dev/gemini-api/docs/pricing">Google 가격</a><br><span class="small">2026-10-20 읽음</span></td><td>AA 주소는 '-preview'. 정식판 점수인지 미확인. AA 표기: deprecated.</td><td>짝: Gemini 3.1 Pro Preview (30) → lite가 14 낮음</td></tr>
+<tr data-score="15" data-group="1"><td><span class="grp g-oll">Ollama Cloud thinking</span></td><td class="mdl">Gemma 4 31B</td><td><code>ollama run gemma4:31b-cloud</code> (<code>gemma4:cloud</code>도 있음)</td><td>예 (thinking 태그)</td><td class="sc">15</td><td>Gemma 4 31B (Reasoning) 15</td><td class="src"><a href="https://artificialanalysis.ai/models/gemma-4-31b">AA 모델</a> · <a href="https://ollama.com/library/gemma4/tags">Ollama</a><br><span class="small">2026-10-20 읽음</span></td><td><code>gemma4:cloud</code>가 어느 크기인지 미확인. 다른 크기(e2b · e4b · 12b · 26b)는 로컬 태그만.</td><td>—</td></tr>
+<tr data-score="15" data-group="2"><td><span class="grp g-goo">Google 무료</span></td><td class="mdl">Gemma 4 31B</td><td>Gemini API 무료 · <code>gemma-4-31b-it</code></td><td>예 (thinking_level high / minimal)</td><td class="sc">15</td><td>Gemma 4 31B (Reasoning) 15 · non-reasoning 14*</td><td class="src"><a href="https://artificialanalysis.ai/models/gemma-4-31b">AA 모델</a> · <a href="https://ai.google.dev/gemini-api/docs/pricing">Google 가격</a><br><span class="small">2026-10-20 읽음</span></td><td></td><td>짝: Gemma 4 26B A4B (17*)</td></tr>
+<tr data-score="13" data-group="1"><td><span class="grp g-oll">Ollama Cloud thinking</span></td><td class="mdl">Nemotron 3 Super 120B A12B</td><td><code>ollama run nemotron-3-super:cloud</code> · 120B (활성 12B)</td><td>예 (thinking 태그)</td><td class="sc">13</td><td>Nemotron 3 Super 120B A12B (Reasoning) 13</td><td class="src"><a href="https://artificialanalysis.ai/models/nvidia-nemotron-3-super-120b-a12b">AA 모델</a> · <a href="https://ollama.com/library/nemotron-3-super">Ollama</a><br><span class="small">2026-10-20 읽음</span></td><td>AA 표기: deprecated, 후속 Nemotron 3.5 Super VL (26, Ollama에 없음).</td><td>같은 계열: ultra 23 · nano 9</td></tr>
+<tr data-score="13" data-group="2"><td><span class="grp g-goo">Google 무료</span></td><td class="mdl">Gemini 2.5 Flash</td><td>Gemini API 무료 등급 · <code>gemini-2.5-flash</code> (기존 사용자만)</td><td>예 (thinking budget)</td><td class="sc">13*</td><td>Gemini 2.5 Flash (Reasoning) 13* · non-reasoning 10*</td><td class="src"><a href="https://artificialanalysis.ai/models/gemini-2-5-flash-reasoning">AA 모델</a> · <a href="https://ai.google.dev/gemini-api/docs/pricing">Google 가격</a><br><span class="small">2026-10-20 읽음</span></td><td>* = AA 추정치. AA 표기: deprecated.</td><td>짝: 2.5 Pro (16) → flash가 3 낮음(추정치)</td></tr>
+<tr data-score="12" data-group="1"><td><span class="grp g-oll">Ollama Cloud thinking</span></td><td class="mdl">gpt-oss-120b</td><td><code>ollama run gpt-oss:120b-cloud</code></td><td>예 (low · medium · high)</td><td class="sc">12</td><td>gpt-oss-120b (high) 12 · low 10*</td><td class="src"><a href="https://artificialanalysis.ai/models/gpt-oss-120b">AA 모델</a> · <a href="https://ollama.com/library/gpt-oss/tags">Ollama</a><br><span class="small">2026-10-20 읽음</span></td><td></td><td>짝: gpt-oss-20b (9) → 120b가 3 높음</td></tr>
+<tr data-score="9" data-group="1"><td><span class="grp g-oll">Ollama Cloud thinking</span></td><td class="mdl">Nemotron 3 Nano</td><td><code>ollama run nemotron-3-nano:30b-cloud</code> (4b는 로컬만)</td><td>예 (thinking 태그)</td><td class="sc">9</td><td>Nemotron 3 Nano 9 · non-reasoning 7*</td><td class="src"><a href="https://artificialanalysis.ai/leaderboards/models">리더보드</a> · <a href="https://ollama.com/library/nemotron-3-nano/tags">Ollama</a><br><span class="small">2026-10-20 읽음</span></td><td>AA 이름에 크기가 없어 30B 판인지 미확인.</td><td>같은 계열: super 13 · ultra 23</td></tr>
+<tr data-score="9" data-group="1"><td><span class="grp g-oll">Ollama Cloud thinking</span></td><td class="mdl">gpt-oss-20b</td><td><code>ollama run gpt-oss:20b-cloud</code></td><td>예 (low · medium · high)</td><td class="sc">9</td><td>gpt-oss-20b (high) 9 · low 10*</td><td class="src"><a href="https://artificialanalysis.ai/leaderboards/models">리더보드</a> · <a href="https://ollama.com/library/gpt-oss/tags">Ollama</a><br><span class="small">2026-10-20 읽음</span></td><td>리더보드에서만 읽음.</td><td>짝: gpt-oss-120b (12)</td></tr>
+<tr data-score="7" data-group="2"><td><span class="grp g-goo">Google 무료</span></td><td class="mdl">Gemini 2.5 Flash-Lite</td><td>Gemini API 무료 등급 · <code>gemini-2.5-flash-lite</code> (기존 사용자만)</td><td>예 (기본 꺼짐, low~high)</td><td class="sc">7*</td><td>Gemini 2.5 Flash-Lite (Non-reasoning) 7* — reasoning 판 점수는 확인 안 함</td><td class="src"><a href="https://artificialanalysis.ai/models/gemini-2-5-flash-lite">AA 모델</a> · <a href="https://ai.google.dev/gemini-api/docs/pricing">Google 가격</a><br><span class="small">2026-10-20 읽음</span></td><td>* = AA 추정치. AA 표기: deprecated.</td><td>짝: 2.5 Flash (13*)</td></tr>
+</tbody></table></div>
+<p class="small">점수가 같은 행은 그룹 순서(실행 중 → Ollama → Google)로 놓았습니다. 표가 넓어 폰에서는 가로로 밀어 봅니다.</p>
+
+<h3 id="models-pairs">짝 비교 · 풀 대 경량</h3>
+<p>flash · mini · lite · air 같은 경량 판이 있는 계열을 풀 판과 나란히 놓았습니다. 점수 차는 대표 점수끼리의 단순 차이입니다. 세대가 다른 판끼리 짝지은 곳(DeepSeek · MiniMax)은 경량 판이 더 새것이라 오히려 점수가 높습니다.</p>
+<div class="tbl"><table class="pairs">
+<thead><tr><th>계열</th><th>풀 판</th><th>경량 판</th><th>점수 차 (풀 − 경량)</th><th>비고</th></tr></thead>
+<tbody>
+<tr><td>GLM-5.3</td><td><code>glm-5.3:cloud</code> 45 (max) · 34 (low)</td><td><code>glm-5.3-flash:cloud</code> 42</td><td>+3 (max 기준) · −8 (low 기준)</td><td>둘 다 Ollama Cloud · thinking. flash는 vision 지원, 활성 18B.</td></tr>
+<tr><td>DeepSeek V4.x</td><td>V4.1 풀 판 없음 · <code>deepseek-v4-pro:cloud</code> 36 (V4 Pro 0813)</td><td><code>deepseek-v4.1-flash:1017-cloud</code> 45 · <code>:cloud</code> 39(대응 미확인)</td><td>−9 (pro 36 − flash 1017 45)</td><td>V4.1 Pro는 9월 자료 기준 미출시(10월 상태 미확인). 세대가 달라 flash가 더 높음.</td></tr>
+<tr><td>MiniMax M3</td><td>M3.1 풀 판 없음 · <code>minimax-m3:cloud</code> 29</td><td><code>minimax-m3.1-flash:cloud</code> 43</td><td>−14</td><td>세대 차(M3 → M3.1)가 섞인 비교.</td></tr>
+<tr><td>gpt-oss</td><td><code>gpt-oss:120b-cloud</code> 12</td><td><code>gpt-oss:20b-cloud</code> 9</td><td>+3</td><td>high effort 기준.</td></tr>
+<tr><td>Nemotron 3</td><td>Ultra 23 · Super 13</td><td>Nano 9 (<code>30b-cloud</code>)</td><td>+14 (Ultra − Nano)</td><td>Nano가 30B 판 점수인지 미확인.</td></tr>
+<tr><td>Gemma 4</td><td>31B 15</td><td>26B A4B 17*</td><td>−2 (추정치)</td><td>Gemini API에서 둘 다 무료. Ollama Cloud에는 31B만.</td></tr>
+<tr><td>Gemini 최신</td><td>Gemini 4 Argon 53 (무료 아님)</td><td>3.8 Flash 41 (무료) · 3.5 Flash-Lite 22 (무료)</td><td>+12 (Argon − Flash) · +19 (Flash − Flash-Lite)</td><td>3.8 세대 Flash-Lite 텍스트 모델은 없음.</td></tr>
+<tr><td>Gemini 3.1</td><td>3.1 Pro Preview 30 (무료 아님)</td><td>3.1 Flash-Lite 16 (무료)</td><td>+14</td><td>AA의 3.1 Flash-Lite 페이지 주소는 '-preview'.</td></tr>
+<tr><td>Gemini 2.5</td><td>2.5 Pro 16</td><td>2.5 Flash 13* · 2.5 Flash-Lite 7* (non-reasoning)</td><td>+3 · +9 (추정치 섞임)</td><td>2.5 계열은 '과거 사용자만 접근'.</td></tr>
+<tr><td>Claude 5.5</td><td>Opus 58</td><td>Sonnet 56 · Haiku 43</td><td>+2 · +15</td><td>모두 max effort 기준.</td></tr>
+<tr><td>GPT-6</td><td>Astra 53</td><td>Sol 48 (6.1 Sol 52) · Luna 38</td><td>+5 · +15</td><td>OpenAI가 Sol · Luna를 '경량'이라 부르는지는 확인 안 함 — 이름 순 비교일 뿐.</td></tr>
+</tbody></table></div>
+
+<h3 id="models-unverified">확인하지 못한 것</h3>
+<ol>
+<li><b>Codex <code>gpt-6-sol</code>이 가리키는 판</b>: AA에는 GPT-6 Sol(48, deprecated)과 GPT-6.1 Sol(52)이 따로 있습니다. 연구자의 Codex CLI가 어느 쪽을 부르는지 확인하지 않았습니다.</li>
+<li><b>GPT-6 Sol의 xhigh 44 · high 43 · low 34 · non-reasoning 28</b>: 검색 결과 요약에서만 봤고, 해당 AA 페이지를 직접 열어 확인한 것은 max 48과 medium 40뿐입니다.</li>
+<li><b>Claude Sonnet 5.5 · Haiku 5.5를 연구자가 Claude Code로 실제로 쓸 수 있는지</b>, 그리고 AA 이름의 'with fallback'이 무슨 설정인지(AA가 설명하지 않음).</li>
+<li><b>Ollama 태그와 AA 판의 대응</b>: <code>deepseek-v4.1-flash:cloud</code>가 0910판(39)인지 1017판(45)인지, <code>gemma4:cloud</code>가 어느 크기인지, <code>nemotron-3-nano:30b-cloud</code>가 AA의 'Nemotron 3 Nano'(크기 표기 없음)인지, <code>mistral-large-4:cloud</code>가 AA의 'Mistral Large 4 Preview'와 같은 판인지.</li>
+<li><b>Ollama Cloud가 고르는 thinking 수준</b>: AA 점수는 대개 max 또는 xhigh effort 판입니다. Ollama Cloud 기본값이 같은 수준인지 확인하지 않았습니다(GLM-5.3은 기본 max라고 적혀 있음).</li>
+<li><b>Nemotron 3 Ultra · gpt-oss-20b · Nemotron 3 Nano · Gemma 4 26B A4B · Claude Sonnet/Haiku 5.5 · GPT-6.1 Sol</b>: AA 모델 페이지를 직접 열지 않고 리더보드 표에서만 읽었습니다. 리더보드 페이지에는 지수판 표기가 없습니다(모델 페이지들은 v4.3.2).</li>
+<li><b>Gemini 무료 등급의 호출 한도</b>: rate-limits 문서에는 무료 표가 없고 AI Studio 안에서만 보입니다. Gemma 4가 무료라는 근거는 가격 페이지의 'Gemma 4' 한 줄(모델 ID 없음)이며, Gemma의 Gemini API 문서는 deprecated 표시가 붙어 있습니다.</li>
+<li><b>Gemini 2.5 계열</b>: 가격 페이지는 무료 등급이 있다고 하지만 모델 목록은 '과거 사용자만 접근'이라고 합니다. 새 프로젝트에서 쓸 수 있는지 미확인입니다. 2.5 Flash-Lite의 reasoning 판 AA 점수도 확인하지 않았습니다.</li>
+<li><b>Gemini 3.1 Flash-Lite의 thinking 지원</b>: Google thinking 문서 목록에 없습니다. AA 점수 16은 reasoning 판이지만 주소가 '-preview'라 정식판과 같은지 미확인입니다.</li>
+<li><b>Gemini 3.6 Flash의 후속 'Gemini 3.7 Flash'</b>: AA가 후속으로 안내하지만 Google 가격 · 모델 페이지에서는 찾지 못했습니다.</li>
+<li><b>DeepSeek V4.1 풀 판(Pro)</b>: 9월 자료 기준 미출시입니다. 10월 출시 여부는 확인하지 못했습니다.</li>
+<li><b>옛 지수판 점수</b>: GLM-5.2 51, Kimi K2.6 54, MiniMax-M2.7 50, Nemotron 3 Ultra 47.7, Nemotron 3 Super 36 같은 출시 때 기사 점수는 옛 지수판(v4.0~v4.1) 기준이라 이 표의 v4.3.2 점수와 비교할 수 없습니다. 표에는 현재 모델 페이지 값만 적었습니다.</li>
+<li><b>뺀 것</b>: Ollama Cloud의 <code>clef</code>(decision 태그, thinking 없음)와 <code>mistral-large-3</code>(thinking 없음), Gemini의 Live · TTS · Transcribe · Robotics · 이미지 · 임베딩 모델(아레나용 텍스트 모델이 아님 — 3.8 Live Extended Thinking은 무료 · thinking이지만 실시간 음성 모델이라 뺌).</li>
+</ol>
+</section>
+<!-- models:end -->
+
+<nav class="pager" aria-label="페이지 이동"><a href="maint.html">← 6 아레나 유지 보수</a><span></span></nav>
+</main>
+</div>
+
+<script src="site.js"></script>
+<script>
+(function(){var t=document.getElementById('roster');if(!t)return;var tb=t.tBodies[0];
+var orig=[].slice.call(tb.rows);
+function by(k){var rs=orig.slice();if(k==='group')rs.sort(function(a,b){return (+a.dataset.group)-(+b.dataset.group)||(+b.dataset.score)-(+a.dataset.score)});rs.forEach(function(r){tb.appendChild(r)});
+[].forEach.call(document.querySelectorAll('.m7 .sortbar button'),function(b){b.setAttribute('aria-pressed',b.dataset.sort===k?'true':'false')})}
+[].forEach.call(document.querySelectorAll('.m7 .sortbar button'),function(b){b.addEventListener('click',function(){by(b.dataset.sort)})});
+var h=t.querySelector('th.sort');if(h)h.addEventListener('click',function(){by('score')});})();
+</script>
+</body></html>

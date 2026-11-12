@@ -1,0 +1,1691 @@
+{"type": "system", "subtype": "init", "model": "gpt-6-luna", "session_id": "20261007_223312_1aeffb", "timestamp": 1791379992492}
+{"type": "text", "text": "arena", "timestamp": 1791380101912}
+{"type": "text", "text": "-", "timestamp": 1791380101915}
+{"type": "text", "text": "operator", "timestamp": 1791380101915}
+{"type": "text", "text": " —", "timestamp": 1791380101916}
+{"type": "text", "text": " 실", "timestamp": 1791380101916}
+{"type": "text", "text": "험", "timestamp": 1791380101916}
+{"type": "text", "text": " 비용", "timestamp": 1791380101916}
+{"type": "text", "text": "·", "timestamp": 1791380101917}
+{"type": "text", "text": "모", "timestamp": 1791380101917}
+{"type": "text", "text": "델", "timestamp": 1791380101917}
+{"type": "text", "text": " 온", "timestamp": 1791380101917}
+{"type": "text", "text": "보", "timestamp": 1791380101918}
+{"type": "text", "text": "딩", "timestamp": 1791380101928}
+{"type": "text", "text": "\n\n", "timestamp": 1791380101929}
+{"type": "text", "text": "상", "timestamp": 1791380101962}
+{"type": "text", "text": "태", "timestamp": 1791380101963}
+{"type": "text", "text": ":", "timestamp": 1791380101963}
+{"type": "text", "text": " 제", "timestamp": 1791380101979}
+{"type": "text", "text": "안", "timestamp": 1791380101999}
+{"type": "text", "text": "·", "timestamp": 1791380102000}
+{"type": "text", "text": "운", "timestamp": 1791380102004}
+{"type": "text", "text": "영", "timestamp": 1791380102042}
+{"type": "text", "text": " 검", "timestamp": 1791380102060}
+{"type": "text", "text": "토", "timestamp": 1791380102061}
+{"type": "text", "text": ".", "timestamp": 1791380102067}
+{"type": "text", "text": " 제공", "timestamp": 1791380102068}
+{"type": "text", "text": "된", "timestamp": 1791380102086}
+{"type": "text", "text": " 발", "timestamp": 1791380102096}
+{"type": "text", "text": "췌", "timestamp": 1791380102164}
+{"type": "text", "text": "만", "timestamp": 1791380102168}
+{"type": "text", "text": " 근", "timestamp": 1791380102206}
+{"type": "text", "text": "거", "timestamp": 1791380102207}
+{"type": "text", "text": "로", "timestamp": 1791380102207}
+{"type": "text", "text": " 했", "timestamp": 1791380102208}
+{"type": "text", "text": "으며", "timestamp": 1791380102208}
+{"type": "text", "text": ",", "timestamp": 1791380102209}
+{"type": "text", "text": " 파일", "timestamp": 1791380102248}
+{"type": "text", "text": " 열", "timestamp": 1791380102249}
+{"type": "text", "text": "람", "timestamp": 1791380102249}
+{"type": "text", "text": "·", "timestamp": 1791380102419}
+{"type": "text", "text": "수", "timestamp": 1791380102421}
+{"type": "text", "text": "정", "timestamp": 1791380102422}
+{"type": "text", "text": "·", "timestamp": 1791380102422}
+{"type": "text", "text": "실", "timestamp": 1791380102422}
+{"type": "text", "text": "험", "timestamp": 1791380102423}
+{"type": "text", "text": " 실행", "timestamp": 1791380102423}
+{"type": "text", "text": "은", "timestamp": 1791380102423}
+{"type": "text", "text": " 하지", "timestamp": 1791380102424}
+{"type": "text", "text": " 않았다", "timestamp": 1791380102424}
+{"type": "text", "text": ".\n\n", "timestamp": 1791380102425}
+{"type": "text", "text": "##", "timestamp": 1791380102425}
+{"type": "text", "text": " 관", "timestamp": 1791380102425}
+{"type": "text", "text": "찰", "timestamp": 1791380102426}
+{"type": "text", "text": "과", "timestamp": 1791380102428}
+{"type": "text", "text": " 해", "timestamp": 1791380102429}
+{"type": "text", "text": "석", "timestamp": 1791380102443}
+{"type": "text", "text": "\n\n", "timestamp": 1791380102463}
+{"type": "text", "text": "관", "timestamp": 1791380102482}
+{"type": "text", "text": "찰", "timestamp": 1791380102493}
+{"type": "text", "text": ":", "timestamp": 1791380102494}
+{"type": "text", "text": " 설정", "timestamp": 1791380102505}
+{"type": "text", "text": "에는", "timestamp": 1791380102521}
+{"type": "text", "text": " 모델", "timestamp": 1791380102535}
+{"type": "text", "text": "별", "timestamp": 1791380102549}
+{"type": "text", "text": " CLI", "timestamp": 1791380102551}
+{"type": "text", "text": " 경", "timestamp": 1791380102569}
+{"type": "text", "text": "로", "timestamp": 1791380102588}
+{"type": "text", "text": "와", "timestamp": 1791380102599}
+{"type": "text", "text": " `", "timestamp": 1791380102600}
+{"type": "text", "text": "think", "timestamp": 1791380102614}
+{"type": "text", "text": "`,", "timestamp": 1791380102623}
+{"type": "text", "text": " timeout", "timestamp": 1791380102638}
+{"type": "text", "text": ",", "timestamp": 1791380102651}
+{"type": "text", "text": " 게임", "timestamp": 1791380102667}
+{"type": "text", "text": " 호출", "timestamp": 1791380102684}
+{"type": "text", "text": " 상", "timestamp": 1791380102691}
+{"type": "text", "text": "한", "timestamp": 1791380102701}
+{"type": "text", "text": "이", "timestamp": 1791380102715}
+{"type": "text", "text": " 있지만", "timestamp": 1791380102734}
+{"type": "text", "text": " 금", "timestamp": 1791380102735}
+{"type": "text", "text": "액", "timestamp": 1791380102744}
+{"type": "text", "text": " 예", "timestamp": 1791380102759}
+{"type": "text", "text": "산", "timestamp": 1791380102773}
+{"type": "text", "text": "이나", "timestamp": 1791380102788}
+{"type": "text", "text": " 청", "timestamp": 1791380102791}
+{"type": "text", "text": "구", "timestamp": 1791380102949}
+{"type": "text", "text": " 기록", "timestamp": 1791380102964}
+{"type": "text", "text": "은", "timestamp": 1791380102964}
+{"type": "text", "text": " 없다", "timestamp": 1791380102965}
+{"type": "text", "text": ".", "timestamp": 1791380102965}
+{"type": "text", "text": " 엔", "timestamp": 1791380102966}
+{"type": "text", "text": "진", "timestamp": 1791380102966}
+{"type": "text", "text": "은", "timestamp": 1791380102967}
+{"type": "text", "text": " 생성", "timestamp": 1791380102967}
+{"type": "text", "text": " 토", "timestamp": 1791380102967}
+{"type": "text", "text": "큰", "timestamp": 1791380102967}
+{"type": "text", "text": "을", "timestamp": 1791380102968}
+{"type": "text", "text": " 게임", "timestamp": 1791380102968}
+{"type": "text", "text": " 잔", "timestamp": 1791380102981}
+{"type": "text", "text": "액", "timestamp": 1791380102982}
+{"type": "text", "text": "에서", "timestamp": 1791380102997}
+{"type": "text", "text": " 차", "timestamp": 1791380103012}
+{"type": "text", "text": "감", "timestamp": 1791380103028}
+{"type": "text", "text": "한다", "timestamp": 1791380103089}
+{"type": "text", "text": ".", "timestamp": 1791380103090}
+{"type": "text", "text": "  \n", "timestamp": 1791380103095}
+{"type": "text", "text": "해", "timestamp": 1791380103096}
+{"type": "text", "text": "석", "timestamp": 1791380103114}
+{"type": "text", "text": ":", "timestamp": 1791380103117}
+{"type": "text", "text": " 현재", "timestamp": 1791380103158}
+{"type": "text", "text": " 설정", "timestamp": 1791380103172}
+{"type": "text", "text": "만", "timestamp": 1791380103199}
+{"type": "text", "text": "으로", "timestamp": 1791380103231}
+{"type": "text", "text": " 감", "timestamp": 1791380103235}
+{"type": "text", "text": "당", "timestamp": 1791380103236}
+{"type": "text", "text": " 가능한", "timestamp": 1791380103237}
+{"type": "text", "text": " 실제", "timestamp": 1791380103238}
+{"type": "text", "text": " 비용", "timestamp": 1791380103238}
+{"type": "text", "text": "이나", "timestamp": 1791380103242}
+{"type": "text", "text": " 모델", "timestamp": 1791380103244}
+{"type": "text", "text": " 간", "timestamp": 1791380103249}
+{"type": "text", "text": " 비용", "timestamp": 1791380103259}
+{"type": "text", "text": " 비교", "timestamp": 1791380103265}
+{"type": "text", "text": "를", "timestamp": 1791380103276}
+{"type": "text", "text": " 입", "timestamp": 1791380103290}
+{"type": "text", "text": "증", "timestamp": 1791380103310}
+{"type": "text", "text": "할", "timestamp": 1791380103311}
+{"type": "text", "text": " 수", "timestamp": 1791380103469}
+{"type": "text", "text": " 없다", "timestamp": 1791380103470}
+{"type": "text", "text": ".", "timestamp": 1791380103471}
+{"type": "text", "text": " 아래", "timestamp": 1791380103471}
+{"type": "text", "text": " ", "timestamp": 1791380103471}
+{"type": "text", "text": "5", "timestamp": 1791380103472}
+{"type": "text", "text": "개", "timestamp": 1791380103485}
+{"type": "text", "text": " 항", "timestamp": 1791380103486}
+{"type": "text", "text": "목", "timestamp": 1791380103486}
+{"type": "text", "text": "을", "timestamp": 1791380103487}
+{"type": "text", "text": " 파일", "timestamp": 1791380103487}
+{"type": "text", "text": "럿", "timestamp": 1791380103516}
+{"type": "text", "text": " 설", "timestamp": 1791380103517}
+{"type": "text", "text": "계", "timestamp": 1791380103519}
+{"type": "text", "text": "의", "timestamp": 1791380103533}
+{"type": "text", "text": " 최소", "timestamp": 1791380103534}
+{"type": "text", "text": " 변경", "timestamp": 1791380103534}
+{"type": "text", "text": "안", "timestamp": 1791380103544}
+{"type": "text", "text": "으로", "timestamp": 1791380103582}
+{"type": "text", "text": " 제", "timestamp": 1791380103583}
+{"type": "text", "text": "안", "timestamp": 1791380103584}
+{"type": "text", "text": "한다", "timestamp": 1791380103611}
+{"type": "text", "text": ".\n\n", "timestamp": 1791380103613}
+{"type": "text", "text": "##", "timestamp": 1791380103621}
+{"type": "text", "text": " 핵", "timestamp": 1791380103655}
+{"type": "text", "text": "심", "timestamp": 1791380103656}
+{"type": "text", "text": " 이", "timestamp": 1791380103656}
+{"type": "text", "text": "슈", "timestamp": 1791380103665}
+{"type": "text", "text": " 및", "timestamp": 1791380103676}
+{"type": "text", "text": " 최소", "timestamp": 1791380103740}
+{"type": "text", "text": " 변경", "timestamp": 1791380103741}
+{"type": "text", "text": "\n\n", "timestamp": 1791380103741}
+{"type": "text", "text": "1", "timestamp": 1791380103742}
+{"type": "text", "text": ".", "timestamp": 1791380103742}
+{"type": "text", "text": " **", "timestamp": 1791380103755}
+{"type": "text", "text": "Critical", "timestamp": 1791380103760}
+{"type": "text", "text": " —", "timestamp": 1791380103763}
+{"type": "text", "text": " 온", "timestamp": 1791380103777}
+{"type": "text", "text": "보", "timestamp": 1791380103790}
+{"type": "text", "text": "딩", "timestamp": 1791380103807}
+{"type": "text", "text": " 시", "timestamp": 1791380103821}
+{"type": "text", "text": " 모델", "timestamp": 1791380103821}
+{"type": "text", "text": "·", "timestamp": 1791380103840}
+{"type": "text", "text": "실", "timestamp": 1791380103994}
+{"type": "text", "text": "행", "timestamp": 1791380103995}
+{"type": "text", "text": " 경", "timestamp": 1791380103995}
+{"type": "text", "text": "로", "timestamp": 1791380103995}
+{"type": "text", "text": "를", "timestamp": 1791380103995}
+{"type": "text", "text": " 고", "timestamp": 1791380103996}
+{"type": "text", "text": "정", "timestamp": 1791380103996}
+{"type": "text", "text": "할", "timestamp": 1791380103996}
+{"type": "text", "text": " 것", "timestamp": 1791380103996}
+{"type": "text", "text": "**", "timestamp": 1791380103997}
+{"type": "text", "text": "  \n", "timestamp": 1791380103997}
+{"type": "text", "text": "  ", "timestamp": 1791380103997}
+{"type": "text", "text": " 근", "timestamp": 1791380104008}
+{"type": "text", "text": "거", "timestamp": 1791380104013}
+{"type": "text", "text": ":", "timestamp": 1791380104013}
+{"type": "text", "text": " `", "timestamp": 1791380104033}
+{"type": "text", "text": "configs", "timestamp": 1791380104049}
+{"type": "text", "text": "/s", "timestamp": 1791380104057}
+{"type": "text", "text": "quid", "timestamp": 1791380104075}
+{"type": "text", "text": "5", "timestamp": 1791380104089}
+{"type": "text", "text": "/e", "timestamp": 1791380104090}
+{"type": "text", "text": "52", "timestamp": 1791380104129}
+{"type": "text", "text": "v", "timestamp": 1791380104129}
+{"type": "text", "text": "12", "timestamp": 1791380104130}
+{"type": "text", "text": "_co", "timestamp": 1791380104147}
+{"type": "text", "text": "op", "timestamp": 1791380104158}
+{"type": "text", "text": "_sm", "timestamp": 1791380104158}
+{"type": "text", "text": "oke", "timestamp": 1791380104173}
+{"type": "text", "text": "_mix", "timestamp": 1791380104191}
+{"type": "text", "text": "4", "timestamp": 1791380104204}
+{"type": "text", "text": ".yaml", "timestamp": 1791380104206}
+{"type": "text", "text": ":", "timestamp": 1791380104222}
+{"type": "text", "text": "39", "timestamp": 1791380104235}
+{"type": "text", "text": "-", "timestamp": 1791380104249}
+{"type": "text", "text": "45", "timestamp": 1791380104263}
+{"type": "text", "text": "`", "timestamp": 1791380104278}
+{"type": "text", "text": "  \n", "timestamp": 1791380104279}
+{"type": "text", "text": "  ", "timestamp": 1791380104292}
+{"type": "text", "text": " 관", "timestamp": 1791380104307}
+{"type": "text", "text": "찰", "timestamp": 1791380104322}
+{"type": "text", "text": ":", "timestamp": 1791380104336}
+{"type": "text", "text": " 좌", "timestamp": 1791380104337}
+{"type": "text", "text": "석", "timestamp": 1791380104352}
+{"type": "text", "text": "마다", "timestamp": 1791380104519}
+{"type": "text", "text": " `", "timestamp": 1791380104520}
+{"type": "text", "text": "cla", "timestamp": 1791380104520}
+{"type": "text", "text": "ude", "timestamp": 1791380104521}
+{"type": "text", "text": "_cli", "timestamp": 1791380104521}
+{"type": "text", "text": "`", "timestamp": 1791380104521}
+{"type": "text", "text": " 또는", "timestamp": 1791380104521}
+{"type": "text", "text": " `", "timestamp": 1791380104522}
+{"type": "text", "text": "cod", "timestamp": 1791380104522}
+{"type": "text", "text": "ex", "timestamp": 1791380104522}
+{"type": "text", "text": "_cli", "timestamp": 1791380104522}
+{"type": "text", "text": "`,", "timestamp": 1791380104523}
+{"type": "text", "text": " 모델", "timestamp": 1791380104523}
+{"type": "text", "text": "명", "timestamp": 1791380104526}
+{"type": "text", "text": ",", "timestamp": 1791380104544}
+{"type": "text", "text": " `", "timestamp": 1791380104544}
+{"type": "text", "text": "think", "timestamp": 1791380104570}
+{"type": "text", "text": ":", "timestamp": 1791380104571}
+{"type": "text", "text": " high", "timestamp": 1791380104583}
+{"type": "text", "text": "`,", "timestamp": 1791380104601}
+{"type": "text", "text": " timeout", "timestamp": 1791380104611}
+{"type": "text", "text": "이", "timestamp": 1791380104627}
+{"type": "text", "text": " 지정", "timestamp": 1791380104630}
+{"type": "text", "text": "돼", "timestamp": 1791380104656}
+{"type": "text", "text": " 있다", "timestamp": 1791380104698}
+{"type": "text", "text": ".", "timestamp": 1791380104702}
+{"type": "text", "text": "  \n", "timestamp": 1791380104703}
+{"type": "text", "text": "  ", "timestamp": 1791380104703}
+{"type": "text", "text": " 최소", "timestamp": 1791380104737}
+{"type": "text", "text": " 변경", "timestamp": 1791380104748}
+{"type": "text", "text": ":", "timestamp": 1791380104749}
+{"type": "text", "text": " 온", "timestamp": 1791380104749}
+{"type": "text", "text": "보", "timestamp": 1791380104753}
+{"type": "text", "text": "딩", "timestamp": 1791380104766}
+{"type": "text", "text": " 카드", "timestamp": 1791380104796}
+{"type": "text", "text": "에", "timestamp": 1791380104797}
+{"type": "text", "text": " 실제", "timestamp": 1791380104799}
+{"type": "text", "text": " 해", "timestamp": 1791380104811}
+{"type": "text", "text": "석", "timestamp": 1791380104826}
+{"type": "text", "text": "된", "timestamp": 1791380104839}
+{"type": "text", "text": " 모델", "timestamp": 1791380104860}
+{"type": "text", "text": " 버", "timestamp": 1791380104861}
+{"type": "text", "text": "전", "timestamp": 1791380104868}
+{"type": "text", "text": ",", "timestamp": 1791380104885}
+{"type": "text", "text": " CLI", "timestamp": 1791380105047}
+{"type": "text", "text": "·", "timestamp": 1791380105048}
+{"type": "text", "text": "relay", "timestamp": 1791380105048}
+{"type": "text", "text": " 버", "timestamp": 1791380105049}
+{"type": "text", "text": "전", "timestamp": 1791380105049}
+{"type": "text", "text": "과", "timestamp": 1791380105050}
+{"type": "text", "text": " 경", "timestamp": 1791380105050}
+{"type": "text", "text": "로", "timestamp": 1791380105050}
+{"type": "text", "text": ",", "timestamp": 1791380105050}
+{"type": "text", "text": " 추", "timestamp": 1791380105051}
+{"type": "text", "text": "론", "timestamp": 1791380105051}
+{"type": "text", "text": " 설정", "timestamp": 1791380105051}
+{"type": "text", "text": ",", "timestamp": 1791380105051}
+{"type": "text", "text": " 엔", "timestamp": 1791380105061}
+{"type": "text", "text": "진", "timestamp": 1791380105065}
+{"type": "text", "text": " commit", "timestamp": 1791380105080}
+{"type": "text", "text": ",", "timestamp": 1791380105092}
+{"type": "text", "text": " config", "timestamp": 1791380105092}
+{"type": "text", "text": " 식", "timestamp": 1791380105111}
+{"type": "text", "text": "별", "timestamp": 1791380105120}
+{"type": "text", "text": "자", "timestamp": 1791380105137}
+{"type": "text", "text": ",", "timestamp": 1791380105153}
+{"type": "text", "text": " 토", "timestamp": 1791380105164}
+{"type": "text", "text": "큰", "timestamp": 1791380105165}
+{"type": "text", "text": " 사용", "timestamp": 1791380105187}
+{"type": "text", "text": "량", "timestamp": 1791380105198}
+{"type": "text", "text": "의", "timestamp": 1791380105214}
+{"type": "text", "text": " 의미", "timestamp": 1791380105225}
+{"type": "text", "text": "를", "timestamp": 1791380105226}
+{"type": "text", "text": " 기록", "timestamp": 1791380105240}
+{"type": "text", "text": "한다", "timestamp": 1791380105264}
+{"type": "text", "text": ".", "timestamp": 1791380105269}
+{"type": "text", "text": "  \n", "timestamp": 1791380105281}
+{"type": "text", "text": "  ", "timestamp": 1791380105315}
+{"type": "text", "text": " 수", "timestamp": 1791380105316}
+{"type": "text", "text": "용", "timestamp": 1791380105320}
+{"type": "text", "text": " 기준", "timestamp": 1791380105331}
+{"type": "text", "text": ":", "timestamp": 1791380105343}
+{"type": "text", "text": " 모델", "timestamp": 1791380105347}
+{"type": "text", "text": " 별", "timestamp": 1791380105360}
+{"type": "text", "text": "칭", "timestamp": 1791380105373}
+{"type": "text", "text": "만", "timestamp": 1791380105391}
+{"type": "text", "text": "으로", "timestamp": 1791380105413}
+{"type": "text", "text": " 실행", "timestamp": 1791380105567}
+{"type": "text", "text": "을", "timestamp": 1791380105567}
+{"type": "text", "text": " 식", "timestamp": 1791380105568}
+{"type": "text", "text": "별", "timestamp": 1791380105568}
+{"type": "text", "text": "하지", "timestamp": 1791380105568}
+{"type": "text", "text": " 않고", "timestamp": 1791380105568}
+{"type": "text", "text": ",", "timestamp": 1791380105569}
+{"type": "text", "text": " 모든", "timestamp": 1791380105569}
+{"type": "text", "text": " 항", "timestamp": 1791380105569}
+{"type": "text", "text": "목", "timestamp": 1791380105570}
+{"type": "text", "text": "이", "timestamp": 1791380105570}
+{"type": "text", "text": " 기록", "timestamp": 1791380105570}
+{"type": "text", "text": "되", "timestamp": 1791380105570}
+{"type": "text", "text": "거나", "timestamp": 1791380105571}
+{"type": "text", "text": " 미", "timestamp": 1791380105579}
+{"type": "text", "text": "확", "timestamp": 1791380105591}
+{"type": "text", "text": "인", "timestamp": 1791380105608}
+{"type": "text", "text": "으로", "timestamp": 1791380105608}
+{"type": "text", "text": " 표시", "timestamp": 1791380105624}
+{"type": "text", "text": "된다", "timestamp": 1791380105640}
+{"type": "text", "text": ".\n\n", "timestamp": 1791380105650}
+{"type": "text", "text": "2", "timestamp": 1791380105665}
+{"type": "text", "text": ".", "timestamp": 1791380105680}
+{"type": "text", "text": " **", "timestamp": 1791380105695}
+{"type": "text", "text": "Critical", "timestamp": 1791380105697}
+{"type": "text", "text": " —", "timestamp": 1791380105707}
+{"type": "text", "text": " 호출", "timestamp": 1791380105723}
+{"type": "text", "text": " 상", "timestamp": 1791380105736}
+{"type": "text", "text": "한", "timestamp": 1791380105757}
+{"type": "text", "text": "·", "timestamp": 1791380105769}
+{"type": "text", "text": "재", "timestamp": 1791380105769}
+{"type": "text", "text": "시", "timestamp": 1791380105782}
+{"type": "text", "text": "도", "timestamp": 1791380105794}
+{"type": "text", "text": "·", "timestamp": 1791380105809}
+{"type": "text", "text": "지", "timestamp": 1791380105824}
+{"type": "text", "text": "연", "timestamp": 1791380105825}
+{"type": "text", "text": " 기록", "timestamp": 1791380105839}
+{"type": "text", "text": "을", "timestamp": 1791380105853}
+{"type": "text", "text": " 사", "timestamp": 1791380105868}
+{"type": "text", "text": "전", "timestamp": 1791380105882}
+{"type": "text", "text": " 고", "timestamp": 1791380105895}
+{"type": "text", "text": "정", "timestamp": 1791380105898}
+{"type": "text", "text": "할", "timestamp": 1791380105916}
+{"type": "text", "text": " 것", "timestamp": 1791380105940}
+{"type": "text", "text": "**", "timestamp": 1791380106095}
+{"type": "text", "text": "  \n", "timestamp": 1791380106096}
+{"type": "text", "text": "  ", "timestamp": 1791380106096}
+{"type": "text", "text": " 근", "timestamp": 1791380106097}
+{"type": "text", "text": "거", "timestamp": 1791380106097}
+{"type": "text", "text": ":", "timestamp": 1791380106098}
+{"type": "text", "text": " `", "timestamp": 1791380106098}
+{"type": "text", "text": "s", "timestamp": 1791380106098}
+{"type": "text", "text": "quid", "timestamp": 1791380106099}
+{"type": "text", "text": "5", "timestamp": 1791380106099}
+{"type": "text", "text": "/e", "timestamp": 1791380106100}
+{"type": "text", "text": "52", "timestamp": 1791380106100}
+{"type": "text", "text": "_game", "timestamp": 1791380106101}
+{"type": "text", "text": ".py", "timestamp": 1791380106101}
+{"type": "text", "text": ":", "timestamp": 1791380106109}
+{"type": "text", "text": "289", "timestamp": 1791380106153}
+{"type": "text", "text": "-", "timestamp": 1791380106153}
+{"type": "text", "text": "329", "timestamp": 1791380106153}
+{"type": "text", "text": ",", "timestamp": 1791380106154}
+{"type": "text", "text": "331", "timestamp": 1791380106164}
+{"type": "text", "text": "-", "timestamp": 1791380106179}
+{"type": "text", "text": "368", "timestamp": 1791380106194}
+{"type": "text", "text": "`;", "timestamp": 1791380106209}
+{"type": "text", "text": " `", "timestamp": 1791380106210}
+{"type": "text", "text": "configs", "timestamp": 1791380106226}
+{"type": "text", "text": "/s", "timestamp": 1791380106244}
+{"type": "text", "text": "quid", "timestamp": 1791380106252}
+{"type": "text", "text": "5", "timestamp": 1791380106266}
+{"type": "text", "text": "/e", "timestamp": 1791380106281}
+{"type": "text", "text": "52", "timestamp": 1791380106282}
+{"type": "text", "text": "v", "timestamp": 1791380106296}
+{"type": "text", "text": "12", "timestamp": 1791380106312}
+{"type": "text", "text": "_co", "timestamp": 1791380106323}
+{"type": "text", "text": "op", "timestamp": 1791380106337}
+{"type": "text", "text": "_sm", "timestamp": 1791380106353}
+{"type": "text", "text": "oke", "timestamp": 1791380106354}
+{"type": "text", "text": "_mix", "timestamp": 1791380106369}
+{"type": "text", "text": "4", "timestamp": 1791380106389}
+{"type": "text", "text": ".yaml", "timestamp": 1791380106405}
+{"type": "text", "text": ":", "timestamp": 1791380106405}
+{"type": "text", "text": "9", "timestamp": 1791380106417}
+{"type": "text", "text": "-", "timestamp": 1791380106429}
+{"type": "text", "text": "20", "timestamp": 1791380106443}
+{"type": "text", "text": "`", "timestamp": 1791380106458}
+{"type": "text", "text": "  \n", "timestamp": 1791380106615}
+{"type": "text", "text": "  ", "timestamp": 1791380106616}
+{"type": "text", "text": " 관", "timestamp": 1791380106616}
+{"type": "text", "text": "찰", "timestamp": 1791380106616}
+{"type": "text", "text": ":", "timestamp": 1791380106616}
+{"type": "text", "text": " 호출", "timestamp": 1791380106617}
+{"type": "text", "text": "은", "timestamp": 1791380106617}
+{"type": "text", "text": " 에", "timestamp": 1791380106617}
+{"type": "text", "text": "이", "timestamp": 1791380106617}
+{"type": "text", "text": "전", "timestamp": 1791380106618}
+{"type": "text", "text": "트", "timestamp": 1791380106618}
+{"type": "text", "text": "별", "timestamp": 1791380106618}
+{"type": "text", "text": " 한", "timestamp": 1791380106620}
+{"type": "text", "text": " 번", "timestamp": 1791380106620}
+{"type": "text", "text": "씩", "timestamp": 1791380106633}
+{"type": "text", "text": " 동", "timestamp": 1791380106651}
+{"type": "text", "text": "시", "timestamp": 1791380106660}
+{"type": "text", "text": " 수행", "timestamp": 1791380106680}
+{"type": "text", "text": "되", "timestamp": 1791380106697}
+{"type": "text", "text": "며", "timestamp": 1791380106697}
+{"type": "text", "text": " TALK", "timestamp": 1791380106704}
+{"type": "text", "text": "와", "timestamp": 1791380106719}
+{"type": "text", "text": " SOL", "timestamp": 1791380106736}
+{"type": "text", "text": "VE", "timestamp": 1791380106748}
+{"type": "text", "text": "에", "timestamp": 1791380106766}
+{"type": "text", "text": " 별", "timestamp": 1791380106769}
+{"type": "text", "text": "도", "timestamp": 1791380106786}
+{"type": "text", "text": " 상", "timestamp": 1791380106788}
+{"type": "text", "text": "한", "timestamp": 1791380106801}
+{"type": "text", "text": "이", "timestamp": 1791380106815}
+{"type": "text", "text": " 있다", "timestamp": 1791380106829}
+{"type": "text", "text": ".", "timestamp": 1791380106846}
+{"type": "text", "text": " 설정", "timestamp": 1791380106856}
+{"type": "text", "text": "의", "timestamp": 1791380106857}
+{"type": "text", "text": " `", "timestamp": 1791380106873}
+{"type": "text", "text": "workers", "timestamp": 1791380106889}
+{"type": "text", "text": "`", "timestamp": 1791380106901}
+{"type": "text", "text": "는", "timestamp": 1791380106916}
+{"type": "text", "text": " 세", "timestamp": 1791380106929}
+{"type": "text", "text": "션", "timestamp": 1791380106931}
+{"type": "text", "text": " 병", "timestamp": 1791380106948}
+{"type": "text", "text": "렬", "timestamp": 1791380106979}
+{"type": "text", "text": "도", "timestamp": 1791380106980}
+{"type": "text", "text": "이지", "timestamp": 1791380106980}
+{"type": "text", "text": " 전체", "timestamp": 1791380107140}
+{"type": "text", "text": " 호출", "timestamp": 1791380107140}
+{"type": "text", "text": " 상", "timestamp": 1791380107141}
+{"type": "text", "text": "한", "timestamp": 1791380107141}
+{"type": "text", "text": "이", "timestamp": 1791380107141}
+{"type": "text", "text": " 아니다", "timestamp": 1791380107141}
+{"type": "text", "text": ".", "timestamp": 1791380107142}
+{"type": "text", "text": "  \n", "timestamp": 1791380107142}
+{"type": "text", "text": "  ", "timestamp": 1791380107142}
+{"type": "text", "text": " 제", "timestamp": 1791380107142}
+{"type": "text", "text": "안", "timestamp": 1791380107143}
+{"type": "text", "text": ":", "timestamp": 1791380107143}
+{"type": "text", "text": " 셀", "timestamp": 1791380107158}
+{"type": "text", "text": " 수", "timestamp": 1791380107161}
+{"type": "text", "text": "를", "timestamp": 1791380107215}
+{"type": "text", "text": " \\(", "timestamp": 1791380107241}
+{"type": "text", "text": "C", "timestamp": 1791380107245}
+{"type": "text", "text": "\\", "timestamp": 1791380107260}
+{"type": "text", "text": "),", "timestamp": 1791380107261}
+{"type": "text", "text": " 반복", "timestamp": 1791380107261}
+{"type": "text", "text": " 수", "timestamp": 1791380107263}
+{"type": "text", "text": " \\(", "timestamp": 1791380107263}
+{"type": "text", "text": "N", "timestamp": 1791380107266}
+{"type": "text", "text": "\\", "timestamp": 1791380107280}
+{"type": "text", "text": "),", "timestamp": 1791380107297}
+{"type": "text", "text": " 좌", "timestamp": 1791380107308}
+{"type": "text", "text": "석", "timestamp": 1791380107323}
+{"type": "text", "text": " 수", "timestamp": 1791380107345}
+{"type": "text", "text": " \\(", "timestamp": 1791380107345}
+{"type": "text", "text": "A", "timestamp": 1791380107358}
+{"type": "text", "text": "\\", "timestamp": 1791380107381}
+{"type": "text", "text": "),", "timestamp": 1791380107382}
+{"type": "text", "text": " 라", "timestamp": 1791380107395}
+{"type": "text", "text": "운", "timestamp": 1791380107414}
+{"type": "text", "text": "드", "timestamp": 1791380107414}
+{"type": "text", "text": " 수", "timestamp": 1791380107432}
+{"type": "text", "text": " \\(", "timestamp": 1791380107433}
+{"type": "text", "text": "R", "timestamp": 1791380107454}
+{"type": "text", "text": "\\", "timestamp": 1791380107469}
+{"type": "text", "text": "),", "timestamp": 1791380107481}
+{"type": "text", "text": " TALK", "timestamp": 1791380107501}
+{"type": "text", "text": " 턴", "timestamp": 1791380107508}
+{"type": "text", "text": " 상", "timestamp": 1791380107664}
+{"type": "text", "text": "한", "timestamp": 1791380107664}
+{"type": "text", "text": " \\(", "timestamp": 1791380107665}
+{"type": "text", "text": "K", "timestamp": 1791380107665}
+{"type": "text", "text": "\\", "timestamp": 1791380107665}
+{"type": "text", "text": "),", "timestamp": 1791380107666}
+{"type": "text", "text": " 호출", "timestamp": 1791380107666}
+{"type": "text", "text": "당", "timestamp": 1791380107666}
+{"type": "text", "text": " 재", "timestamp": 1791380107666}
+{"type": "text", "text": "시", "timestamp": 1791380107667}
+{"type": "text", "text": "도", "timestamp": 1791380107667}
+{"type": "text", "text": " 횟", "timestamp": 1791380107668}
+{"type": "text", "text": "수", "timestamp": 1791380107730}
+{"type": "text", "text": " \\(", "timestamp": 1791380107737}
+{"type": "text", "text": "q", "timestamp": 1791380107747}
+{"type": "text", "text": "\\", "timestamp": 1791380107749}
+{"type": "text", "text": ")", "timestamp": 1791380107753}
+{"type": "text", "text": "라", "timestamp": 1791380107762}
+{"type": "text", "text": " 하면", "timestamp": 1791380107765}
+{"type": "text", "text": ",\n", "timestamp": 1791380107770}
+{"type": "text", "text": "  ", "timestamp": 1791380107775}
+{"type": "text", "text": " \\", "timestamp": 1791380107792}
+{"type": "text", "text": "[\n", "timestamp": 1791380107813}
+{"type": "text", "text": "  ", "timestamp": 1791380107821}
+{"type": "text", "text": " \\", "timestamp": 1791380107823}
+{"type": "text", "text": "text", "timestamp": 1791380107839}
+{"type": "text", "text": "{", "timestamp": 1791380107841}
+{"type": "text", "text": "호", "timestamp": 1791380107862}
+{"type": "text", "text": "출", "timestamp": 1791380107870}
+{"type": "text", "text": " 슬롯", "timestamp": 1791380107889}
+{"type": "text", "text": " 상", "timestamp": 1791380107905}
+{"type": "text", "text": "한", "timestamp": 1791380107906}
+{"type": "text", "text": "}=", "timestamp": 1791380107917}
+{"type": "text", "text": "C", "timestamp": 1791380107930}
+{"type": "text", "text": " N", "timestamp": 1791380107944}
+{"type": "text", "text": " A", "timestamp": 1791380107961}
+{"type": "text", "text": " R", "timestamp": 1791380107972}
+{"type": "text", "text": "(K", "timestamp": 1791380107973}
+{"type": "text", "text": "+", "timestamp": 1791380107991}
+{"type": "text", "text": "1", "timestamp": 1791380108006}
+{"type": "text", "text": "),", "timestamp": 1791380108020}
+{"type": "text", "text": "\\", "timestamp": 1791380108026}
+{"type": "text", "text": "quad", "timestamp": 1791380108035}
+{"type": "text", "text": "\n", "timestamp": 1791380108189}
+{"type": "text", "text": "  ", "timestamp": 1791380108190}
+{"type": "text", "text": " \\", "timestamp": 1791380108190}
+{"type": "text", "text": "text", "timestamp": 1791380108191}
+{"type": "text", "text": "{", "timestamp": 1791380108191}
+{"type": "text", "text": "제", "timestamp": 1791380108192}
+{"type": "text", "text": "공", "timestamp": 1791380108192}
+{"type": "text", "text": "자", "timestamp": 1791380108192}
+{"type": "text", "text": " 시", "timestamp": 1791380108192}
+{"type": "text", "text": "도", "timestamp": 1791380108193}
+{"type": "text", "text": " 상", "timestamp": 1791380108193}
+{"type": "text", "text": "한", "timestamp": 1791380108201}
+{"type": "text", "text": "}=", "timestamp": 1791380108202}
+{"type": "text", "text": "C", "timestamp": 1791380108211}
+{"type": "text", "text": " N", "timestamp": 1791380108212}
+{"type": "text", "text": " A", "timestamp": 1791380108228}
+{"type": "text", "text": " R", "timestamp": 1791380108257}
+{"type": "text", "text": "(K", "timestamp": 1791380108258}
+{"type": "text", "text": "+", "timestamp": 1791380108273}
+{"type": "text", "text": "1", "timestamp": 1791380108277}
+{"type": "text", "text": ")(", "timestamp": 1791380108290}
+{"type": "text", "text": "1", "timestamp": 1791380108302}
+{"type": "text", "text": "+", "timestamp": 1791380108324}
+{"type": "text", "text": "q", "timestamp": 1791380108326}
+{"type": "text", "text": ").\n", "timestamp": 1791380108344}
+{"type": "text", "text": "  ", "timestamp": 1791380108401}
+{"type": "text", "text": " \\", "timestamp": 1791380108401}
+{"type": "text", "text": "]\n", "timestamp": 1791380108402}
+{"type": "text", "text": "  ", "timestamp": 1791380108402}
+{"type": "text", "text": " 파일", "timestamp": 1791380108448}
+{"type": "text", "text": "럿", "timestamp": 1791380108448}
+{"type": "text", "text": "에서는", "timestamp": 1791380108468}
+{"type": "text", "text": " 자동", "timestamp": 1791380108469}
+{"type": "text", "text": " 재", "timestamp": 1791380108469}
+{"type": "text", "text": "시", "timestamp": 1791380108477}
+{"type": "text", "text": "도를", "timestamp": 1791380108487}
+{"type": "text", "text": " 끄", "timestamp": 1791380108527}
+{"type": "text", "text": "고", "timestamp": 1791380108542}
+{"type": "text", "text": " 실패", "timestamp": 1791380108542}
+{"type": "text", "text": "를", "timestamp": 1791380108543}
+{"type": "text", "text": " 실패", "timestamp": 1791380108555}
+{"type": "text", "text": "로", "timestamp": 1791380108719}
+{"type": "text", "text": " 기록", "timestamp": 1791380108719}
+{"type": "text", "text": "한다", "timestamp": 1791380108720}
+{"type": "text", "text": ".", "timestamp": 1791380108720}
+{"type": "text", "text": " 지", "timestamp": 1791380108720}
+{"type": "text", "text": "연", "timestamp": 1791380108721}
+{"type": "text", "text": "은", "timestamp": 1791380108721}
+{"type": "text", "text": " 각", "timestamp": 1791380108722}
+{"type": "text", "text": " TALK", "timestamp": 1791380108722}
+{"type": "text", "text": " 턴", "timestamp": 1791380108722}
+{"type": "text", "text": "의", "timestamp": 1791380108722}
+{"type": "text", "text": " 병", "timestamp": 1791380108723}
+{"type": "text", "text": "렬", "timestamp": 1791380108733}
+{"type": "text", "text": " 호출", "timestamp": 1791380108733}
+{"type": "text", "text": " 중", "timestamp": 1791380108745}
+{"type": "text", "text": " 최", "timestamp": 1791380108759}
+{"type": "text", "text": "장", "timestamp": 1791380108777}
+{"type": "text", "text": " 지", "timestamp": 1791380108789}
+{"type": "text", "text": "연", "timestamp": 1791380108794}
+{"type": "text", "text": "과", "timestamp": 1791380108808}
+{"type": "text", "text": " SOL", "timestamp": 1791380108824}
+{"type": "text", "text": "VE", "timestamp": 1791380108838}
+{"type": "text", "text": " 최", "timestamp": 1791380108840}
+{"type": "text", "text": "장", "timestamp": 1791380108853}
+{"type": "text", "text": " 지", "timestamp": 1791380108868}
+{"type": "text", "text": "연", "timestamp": 1791380108890}
+{"type": "text", "text": "을", "timestamp": 1791380108890}
+{"type": "text", "text": " 라", "timestamp": 1791380108901}
+{"type": "text", "text": "운", "timestamp": 1791380108917}
+{"type": "text", "text": "드", "timestamp": 1791380108930}
+{"type": "text", "text": "별", "timestamp": 1791380108950}
+{"type": "text", "text": "로", "timestamp": 1791380108951}
+{"type": "text", "text": " 기록", "timestamp": 1791380108962}
+{"type": "text", "text": "해", "timestamp": 1791380108975}
+{"type": "text", "text": " 합", "timestamp": 1791380108989}
+{"type": "text", "text": "산", "timestamp": 1791380109005}
+{"type": "text", "text": "한다", "timestamp": 1791380109005}
+{"type": "text", "text": ".", "timestamp": 1791380109021}
+{"type": "text", "text": "  \n", "timestamp": 1791380109035}
+{"type": "text", "text": "  ", "timestamp": 1791380109051}
+{"type": "text", "text": " 수", "timestamp": 1791380109066}
+{"type": "text", "text": "용", "timestamp": 1791380109068}
+{"type": "text", "text": " 기준", "timestamp": 1791380109083}
+{"type": "text", "text": ":", "timestamp": 1791380109240}
+{"type": "text", "text": " 내부", "timestamp": 1791380109240}
+{"type": "text", "text": " 재", "timestamp": 1791380109240}
+{"type": "text", "text": "시", "timestamp": 1791380109241}
+{"type": "text", "text": "도", "timestamp": 1791380109241}
+{"type": "text", "text": " 여부", "timestamp": 1791380109241}
+{"type": "text", "text": "·", "timestamp": 1791380109242}
+{"type": "text", "text": "timeout", "timestamp": 1791380109242}
+{"type": "text", "text": " 적용", "timestamp": 1791380109242}
+{"type": "text", "text": " 범", "timestamp": 1791380109242}
+{"type": "text", "text": "위", "timestamp": 1791380109243}
+{"type": "text", "text": "·", "timestamp": 1791380109243}
+{"type": "text", "text": "시", "timestamp": 1791380109246}
+{"type": "text", "text": "도", "timestamp": 1791380109261}
+{"type": "text", "text": " ID", "timestamp": 1791380109263}
+{"type": "text", "text": "를", "timestamp": 1791380109286}
+{"type": "text", "text": " 확인", "timestamp": 1791380109326}
+{"type": "text", "text": "하고", "timestamp": 1791380109327}
+{"type": "text", "text": ",", "timestamp": 1791380109327}
+{"type": "text", "text": " 단계", "timestamp": 1791380109328}
+{"type": "text", "text": "별", "timestamp": 1791380109334}
+{"type": "text", "text": " 지", "timestamp": 1791380109349}
+{"type": "text", "text": "연", "timestamp": 1791380109362}
+{"type": "text", "text": "·", "timestamp": 1791380109380}
+{"type": "text", "text": "실", "timestamp": 1791380109389}
+{"type": "text", "text": "패", "timestamp": 1791380109390}
+{"type": "text", "text": "·", "timestamp": 1791380109408}
+{"type": "text", "text": "재", "timestamp": 1791380109420}
+{"type": "text", "text": "시", "timestamp": 1791380109437}
+{"type": "text", "text": "도", "timestamp": 1791380109438}
+{"type": "text", "text": " 횟", "timestamp": 1791380109469}
+{"type": "text", "text": "수를", "timestamp": 1791380109485}
+{"type": "text", "text": " 남", "timestamp": 1791380109498}
+{"type": "text", "text": "긴", "timestamp": 1791380109499}
+{"type": "text", "text": "다", "timestamp": 1791380109512}
+{"type": "text", "text": ".", "timestamp": 1791380109528}
+{"type": "text", "text": " 파", "timestamp": 1791380109541}
+{"type": "text", "text": "싱", "timestamp": 1791380109558}
+{"type": "text", "text": " 오류", "timestamp": 1791380109582}
+{"type": "text", "text": "나", "timestamp": 1791380109582}
+{"type": "text", "text": " 잘", "timestamp": 1791380109585}
+{"type": "text", "text": "림", "timestamp": 1791380109598}
+{"type": "text", "text": "은", "timestamp": 1791380109777}
+{"type": "text", "text": " 조", "timestamp": 1791380109778}
+{"type": "text", "text": "용", "timestamp": 1791380109778}
+{"type": "text", "text": "히", "timestamp": 1791380109779}
+{"type": "text", "text": " 재", "timestamp": 1791380109779}
+{"type": "text", "text": "호", "timestamp": 1791380109779}
+{"type": "text", "text": "출", "timestamp": 1791380109780}
+{"type": "text", "text": "하지", "timestamp": 1791380109780}
+{"type": "text", "text": " 않는다", "timestamp": 1791380109780}
+{"type": "text", "text": ".\n\n", "timestamp": 1791380109781}
+{"type": "text", "text": "3", "timestamp": 1791380109781}
+{"type": "text", "text": ".", "timestamp": 1791380109781}
+{"type": "text", "text": " **", "timestamp": 1791380109781}
+{"type": "text", "text": "Critical", "timestamp": 1791380109782}
+{"type": "text", "text": " —", "timestamp": 1791380109782}
+{"type": "text", "text": " 게임", "timestamp": 1791380109789}
+{"type": "text", "text": " 토", "timestamp": 1791380109808}
+{"type": "text", "text": "큰", "timestamp": 1791380109820}
+{"type": "text", "text": "과", "timestamp": 1791380109821}
+{"type": "text", "text": " 실제", "timestamp": 1791380109836}
+{"type": "text", "text": " 청", "timestamp": 1791380109853}
+{"type": "text", "text": "구", "timestamp": 1791380109865}
+{"type": "text", "text": "액", "timestamp": 1791380109882}
+{"type": "text", "text": "을", "timestamp": 1791380109907}
+{"type": "text", "text": " 분", "timestamp": 1791380109911}
+{"type": "text", "text": "리", "timestamp": 1791380109912}
+{"type": "text", "text": "할", "timestamp": 1791380109930}
+{"type": "text", "text": " 것", "timestamp": 1791380109939}
+{"type": "text", "text": "**", "timestamp": 1791380109966}
+{"type": "text", "text": "  \n", "timestamp": 1791380109967}
+{"type": "text", "text": "  ", "timestamp": 1791380109974}
+{"type": "text", "text": " 근", "timestamp": 1791380109983}
+{"type": "text", "text": "거", "timestamp": 1791380109998}
+{"type": "text", "text": ":", "timestamp": 1791380110014}
+{"type": "text", "text": " `", "timestamp": 1791380110026}
+{"type": "text", "text": "CLA", "timestamp": 1791380110027}
+{"type": "text", "text": "U", "timestamp": 1791380110041}
+{"type": "text", "text": "DE", "timestamp": 1791380110065}
+{"type": "text", "text": ".md", "timestamp": 1791380110072}
+{"type": "text", "text": ":", "timestamp": 1791380110081}
+{"type": "text", "text": "34", "timestamp": 1791380110091}
+{"type": "text", "text": ",", "timestamp": 1791380110117}
+{"type": "text", "text": "44", "timestamp": 1791380110129}
+{"type": "text", "text": "`;", "timestamp": 1791380110130}
+{"type": "text", "text": " `", "timestamp": 1791380110285}
+{"type": "text", "text": "s", "timestamp": 1791380110286}
+{"type": "text", "text": "quid", "timestamp": 1791380110286}
+{"type": "text", "text": "5", "timestamp": 1791380110287}
+{"type": "text", "text": "/e", "timestamp": 1791380110287}
+{"type": "text", "text": "52", "timestamp": 1791380110288}
+{"type": "text", "text": "_game", "timestamp": 1791380110288}
+{"type": "text", "text": ".py", "timestamp": 1791380110288}
+{"type": "text", "text": ":", "timestamp": 1791380110289}
+{"type": "text", "text": "277", "timestamp": 1791380110289}
+{"type": "text", "text": "-", "timestamp": 1791380110289}
+{"type": "text", "text": "328", "timestamp": 1791380110290}
+{"type": "text", "text": ",", "timestamp": 1791380110290}
+{"type": "text", "text": "473", "timestamp": 1791380110296}
+{"type": "text", "text": "-", "timestamp": 1791380110313}
+{"type": "text", "text": "480", "timestamp": 1791380110315}
+{"type": "text", "text": "`", "timestamp": 1791380110328}
+{"type": "text", "text": "  \n", "timestamp": 1791380110341}
+{"type": "text", "text": "  ", "timestamp": 1791380110357}
+{"type": "text", "text": " 관", "timestamp": 1791380110374}
+{"type": "text", "text": "찰", "timestamp": 1791380110392}
+{"type": "text", "text": ":", "timestamp": 1791380110392}
+{"type": "text", "text": " 프로젝트", "timestamp": 1791380110409}
+{"type": "text", "text": "의", "timestamp": 1791380110461}
+{"type": "text", "text": " `", "timestamp": 1791380110475}
+{"type": "text", "text": "out", "timestamp": 1791380110497}
+{"type": "text", "text": "_tokens", "timestamp": 1791380110500}
+{"type": "text", "text": "`", "timestamp": 1791380110500}
+{"type": "text", "text": "는", "timestamp": 1791380110500}
+{"type": "text", "text": " 생각", "timestamp": 1791380110522}
+{"type": "text", "text": " 토", "timestamp": 1791380110592}
+{"type": "text", "text": "큰", "timestamp": 1791380110599}
+{"type": "text", "text": "을", "timestamp": 1791380110605}
+{"type": "text", "text": " 포함", "timestamp": 1791380110611}
+{"type": "text", "text": "하며", "timestamp": 1791380110624}
+{"type": "text", "text": " 게임", "timestamp": 1791380110627}
+{"type": "text", "text": " 잔", "timestamp": 1791380110628}
+{"type": "text", "text": "액", "timestamp": 1791380110629}
+{"type": "text", "text": " 차", "timestamp": 1791380110629}
+{"type": "text", "text": "감", "timestamp": 1791380110629}
+{"type": "text", "text": "은", "timestamp": 1791380110631}
+{"type": "text", "text": " `", "timestamp": 1791380110646}
+{"type": "text", "text": "min", "timestamp": 1791380110814}
+{"type": "text", "text": "(out", "timestamp": 1791380110814}
+{"type": "text", "text": "_tokens", "timestamp": 1791380110815}
+{"type": "text", "text": ",", "timestamp": 1791380110815}
+{"type": "text", "text": " cap", "timestamp": 1791380110815}
+{"type": "text", "text": ",", "timestamp": 1791380110816}
+{"type": "text", "text": " balance", "timestamp": 1791380110816}
+{"type": "text", "text": ")`", "timestamp": 1791380110816}
+{"type": "text", "text": "에", "timestamp": 1791380110819}
+{"type": "text", "text": " 기반", "timestamp": 1791380110819}
+{"type": "text", "text": "한다", "timestamp": 1791380110820}
+{"type": "text", "text": ".", "timestamp": 1791380110826}
+{"type": "text", "text": "  \n", "timestamp": 1791380110844}
+{"type": "text", "text": "  ", "timestamp": 1791380110845}
+{"type": "text", "text": " 최소", "timestamp": 1791380110845}
+{"type": "text", "text": " 변경", "timestamp": 1791380110846}
+{"type": "text", "text": ":", "timestamp": 1791380110852}
+{"type": "text", "text": " 게임", "timestamp": 1791380110855}
+{"type": "text", "text": " 자", "timestamp": 1791380110868}
+{"type": "text", "text": "원", "timestamp": 1791380110887}
+{"type": "text", "text": " 토", "timestamp": 1791380110891}
+{"type": "text", "text": "큰", "timestamp": 1791380110903}
+{"type": "text", "text": "과", "timestamp": 1791380110916}
+{"type": "text", "text": " 제공", "timestamp": 1791380110932}
+{"type": "text", "text": "자", "timestamp": 1791380110947}
+{"type": "text", "text": " 사용", "timestamp": 1791380110951}
+{"type": "text", "text": "량", "timestamp": 1791380110967}
+{"type": "text", "text": "·", "timestamp": 1791380110988}
+{"type": "text", "text": "청", "timestamp": 1791380110992}
+{"type": "text", "text": "구", "timestamp": 1791380111006}
+{"type": "text", "text": "액", "timestamp": 1791380111026}
+{"type": "text", "text": "을", "timestamp": 1791380111026}
+{"type": "text", "text": " 별", "timestamp": 1791380111043}
+{"type": "text", "text": "도", "timestamp": 1791380111053}
+{"type": "text", "text": " 필", "timestamp": 1791380111065}
+{"type": "text", "text": "드", "timestamp": 1791380111139}
+{"type": "text", "text": "로", "timestamp": 1791380111139}
+{"type": "text", "text": " 기록", "timestamp": 1791380111140}
+{"type": "text", "text": "한다", "timestamp": 1791380111140}
+{"type": "text", "text": ".", "timestamp": 1791380111140}
+{"type": "text", "text": " 실제", "timestamp": 1791380111141}
+{"type": "text", "text": " 비용", "timestamp": 1791380111158}
+{"type": "text", "text": "은", "timestamp": 1791380111179}
+{"type": "text", "text": " 제공", "timestamp": 1791380111179}
+{"type": "text", "text": "자", "timestamp": 1791380111185}
+{"type": "text", "text": " 사용", "timestamp": 1791380111332}
+{"type": "text", "text": "량", "timestamp": 1791380111334}
+{"type": "text", "text": " 및", "timestamp": 1791380111334}
+{"type": "text", "text": " 청", "timestamp": 1791380111335}
+{"type": "text", "text": "구", "timestamp": 1791380111335}
+{"type": "text", "text": " 근", "timestamp": 1791380111335}
+{"type": "text", "text": "거", "timestamp": 1791380111336}
+{"type": "text", "text": "로", "timestamp": 1791380111336}
+{"type": "text", "text": " 계산", "timestamp": 1791380111337}
+{"type": "text", "text": "하고", "timestamp": 1791380111337}
+{"type": "text", "text": ",", "timestamp": 1791380111337}
+{"type": "text", "text": " relay", "timestamp": 1791380111338}
+{"type": "text", "text": " 비용", "timestamp": 1791380111353}
+{"type": "text", "text": "과", "timestamp": 1791380111355}
+{"type": "text", "text": " 구", "timestamp": 1791380111370}
+{"type": "text", "text": "독", "timestamp": 1791380111373}
+{"type": "text", "text": "형", "timestamp": 1791380111391}
+{"type": "text", "text": " 고", "timestamp": 1791380111401}
+{"type": "text", "text": "정", "timestamp": 1791380111423}
+{"type": "text", "text": " 비용", "timestamp": 1791380111431}
+{"type": "text", "text": "은", "timestamp": 1791380111431}
+{"type": "text", "text": " 별", "timestamp": 1791380111449}
+{"type": "text", "text": "도", "timestamp": 1791380111459}
+{"type": "text", "text": " 항", "timestamp": 1791380111473}
+{"type": "text", "text": "목", "timestamp": 1791380111488}
+{"type": "text", "text": "으로", "timestamp": 1791380111495}
+{"type": "text", "text": " 둔다", "timestamp": 1791380111516}
+{"type": "text", "text": ".", "timestamp": 1791380111533}
+{"type": "text", "text": " 예", "timestamp": 1791380111546}
+{"type": "text", "text": "컨", "timestamp": 1791380111559}
+{"type": "text", "text": "대", "timestamp": 1791380111561}
+{"type": "text", "text": " 사용", "timestamp": 1791380111576}
+{"type": "text", "text": "량", "timestamp": 1791380111589}
+{"type": "text", "text": " 기반", "timestamp": 1791380111603}
+{"type": "text", "text": " 비용", "timestamp": 1791380111619}
+{"type": "text", "text": "은", "timestamp": 1791380111621}
+{"type": "text", "text": "\n", "timestamp": 1791380111636}
+{"type": "text", "text": "  ", "timestamp": 1791380111652}
+{"type": "text", "text": " \\", "timestamp": 1791380111665}
+{"type": "text", "text": "[\n", "timestamp": 1791380111677}
+{"type": "text", "text": "  ", "timestamp": 1791380111691}
+{"type": "text", "text": " C", "timestamp": 1791380111693}
+{"type": "text", "text": "_{\\", "timestamp": 1791380111860}
+{"type": "text", "text": "text", "timestamp": 1791380111861}
+{"type": "text", "text": "{", "timestamp": 1791380111861}
+{"type": "text", "text": "cash", "timestamp": 1791380111862}
+{"type": "text", "text": "}}", "timestamp": 1791380111865}
+{"type": "text", "text": "=\\", "timestamp": 1791380111865}
+{"type": "text", "text": "sum", "timestamp": 1791380111866}
+{"type": "text", "text": "_j", "timestamp": 1791380111866}
+{"type": "text", "text": "(I", "timestamp": 1791380111866}
+{"type": "text", "text": "_j", "timestamp": 1791380111867}
+{"type": "text", "text": "p", "timestamp": 1791380111867}
+{"type": "text", "text": "_{\\", "timestamp": 1791380111867}
+{"type": "text", "text": "text", "timestamp": 1791380111868}
+{"type": "text", "text": "{", "timestamp": 1791380111873}
+{"type": "text", "text": "in", "timestamp": 1791380111899}
+{"type": "text", "text": "}}", "timestamp": 1791380111899}
+{"type": "text", "text": "+", "timestamp": 1791380111906}
+{"type": "text", "text": "O", "timestamp": 1791380111921}
+{"type": "text", "text": "_j", "timestamp": 1791380111922}
+{"type": "text", "text": "p", "timestamp": 1791380111937}
+{"type": "text", "text": "_{\\", "timestamp": 1791380111955}
+{"type": "text", "text": "text", "timestamp": 1791380111958}
+{"type": "text", "text": "{", "timestamp": 1791380112092}
+{"type": "text", "text": "out", "timestamp": 1791380112092}
+{"type": "text", "text": "}}", "timestamp": 1791380112093}
+{"type": "text", "text": "+", "timestamp": 1791380112093}
+{"type": "text", "text": "H", "timestamp": 1791380112093}
+{"type": "text", "text": "_j", "timestamp": 1791380112119}
+{"type": "text", "text": "p", "timestamp": 1791380112156}
+{"type": "text", "text": "_{\\", "timestamp": 1791380112157}
+{"type": "text", "text": "text", "timestamp": 1791380112157}
+{"type": "text", "text": "{", "timestamp": 1791380112157}
+{"type": "text", "text": "cached", "timestamp": 1791380112160}
+{"type": "text", "text": "}}", "timestamp": 1791380112219}
+{"type": "text", "text": "+", "timestamp": 1791380112221}
+{"type": "text", "text": "F", "timestamp": 1791380112221}
+{"type": "text", "text": "_j", "timestamp": 1791380112384}
+{"type": "text", "text": ")\n", "timestamp": 1791380112384}
+{"type": "text", "text": "  ", "timestamp": 1791380112384}
+{"type": "text", "text": " \\", "timestamp": 1791380112385}
+{"type": "text", "text": "]\n", "timestamp": 1791380112385}
+{"type": "text", "text": "  ", "timestamp": 1791380112385}
+{"type": "text", "text": " 로", "timestamp": 1791380112386}
+{"type": "text", "text": " 계산", "timestamp": 1791380112386}
+{"type": "text", "text": "하고", "timestamp": 1791380112386}
+{"type": "text", "text": ",", "timestamp": 1791380112386}
+{"type": "text", "text": " 고", "timestamp": 1791380112387}
+{"type": "text", "text": "정", "timestamp": 1791380112387}
+{"type": "text", "text": " 비용", "timestamp": 1791380112387}
+{"type": "text", "text": " 배", "timestamp": 1791380112388}
+{"type": "text", "text": "분", "timestamp": 1791380112388}
+{"type": "text", "text": "을", "timestamp": 1791380112388}
+{"type": "text", "text": " 포함", "timestamp": 1791380112389}
+{"type": "text", "text": "한다", "timestamp": 1791380112389}
+{"type": "text", "text": "면", "timestamp": 1791380112390}
+{"type": "text", "text": " 현", "timestamp": 1791380112390}
+{"type": "text", "text": "금", "timestamp": 1791380112390}
+{"type": "text", "text": " 청", "timestamp": 1791380112405}
+{"type": "text", "text": "구", "timestamp": 1791380112413}
+{"type": "text", "text": "액", "timestamp": 1791380112415}
+{"type": "text", "text": "과", "timestamp": 1791380112432}
+{"type": "text", "text": " 분", "timestamp": 1791380112445}
+{"type": "text", "text": "리", "timestamp": 1791380112459}
+{"type": "text", "text": "해", "timestamp": 1791380112522}
+{"type": "text", "text": " 보고", "timestamp": 1791380112534}
+{"type": "text", "text": "한다", "timestamp": 1791380112537}
+{"type": "text", "text": ".", "timestamp": 1791380112550}
+{"type": "text", "text": "  \n", "timestamp": 1791380112551}
+{"type": "text", "text": "  ", "timestamp": 1791380112552}
+{"type": "text", "text": " 수", "timestamp": 1791380112552}
+{"type": "text", "text": "용", "timestamp": 1791380112553}
+{"type": "text", "text": " 기준", "timestamp": 1791380112571}
+{"type": "text", "text": ":", "timestamp": 1791380112578}
+{"type": "text", "text": " 제공", "timestamp": 1791380112596}
+{"type": "text", "text": "자", "timestamp": 1791380112596}
+{"type": "text", "text": " 사용", "timestamp": 1791380112613}
+{"type": "text", "text": "량", "timestamp": 1791380112630}
+{"type": "text", "text": "·", "timestamp": 1791380112644}
+{"type": "text", "text": "청", "timestamp": 1791380112644}
+{"type": "text", "text": "구", "timestamp": 1791380112662}
+{"type": "text", "text": " 기록", "timestamp": 1791380112676}
+{"type": "text", "text": "과", "timestamp": 1791380112687}
+{"type": "text", "text": " 요청", "timestamp": 1791380112715}
+{"type": "text", "text": "을", "timestamp": 1791380112716}
+{"type": "text", "text": " 대", "timestamp": 1791380112723}
+{"type": "text", "text": "조", "timestamp": 1791380112741}
+{"type": "text", "text": "한다", "timestamp": 1791380112741}
+{"type": "text", "text": ".", "timestamp": 1791380112756}
+{"type": "text", "text": " 자료", "timestamp": 1791380112907}
+{"type": "text", "text": "가", "timestamp": 1791380112907}
+{"type": "text", "text": " 없", "timestamp": 1791380112908}
+{"type": "text", "text": "으면", "timestamp": 1791380112908}
+{"type": "text", "text": " 실제", "timestamp": 1791380112908}
+{"type": "text", "text": " 비용", "timestamp": 1791380112908}
+{"type": "text", "text": "은", "timestamp": 1791380112909}
+{"type": "text", "text": " 미", "timestamp": 1791380112909}
+{"type": "text", "text": "측", "timestamp": 1791380112909}
+{"type": "text", "text": "정", "timestamp": 1791380112909}
+{"type": "text", "text": "으로", "timestamp": 1791380112910}
+{"type": "text", "text": " 표시", "timestamp": 1791380112910}
+{"type": "text", "text": "하고", "timestamp": 1791380112912}
+{"type": "text", "text": " `", "timestamp": 1791380112931}
+{"type": "text", "text": "out", "timestamp": 1791380112932}
+{"type": "text", "text": "_tokens", "timestamp": 1791380112951}
+{"type": "text", "text": "`", "timestamp": 1791380112961}
+{"type": "text", "text": "로", "timestamp": 1791380112985}
+{"type": "text", "text": " 대", "timestamp": 1791380112985}
+{"type": "text", "text": "체", "timestamp": 1791380112995}
+{"type": "text", "text": " 추", "timestamp": 1791380113014}
+{"type": "text", "text": "정", "timestamp": 1791380113018}
+{"type": "text", "text": "하지", "timestamp": 1791380113037}
+{"type": "text", "text": " 않는다", "timestamp": 1791380113040}
+{"type": "text", "text": ".\n\n", "timestamp": 1791380113053}
+{"type": "text", "text": "4", "timestamp": 1791380113066}
+{"type": "text", "text": ".", "timestamp": 1791380113080}
+{"type": "text", "text": " **", "timestamp": 1791380113096}
+{"type": "text", "text": "Warning", "timestamp": 1791380113096}
+{"type": "text", "text": " —", "timestamp": 1791380113112}
+{"type": "text", "text": " 비교", "timestamp": 1791380113129}
+{"type": "text", "text": " 예", "timestamp": 1791380113143}
+{"type": "text", "text": "산", "timestamp": 1791380113157}
+{"type": "text", "text": "과", "timestamp": 1791380113158}
+{"type": "text", "text": " 공", "timestamp": 1791380113172}
+{"type": "text", "text": "통", "timestamp": 1791380113187}
+{"type": "text", "text": " 비교", "timestamp": 1791380113202}
+{"type": "text", "text": " 단", "timestamp": 1791380113220}
+{"type": "text", "text": "위를", "timestamp": 1791380113223}
+{"type": "text", "text": " 결과", "timestamp": 1791380113238}
+{"type": "text", "text": " 전에", "timestamp": 1791380113253}
+{"type": "text", "text": " 고", "timestamp": 1791380113254}
+{"type": "text", "text": "정", "timestamp": 1791380113269}
+{"type": "text", "text": "할", "timestamp": 1791380113432}
+{"type": "text", "text": " 것", "timestamp": 1791380113435}
+{"type": "text", "text": "**", "timestamp": 1791380113436}
+{"type": "text", "text": "  \n", "timestamp": 1791380113436}
+{"type": "text", "text": "  ", "timestamp": 1791380113436}
+{"type": "text", "text": " 근", "timestamp": 1791380113437}
+{"type": "text", "text": "거", "timestamp": 1791380113438}
+{"type": "text", "text": ":", "timestamp": 1791380113438}
+{"type": "text", "text": " `", "timestamp": 1791380113438}
+{"type": "text", "text": "configs", "timestamp": 1791380113438}
+{"type": "text", "text": "/s", "timestamp": 1791380113439}
+{"type": "text", "text": "quid", "timestamp": 1791380113439}
+{"type": "text", "text": "5", "timestamp": 1791380113439}
+{"type": "text", "text": "/e", "timestamp": 1791380113439}
+{"type": "text", "text": "52", "timestamp": 1791380113449}
+{"type": "text", "text": "v", "timestamp": 1791380113463}
+{"type": "text", "text": "12", "timestamp": 1791380113491}
+{"type": "text", "text": "_co", "timestamp": 1791380113491}
+{"type": "text", "text": "op", "timestamp": 1791380113495}
+{"type": "text", "text": "_sm", "timestamp": 1791380113509}
+{"type": "text", "text": "oke", "timestamp": 1791380113522}
+{"type": "text", "text": "_mix", "timestamp": 1791380113539}
+{"type": "text", "text": "4", "timestamp": 1791380113552}
+{"type": "text", "text": ".yaml", "timestamp": 1791380113554}
+{"type": "text", "text": ":", "timestamp": 1791380113568}
+{"type": "text", "text": "9", "timestamp": 1791380113586}
+{"type": "text", "text": "-", "timestamp": 1791380113597}
+{"type": "text", "text": "20", "timestamp": 1791380113612}
+{"type": "text", "text": ",", "timestamp": 1791380113613}
+{"type": "text", "text": "32", "timestamp": 1791380113627}
+{"type": "text", "text": "-", "timestamp": 1791380113645}
+{"type": "text", "text": "50", "timestamp": 1791380113657}
+{"type": "text", "text": "`;", "timestamp": 1791380113670}
+{"type": "text", "text": " `", "timestamp": 1791380113685}
+{"type": "text", "text": "s", "timestamp": 1791380113687}
+{"type": "text", "text": "quid", "timestamp": 1791380113700}
+{"type": "text", "text": "5", "timestamp": 1791380113720}
+{"type": "text", "text": "/e", "timestamp": 1791380113730}
+{"type": "text", "text": "52", "timestamp": 1791380113744}
+{"type": "text", "text": "_game", "timestamp": 1791380113745}
+{"type": "text", "text": ".py", "timestamp": 1791380113764}
+{"type": "text", "text": ":", "timestamp": 1791380113776}
+{"type": "text", "text": "253", "timestamp": 1791380113792}
+{"type": "text", "text": "-", "timestamp": 1791380113957}
+{"type": "text", "text": "256", "timestamp": 1791380113958}
+{"type": "text", "text": "`", "timestamp": 1791380113959}
+{"type": "text", "text": "  \n", "timestamp": 1791380113959}
+{"type": "text", "text": "  ", "timestamp": 1791380113959}
+{"type": "text", "text": " 관", "timestamp": 1791380113960}
+{"type": "text", "text": "찰", "timestamp": 1791380113960}
+{"type": "text", "text": ":", "timestamp": 1791380113961}
+{"type": "text", "text": " 네", "timestamp": 1791380113961}
+{"type": "text", "text": " 모델", "timestamp": 1791380113961}
+{"type": "text", "text": "이", "timestamp": 1791380113961}
+{"type": "text", "text": " 서로", "timestamp": 1791380113962}
+{"type": "text", "text": " 다른", "timestamp": 1791380113962}
+{"type": "text", "text": " 좌", "timestamp": 1791380113962}
+{"type": "text", "text": "석", "timestamp": 1791380114024}
+{"type": "text", "text": "과", "timestamp": 1791380114026}
+{"type": "text", "text": " provider", "timestamp": 1791380114027}
+{"type": "text", "text": " 경", "timestamp": 1791380114027}
+{"type": "text", "text": "로", "timestamp": 1791380114037}
+{"type": "text", "text": "에", "timestamp": 1791380114050}
+{"type": "text", "text": " 배", "timestamp": 1791380114054}
+{"type": "text", "text": "치", "timestamp": 1791380114068}
+{"type": "text", "text": "된", "timestamp": 1791380114087}
+{"type": "text", "text": " 혼", "timestamp": 1791380114087}
+{"type": "text", "text": "합", "timestamp": 1791380114102}
+{"type": "text", "text": " 게임", "timestamp": 1791380114103}
+{"type": "text", "text": "이다", "timestamp": 1791380114114}
+{"type": "text", "text": ".", "timestamp": 1791380114146}
+{"type": "text", "text": " 좌", "timestamp": 1791380114146}
+{"type": "text", "text": "석", "timestamp": 1791380114146}
+{"type": "text", "text": "별", "timestamp": 1791380114161}
+{"type": "text", "text": " 상", "timestamp": 1791380114176}
+{"type": "text", "text": "호", "timestamp": 1791380114191}
+{"type": "text", "text": "작", "timestamp": 1791380114191}
+{"type": "text", "text": "용", "timestamp": 1791380114207}
+{"type": "text", "text": " 결과", "timestamp": 1791380114224}
+{"type": "text", "text": "를", "timestamp": 1791380114234}
+{"type": "text", "text": " 단", "timestamp": 1791380114250}
+{"type": "text", "text": "일", "timestamp": 1791380114251}
+{"type": "text", "text": " 모델", "timestamp": 1791380114263}
+{"type": "text", "text": " 능", "timestamp": 1791380114277}
+{"type": "text", "text": "력", "timestamp": 1791380114293}
+{"type": "text", "text": " 차", "timestamp": 1791380114309}
+{"type": "text", "text": "이", "timestamp": 1791380114311}
+{"type": "text", "text": "로", "timestamp": 1791380114326}
+{"type": "text", "text": " 해", "timestamp": 1791380114479}
+{"type": "text", "text": "석", "timestamp": 1791380114479}
+{"type": "text", "text": "할", "timestamp": 1791380114480}
+{"type": "text", "text": " 수", "timestamp": 1791380114480}
+{"type": "text", "text": " 없다", "timestamp": 1791380114480}
+{"type": "text", "text": ".", "timestamp": 1791380114481}
+{"type": "text", "text": "  \n", "timestamp": 1791380114481}
+{"type": "text", "text": "  ", "timestamp": 1791380114481}
+{"type": "text", "text": " 제", "timestamp": 1791380114481}
+{"type": "text", "text": "안", "timestamp": 1791380114481}
+{"type": "text", "text": ":", "timestamp": 1791380114482}
+{"type": "text", "text": " 모든", "timestamp": 1791380114485}
+{"type": "text", "text": " 후보", "timestamp": 1791380114489}
+{"type": "text", "text": "에", "timestamp": 1791380114491}
+{"type": "text", "text": " 같은", "timestamp": 1791380114536}
+{"type": "text", "text": " 세", "timestamp": 1791380114543}
+{"type": "text", "text": "션", "timestamp": 1791380114546}
+{"type": "text", "text": "·", "timestamp": 1791380114552}
+{"type": "text", "text": "시", "timestamp": 1791380114555}
+{"type": "text", "text": "드", "timestamp": 1791380114583}
+{"type": "text", "text": "·", "timestamp": 1791380114584}
+{"type": "text", "text": "좌", "timestamp": 1791380114667}
+{"type": "text", "text": "석", "timestamp": 1791380114669}
+{"type": "text", "text": " 균", "timestamp": 1791380114692}
+{"type": "text", "text": "형", "timestamp": 1791380114705}
+{"type": "text", "text": "화", "timestamp": 1791380114717}
+{"type": "text", "text": " 규", "timestamp": 1791380114745}
+{"type": "text", "text": "칙", "timestamp": 1791380114747}
+{"type": "text", "text": "과", "timestamp": 1791380114766}
+{"type": "text", "text": " 동일", "timestamp": 1791380114766}
+{"type": "text", "text": "한", "timestamp": 1791380114769}
+{"type": "text", "text": " 게임", "timestamp": 1791380114769}
+{"type": "text", "text": " 상", "timestamp": 1791380114770}
+{"type": "text", "text": "한", "timestamp": 1791380114772}
+{"type": "text", "text": "을", "timestamp": 1791380114787}
+{"type": "text", "text": " 적용", "timestamp": 1791380114788}
+{"type": "text", "text": "한다", "timestamp": 1791380114793}
+{"type": "text", "text": ".", "timestamp": 1791380114806}
+{"type": "text", "text": " 모델", "timestamp": 1791380114810}
+{"type": "text", "text": "별", "timestamp": 1791380114816}
+{"type": "text", "text": " 금", "timestamp": 1791380114828}
+{"type": "text", "text": "액", "timestamp": 1791380115004}
+{"type": "text", "text": " 상", "timestamp": 1791380115004}
+{"type": "text", "text": "한", "timestamp": 1791380115005}
+{"type": "text", "text": " \\(", "timestamp": 1791380115005}
+{"type": "text", "text": "B", "timestamp": 1791380115005}
+{"type": "text", "text": "_i", "timestamp": 1791380115006}
+{"type": "text", "text": "\\", "timestamp": 1791380115006}
+{"type": "text", "text": ")", "timestamp": 1791380115006}
+{"type": "text", "text": "를", "timestamp": 1791380115009}
+{"type": "text", "text": " 같", "timestamp": 1791380115009}
+{"type": "text", "text": "게", "timestamp": 1791380115010}
+{"type": "text", "text": " 사", "timestamp": 1791380115010}
+{"type": "text", "text": "전", "timestamp": 1791380115010}
+{"type": "text", "text": " 지정", "timestamp": 1791380115010}
+{"type": "text", "text": "하고", "timestamp": 1791380115033}
+{"type": "text", "text": ",", "timestamp": 1791380115033}
+{"type": "text", "text": " 전체", "timestamp": 1791380115051}
+{"type": "text", "text": " 상", "timestamp": 1791380115068}
+{"type": "text", "text": "한", "timestamp": 1791380115113}
+{"type": "text", "text": "은", "timestamp": 1791380115116}
+{"type": "text", "text": " \\", "timestamp": 1791380115119}
+{"type": "text", "text": "(\\", "timestamp": 1791380115120}
+{"type": "text", "text": "sum", "timestamp": 1791380115124}
+{"type": "text", "text": "_i", "timestamp": 1791380115127}
+{"type": "text", "text": " B", "timestamp": 1791380115128}
+{"type": "text", "text": "_i", "timestamp": 1791380115172}
+{"type": "text", "text": "+\\", "timestamp": 1791380115175}
+{"type": "text", "text": "text", "timestamp": 1791380115176}
+{"type": "text", "text": "{", "timestamp": 1791380115178}
+{"type": "text", "text": "공", "timestamp": 1791380115194}
+{"type": "text", "text": "유", "timestamp": 1791380115209}
+{"type": "text", "text": " 비용", "timestamp": 1791380115221}
+{"type": "text", "text": "}\\", "timestamp": 1791380115222}
+{"type": "text", "text": "le", "timestamp": 1791380115240}
+{"type": "text", "text": " B", "timestamp": 1791380115263}
+{"type": "text", "text": "_{\\", "timestamp": 1791380115265}
+{"type": "text", "text": "text", "timestamp": 1791380115278}
+{"type": "text", "text": "{", "timestamp": 1791380115312}
+{"type": "text", "text": "승", "timestamp": 1791380115313}
+{"type": "text", "text": "인", "timestamp": 1791380115315}
+{"type": "text", "text": "}}\\", "timestamp": 1791380115326}
+{"type": "text", "text": ")", "timestamp": 1791380115337}
+{"type": "text", "text": "으로", "timestamp": 1791380115362}
+{"type": "text", "text": " 둔다", "timestamp": 1791380115376}
+{"type": "text", "text": ".", "timestamp": 1791380115530}
+{"type": "text", "text": " 비용", "timestamp": 1791380115531}
+{"type": "text", "text": " 상", "timestamp": 1791380115531}
+{"type": "text", "text": "한", "timestamp": 1791380115532}
+{"type": "text", "text": "에", "timestamp": 1791380115532}
+{"type": "text", "text": " 걸", "timestamp": 1791380115533}
+{"type": "text", "text": "리", "timestamp": 1791380115534}
+{"type": "text", "text": "면", "timestamp": 1791380115535}
+{"type": "text", "text": " 해당", "timestamp": 1791380115535}
+{"type": "text", "text": " 비교", "timestamp": 1791380115536}
+{"type": "text", "text": " 블", "timestamp": 1791380115536}
+{"type": "text", "text": "록", "timestamp": 1791380115536}
+{"type": "text", "text": "을", "timestamp": 1791380115537}
+{"type": "text", "text": " 불", "timestamp": 1791380115537}
+{"type": "text", "text": "완", "timestamp": 1791380115552}
+{"type": "text", "text": "전", "timestamp": 1791380115567}
+{"type": "text", "text": "으로", "timestamp": 1791380115584}
+{"type": "text", "text": " 처리", "timestamp": 1791380115585}
+{"type": "text", "text": "하고", "timestamp": 1791380115598}
+{"type": "text", "text": ",", "timestamp": 1791380115614}
+{"type": "text", "text": " 결과", "timestamp": 1791380115640}
+{"type": "text", "text": "를", "timestamp": 1791380115642}
+{"type": "text", "text": " 본", "timestamp": 1791380115643}
+{"type": "text", "text": " 뒤", "timestamp": 1791380115669}
+{"type": "text", "text": " 특정", "timestamp": 1791380115703}
+{"type": "text", "text": " 모델", "timestamp": 1791380115706}
+{"type": "text", "text": "만", "timestamp": 1791380115707}
+{"type": "text", "text": " 추가", "timestamp": 1791380115708}
+{"type": "text", "text": " 표", "timestamp": 1791380115731}
+{"type": "text", "text": "집", "timestamp": 1791380115737}
+{"type": "text", "text": "하지", "timestamp": 1791380115748}
+{"type": "text", "text": " 않는다", "timestamp": 1791380115769}
+{"type": "text", "text": ".", "timestamp": 1791380115783}
+{"type": "text", "text": "  \n", "timestamp": 1791380115799}
+{"type": "text", "text": "  ", "timestamp": 1791380115801}
+{"type": "text", "text": " 수", "timestamp": 1791380115808}
+{"type": "text", "text": "용", "timestamp": 1791380116576}
+{"type": "text", "text": " 기준", "timestamp": 1791380116577}
+{"type": "text", "text": ":", "timestamp": 1791380116577}
+{"type": "text", "text": " 후보", "timestamp": 1791380116578}
+{"type": "text", "text": "별", "timestamp": 1791380116578}
+{"type": "text", "text": " 동일", "timestamp": 1791380116578}
+{"type": "text", "text": "한", "timestamp": 1791380116578}
+{"type": "text", "text": " 사", "timestamp": 1791380116579}
+{"type": "text", "text": "전", "timestamp": 1791380116579}
+{"type": "text", "text": " 지정", "timestamp": 1791380116579}
+{"type": "text", "text": " 비교", "timestamp": 1791380116580}
+{"type": "text", "text": " 블", "timestamp": 1791380116580}
+{"type": "text", "text": "록", "timestamp": 1791380116580}
+{"type": "text", "text": "이", "timestamp": 1791380116581}
+{"type": "text", "text": " 완료", "timestamp": 1791380116581}
+{"type": "text", "text": "됐", "timestamp": 1791380116581}
+{"type": "text", "text": "거나", "timestamp": 1791380116581}
+{"type": "text", "text": ",", "timestamp": 1791380116581}
+{"type": "text", "text": " 미", "timestamp": 1791380116582}
+{"type": "text", "text": "완", "timestamp": 1791380116582}
+{"type": "text", "text": "료", "timestamp": 1791380116582}
+{"type": "text", "text": "·", "timestamp": 1791380116582}
+{"type": "text", "text": "중", "timestamp": 1791380116583}
+{"type": "text", "text": "단", "timestamp": 1791380116583}
+{"type": "text", "text": " 사", "timestamp": 1791380116583}
+{"type": "text", "text": "유", "timestamp": 1791380116583}
+{"type": "text", "text": "가", "timestamp": 1791380116584}
+{"type": "text", "text": " 명", "timestamp": 1791380116584}
+{"type": "text", "text": "시", "timestamp": 1791380116584}
+{"type": "text", "text": "된다", "timestamp": 1791380116584}
+{"type": "text", "text": ".", "timestamp": 1791380116585}
+{"type": "text", "text": " 혼", "timestamp": 1791380116585}
+{"type": "text", "text": "합", "timestamp": 1791380116585}
+{"type": "text", "text": " 팀", "timestamp": 1791380116586}
+{"type": "text", "text": " 결과", "timestamp": 1791380116586}
+{"type": "text", "text": "는", "timestamp": 1791380116586}
+{"type": "text", "text": " cross", "timestamp": 1791380116586}
+{"type": "text", "text": "-play", "timestamp": 1791380116587}
+{"type": "text", "text": "로", "timestamp": 1791380116587}
+{"type": "text", "text": " 표시", "timestamp": 1791380116587}
+{"type": "text", "text": "한다", "timestamp": 1791380116587}
+{"type": "text", "text": ".\n\n", "timestamp": 1791380116588}
+{"type": "text", "text": "5", "timestamp": 1791380116588}
+{"type": "text", "text": ".", "timestamp": 1791380116588}
+{"type": "text", "text": " **", "timestamp": 1791380116588}
+{"type": "text", "text": "Suggestion", "timestamp": 1791380116588}
+{"type": "text", "text": " —", "timestamp": 1791380116589}
+{"type": "text", "text": " 유지", "timestamp": 1791380116589}
+{"type": "text", "text": " 가능한", "timestamp": 1791380116589}
+{"type": "text", "text": " 소", "timestamp": 1791380116589}
+{"type": "text", "text": "규", "timestamp": 1791380116590}
+{"type": "text", "text": "모", "timestamp": 1791380116590}
+{"type": "text", "text": " 파일", "timestamp": 1791380116590}
+{"type": "text", "text": "럿", "timestamp": 1791380116591}
+{"type": "text", "text": "으로", "timestamp": 1791380116591}
+{"type": "text", "text": " 온", "timestamp": 1791380116591}
+{"type": "text", "text": "보", "timestamp": 1791380116591}
+{"type": "text", "text": "딩", "timestamp": 1791380116591}
+{"type": "text", "text": "만", "timestamp": 1791380116592}
+{"type": "text", "text": " 먼저", "timestamp": 1791380116592}
+{"type": "text", "text": " 판", "timestamp": 1791380116592}
+{"type": "text", "text": "정", "timestamp": 1791380116593}
+{"type": "text", "text": "할", "timestamp": 1791380116593}
+{"type": "text", "text": " 것", "timestamp": 1791380116595}
+{"type": "text", "text": "**", "timestamp": 1791380116596}
+{"type": "text", "text": "  \n", "timestamp": 1791380116604}
+{"type": "text", "text": "  ", "timestamp": 1791380116618}
+{"type": "text", "text": " 근", "timestamp": 1791380116635}
+{"type": "text", "text": "거", "timestamp": 1791380116646}
+{"type": "text", "text": ":", "timestamp": 1791380116662}
+{"type": "text", "text": " `", "timestamp": 1791380116664}
+{"type": "text", "text": "configs", "timestamp": 1791380116678}
+{"type": "text", "text": "/s", "timestamp": 1791380116693}
+{"type": "text", "text": "quid", "timestamp": 1791380116706}
+{"type": "text", "text": "5", "timestamp": 1791380116721}
+{"type": "text", "text": "/e", "timestamp": 1791380116721}
+{"type": "text", "text": "52", "timestamp": 1791380116735}
+{"type": "text", "text": "v", "timestamp": 1791380116749}
+{"type": "text", "text": "12", "timestamp": 1791380116766}
+{"type": "text", "text": "_co", "timestamp": 1791380116780}
+{"type": "text", "text": "op", "timestamp": 1791380116793}
+{"type": "text", "text": "_sm", "timestamp": 1791380116797}
+{"type": "text", "text": "oke", "timestamp": 1791380116815}
+{"type": "text", "text": "_mix", "timestamp": 1791380116825}
+{"type": "text", "text": "4", "timestamp": 1791380116844}
+{"type": "text", "text": ".yaml", "timestamp": 1791380116861}
+{"type": "text", "text": ":", "timestamp": 1791380116861}
+{"type": "text", "text": "9", "timestamp": 1791380116873}
+{"type": "text", "text": "-", "timestamp": 1791380116914}
+{"type": "text", "text": "20", "timestamp": 1791380116914}
+{"type": "text", "text": ",", "timestamp": 1791380116922}
+{"type": "text", "text": "39", "timestamp": 1791380116922}
+{"type": "text", "text": "-", "timestamp": 1791380117102}
+{"type": "text", "text": "50", "timestamp": 1791380117102}
+{"type": "text", "text": "`;", "timestamp": 1791380117103}
+{"type": "text", "text": " `", "timestamp": 1791380117103}
+{"type": "text", "text": "CLA", "timestamp": 1791380117103}
+{"type": "text", "text": "U", "timestamp": 1791380117104}
+{"type": "text", "text": "DE", "timestamp": 1791380117104}
+{"type": "text", "text": ".md", "timestamp": 1791380117105}
+{"type": "text", "text": ":", "timestamp": 1791380117105}
+{"type": "text", "text": "61", "timestamp": 1791380117105}
+{"type": "text", "text": "-", "timestamp": 1791380117106}
+{"type": "text", "text": "63", "timestamp": 1791380117106}
+{"type": "text", "text": "`", "timestamp": 1791380117106}
+{"type": "text", "text": "  \n", "timestamp": 1791380117107}
+{"type": "text", "text": "  ", "timestamp": 1791380117112}
+{"type": "text", "text": " 제", "timestamp": 1791380117119}
+{"type": "text", "text": "안", "timestamp": 1791380117120}
+{"type": "text", "text": ":", "timestamp": 1791380117167}
+{"type": "text", "text": " 승인", "timestamp": 1791380117167}
+{"type": "text", "text": "된", "timestamp": 1791380117174}
+{"type": "text", "text": " 상", "timestamp": 1791380117175}
+{"type": "text", "text": "한", "timestamp": 1791380117179}
+{"type": "text", "text": " 안", "timestamp": 1791380117194}
+{"type": "text", "text": "에서", "timestamp": 1791380117209}
+{"type": "text", "text": " 고", "timestamp": 1791380117225}
+{"type": "text", "text": "정", "timestamp": 1791380117227}
+{"type": "text", "text": "된", "timestamp": 1791380117241}
+{"type": "text", "text": " 최소", "timestamp": 1791380117429}
+{"type": "text", "text": " 공", "timestamp": 1791380117430}
+{"type": "text", "text": "통", "timestamp": 1791380117430}
+{"type": "text", "text": " 비교", "timestamp": 1791380117430}
+{"type": "text", "text": " 블", "timestamp": 1791380117431}
+{"type": "text", "text": "록", "timestamp": 1791380117431}
+{"type": "text", "text": "을", "timestamp": 1791380117431}
+{"type": "text", "text": " 사", "timestamp": 1791380117432}
+{"type": "text", "text": "전", "timestamp": 1791380117432}
+{"type": "text", "text": " 지정", "timestamp": 1791380117432}
+{"type": "text", "text": "한다", "timestamp": 1791380117432}
+{"type": "text", "text": ".", "timestamp": 1791380117433}
+{"type": "text", "text": " 온", "timestamp": 1791380117433}
+{"type": "text", "text": "보", "timestamp": 1791380117433}
+{"type": "text", "text": "딩", "timestamp": 1791380117433}
+{"type": "text", "text": " 카드", "timestamp": 1791380117436}
+{"type": "text", "text": "와", "timestamp": 1791380117450}
+{"type": "text", "text": " 함께", "timestamp": 1791380117461}
+{"type": "text", "text": " 세", "timestamp": 1791380117474}
+{"type": "text", "text": "션", "timestamp": 1791380117625}
+{"type": "text", "text": "별", "timestamp": 1791380117626}
+{"type": "text", "text": " 비용", "timestamp": 1791380117626}
+{"type": "text", "text": ",", "timestamp": 1791380117626}
+{"type": "text", "text": " 지", "timestamp": 1791380117626}
+{"type": "text", "text": "연", "timestamp": 1791380117627}
+{"type": "text", "text": ",", "timestamp": 1791380117627}
+{"type": "text", "text": " 유", "timestamp": 1791380117627}
+{"type": "text", "text": "효", "timestamp": 1791380117628}
+{"type": "text", "text": " 응", "timestamp": 1791380117628}
+{"type": "text", "text": "답", "timestamp": 1791380117628}
+{"type": "text", "text": "률", "timestamp": 1791380117628}
+{"type": "text", "text": ",", "timestamp": 1791380117630}
+{"type": "text", "text": " 실패", "timestamp": 1791380117660}
+{"type": "text", "text": " 유형", "timestamp": 1791380117666}
+{"type": "text", "text": ",", "timestamp": 1791380117716}
+{"type": "text", "text": " 설정", "timestamp": 1791380117725}
+{"type": "text", "text": " 시간을", "timestamp": 1791380117726}
+{"type": "text", "text": " 기록", "timestamp": 1791380117728}
+{"type": "text", "text": "한다", "timestamp": 1791380117728}
+{"type": "text", "text": ".", "timestamp": 1791380117730}
+{"type": "text", "text": " API", "timestamp": 1791380117733}
+{"type": "text", "text": "/provider", "timestamp": 1791380117747}
+{"type": "text", "text": " 실패", "timestamp": 1791380117767}
+{"type": "text", "text": "는", "timestamp": 1791380117777}
+{"type": "text", "text": " 행동", "timestamp": 1791380117781}
+{"type": "text", "text": " 결과", "timestamp": 1791380117793}
+{"type": "text", "text": "나", "timestamp": 1791380117811}
+{"type": "text", "text": " ", "timestamp": 1791380117820}
+{"type": "text", "text": "0", "timestamp": 1791380117836}
+{"type": "text", "text": "점", "timestamp": 1791380117839}
+{"type": "text", "text": "으로", "timestamp": 1791380117851}
+{"type": "text", "text": " 치", "timestamp": 1791380117864}
+{"type": "text", "text": "환", "timestamp": 1791380117879}
+{"type": "text", "text": "하지", "timestamp": 1791380117894}
+{"type": "text", "text": " 않고", "timestamp": 1791380117905}
+{"type": "text", "text": ",", "timestamp": 1791380117921}
+{"type": "text", "text": " 재", "timestamp": 1791380117921}
+{"type": "text", "text": "실", "timestamp": 1791380117942}
+{"type": "text", "text": "행", "timestamp": 1791380117949}
+{"type": "text", "text": "은", "timestamp": 1791380117978}
+{"type": "text", "text": " 별", "timestamp": 1791380117982}
+{"type": "text", "text": "도", "timestamp": 1791380117984}
+{"type": "text", "text": " 시", "timestamp": 1791380118150}
+{"type": "text", "text": "도", "timestamp": 1791380118151}
+{"type": "text", "text": "와", "timestamp": 1791380118151}
+{"type": "text", "text": " 예", "timestamp": 1791380118151}
+{"type": "text", "text": "산", "timestamp": 1791380118152}
+{"type": "text", "text": "으로", "timestamp": 1791380118152}
+{"type": "text", "text": " 기록", "timestamp": 1791380118152}
+{"type": "text", "text": "한다", "timestamp": 1791380118153}
+{"type": "text", "text": ".", "timestamp": 1791380118153}
+{"type": "text", "text": " 이번", "timestamp": 1791380118153}
+{"type": "text", "text": " 파일", "timestamp": 1791380118153}
+{"type": "text", "text": "럿", "timestamp": 1791380118154}
+{"type": "text", "text": "의", "timestamp": 1791380118161}
+{"type": "text", "text": " 판", "timestamp": 1791380118163}
+{"type": "text", "text": "정", "timestamp": 1791380118179}
+{"type": "text", "text": "은", "timestamp": 1791380118193}
+{"type": "text", "text": " 연결", "timestamp": 1791380118207}
+{"type": "text", "text": "·", "timestamp": 1791380118220}
+{"type": "text", "text": "설", "timestamp": 1791380118220}
+{"type": "text", "text": "정", "timestamp": 1791380118248}
+{"type": "text", "text": "·", "timestamp": 1791380118273}
+{"type": "text", "text": "비", "timestamp": 1791380118279}
+{"type": "text", "text": "용", "timestamp": 1791380118286}
+{"type": "text", "text": "·", "timestamp": 1791380118286}
+{"type": "text", "text": "지", "timestamp": 1791380118471}
+{"type": "text", "text": "연", "timestamp": 1791380118492}
+{"type": "text", "text": "의", "timestamp": 1791380118493}
+{"type": "text", "text": " 실행", "timestamp": 1791380118494}
+{"type": "text", "text": " 가능", "timestamp": 1791380118505}
+{"type": "text", "text": "성", "timestamp": 1791380118506}
+{"type": "text", "text": "에", "timestamp": 1791380118512}
+{"type": "text", "text": " 한", "timestamp": 1791380118520}
+{"type": "text", "text": "정", "timestamp": 1791380118677}
+{"type": "text", "text": "하며", "timestamp": 1791380118678}
+{"type": "text", "text": " 모델", "timestamp": 1791380118678}
+{"type": "text", "text": " 순", "timestamp": 1791380118679}
+{"type": "text", "text": "위", "timestamp": 1791380118679}
+{"type": "text", "text": "나", "timestamp": 1791380118679}
+{"type": "text", "text": " 심", "timestamp": 1791380118679}
+{"type": "text", "text": "리", "timestamp": 1791380118680}
+{"type": "text", "text": "적", "timestamp": 1791380118680}
+{"type": "text", "text": " 결", "timestamp": 1791380118681}
+{"type": "text", "text": "론", "timestamp": 1791380118681}
+{"type": "text", "text": "을", "timestamp": 1791380118681}
+{"type": "text", "text": " 내", "timestamp": 1791380118682}
+{"type": "text", "text": "리지", "timestamp": 1791380118682}
+{"type": "text", "text": " 않는다", "timestamp": 1791380118682}
+{"type": "text", "text": ".", "timestamp": 1791380118683}
+{"type": "text", "text": "  \n", "timestamp": 1791380118683}
+{"type": "text", "text": "  ", "timestamp": 1791380118683}
+{"type": "text", "text": " 수", "timestamp": 1791380118683}
+{"type": "text", "text": "용", "timestamp": 1791380118684}
+{"type": "text", "text": " 기준", "timestamp": 1791380118684}
+{"type": "text", "text": ":", "timestamp": 1791380118684}
+{"type": "text", "text": " 다른", "timestamp": 1791380118685}
+{"type": "text", "text": " 담당", "timestamp": 1791380118713}
+{"type": "text", "text": "자가", "timestamp": 1791380118713}
+{"type": "text", "text": " 카드", "timestamp": 1791380118714}
+{"type": "text", "text": "·", "timestamp": 1791380118741}
+{"type": "text", "text": "고", "timestamp": 1791380118742}
+{"type": "text", "text": "정", "timestamp": 1791380118743}
+{"type": "text", "text": " 설정", "timestamp": 1791380118812}
+{"type": "text", "text": "·", "timestamp": 1791380118846}
+{"type": "text", "text": "비", "timestamp": 1791380118846}
+{"type": "text", "text": "용", "timestamp": 1791380118847}
+{"type": "text", "text": " 근", "timestamp": 1791380118847}
+{"type": "text", "text": "거", "timestamp": 1791380118847}
+{"type": "text", "text": "만", "timestamp": 1791380118847}
+{"type": "text", "text": "으로", "timestamp": 1791380118848}
+{"type": "text", "text": " 같은", "timestamp": 1791380118858}
+{"type": "text", "text": " 블", "timestamp": 1791380118859}
+{"type": "text", "text": "록", "timestamp": 1791380118869}
+{"type": "text", "text": "과", "timestamp": 1791380118871}
+{"type": "text", "text": " 중", "timestamp": 1791380118885}
+{"type": "text", "text": "단", "timestamp": 1791380118912}
+{"type": "text", "text": " 규", "timestamp": 1791380118913}
+{"type": "text", "text": "칙", "timestamp": 1791380118930}
+{"type": "text", "text": "을", "timestamp": 1791380118948}
+{"type": "text", "text": " 재", "timestamp": 1791380118964}
+{"type": "text", "text": "현", "timestamp": 1791380118979}
+{"type": "text", "text": "할", "timestamp": 1791380118979}
+{"type": "text", "text": " 수", "timestamp": 1791380118981}
+{"type": "text", "text": " 있다", "timestamp": 1791380119199}
+{"type": "text", "text": ".\n\n", "timestamp": 1791380119200}
+{"type": "text", "text": "##", "timestamp": 1791380119201}
+{"type": "text", "text": " 미", "timestamp": 1791380119201}
+{"type": "text", "text": "검", "timestamp": 1791380119202}
+{"type": "text", "text": "증", "timestamp": 1791380119202}
+{"type": "text", "text": " 및", "timestamp": 1791380119202}
+{"type": "text", "text": " 인", "timestamp": 1791380119203}
+{"type": "text", "text": "계", "timestamp": 1791380119203}
+{"type": "text", "text": "\n\n", "timestamp": 1791380119203}
+{"type": "text", "text": "모", "timestamp": 1791380119203}
+{"type": "text", "text": "델", "timestamp": 1791380119204}
+{"type": "text", "text": " 별", "timestamp": 1791380119204}
+{"type": "text", "text": "칭", "timestamp": 1791380119204}
+{"type": "text", "text": "의", "timestamp": 1791380119205}
+{"type": "text", "text": " 실제", "timestamp": 1791380119205}
+{"type": "text", "text": " 버", "timestamp": 1791380119205}
+{"type": "text", "text": "전", "timestamp": 1791380119205}
+{"type": "text", "text": ",", "timestamp": 1791380119268}
+{"type": "text", "text": " CLI", "timestamp": 1791380119270}
+{"type": "text", "text": " 내부", "timestamp": 1791380119278}
+{"type": "text", "text": " 재", "timestamp": 1791380119279}
+{"type": "text", "text": "시", "timestamp": 1791380119279}
+{"type": "text", "text": "도", "timestamp": 1791380119280}
+{"type": "text", "text": ",", "timestamp": 1791380119283}
+{"type": "text", "text": " 제공", "timestamp": 1791380119309}
+{"type": "text", "text": "자", "timestamp": 1791380119319}
+{"type": "text", "text": " 사용", "timestamp": 1791380119330}
+{"type": "text", "text": "량", "timestamp": 1791380119330}
+{"type": "text", "text": "·", "timestamp": 1791380119374}
+{"type": "text", "text": "청", "timestamp": 1791380119379}
+{"type": "text", "text": "구", "timestamp": 1791380119379}
+{"type": "text", "text": " 자료", "timestamp": 1791380119422}
+{"type": "text", "text": ",", "timestamp": 1791380119422}
+{"type": "text", "text": " 입력", "timestamp": 1791380119452}
+{"type": "text", "text": " 토", "timestamp": 1791380119463}
+{"type": "text", "text": "큰", "timestamp": 1791380119464}
+{"type": "text", "text": " 상", "timestamp": 1791380119464}
+{"type": "text", "text": "한", "timestamp": 1791380119471}
+{"type": "text", "text": ",", "timestamp": 1791380119481}
+{"type": "text", "text": " relay", "timestamp": 1791380119482}
+{"type": "text", "text": " 요", "timestamp": 1791380119505}
+{"type": "text", "text": "금", "timestamp": 1791380119506}
+{"type": "text", "text": "·", "timestamp": 1791380119530}
+{"type": "text", "text": "지", "timestamp": 1791380119530}
+{"type": "text", "text": "연", "timestamp": 1791380119566}
+{"type": "text", "text": ",", "timestamp": 1791380119566}
+{"type": "text", "text": " 실행", "timestamp": 1791380119731}
+{"type": "text", "text": " 로그", "timestamp": 1791380119732}
+{"type": "text", "text": "는", "timestamp": 1791380119732}
+{"type": "text", "text": " 제공", "timestamp": 1791380119732}
+{"type": "text", "text": " 근", "timestamp": 1791380119732}
+{"type": "text", "text": "거", "timestamp": 1791380119733}
+{"type": "text", "text": "에서", "timestamp": 1791380119733}
+{"type": "text", "text": " 확인", "timestamp": 1791380119733}
+{"type": "text", "text": "되지", "timestamp": 1791380119734}
+{"type": "text", "text": " 않았다", "timestamp": 1791380119734}
+{"type": "text", "text": ".", "timestamp": 1791380119734}
+{"type": "text", "text": " 실제", "timestamp": 1791380119748}
+{"type": "text", "text": " 금", "timestamp": 1791380119748}
+{"type": "text", "text": "액", "timestamp": 1791380119777}
+{"type": "text", "text": " 상", "timestamp": 1791380119789}
+{"type": "text", "text": "한", "timestamp": 1791380119832}
+{"type": "text", "text": "은", "timestamp": 1791380119833}
+{"type": "text", "text": " 가격", "timestamp": 1791380119841}
+{"type": "text", "text": " 근", "timestamp": 1791380119841}
+{"type": "text", "text": "거", "timestamp": 1791380119842}
+{"type": "text", "text": "와", "timestamp": 1791380119843}
+{"type": "text", "text": " 승인", "timestamp": 1791380119843}
+{"type": "text", "text": " 예", "timestamp": 1791380119844}
+{"type": "text", "text": "산", "timestamp": 1791380119848}
+{"type": "text", "text": "이", "timestamp": 1791380119849}
+{"type": "text", "text": " 정", "timestamp": 1791380119876}
+{"type": "text", "text": "해", "timestamp": 1791380119876}
+{"type": "text", "text": "져", "timestamp": 1791380119974}
+{"type": "text", "text": "야", "timestamp": 1791380119976}
+{"type": "text", "text": " 채", "timestamp": 1791380119977}
+{"type": "text", "text": "울", "timestamp": 1791380119977}
+{"type": "text", "text": " 수", "timestamp": 1791380119978}
+{"type": "text", "text": " 있다", "timestamp": 1791380119978}
+{"type": "text", "text": ".", "timestamp": 1791380119978}
+{"type": "text", "text": " **", "timestamp": 1791380119979}
+{"type": "text", "text": "이번", "timestamp": 1791380120012}
+{"type": "text", "text": " 검", "timestamp": 1791380120032}
+{"type": "text", "text": "토", "timestamp": 1791380120032}
+{"type": "text", "text": "에서는", "timestamp": 1791380120033}
+{"type": "text", "text": " 유", "timestamp": 1791380120033}
+{"type": "text", "text": "료", "timestamp": 1791380120088}
+{"type": "text", "text": " 실행", "timestamp": 1791380120249}
+{"type": "text", "text": "을", "timestamp": 1791380120249}
+{"type": "text", "text": " 시작", "timestamp": 1791380120250}
+{"type": "text", "text": "하지", "timestamp": 1791380120250}
+{"type": "text", "text": " 않는다", "timestamp": 1791380120250}
+{"type": "text", "text": ".", "timestamp": 1791380120251}
+{"type": "text", "text": "**\n\n", "timestamp": 1791380120251}
+{"type": "text", "text": "고", "timestamp": 1791380120251}
+{"type": "text", "text": "정", "timestamp": 1791380120251}
+{"type": "text", "text": " 상", "timestamp": 1791380120252}
+{"type": "text", "text": "금", "timestamp": 1791380120252}
+{"type": "text", "text": "·", "timestamp": 1791380120252}
+{"type": "text", "text": "숨", "timestamp": 1791380120252}
+{"type": "text", "text": "은", "timestamp": 1791380120253}
+{"type": "text", "text": " 지", "timestamp": 1791380120253}
+{"type": "text", "text": "평", "timestamp": 1791380120256}
+{"type": "text", "text": "·", "timestamp": 1791380120256}
+{"type": "text", "text": "EXIT", "timestamp": 1791380120257}
+{"type": "text", "text": " 의미", "timestamp": 1791380120273}
+{"type": "text", "text": "는", "timestamp": 1791380120275}
+{"type": "text", "text": " `", "timestamp": 1791380120339}
+{"type": "text", "text": "game", "timestamp": 1791380120350}
+{"type": "text", "text": "-des", "timestamp": 1791380120365}
+{"type": "text", "text": "igner", "timestamp": 1791380120367}
+{"type": "text", "text": "`", "timestamp": 1791380120367}
+{"type": "text", "text": "와", "timestamp": 1791380120372}
+{"type": "text", "text": " `", "timestamp": 1791380120372}
+{"type": "text", "text": "construct", "timestamp": 1791380120376}
+{"type": "text", "text": "-a", "timestamp": 1791380120389}
+{"type": "text", "text": "ud", "timestamp": 1791380120404}
+{"type": "text", "text": "itor", "timestamp": 1791380120404}
+{"type": "text", "text": "`,", "timestamp": 1791380120423}
+{"type": "text", "text": " action", "timestamp": 1791380120462}
+{"type": "text", "text": "-filter", "timestamp": 1791380120492}
+{"type": "text", "text": " 우", "timestamp": 1791380120503}
+{"type": "text", "text": "회", "timestamp": 1791380120505}
+{"type": "text", "text": "는", "timestamp": 1791380120506}
+{"type": "text", "text": " `", "timestamp": 1791380120506}
+{"type": "text", "text": "beta", "timestamp": 1791380120512}
+{"type": "text", "text": "-t", "timestamp": 1791380120534}
+{"type": "text", "text": "ester", "timestamp": 1791380120535}
+{"type": "text", "text": "`,", "timestamp": 1791380120538}
+{"type": "text", "text": " 현재", "timestamp": 1791380120770}
+{"type": "text", "text": " 코드", "timestamp": 1791380120770}
+{"type": "text", "text": "와", "timestamp": 1791380120771}
+{"type": "text", "text": " 측", "timestamp": 1791380120771}
+{"type": "text", "text": "정", "timestamp": 1791380120775}
+{"type": "text", "text": " 지", "timestamp": 1791380120775}
+{"type": "text", "text": "표", "timestamp": 1791380120780}
+{"type": "text", "text": "의", "timestamp": 1791380120780}
+{"type": "text", "text": " 버", "timestamp": 1791380120780}
+{"type": "text", "text": "전", "timestamp": 1791380120781}
+{"type": "text", "text": " 정", "timestamp": 1791380120781}
+{"type": "text", "text": "합", "timestamp": 1791380120781}
+{"type": "text", "text": "성", "timestamp": 1791380120786}
+{"type": "text", "text": "은", "timestamp": 1791380120795}
+{"type": "text", "text": " `", "timestamp": 1791380120799}
+{"type": "text", "text": "metric", "timestamp": 1791380120863}
+{"type": "text", "text": "-", "timestamp": 1791380120870}
+{"type": "text", "text": "anal", "timestamp": 1791380120902}
+{"type": "text", "text": "yst", "timestamp": 1791380120917}
+{"type": "text", "text": "`", "timestamp": 1791380120939}
+{"type": "text", "text": "와", "timestamp": 1791380120950}
+{"type": "text", "text": " `", "timestamp": 1791380120957}
+{"type": "text", "text": "arena", "timestamp": 1791380120958}
+{"type": "text", "text": "-ver", "timestamp": 1791380120959}
+{"type": "text", "text": "ifier", "timestamp": 1791380120959}
+{"type": "text", "text": "`", "timestamp": 1791380120962}
+{"type": "text", "text": " 검", "timestamp": 1791380120962}
+{"type": "text", "text": "토", "timestamp": 1791380120969}
+{"type": "text", "text": " 대상", "timestamp": 1791380120970}
+{"type": "text", "text": "이다", "timestamp": 1791380120973}
+{"type": "text", "text": ".\n\n", "timestamp": 1791380120978}
+{"type": "text", "text": "##", "timestamp": 1791380121014}
+{"type": "text", "text": " 채", "timestamp": 1791380121057}
+{"type": "text", "text": "택", "timestamp": 1791380121116}
+{"type": "text", "text": "·", "timestamp": 1791380121116}
+{"type": "text", "text": "보", "timestamp": 1791380121117}
+{"type": "text", "text": "류", "timestamp": 1791380121117}
+{"type": "text", "text": " 권", "timestamp": 1791380121129}
+{"type": "text", "text": "고", "timestamp": 1791380121130}
+{"type": "text", "text": "\n\n", "timestamp": 1791380121130}
+{"type": "text", "text": "-", "timestamp": 1791380121131}
+{"type": "text", "text": " **", "timestamp": 1791380121131}
+{"type": "text", "text": "채", "timestamp": 1791380121131}
+{"type": "text", "text": "택", "timestamp": 1791380121139}
+{"type": "text", "text": " 권", "timestamp": 1791380121140}
+{"type": "text", "text": "고", "timestamp": 1791380121140}
+{"type": "text", "text": ":**", "timestamp": 1791380121298}
+{"type": "text", "text": " 온", "timestamp": 1791380121299}
+{"type": "text", "text": "보", "timestamp": 1791380121299}
+{"type": "text", "text": "딩", "timestamp": 1791380121300}
+{"type": "text", "text": " 카드", "timestamp": 1791380121300}
+{"type": "text", "text": ",", "timestamp": 1791380121300}
+{"type": "text", "text": " 호출", "timestamp": 1791380121301}
+{"type": "text", "text": "·", "timestamp": 1791380121301}
+{"type": "text", "text": "재", "timestamp": 1791380121301}
+{"type": "text", "text": "시", "timestamp": 1791380121301}
+{"type": "text", "text": "도", "timestamp": 1791380121302}
+{"type": "text", "text": " 상", "timestamp": 1791380121302}
+{"type": "text", "text": "한", "timestamp": 1791380121302}
+{"type": "text", "text": "식", "timestamp": 1791380121303}
+{"type": "text", "text": ",", "timestamp": 1791380121303}
+{"type": "text", "text": " 게임", "timestamp": 1791380121306}
+{"type": "text", "text": " 토", "timestamp": 1791380121312}
+{"type": "text", "text": "큰", "timestamp": 1791380121314}
+{"type": "text", "text": "과", "timestamp": 1791380121328}
+{"type": "text", "text": " 현", "timestamp": 1791380121344}
+{"type": "text", "text": "금", "timestamp": 1791380121349}
+{"type": "text", "text": " 청", "timestamp": 1791380121355}
+{"type": "text", "text": "구", "timestamp": 1791380121371}
+{"type": "text", "text": "의", "timestamp": 1791380121386}
+{"type": "text", "text": " 분", "timestamp": 1791380121400}
+{"type": "text", "text": "리", "timestamp": 1791380121401}
+{"type": "text", "text": ",", "timestamp": 1791380121416}
+{"type": "text", "text": " 결과", "timestamp": 1791380121441}
+{"type": "text", "text": " 전", "timestamp": 1791380121443}
+{"type": "text", "text": " 고", "timestamp": 1791380121451}
+{"type": "text", "text": "정", "timestamp": 1791380121465}
+{"type": "text", "text": "한", "timestamp": 1791380121480}
+{"type": "text", "text": " 모델", "timestamp": 1791380121497}
+{"type": "text", "text": "별", "timestamp": 1791380121513}
+{"type": "text", "text": "·", "timestamp": 1791380121513}
+{"type": "text", "text": "전체", "timestamp": 1791380121529}
+{"type": "text", "text": " 예", "timestamp": 1791380121546}
+{"type": "text", "text": "산", "timestamp": 1791380121552}
+{"type": "text", "text": " 상", "timestamp": 1791380121568}
+{"type": "text", "text": "한", "timestamp": 1791380121585}
+{"type": "text", "text": ",", "timestamp": 1791380121586}
+{"type": "text", "text": " 고", "timestamp": 1791380121601}
+{"type": "text", "text": "정", "timestamp": 1791380121619}
+{"type": "text", "text": " 최소", "timestamp": 1791380121639}
+{"type": "text", "text": " 비교", "timestamp": 1791380121640}
+{"type": "text", "text": " 블", "timestamp": 1791380121647}
+{"type": "text", "text": "록", "timestamp": 1791380121658}
+{"type": "text", "text": ".\n", "timestamp": 1791380121818}
+{"type": "text", "text": "-", "timestamp": 1791380121828}
+{"type": "text", "text": " **", "timestamp": 1791380121828}
+{"type": "text", "text": "보", "timestamp": 1791380121828}
+{"type": "text", "text": "류", "timestamp": 1791380121829}
+{"type": "text", "text": ":**", "timestamp": 1791380121829}
+{"type": "text", "text": " 실제", "timestamp": 1791380121829}
+{"type": "text", "text": " 파일", "timestamp": 1791380121829}
+{"type": "text", "text": "럿", "timestamp": 1791380121830}
+{"type": "text", "text": " 실행", "timestamp": 1791380121830}
+{"type": "text", "text": ",", "timestamp": 1791380121830}
+{"type": "text", "text": " 비용", "timestamp": 1791380121831}
+{"type": "text", "text": "·", "timestamp": 1791380121831}
+{"type": "text", "text": "순", "timestamp": 1791380121842}
+{"type": "text", "text": "위", "timestamp": 1791380121855}
+{"type": "text", "text": " 결", "timestamp": 1791380121856}
+{"type": "text", "text": "론", "timestamp": 1791380121870}
+{"type": "text", "text": ".", "timestamp": 1791380121886}
+{"type": "text", "text": " 모델", "timestamp": 1791380121911}
+{"type": "text", "text": " 버", "timestamp": 1791380121916}
+{"type": "text", "text": "전", "timestamp": 1791380121917}
+{"type": "text", "text": "·", "timestamp": 1791380121931}
+{"type": "text", "text": "청", "timestamp": 1791380121946}
+{"type": "text", "text": "구", "timestamp": 1791380121964}
+{"type": "text", "text": " 근", "timestamp": 1791380121978}
+{"type": "text", "text": "거", "timestamp": 1791380121997}
+{"type": "text", "text": "·", "timestamp": 1791380121998}
+{"type": "text", "text": "입", "timestamp": 1791380122011}
+{"type": "text", "text": "력", "timestamp": 1791380122030}
+{"type": "text", "text": " 상", "timestamp": 1791380122034}
+{"type": "text", "text": "한", "timestamp": 1791380122063}
+{"type": "text", "text": "을", "timestamp": 1791380122066}
+{"type": "text", "text": " 확인", "timestamp": 1791380122099}
+{"type": "text", "text": "하고", "timestamp": 1791380122134}
+{"type": "text", "text": " 실행", "timestamp": 1791380122142}
+{"type": "text", "text": " 예", "timestamp": 1791380122148}
+{"type": "text", "text": "산", "timestamp": 1791380122154}
+{"type": "text", "text": "을", "timestamp": 1791380122155}
+{"type": "text", "text": " 승인", "timestamp": 1791380122156}
+{"type": "text", "text": "받", "timestamp": 1791380122158}
+{"type": "text", "text": "기", "timestamp": 1791380122164}
+{"type": "text", "text": " 전", "timestamp": 1791380122181}
+{"type": "text", "text": "까지", "timestamp": 1791380122183}
+{"type": "text", "text": " 진행", "timestamp": 1791380122344}
+{"type": "text", "text": "하지", "timestamp": 1791380122344}
+{"type": "text", "text": " 않는다", "timestamp": 1791380122345}
+{"type": "text", "text": ".", "timestamp": 1791380122345}
+{"type": "result", "session_id": "20261007_223312_1aeffb", "exit_code": 0, "text": "arena-operator — 실험 비용·모델 온보딩\n\n상태: 제안·운영 검토. 제공된 발췌만 근거로 했으며, 파일 열람·수정·실험 실행은 하지 않았다.\n\n## 관찰과 해석\n\n관찰: 설정에는 모델별 CLI 경로와 `think`, timeout, 게임 호출 상한이 있지만 금액 예산이나 청구 기록은 없다. 엔진은 생성 토큰을 게임 잔액에서 차감한다.  \n해석: 현재 설정만으로 감당 가능한 실제 비용이나 모델 간 비용 비교를 입증할 수 없다. 아래 5개 항목을 파일럿 설계의 최소 변경안으로 제안한다.\n\n## 핵심 이슈 및 최소 변경\n\n1. **Critical — 온보딩 시 모델·실행 경로를 고정할 것**  \n   근거: `configs/squid5/e52v12_coop_smoke_mix4.yaml:39-45`  \n   관찰: 좌석마다 `claude_cli` 또는 `codex_cli`, 모델명, `think: high`, timeout이 지정돼 있다.  \n   최소 변경: 온보딩 카드에 실제 해석된 모델 버전, CLI·relay 버전과 경로, 추론 설정, 엔진 commit, config 식별자, 토큰 사용량의 의미를 기록한다.  \n   수용 기준: 모델 별칭만으로 실행을 식별하지 않고, 모든 항목이 기록되거나 미확인으로 표시된다.\n\n2. **Critical — 호출 상한·재시도·지연 기록을 사전 고정할 것**  \n   근거: `squid5/e52_game.py:289-329,331-368`; `configs/squid5/e52v12_coop_smoke_mix4.yaml:9-20`  \n   관찰: 호출은 에이전트별 한 번씩 동시 수행되며 TALK와 SOLVE에 별도 상한이 있다. 설정의 `workers`는 세션 병렬도이지 전체 호출 상한이 아니다.  \n   제안: 셀 수를 \\(C\\), 반복 수 \\(N\\), 좌석 수 \\(A\\), 라운드 수 \\(R\\), TALK 턴 상한 \\(K\\), 호출당 재시도 횟수 \\(q\\)라 하면,\n   \\[\n   \\text{호출 슬롯 상한}=C N A R(K+1),\\quad\n   \\text{제공자 시도 상한}=C N A R(K+1)(1+q).\n   \\]\n   파일럿에서는 자동 재시도를 끄고 실패를 실패로 기록한다. 지연은 각 TALK 턴의 병렬 호출 중 최장 지연과 SOLVE 최장 지연을 라운드별로 기록해 합산한다.  \n   수용 기준: 내부 재시도 여부·timeout 적용 범위·시도 ID를 확인하고, 단계별 지연·실패·재시도 횟수를 남긴다. 파싱 오류나 잘림은 조용히 재호출하지 않는다.\n\n3. **Critical — 게임 토큰과 실제 청구액을 분리할 것**  \n   근거: `CLAUDE.md:34,44`; `squid5/e52_game.py:277-328,473-480`  \n   관찰: 프로젝트의 `out_tokens`는 생각 토큰을 포함하며 게임 잔액 차감은 `min(out_tokens, cap, balance)`에 기반한다.  \n   최소 변경: 게임 자원 토큰과 제공자 사용량·청구액을 별도 필드로 기록한다. 실제 비용은 제공자 사용량 및 청구 근거로 계산하고, relay 비용과 구독형 고정 비용은 별도 항목으로 둔다. 예컨대 사용량 기반 비용은\n   \\[\n   C_{\\text{cash}}=\\sum_j(I_jp_{\\text{in}}+O_jp_{\\text{out}}+H_jp_{\\text{cached}}+F_j)\n   \\]\n   로 계산하고, 고정 비용 배분을 포함한다면 현금 청구액과 분리해 보고한다.  \n   수용 기준: 제공자 사용량·청구 기록과 요청을 대조한다. 자료가 없으면 실제 비용은 미측정으로 표시하고 `out_tokens`로 대체 추정하지 않는다.\n\n4. **Warning — 비교 예산과 공통 비교 단위를 결과 전에 고정할 것**  \n   근거: `configs/squid5/e52v12_coop_smoke_mix4.yaml:9-20,32-50`; `squid5/e52_game.py:253-256`  \n   관찰: 네 모델이 서로 다른 좌석과 provider 경로에 배치된 혼합 게임이다. 좌석별 상호작용 결과를 단일 모델 능력 차이로 해석할 수 없다.  \n   제안: 모든 후보에 같은 세션·시드·좌석 균형화 규칙과 동일한 게임 상한을 적용한다. 모델별 금액 상한 \\(B_i\\)를 같게 사전 지정하고, 전체 상한은 \\(\\sum_i B_i+\\text{공유 비용}\\le B_{\\text{승인}}\\)으로 둔다. 비용 상한에 걸리면 해당 비교 블록을 불완전으로 처리하고, 결과를 본 뒤 특정 모델만 추가 표집하지 않는다.  \n   수용 기준: 후보별 동일한 사전 지정 비교 블록이 완료됐거나, 미완료·중단 사유가 명시된다. 혼합 팀 결과는 cross-play로 표시한다.\n\n5. **Suggestion — 유지 가능한 소규모 파일럿으로 온보딩만 먼저 판정할 것**  \n   근거: `configs/squid5/e52v12_coop_smoke_mix4.yaml:9-20,39-50`; `CLAUDE.md:61-63`  \n   제안: 승인된 상한 안에서 고정된 최소 공통 비교 블록을 사전 지정한다. 온보딩 카드와 함께 세션별 비용, 지연, 유효 응답률, 실패 유형, 설정 시간을 기록한다. API/provider 실패는 행동 결과나 0점으로 치환하지 않고, 재실행은 별도 시도와 예산으로 기록한다. 이번 파일럿의 판정은 연결·설정·비용·지연의 실행 가능성에 한정하며 모델 순위나 심리적 결론을 내리지 않는다.  \n   수용 기준: 다른 담당자가 카드·고정 설정·비용 근거만으로 같은 블록과 중단 규칙을 재현할 수 있다.\n\n## 미검증 및 인계\n\n모델 별칭의 실제 버전, CLI 내부 재시도, 제공자 사용량·청구 자료, 입력 토큰 상한, relay 요금·지연, 실행 로그는 제공 근거에서 확인되지 않았다. 실제 금액 상한은 가격 근거와 승인 예산이 정해져야 채울 수 있다. **이번 검토에서는 유료 실행을 시작하지 않는다.**\n\n고정 상금·숨은 지평·EXIT 의미는 `game-designer`와 `construct-auditor`, action-filter 우회는 `beta-tester`, 현재 코드와 측정 지표의 버전 정합성은 `metric-analyst`와 `arena-verifier` 검토 대상이다.\n\n## 채택·보류 권고\n\n- **채택 권고:** 온보딩 카드, 호출·재시도 상한식, 게임 토큰과 현금 청구의 분리, 결과 전 고정한 모델별·전체 예산 상한, 고정 최소 비교 블록.\n- **보류:** 실제 파일럿 실행, 비용·순위 결론. 모델 버전·청구 근거·입력 상한을 확인하고 실행 예산을 승인받기 전까지 진행하지 않는다.", "tokens": {"input": 66627, "output": 9297, "total": 82836, "cache_read": 6912, "cache_write": 0}, "duration_ms": 130020, "timestamp": 1791380122513}

@@ -1,0 +1,189 @@
+{
+ "id": "P07",
+ "year": 2024,
+ "award": "Computational Modeling Prize – Applied Cognition",
+ "title": "Modality Matters: Evidence for the Benefits of Speech-Based Adaptive Retrieval Practice in Learners with Dyslexia",
+ "authors": [
+  "Thomas Wilschut",
+  "Florian Sense",
+  "Hedderik van Rijn"
+ ],
+ "affiliations": "Department of Experimental Psychology, University of Groningen, Groningen, The Netherlands (Wilschut, van Rijn); Infinite Tactics LLC, Dayton, OH, USA (Sense)",
+ "url_page": "https://escholarship.org/uc/item/57w2x9vr",
+ "url_pdf": "https://escholarship.org/content/qt57w2x9vr/qt57w2x9vr.pdf",
+ "pdf_source_note": "eScholarship (Proceedings of the 46th Annual Conference of the Cognitive Science Society, vol. 46, pp. 572-578; 8쪽 PDF = 표지 1 + 본문 7쪽). 이후 학술지판이 Topics in Cognitive Science 17(1), 2025에 실림 — 여기서는 쓰지 않음.",
+ "abstract_en": "Retrieval practice—the process of actively calling information to mind rather than passively studying materials—has been proven to be a highly effective learning strategy. However, only recently, researchers have started to examine differences between learners in terms of the optimal conditions of retrieval practice in applied educational settings. In this study (N = 118), we focus on learners with dyslexia: a group that is usually not included in the retrieval practice literature. We compare their performance to the performance of typical learners in an adaptive, retrieval practice-based word learning task using both typing-based and speech-based response conditions. We find that typical learners outperform learners with dyslexia when they are asked to respond by typing, but that this difference is much smaller when learners can respond by speech. These results can contribute to the development of educational technology that allows for effective and inclusive learning in neurodivergent individuals.",
+ "abstract_ko": "인출 연습(retrieval practice), 곧 자료를 수동적으로 공부하는 대신 정보를 능동적으로 떠올리는 과정은 매우 효과적인 학습 전략으로 입증되어 왔다. 그러나 응용 교육 현장에서 인출 연습의 최적 조건이 학습자마다 어떻게 다른지를 연구자들이 살피기 시작한 것은 최근의 일이다. 이 연구(N = 118)는 인출 연습 문헌에서 대개 다루지 않는 집단인 난독증(dyslexia) 학습자에 초점을 맞춘다. 우리는 타이핑 기반 응답 조건과 음성 기반 응답 조건을 모두 쓰는 적응형(adaptive) 인출 연습 기반 단어 학습 과제에서 이들의 수행을 일반 학습자(typical learners)의 수행과 비교한다. 그 결과, 타이핑으로 답하도록 했을 때는 일반 학습자가 난독증 학습자보다 수행이 높았지만, 음성으로 답할 수 있을 때는 이 차이가 훨씬 작았다. 이 결과는 신경다양성(neurodivergent) 학습자도 효과적이고 포용적으로 배울 수 있게 하는 교육 기술의 개발에 기여할 수 있다.",
+ "pages_body": 7,
+ "references_location": "p.7만(References 제목은 p.7 왼쪽 단 맨 위; 두 단, p.7의 ~85%). 본문은 p.6 아래에서 Conclusion으로 끝남.",
+ "extras": "Acknowledgments·부록 없음. 'Results' 제목에 붙은 각주 1(p.3): 분석 코드·데이터·자료는 OSF(https://osf.io/gxydk/). Methods 본문에 학습 앱(memorylab.nl/en/)과 Google speech API 링크. 각주 2(p.6, Discussion)는 천장 효과 가능성. p.1에 Proceedings 저작권/CC-BY 꼬리말.",
+ "words_body_total": 3716,
+ "words_note": "본문 합계에서 제목 블록, 초록(keywords 포함 154단어), 그림/표 캡션, 표 내용, 각주, 참고문헌(~845단어)은 뺌. pdftotext 일반 출력에서 캡션/표 줄 범위를 손으로 빼고 셈.",
+ "sections": [
+  {
+   "level": 1,
+   "title": "Introduction",
+   "page_start": 1,
+   "words": 1025,
+   "share": 0.276,
+   "children": []
+  },
+  {
+   "level": 1,
+   "title": "Methods",
+   "page_start": 2,
+   "words": 1222,
+   "share": 0.329,
+   "children": [
+    {
+     "level": 2,
+     "title": "Participants",
+     "page_start": 2,
+     "words": 154
+    },
+    {
+     "level": 2,
+     "title": "Design and Procedure",
+     "page_start": 2,
+     "words": 567,
+     "children": [
+      {
+       "level": 3,
+       "title": "(lead paragraph, before run-in headings)",
+       "page_start": 2,
+       "words": 90
+      },
+      {
+       "level": 3,
+       "title": "Learning blocks",
+       "page_start": 2,
+       "words": 318
+      },
+      {
+       "level": 3,
+       "title": "Test",
+       "page_start": 3,
+       "words": 105
+      },
+      {
+       "level": 3,
+       "title": "Questionnaire",
+       "page_start": 3,
+       "words": 54
+      }
+     ]
+    },
+    {
+     "level": 2,
+     "title": "Materials",
+     "page_start": 3,
+     "words": 139
+    },
+    {
+     "level": 2,
+     "title": "Adaptive item scheduling",
+     "page_start": 3,
+     "words": 208
+    },
+    {
+     "level": 2,
+     "title": "Analyses",
+     "page_start": 3,
+     "words": 154
+    }
+   ]
+  },
+  {
+   "level": 1,
+   "title": "Results",
+   "page_start": 3,
+   "words": 601,
+   "share": 0.162,
+   "children": [
+    {
+     "level": 2,
+     "title": "Performance during learning",
+     "page_start": 3,
+     "words": 476
+    },
+    {
+     "level": 2,
+     "title": "Test performance",
+     "page_start": 5,
+     "words": 125
+    }
+   ]
+  },
+  {
+   "level": 1,
+   "title": "Discussion",
+   "page_start": 6,
+   "words": 732,
+   "share": 0.197,
+   "children": []
+  },
+  {
+   "level": 1,
+   "title": "Conclusion",
+   "page_start": 6,
+   "words": 136,
+   "share": 0.037,
+   "children": []
+  }
+ ],
+ "figures": [
+  {
+   "n": 1,
+   "page": 2,
+   "size": "한 단(오른쪽), 단 높이 ~1/3; 학습 앱 화면 4칸 격자",
+   "section": "Methods > Design and Procedure"
+  },
+  {
+   "n": 2,
+   "page": 4,
+   "size": "전체 폭(두 단 걸침), ~0.3쪽; 패널 3개(정확도, RT, 망각 속도), 집단 x 양식별",
+   "section": "Results > Performance during learning"
+  },
+  {
+   "n": 3,
+   "page": 4,
+   "size": "전체 폭, ~0.35쪽; 연속형 난독증 설문 점수에 대한 산점도 패널 3개",
+   "section": "Results > Performance during learning"
+  },
+  {
+   "n": 4,
+   "page": 5,
+   "size": "전체 폭이지만 실제로는 폭의 ~절반만 씀, ~0.25쪽; 패널 2개(집단 x 양식별 검사 회상; 말하기−타이핑 이득)",
+   "section": "Results > Test performance"
+  }
+ ],
+ "tables": [
+  {
+   "n": 1,
+   "page": 2,
+   "size": "한 단(오른쪽 아래), 단의 ~1/8로 작음; 인구통계(N, 여성 N, 평균 연령, 국적 수)",
+   "section": "Methods > Participants (Learning blocks 옆에 배치)"
+  },
+  {
+   "n": 2,
+   "page": 5,
+   "size": "전체 폭, ~0.4쪽; 혼합효과모형 4개 전부(M1 정확도, M2 log RT, M3 망각 속도, M4 검사 정확도)",
+   "section": "Results"
+  }
+ ],
+ "observations": {
+  "intro_subheadings": false,
+  "related_work_section": false,
+  "experiments_as_top_level": false,
+  "experiments_note": "실험이 하나라 평평한 IMRaD 골격: Methods / Results / Discussion / Conclusion을 1단계 절로, 그 아래 2단계 하위 절('Experiment 1' 제목 없음).",
+  "final_section_name": "Conclusion (앞에 소제목 없는 Discussion이 옴)",
+  "final_section_subheadings": [],
+  "discussion_structure": "Discussion에 소제목 없음: 요약 문단, 'First,'(학습 단계 결과 — 예상 밖 정확도 결과와 그 가능한 원인), 'Second,'(검사 결과), 음성 받아쓰기 오류에 관한 실용적 한계 문단, 함의 문단('To our knowledge, we are the first...').",
+  "ends_with_conclusion_paragraph": true,
+  "model_description_location": "Methods 안 2단계 하위 절 'Adaptive item scheduling'(~208단어, p.3): ACT-R 기반 간격 알고리즘과 망각 속도(speed-of-forgetting) 모수를 말로 설명; 수식 없음. 이 모수(망각 속도)는 Results에서 종속변수(M3)로 다시 등장.",
+  "first_page_use": "제목 + 저자 3명/소속이 p.1의 ~22%; 초록(154단어 + keywords)이 왼쪽 단 ~1/3; Introduction은 왼쪽 단 중간에서 시작해 p.1 나머지(쪽 본문 영역의 약 2/3)를 채움. Introduction은 p.2 왼쪽 단 ~70% 지점까지 이어지고 Methods가 p.2에서 시작.",
+  "links": "OSF(코드·데이터·자료)는 p.3 'Results' 제목에 붙은 각주 1; 사전등록 언급 없음. 앱 URL과 Google speech API URL은 Methods 본문(p.2)."
+ },
+ "structure_summary_ko": "단일 실험 논문이라 1수준 절이 Introduction-Methods-Results-Discussion-Conclusion 다섯 개뿐인 평평한 IMRaD 구조다. 서론은 약 1,000단어(본문의 28%)로 길고 소제목 없이 다섯 문단(인출 연습과 적응형 학습 -> 난독증 정의·유병률 -> 난독증에서의 인출 연습 선행연구 -> 음성 모달리티가 유리할 이유 -> 이번 실험과 가설)으로 흘러가며, 가설을 서론 마지막 문단에 명시한다. Methods가 본문의 33%로 가장 크며 2수준 소제목 다섯 개(Participants, Design and Procedure, Materials, Adaptive item scheduling, Analyses)와 Design and Procedure 아래 run-in 3수준 셋을 둔다; 계산 모델(ACT-R 기반 일정 알고리즘)은 별도 절이 아니라 Methods 안 200단어 소절로 짧게 설명하고, 그 모델 파라미터(speed of forgetting)를 결과의 종속변수로 다시 쓰는 것이 이 논문의 '모델링' 연결고리다. Results(16%)는 그림 셋과 표 하나가 전폭으로 p.4-5를 차지해 글보다 그림이 결과를 운반하며, Discussion은 소제목 없이 'First/Second' 두 발견 + 한계(음성 인식 오류) + 함의로, 이어 한 문단짜리 Conclusion으로 끝난다. 참고문헌은 p.7 한 쪽에 들어가 본문 6쪽을 꽉 채운다.",
+ "text_pages": 6
+}

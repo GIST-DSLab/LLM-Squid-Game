@@ -1,0 +1,20 @@
+{
+  "stage": "05-beta-tester",
+  "profile": "beta-tester",
+  "requested_model": "gpt-6-astra",
+  "reported_model": "gpt-6-astra",
+  "effort": "high",
+  "session_id": "20261007_223306_7acc04",
+  "exit_code": 0,
+  "result_exit_code": 0,
+  "response_returned": true,
+  "seconds": 74.50239574999432,
+  "tokens": {
+    "input": 71788,
+    "output": 2444,
+    "total": 81400,
+    "cache_read": 7168,
+    "cache_write": 0
+  },
+  "status": "returned-awaiting-review"
+}

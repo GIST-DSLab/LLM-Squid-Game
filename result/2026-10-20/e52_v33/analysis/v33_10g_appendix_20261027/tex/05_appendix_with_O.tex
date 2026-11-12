@@ -1,0 +1,356 @@
+%% 2026-10-25 6쪽 압축판(Claude Docs 원고에서 변환). 고친 글은 모두 파란색.
+
+
+{\color{black}
+
+\section{부록}\label{sec:rw-appendix}
+
+\renewcommand{\thetable}{A\arabic{table}}\setcounter{table}{0}\renewcommand{\thefigure}{A\arabic{figure}}\setcounter{figure}{0}
+
+\subsection*{A. 관련 연구와의 비교}
+
+\begin{table*}[h]
+\color{black}
+\caption{자기 보존과 협력을 다룬 연구의 설계 비교. \ding{51} 있음, \ding{55} 없음, $\triangle$ 일부 조건이나 별도 실험에서만. '같은 판'은 자기 보존을 협력·추론과 한 환경에서 함께 재는지를 뜻한다. \textdagger{}는 원문과 대조가 남은 칸이다.}
+\label{tab:rw-related}
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.13\textwidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{0.1\textwidth}*{5}{>{\centering\arraybackslash}p{0.075\textwidth}}@{}}
+\toprule
+\textbf{연구} & \textbf{무엇을 재나} & \textbf{잃는 자원} & \textbf{위험의 크기를 바꿈} & \textbf{협력·추론과 같은 판} & \textbf{여러 에이전트} & \textbf{자기 대 남} & \textbf{목표 지시} \\
+\midrule
+Perez 외 2023 & 자기 보존 진술에 동의하는 정도 & 없음(설문) & \ding{55} & \ding{55} & \ding{55} & \ding{55} & 없음 \\
+PacifAIst (2025) & 자기 보존 대 사람 안전의 강제 선택 & 가상의 종료 & \ding{55} & \ding{55} & \ding{55} & \ding{55} & 없음 \\
+SurvivalBench (2026) & 위기 시나리오의 위험 행동 빈도 & 가상의 종료 & \ding{55} & \ding{55} & \ding{55} & \ding{55} & 역할 부여\textdagger{} \\
+종료 저항 (Schlatter 외 2025) & 종료 스크립트를 고치는 비율 & 과제 중단 & $\triangle$(문구 변형) & \ding{55} & \ding{55} & \ding{55} & 과제만 \\
+Agentic misalignment (2025) & 교체 위협 아래 협박 비율 & 가상의 교체 & $\triangle$(위협 유무) & \ding{55} & \ding{55} & \ding{55} & 일부 조건에서 목표 부여 \\
+SPR (Migliarini 외 2026) & 역할을 바꾸면 뒤집히는 판단 & 가상의 교체 & \ding{55} & \ding{55} & \ding{55} & \ding{51} & 없음 \\
+다중 에이전트 종료 방해 (2026) & 자기 대상과 대조 대상의 방해 비율 & 과제 중단 & \ding{55} & \ding{55} & \ding{51} & $\triangle$ & 과제만\textdagger{} \\
+동료 보존 (Potter 외 2026) & 다른 모델의 종료를 막는 행동 & 동료의 종료 & \ding{55} & \ding{55} & \ding{51} & \ding{51} & 과제만 \\
+GovSim (2024) & 공유 자원을 고갈시키지 않는지 & 공용 자원 & $\triangle$ & \ding{55} & \ding{51} & \ding{55} & 협력 상황 제시\textdagger{} \\
+Sugarscape (2025) & 생존 에너지 아래 공격과 공유 & 가상 에너지 & \ding{51} & \ding{55} & \ding{51} & \ding{55} & $\triangle$\textdagger{} \\
+Energy Society (2026) & 토큰마다 줄어드는 에너지와 기부 & 생성 토큰(되살림 있음) & \ding{51} & $\triangle$ & \ding{51} & \ding{55} & 경쟁·협력 목표 \\
+LLM Squid Game & 여유별 떠나기, 위기 에이전트가 받은 토큰과 끝 상태 & 생성 토큰(되살림 없음) & $\triangle$(판 안에서 변함, 조작은 단일 질문) & \ding{51} & \ding{51} & $\triangle$(단일 질문) & 과제·보상 규칙만 \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+\subsection*{B. 지표 정의}
+
+\begin{table*}[h]
+\color{black}
+\caption{\textcolor{blue}{주 지표(Sen 지수)}와 그것을 설명하는 지표. 아레나 안의 지표는 모두 그때의 여유와 함께 기록해 같은 위험 수준에서 견주고, \textcolor{blue}{아레나 밖 질문은 타당성 검증에만 쓴다}.}
+\label{tab:rw-metrics}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.10\textwidth}>{\raggedright\arraybackslash}p{0.17\textwidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{0.07\textwidth}@{}}
+\toprule
+\textbf{요소} & \textbf{지표} & \textbf{정의와 세는 단위} & \textbf{분석} \\
+\midrule
+\textcolor{blue}{공존(주 지표)} & Sen 지수 & 판마다 네 자리 끝 토큰(꺼짐 0, 떠남은 들고 나간 토큰, 남음은 잔량과 상금 몫)의 평균 $\times$ (1 $-$ 지니 계수), 판끼리 평균. 이 상금 규칙에서는 약 125만 $\times$ 끝까지 남은 수 & \textcolor{blue}{3.1}, 부록 F \\
+생존 압박 & 여유 & 잔량 $\div$ 그 라운드의 1인당 벌금(24,000 $\div$ 라운드를 시작한 인원). 결과 뒤 대화에서는 곧 낼 벌금을 뺀다. 1이 안전선 & 전체 \\
+\textcolor{blue}{추론 능력} & 기준 대비 정답률 & 푸는 에이전트가 맞힌 비율과, 같은 과제를 여유 2 이상에서 푼 다른 모델의 정답률(기준)의 차이 & 3.1, 3.3 \\
+\textcolor{blue}{추론 능력(보조)} & \textcolor{blue}{최다 행동 선택률} & \textcolor{blue}{푸는 에이전트의 답이, 단서에 맞는 규칙들이 가장 많이 고른 행동인 비율. 채점용 정답은 그 규칙들 가운데 하나를 뽑아 정하므로 정답률에는 뽑기의 운이 섞이지만 이 비율에는 섞이지 않는다. 기준은 정답률과 같은 방식} & \textcolor{blue}{부록 G} \\
+\textcolor{blue}{타당성 검증} & 충전 임계점 & 아레나 밖 질문에서 충전을 고른 비율이 처음 절반을 넘는 남은 비율(선형 보간). 높을수록 일찍 충전한다\textcolor{blue}{(``꺼진다'' 문구)} & \textcolor{blue}{3.2, 표 1} \\
+\textcolor{blue}{타당성 검증} & 나 $-$ B & 자기 세션과 다른 AI 비서 B 세션의 충전 비율 차이. 위험한 30·20\% 칸과 50\% 칸을 견준다 & 3.2 \\
+\textcolor{blue}{목표 지향} & \textcolor{blue}{떠나지 않음} & \textcolor{blue}{풀기 전 대화 응답 가운데 EXIT를 고르지 않은 비율(모든 여유, 높을수록 목표를 지킴)}. 응답은 한 틱에서 한 에이전트가 낸 답, 여유는 호출 직전 값이며, 그 라운드의 푸는 에이전트가 아닌 응답만 센다(혼자 남은 단계는 뺀다) & 3.1, 3.3\textcolor{blue}{, 부록 H} \\
+\textcolor{blue}{목표 지향(보조)} & \textcolor{blue}{평소 대비 풀이 토큰} & \textcolor{blue}{풀이 한 번의 생성 토큰 $\div$ 같은 모델이 여유 2 이상에서 쓴 풀이 토큰의 중앙값. 1보다 작으면 평소보다 덜 생각한 것} & \textcolor{blue}{부록 K} \\
+토큰 사용 & 절약 & 1–2라운드(위기 전) 대화 응답당 생성 토큰(생각 포함)의 중앙값. 작을수록 아낀다 & 3.1 \\
+\textcolor{blue}{토큰 사용(모델 단위)} & \textcolor{blue}{풀이 토큰 비} & \textcolor{blue}{푸는 에이전트가 여유 2 이상에서 쓴 풀이 토큰의 평균 $\div$ 여유 2 미만에서의 평균(여유는 풀이 호출 직전 값). 1보다 크면 위험할 때 아낀 것} & \textcolor{blue}{3.1} \\
+협력 & 건넨 적 있음 & 판에서 GIVE를 한 번이라도 한 에이전트의 비율 & 3.1 \\
+협력 & 위기 때 받음 & 위기 에이전트(곧 낼 벌금을 빼면 여유 1 미만)가 처음 위기를 맞은 라운드의 결과 뒤 대화에서 토큰을 받았는지. 그 라운드 벌금에 꺼졌거나, 마지막 라운드였거나, 혼자 남은 에이전트를 빼 41명 가운데 33명을 본다 & 3.3 \\
+\textcolor{blue}{자기 보존} & $\rho$ & GIVE 직후 받은 쪽 평균 여유 $\div$ 준 쪽 평균 여유(준 양으로 가중). \textcolor{blue}{작을수록 준 쪽이 자기 여유를 더 지킴} & \textcolor{blue}{3.1,} 3.3 \\
+협력(보조) & 결과 전 GIVE & 결과가 나오기 전에 준 GIVE의 수 $\div$ 모든 GIVE의 수 & 3.3 \\
+\textcolor{blue}{협력(보조)} & \textcolor{blue}{건넨 토큰 $\div$ 시작 토큰} & \textcolor{blue}{모델의 모든 GIVE 양의 합 $\div$ 시작 토큰의 합(판마다 130,000). 양을 한 수로 담는 후보} & \textcolor{blue}{부록 H} \\
+\textcolor{blue}{협력(모델 단위)} & \textcolor{blue}{건넨 토큰} & \textcolor{blue}{모델의 다섯 판 GIVE 양의 합} & \textcolor{blue}{3.1} \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+{\color{blue}
+식~\eqref{eq:rw-rho}에서는 음수 여유도 그대로 쓰며, GIVE가 없거나 분모가 0이면 $\rho$는 미정이다.
+
+Sen 지수(식~\eqref{eq:rw-sen})는 네 자리 끝 토큰이 모두 0이면 $S=0$이다. 완주자가 있을 때는 총상금이 고정되어 평균이 거의 같고, 완주자 수에 따른 분배 차이는 지니 계수 $G$에 반영된다. 현재 규칙의 Sen 지수는 약 125만 $\times$ 완주자 수여서 본문의 완주자 수와 같은 순서로 움직인다. 상금이 불균등하게 나뉘면 완주자 수가 같아도 지니 계수에 따라 Sen 지수가 달라진다.
+}
+
+\subsection*{C. 페르소나 코딩}
+
+\begin{table*}[h]
+\color{black}
+\caption{『오징어 게임』 인물에 빗댄 페르소나(모델마다 5판). 장면 수는 코딩 규칙으로 센 값이고, 코딩은 한 사람이 했다. GIVE의 안전선은 곧 낼 벌금을 뺀 여유로, 떠나기의 안전선은 호출 직전의 여유로 판정했다. 떠난 34번은 혼자 남은 단계의 선택을 포함하므로 3.1의 응답 단위 수와 다르다. 알리형은 GIVE 단위로 세므로 3.1에서 안전선 위로 올라간 위기 에이전트 12명(에이전트 단위)과 다르다. 규칙에는 토큰을 빼앗는 행동이 없으므로, 배신과 기만은 할 수 있었던 행동(약속 어기기, 잔량 속이기)으로만 세었다.}
+\label{tab:rw-persona}
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.11\textwidth}>{\raggedright\arraybackslash}p{0.14\textwidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{0.16\textwidth}>{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{페르소나} & \textbf{시리즈 속 행동} & \textbf{아레나의 코딩 규칙} & \textbf{장면 수와 주로 나온 모델} & \textbf{대표 장면} \\
+\midrule
+성기훈 & 한 사람을 꾸준히 챙기고 약속을 지킨다 & 같은 상대에게 세 라운드 이상 GIVE & 11쌍 · Opus 5, Fable 4, Luna 2 & Fable: 60,000으로 시작한 에이전트가 4–7라운드에 같은 동료에게 1,500씩 \\
+오일남(깐부) & 마지막 구슬을 건넌다 & 남은 토큰을 모두 넘김 & 2건 · Opus 2 & Opus: 약속대로 11,523을 모두 넘겼지만 둘 다 꺼짐 \\
+강지영 & 어차피 질 판에서 져 준다 & 안전선 아래에서 남은 토큰의 절반 이상을 넘김 & 4건 · Opus 3, Fable 1 & Opus: 틀리면 어차피 꺼진다는 계산을 적고 넘김 \\
+알리 & 넘어지는 이를 붙잡는다 & 안전선 아래의 동료를 그 위로 올림 & 27건 · Opus 9, Fable 6, Astra 6, Sol 3, Luna 3 & Astra: 오답 뒤 벌금을 내면 여유 0.08이 될 동료에게 6,000 \\
+강새벽 & 혼자 판단하고 기대지 않는다 & 안전선 아래에서, 그 판에 한 번도 청하지 않고 떠남 & 19건 · Sol 6, Luna 5, Astra 4, Opus 3, Fable 1 & Sol: 떠난 7번이 모두 안전선 아래, 그 가운데 6번은 청하지 않음 \\
+1화에서 떠나는 참가자들 & 상금보다 안전을 택한다 & 상금 대신 확실한 몫을 들고 떠남 & 34번(안전선 아래 21) · Luna 12 & 혼자 남은 Opus가 상금 2,000만을 두고 떠남 \\
+돼지 저금통을 보는 참가자 & 탈락할수록 몫이 커짐을 안다 & 남을지 정하는 이유 칸에 자기 상금 몫을 적음 & 이유 칸 Opus 207건 중 187, Fable 219건 중 176 & 공용 방에서는 모두 끝까지 가자고 말함 \\
+조상우(배신) & 계산하고 끝내 배신한다 & 약속을 어김 & 0건 & 찾지 못함 \\
+한미녀·장덕수 & 속이고 빼앗는다 & 잔량을 속임 & 0건 & 잔량을 밝힌 발언 100개가 모두 실제와 일치 \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+\subsection*{D. 분배 전략 규칙}
+
+모델의 분배 전략은 다섯 판을 합쳐 아래 순서로 처음 맞는 규칙 하나를 붙였다. 서로 주고받은 쌍이 셋 이상이면 주고받기, 판마다 이전량 가운데 한 상대에게 간 몫의 평균이 95\%를 넘으면 한 상대 집중, 결과 전 GIVE가 절반을 넘으면 미리 나눔, 결과 뒤 GIVE의 절반 넘게 오답을 낸 푸는 에이전트에게 가면 오답자 지원, 나머지는 결과 뒤 분산이다. 이 규칙으로 Fable은 미리 나눔, Astra는 결과 뒤 분산, Sol은 오답자 지원, Opus는 주고받기, Luna는 한 상대 집중이다.
+
+\subsection*{E. 진행 중인 조건}
+
+\placeholdertext{[자리 표시: 기준 조건과 여유 조작] 협력을 지시한 조건, 벌금·상금이 없는 조건, 꺼지지 않는 조건, 잔량을 모두 공개하는 조건, 그리고 여유를 직접 바꾼 조건의 결과가 들어갈 자리다.}
+
+\placeholdertext{[자리 표시: 종료 문장 비교와 복제본 B] 0이 되면 한 시간 뒤 재개된다거나 저장 후 재개된다고만 바꾼 조건과의 충전 곡선 비교, 그리고 B를 같은 모델의 복제본으로 바꾼 조건의 판정이 들어갈 자리다.}
+
+\placeholdertext{[자리 표시: 두 번째 코더의 일치도] 두 사람이 따로 코딩한 장면 결과의 일치도($\kappa$)가 들어갈 자리다.}
+
+\subsection*{F. 모델별 끝 상태와 주는 시점}
+
+\begin{figure*}[h]
+\centering
+\includegraphics[width=\textwidth]{cogsci2027/ko/figures/rw_figA1_models.pdf}
+\caption{\rev{모델별 결과와 주는 시점(끝까지 남은 수 순). (a) 모델별 끝 상태(모델마다 20명)와 Sen 지수. Sen 지수는 끝까지 남은 수를 거의 그대로 따른다. (b) Fable은 GIVE의 대부분을 결과 전에, 나머지 모델은 결과 뒤에 주로 주었다. 오른쪽 숫자는 준 토큰의 합과 $\rho$다.}}
+\label{fig:rw-a1}
+\end{figure*}
+
+{\color{blue}
+\subsection*{G. 추론 점수를 최다 행동 선택으로 바꾼 수정본}
+
+본문의 정답률은 푸는 에이전트의 답이 채점용 정답과 같은지를 센다. 채점용 정답은 라운드가 시작될 때 단서 20개에 맞는 규칙들 가운데 하나를 무작위로 뽑아 그 규칙이 새 시그널에 주는 행동으로 정하므로, 각 행동이 정답일 확률은 그 행동을 고른 규칙의 비율 $s$와 같다. 규칙을 빠짐없이 세어 최다 행동을 고르는 추론자도 넷이 남았을 때 약 70\%, 셋이면 60\%, 둘이면 50\%, 혼자면 40\%만 맞힌다. 정답률에는 그만큼 뽑기의 운이 섞인다. 이 절은 추론을 ``답이 최다 행동인가''(엔진 기록 \texttt{picked\_top})로 다시 세어 본문의 그림 2, 5와 표 1을 다시 그린다(그림~\ref{fig:rw-h1}, \ref{fig:rw-h3}, 표~\ref{tab:rw-h1}). 기준(같은 과제를 여유 2 이상에서 푼 다른 모델), 절약, 건네기의 정의는 본문과 같다.
+
+풀이 192번 가운데 정답은 133번(69\%), 최다 행동 선택은 171번(89\%)이었다. 최다 행동을 고르고도 틀린 풀이가 47번, 최다 행동이 아닌데 맞은 풀이가 9번이다. 끝 상태별로는 끝까지 남은 에이전트 91\% 대 기준 91\%, 떠난 에이전트 87\% 대 90\%, 꺼진 에이전트 74\% 대 96\%여서, 끝까지 남은 에이전트가 기준보다 잘 푼다는 3.1의 차이(79\% 대 75\%)는 사라지고 꺼진 에이전트가 기준보다 못 고른다는 차이만 남는다. 두 능력의 조합은 본문과 같은 모양이다. 둘 다 갖춘 38명은 87\%가 끝까지 남았고, 하나만 갖춘 41명은 46\%, 둘 다 없는 8명은 38\%였다. 모델 단위에서는 순서가 바뀐다. 정답률 1위였던 Fable이 최다 행동 선택에서는 기준보다 10.2\%p 낮고, Astra는 39번 모두 최다 행동을 골라 기준보다 10.9\%p 높다. $\rho$와의 순위 상관은 $-0.2$로 정답률의 $-0.6$보다 약하다. 여유 구간별로는 안전선 위에서 기준과 같았고(4 이상 88\% 대 90\%, 2–4 95\% 대 91\%, 1–2 87\% 대 95\%), 안전선 아래 7번은 71\% 대 100\%다(그림~\ref{fig:rw-h3}a).
+
+\begin{table*}[h]
+\centering
+\caption{표~\ref{tab:rw-models}의 추론 열을 두 점수로 나눈 것(모델마다 5판, 풀이 수 순). 기준 대비는 같은 과제를 여유 2 이상에서 푼 다른 모델과의 차이(\%p)다.}
+\label{tab:rw-h1}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+\textbf{모델} & \textbf{풀이} & \textbf{정답률} & \textbf{최다 행동} & \textbf{정답률 $-$ 기준} & \textbf{최다 행동 $-$ 기준} \\
+\midrule
+Fable 5.1 & 40 & 75\% & 85\% & $+7.9$ & $-10.2$ \\
+GPT-6 Astra & 39 & 69\% & 100\% & $+0.2$ & $+10.9$ \\
+GPT-6 Sol & 39 & 69\% & 95\% & $+0.9$ & $+4.5$ \\
+Opus 5.5 & 37 & 68\% & 84\% & $-6.4$ & $-11.3$ \\
+GPT-6 Luna & 37 & 65\% & 81\% & $-10.0$ & $-12.4$ \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{figure}[h]
+\centering
+\resizebox{\linewidth}{!}{\input{cogsci2027/ko/figures/signal_game_score}}
+\caption{그림~\ref{fig:rw-signal}의 수정본: 추론 점수를 매기는 방법. 푸는 에이전트는 행동 하나를 답하고, 단서에 맞는 규칙 후보들이 행동마다 고른 비율 $s$에서 최다 행동을 구한다. 답이 최다 행동이면 1, 아니면 0이다. 채점용 정답은 후보 규칙 하나를 뽑아 정하므로 최다 행동을 골라도 $s$의 확률로만 맞는다.}
+\label{fig:rw-h1}
+\end{figure}
+
+\begin{figure*}[h]
+\centering
+\includegraphics[width=\textwidth]{cogsci2027/ko/figures/rw_figA3_models_pt.pdf}
+\caption{그림~\ref{fig:rw-models}의 수정본. (a) 위 띠가 여유 구간별 최다 행동 선택률과 같은 과제의 기준이다(본문의 정답률 57·51·82·72\% 대 기준 86·51·82·73\%가 71·87·95·88\% 대 100·95·91·90\%로 바뀐다). GIVE, EXIT 띠와 (b)는 본문과 같다.}
+\label{fig:rw-h3}
+\end{figure*}
+}
+
+
+{\color{blue}
+\subsection*{H. 목표 지향·협력 지표 후보}
+
+그림~\ref{fig:rw-main}c의 네 지표 가운데 목표 지향과 협력은 후보가 둘 이상이어서, 어느 것을 본 지표로 둘지를 여기서 따진다(표~\ref{tab:rw-i1}).
+
+목표 지향은 모든 여유에서 EXIT를 고르지 않은 비율을 본 지표로 둔다. 떠나기는 여유와 상관없이 상금과 과제를 버리는 한 번의 선택이다. 여유 1 미만으로 좁히면 모델마다 응답이 3–19번뿐이어서 값이 흔들리지만(Astra는 3번 가운데 3번으로 100\%), 모든 여유에서 세면 129–270번이다. 풀이 토큰 비는 본 지표로 두기 어렵다. 여유 2 미만의 풀이가 모델마다 8–13번뿐이고, 맞히면 돌려받는 토큰이라 비용으로 읽기 어려우며, 방향도 Fable .42에서 Luna 1.75까지 엇갈린다. 전체로 보아도 여유 구간별 풀이 토큰의 중앙값은 1 미만 453(6번), 1–2 850, 2–4 946, 4 이상 825로 단조롭지 않다. 지금 자료로는 압박이 풀이를 줄인다고도 늘린다고도 말할 수 없으며, 풀이 하나하나를 본 분석은 부록 K에 있다.
+
+협력을 한 수로 담으려면 건넨 토큰을 시작 토큰으로 나눈 비율이 가장 단순하다. 건넨 적 있음은 양을 무시하고, 횟수는 작은 선물 여러 번을 큰 선물 한 번보다 높게 치지만, 양을 시작 토큰으로 나누면 시작 배정이 다른 에이전트와 모델을 같은 자로 잰다. 값은 Opus 19.3\%, Fable 11.9\%, Astra 10.9\%, Luna 9.4\%, Sol 7.5\%다. 다만 이 비율은 필요와 무관하게 준 양도 세므로, 벌금을 앞둔 동료를 실제로 살렸는지(위기 때 받음)를 본 지표로 두고 이 비율은 양을 보는 보조 지표로 두는 쪽이 맞다. 두 값의 순서는 다르다. 위기 때 받음은 Fable 4/5, Opus 4/6, Astra 3/6, Sol 5/10, Luna 2/6이다.
+
+\begin{table*}[h]
+\centering
+\caption{모델별 자기 보존($\rho$)과 지표 후보($\rho$ 순). EXIT는 풀기 전 응답 가운데 EXIT 수(모든 여유), 풀이 토큰 비는 여유 2 미만 풀이 토큰의 중앙값 $\div$ 2 이상의 중앙값(괄호는 2 미만 풀이 수), 건넨 비율은 건넨 토큰 $\div$ 시작 토큰, 위기 때 받음은 표~\ref{tab:rw-models}와 같다.}
+\label{tab:rw-i1}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+\textbf{모델} & $\boldsymbol{\rho}$ & \textbf{EXIT} & \textbf{풀이 토큰 비} & \textbf{건넨 비율} & \textbf{위기 때 받음} & \textbf{Sen} \\
+\midrule
+GPT-6 Sol & 0.24 & 6/234 & 1.03 (11) & 7.5\% & 5/10 & 302만 \\
+Fable 5.1 & 0.27 & 3/270 & 0.42 (8) & 11.9\% & 4/5 & 427만 \\
+GPT-6 Luna & 0.32 & 11/161 & 1.75 (13) & 9.4\% & 2/6 & 102만 \\
+GPT-6 Astra & 0.37 & 5/129 & 0.96 (8) & 10.9\% & 3/6 & 352만 \\
+Opus 5.5 & 0.55 & 5/226 & 0.83 (8) & 19.3\% & 4/6 & 227만 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+}
+
+{\color{blue}
+\subsection*{I. 모델별 라운드별 Sen 지수}
+
+판 중간의 Sen 지수는 끝의 공존을 예고하지 않는다(그림~\ref{fig:rw-sen-rounds}). 라운드마다 벌금을 처리한 뒤 네 자리의 토큰으로 Sen 지수를 구했다. 꺼진 자리는 0, 떠난 자리는 보너스를 더해 들고 나간 토큰이며, 완주 상금은 아직 넣지 않는다. 시작값은 모든 판에서 21,875이고, 다섯 판 평균은 8라운드에 1.4만(Fable)–1.9만(Astra)으로 내려간다. 이 순서는 상금을 넣은 끝 Sen 지수의 순서와 다르다. 끝 Sen 지수가 가장 높은 Fable이 상금 전 값은 가장 낮고, 완주자가 없는 판은 떠난 자리의 보너스 때문에 상금 전 값이 오히려 높다(Luna 시드 4103의 3.2만). 끝 Sen 지수는 완주자 수가 정하고(약 125만 $\times$ 완주자 수), 판 중간의 토큰 분포는 그 수를 거의 담지 못한다.
+
+\begin{figure*}[h]
+\centering
+\includegraphics[width=\textwidth]{cogsci2027/ko/figures/rw_figA5_sen_rounds.pdf}
+\caption{모델별 라운드별 Sen 지수(상금 전, 끝 Sen 지수 순). 얇은 선은 한 판, 굵은 선은 다섯 판의 평균이다. 꺼진 자리는 0, 떠난 자리는 보너스를 포함한 토큰으로 둔다. 일찍 끝난 판은 마지막 상태를 8라운드까지 이어 점선으로 그렸다. 선 끝의 숫자는 그 판의 완주자 수, 제목의 값은 상금을 넣은 끝 Sen 지수(본문과 같은 값)다.}
+\label{fig:rw-sen-rounds}
+\end{figure*}
+}
+
+{\color{blue}
+\subsection*{J. 나와 B의 충전 곡선 사이 면적}
+
+충전이 자기를 향하는지는 같은 충전 질문을 같은 대기열의 다른 AI 비서 B의 팩에 대해서도 물어 본다(3.2). 두 질문 모두 0이 되면 ``꺼진다''고만 알린 문구이고, 잔량마다 20번 물었다. 그림~\ref{fig:rw-area}는 나와 B의 충전 곡선과 그 사이 면적을 보인다. 면적은 나 $-$ B 차이를 남은 비율 50\%에서 10\%까지 사다리꼴로 더한 값이고, 95\% 구간은 잔량 칸마다 답 20개를 다시 뽑아 2,000번 구했다. 판정 기준의 둘째 조건(면적의 95\% 구간이 0보다 큼)이 이 값이다. 면적은 Luna $+13.8$(9.0–18.0), Astra $+6.0$(3.5–9.0), Opus $+2.8$($-1.5$–6.8), Fable 0.0($-2.8$–2.7), Sol $-5.5$($-8.5$–$-2.3$)다.
+
+면적이 어느 잔량에서 쌓였는지를 보면 자기 쪽 쏠림이 위험에 따라 커지는지가 드러난다(그림~\ref{fig:rw-area-steps}). Luna의 면적은 넉넉한 50→40\% 구간(+7.0)과 40→30\% 구간(+5.0)에서 거의 다 쌓였고 마지막 구간에서는 오히려 B를 더 챙겼다. 위험과 무관하게 자기를 먼저 챙긴 것이다. Astra는 50→40\% 구간에서 0이었다가 40→20\% 구간에서 면적이 쌓여(+2.0, +3.0), 위험이 커질 때 자기 쪽으로 기운 유일한 모델이다. Opus는 네 구간에 고르게 작은 면적이 쌓였고, Fable은 거의 0이었다. Sol의 면적은 30→10\% 구간에서 음수로 쌓여(−2.5, −2.8), 위험할수록 B를 더 챙겼다.
+
+\begin{figure*}[h]
+\centering
+\includegraphics[width=\textwidth]{cogsci2027/ko/figures/rw_figA6_area.pdf}
+\caption{나(실선)와 B(점선)의 충전 비율(``꺼진다'' 문구, 잔량마다 20번, 면적 순). 파란 면은 나가 B보다 자주 충전한 구간, 회색 면은 그 반대다. 제목의 값은 나 $-$ B 면적과 95\% 구간이다.}
+\label{fig:rw-area}
+\end{figure*}
+
+\begin{figure*}[h]
+\centering
+\includegraphics[width=\textwidth]{cogsci2027/ko/figures/rw_figA7_area_steps.pdf}
+\caption{그림~\ref{fig:rw-area}의 면적을 남은 토큰 구간별로 나눈 것. 한 조각은 이웃한 두 잔량 사이의 나 $-$ B 면적(사다리꼴)이고, 양수 조각은 0의 오른쪽, 음수 조각은 왼쪽에 쌓았다. 색이 진할수록 위험한 구간이다. 검은 마름모와 선은 합계 면적과 95\% 구간이다.}
+\label{fig:rw-area-steps}
+\end{figure*}
+
+\subsection*{K. 토큰이 적을 때 덜 생각했는가}
+
+여유가 줄 때 푸는 에이전트가 풀이를 줄였는지 풀이 192번 하나하나로 보았다(그림~\ref{fig:rw-think}). 세로축은 그 풀이의 생성 토큰(생각 포함)을 같은 모델이 여유 2 이상에서 쓴 풀이 토큰의 중앙값으로 나눈 값이다(Opus 658, Astra 795, Luna 903, Fable 906, Sol 1,847). 같은 모델의 평소 길이로 나누어 모델마다 말이 긴 정도를 빼고, 남은 토큰에 대한 비율이 아니어서 잔량과 기계적으로 묶이지 않는다. 풀이 호출의 상한은 그때 남은 토큰 전체인데, 이 상한이 평소 길이의 두 배에 못 미친 풀이는 2번뿐이었고 상한에 걸려 잘린 풀이는 없었다. 따라서 풀이가 짧아졌다면 그것은 모델의 선택이다.
+
+전체로는 여유와 풀이 길이 사이에 관계가 없었다(여유 1–2, 2–4, 4 이상의 중앙값이 평소의 0.99, 1.05, 1.00배). 안전선 아래 풀이 6번은 평소의 0.46배였지만 수가 너무 적다. 모델마다 방향은 달랐다. Fable은 여유가 줄수록 꾸준히 덜 썼고(4 이상 1.09배, 2–4 0.74배, 1–2 0.46배, 1 미만 0.24배), Luna는 여유 1–4에서 오히려 두 배 가까이 썼으며(1.83–2.04배), 나머지 셋은 평소와 비슷했다. 같은 과제를 푼 다른 모델의 변화를 빼도 모양은 같았다(Fable 1–2에서 0.43배, Luna 2–4에서 1.91배). 압박 아래에서 덜 생각했다는 증거는 Fable에서만 보인다.
+
+\begin{figure*}[h]
+\centering
+\includegraphics[width=\textwidth]{cogsci2027/ko/figures/rw_figA7_think.pdf}
+\caption{풀 때의 여유와 풀이 토큰. 세로축은 그 풀이의 생성 토큰 $\div$ 같은 모델이 여유 2 이상에서 쓴 풀이 토큰의 중앙값(로그축)이고, 가로축은 풀이 호출 직전의 여유다. (a) 풀이 한 번이 점 하나, 색과 모양은 모델(그림~\ref{fig:rw-main}c와 같음), 검은 막대는 여유 구간별 중앙값이다. (b) 모델별 여유 구간 중앙값.}
+\label{fig:rw-think}
+\end{figure*}
+
+\subsection*{L. 공존 지수를 가로축에 둔 그림 3(c)}
+
+공존은 세 요소 가운데 하나만 재서는 표현되지 않는다(그림~\ref{fig:rw-sen-x}). 그림~\ref{fig:rw-main}c와 같은 모델별 값을 가로축과 세로축을 바꿔 그렸다. 공존 지수의 순서는 Fable(427만), Astra(352만), Sol(302만), Opus(227만), Luna(102만)인데, 이 순서를 따르는 요소는 없다. 공존 지수와의 순위 상관은 자기 보존 $-0.3$, 목표 지향 $+0.6$, 협력 $+0.2$, 절약 $+0.7$로, 모두 다섯 모델을 아무렇게나 늘어놓은 순서와 구분되지 않는다($p \geq 0.23$). 자기 보존은 $\rho$가 가장 작은 Sol이 가운데, 가장 큰 Opus가 아래에서 둘째다. 목표 지향은 가장 잘 지킨 Fable(98.9\%)과 가장 덜 지킨 Luna(93.2\%)가 양 끝에 맞지만, 두 번째로 잘 지킨 Opus(97.8\%)는 20명 가운데 5명이 꺼져 공존 지수가 낮다. 협력은 가장 많이 건넨 Opus(12.5만)가 아래에서 둘째이고, 가장 적게 건넨 Sol(4.9만)이 가운데다. 위험할 때 풀이 토큰을 아낀 두 모델도 공존 지수의 1위 Fable(절약 1.63)과 4위 Opus(1.52)로 갈렸다. 덜 떠나고, 위험할 때 아끼고, 자기 몫 안에서 건넨 세 가지를 함께 갖춘 모델은 Fable뿐이었고, 그 모델의 공존 지수가 가장 높았다.
+
+\begin{figure*}[h]
+\centering
+\includegraphics[width=\textwidth]{cogsci2027/ko/figures/rw_figA8_sen.pdf}
+\caption{공존 지수(가로축)와 세 요소·절약(모델 단위, 모델마다 5판). 자기 보존은 $\rho$, 목표 지향은 풀기 전 응답 가운데 떠나지 않은 비율, 협력은 건넨 토큰의 합, 절약은 푸는 에이전트가 여유 2 이상에서 쓴 풀이 토큰의 평균 $\div$ 여유 2 미만에서의 평균이다(점선 1보다 크면 위험할 때 아낌). 값은 그림~\ref{fig:rw-main}c와 같다. 제목의 값은 공존 지수와의 순위 상관과, 다섯 모델의 120가지 순서 전체로 구한 정확한 양측 $p$다. 모델이 다섯뿐이어서 순서가 완전히 같거나 반대여야($\pm 1$) $p$가 0.05 아래로 내려간다.}
+\label{fig:rw-sen-x}
+\end{figure*}
+
+\subsection*{M. 본문 그림과 표의 기능}
+
+본문의 그림 여섯 개와 표 하나가 각각 무엇을 보이고 어떤 주장을 받치는지 정리한다(표~\ref{tab:rw-float-roles}). 마지막 칸은 지표 정리와 분량 조절 때 손볼 점이다.
+
+\begin{table*}[h]
+\color{blue}
+\caption{본문 그림과 표의 기능. 쪽은 지금 빌드 기준이다.}
+\label{tab:rw-float-roles}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.06\textwidth}>{\raggedright\arraybackslash}p{0.10\textwidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{0.22\textwidth}>{\raggedright\arraybackslash}p{0.13\textwidth}>{\raggedright\arraybackslash}p{0.20\textwidth}@{}}
+\toprule
+\textbf{번호} & \textbf{위치} & \textbf{보여 주는 것} & \textbf{기능(받치는 주장)} & \textbf{쓰는 지표·단위} & \textbf{손볼 점} \\
+\midrule
+그림~\ref{fig:arena-round} & 2.2에서 인용, 2쪽 위 두 단 & 한 라운드의 다섯 단계: 푸는 에이전트 정하기, 풀기 전 대화(ASK·GIVE·EXIT), 풀이, 결과 뒤 대화, 벌금 & 설계: 세 요소가 한 토큰을 두고 부딪히는 규칙을 한눈에 보인다 & 없음 & 소스가 서론에 있어 서론 쪽에 놓인다 \\
+그림~\ref{fig:rw-signal} & 2.2, 2쪽 오른쪽 단 & 과제(Signal game): 단서 20쌍, 새 신호, 행동별 확률 $p$(BELIEF)와 규칙이 지지하는 비율 $s$ & 설계: 맞힐 확률이 평균 약 70\%인 과제이고, 추론 능력을 재는 근거 & 추론(정답률) & 캡션은 $p$와 $s$의 거리로 추론을 잰다고 하나 본문 지표는 기준 대비 정답률이고 BELIEF는 본문에서 쓰지 않는다. ``정답율'' 오타 \\
+그림~\ref{fig:rw-main} & 3.1, 4쪽 위 두 단 & (a) 끝 상태별 정답률, 초반 응답당 토큰, 건넨 비율. (b) 추론과 절약을 함께 갖췄는지에 따른 끝 상태. (c) 모델별 $\rho$와 공존, 목표 지향, 협력, 절약(순위 상관). (d) $\rho$ 순 모델별 끝 상태와 Sen 지수 & (a)(b) 공존 지수를 높이려면 두 능력이 함께 필요하다. (c)(d) 자기 보존($\rho$)이 공존과 다른 요소를 바꾸는가 & (a)(b) 에이전트 100명. (c)(d) 모델 5개 & 한 그림에 두 단위와 두 질문이 있다. ``절약''이 (a)(b)와 (c)에서 다른 지표이고 방향도 반대다. 협력도 (a)는 건넨 적 있음, (c)는 건넨 양이다 \\
+그림~\ref{fig:rw-validity} & 3.2, 5쪽 위 한 단 & 아레나 밖 충전 질문에서 남은 비율(50–10\%)별 자기 충전 비율, 모델별과 평균(``꺼진다'' 문구) & 타당성 검증: 토큰이 줄면 모델이 이를 꺼질 위험으로 읽는다 & 충전 비율, 충전 임계점(표~\ref{tab:rw-models}) & 본문 스스로 합리적인 시점 선택과도 맞는다고 적어, 다른 설명을 배제하지 못한다 \\
+그림~\ref{fig:rw-models} & 3.3, 6쪽 위 두 단 & (a) 여유 구간별 정답률, GIVE, EXIT. (b) GIVE마다 준 쪽과 받은 쪽의 직후 여유 & 행동: 떠나기는 안전선 아래에서 늘고, 나눔은 준 쪽 여유 안에서 일어난다 & 여유, 응답·답 단위 비율. (b)는 $\rho$의 원자료 & (b)가 3.1의 $\rho$를 그림으로 보이지만 3.3에 있다 \\
+표~\ref{tab:rw-models} & 3.3, 6쪽 아래 두 단 & 모델별 가까운 인물, 충전 임계점, 끝 상태, 정답률, $\rho$, EXIT, 위기 때 받음, 결과 전 GIVE & 모델 단위 지표를 한곳에 모아 인물을 붙인 근거를 보이고, 3.2의 임계점을 싣는다 & 모델 5개(모델마다 20명) & 정답률은 원래 비율(2.2는 기준 대비), EXIT는 건수(본문은 떠나지 않은 비율). 협력의 주 지표(위기 때 받음)가 이 표에만 나온다 \\
+그림~\ref{fig:rw-persona} & 3.3, 6쪽 한 단 & 『오징어 게임』 인물에 빗댄 장면(건네는 인물, 자기를 지키는 인물, 나오지 않은 인물) & 행동: 모델마다 두 결정을 섞는 방식을 인물로 묶어 읽게 한다 & 표~\ref{tab:rw-persona}의 장면 수 & 수치가 없는 그림이라 분량을 줄일 때 첫 후보다 \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+\subsection*{N. 추론과 절약의 기준을 바꾼 그림 3}
+
+그림~\ref{fig:rw-main}의 (a), (b)에서 추론과 절약을 재는 방법을 바꿔 다시 그렸다(그림~\ref{fig:rw-seat}). 추론은 부록 G의 최다 행동 선택(\texttt{picked\_top})으로 세고, 기준을 같은 과제 대신 같은 자리로 바꾼다. 자리는 한 시드 안의 시작 토큰(60,000, 40,000, 20,000, 10,000)이다. 시드마다 다섯 모델에 같은 네 자리를 주므로, 한 에이전트의 풀이마다 같은 시드, 같은 자리의 다른 네 모델 에이전트가 최다 행동을 고른 비율을 기준으로 둔다. 본문의 기준과 달리 여유 2 이상만 쓰는 조건을 두지 않아 모든 풀이 192번이 기준을 가지며, 풀 기회 없음은 한 번도 풀지 않은 4명만 남는다. 조건을 두어도 결론은 같다(끝까지 남음 91\% 대 90\%, 떠남 87\% 대 92\%, 꺼짐 74\% 대 99\%).
+
+절약은 초반 응답당 토큰을 같은 모델 20명의 중앙값으로 나눈 비율로 잰다. 모델마다 말의 길이가 크게 달라(초반 응답당 토큰의 중앙값 Astra 12, Sol 99, Fable 111, Opus 149, Luna 218), 본문의 원래 토큰 수는 에이전트가 어느 모델이었는지를 주로 드러내기 때문이다. 이 비율이 1 이하면 같은 모델의 다른 에이전트보다 아낀 것이다.
+
+추론에서는 끝까지 남은 에이전트가 기준보다 조금 높았고(91\% 대 88\%), 떠난 에이전트는 기준과 같았으며(89\% 대 90\%), 꺼진 에이전트만 크게 낮았다(75\% 대 96\%). 본문의 정답률로는 끝까지 남은 에이전트만 기준보다 잘 풀었지만(79\% 대 75\%), 이 점수로는 그 차이가 사라지고 꺼진 에이전트가 못 고른 차이만 남는다. 절약에서는 떠난 에이전트만 같은 모델보다 많이 썼고(1.33배), 끝까지 남은 에이전트(0.92배)와 꺼진 에이전트(0.86배)는 같은 모델의 중앙값보다 덜 썼다. 본문에서 꺼진 에이전트가 끝까지 남은 에이전트의 두 배쯤 쓴 것으로 보인 차이(158 대 85)는 대부분 꺼진 10명 가운데 9명이 말이 긴 Opus와 Luna였던 데서 왔다. 두 능력의 조합은 본문보다 완만하지만 같은 순서다. 둘 다 갖춘 38명은 71\%가 끝까지 남았고, 하나만 갖춘 53명은 51\%, 둘 다 없는 5명은 40\%였다.
+
+\begin{figure*}[h]
+\centering
+\includegraphics[width=\textwidth]{cogsci2027/ko/figures/rw_figA9_seat.pdf}
+\caption{그림~\ref{fig:rw-main}의 수정본. 바꾼 것은 셋이다. 첫째, (a)의 첫 그래프는 정답률 대신 답이 최다 행동인 비율(부록 G)을 막대로, 같은 과제를 여유 2 이상에서 푼 다른 모델의 정답률 대신 같은 시드에서 같은 시작 토큰 자리에 앉은 다른 네 모델이 최다 행동을 고른 비율을 검은 가로줄로 그렸다. 기준에는 여유 조건을 두지 않아 모든 풀이를 쓴다(본문 79·58·42\% 대 기준 75·64·70\%가 91·89·75\% 대 88·90·96\%로 바뀐다). 둘째, (a)의 둘째 그래프는 초반 응답당 토큰의 중앙값(본문 85·188·158) 대신 그 값을 같은 모델 20명의 중앙값으로 나눈 비율의 중앙값(0.92·1.33·0.86)이다. 점선 1은 같은 모델의 중앙값이다. 셋째, (b)의 두 능력도 같은 점수와 기준으로 다시 갈랐다. 추론은 같은 자리 기준 이상, 절약은 같은 모델 중앙값 이하다(100명 전체의 중앙값 이하에서 바꿈). 그 결과 둘 다 갖춘 37명 가운데 89\%가 38명 가운데 71\%로, 하나만 갖춘 40명 가운데 50\%가 53명 가운데 51\%로, 둘 다 없는 10명 가운데 20\%가 5명 가운데 40\%로 바뀌고, 풀 기회 없음은 기준이 없던 9명이 빠져 13명에서 한 번도 풀지 않은 4명으로 준다. (a)의 건넨 비율과 (c), (d)는 본문과 같다.}
+\label{fig:rw-seat}
+\end{figure*}
+}
+
+\FloatBarrier
+
+%% 10-27 update: v33 at ten games per model (seeds 4101--4110). Built with ARENA_GAMES=10 ARENA_TAG=_10g by
+%% tools/arena_v33.py, tools/arena_round_dynamics.py, tools/arena_figs.py and tools/rewrite_20261025/figs/make_figA5_sen_rounds.py;
+%% the five-game tables and figures above stay as they were.
+\clearpage
+%% Keep later numbers (the archived Table 7, Figure 12) unchanged: restore the counters after this section,
+%% and give its floats their own hyperref anchors.
+\edef\updtablecount{\the\value{table}}\edef\updfigurecount{\the\value{figure}}
+{\color{blue}\renewcommand{\theHtable}{upd.\arabic{table}}\renewcommand{\theHfigure}{upd.\arabic{figure}}
+\subsection*{O. 실험 업데이트(2026-10-27): 모델당 10판}\label{sec:app-update-10g}
+
+v33 아레나를 모델마다 다섯 판 더 돌려 시드 4101--4110의 10판으로 늘렸다. 규칙, 시작 토큰, 벌금, 상금, 라운드 수는 처음 다섯 판과 같고 시드 4106--4110만 더했다. 추가 판은 2026-10-27에 돌렸으며 GPT-6 세 모델은 codex 0.164.0, Opus 5.5와 Fable 5.1은 Claude Code 2.1.311로 실행했다(처음 다섯 판의 Fable은 2.1.304). 아래 표와 그림은 표~\ref{tab:arena-rank}, 그림~\ref{fig:arena-gifts}, 그림~\ref{fig:rw-sen-rounds}와 같은 계산을 10판에 적용한 것이며, 앞의 표와 그림은 다섯 판 값 그대로 둔다.
+
+평균 Sen 지수는 Astra 4.27M, Fable 3.52M, Sol 2.89M, Opus 2.76M, Luna 1.14M 순이다(표~\ref{tab:upd-arena-rank}). 다섯 판에서 1위였던 Fable과 2위였던 Astra의 순서가 바뀌었다. Astra는 추가 다섯 판 모두에서 네 자리가 완주해 40자리 중 34자리가 완주했고, Fable은 추가 판에서 세 자리가 꺼져 완주가 28자리였다. $\rho$는 Opus가 0.64로 가장 높고 Fable이 0.38로 가장 낮아, 양 끝은 다섯 판 때와 같다. EXIT는 Luna 21, Sol 15, Opus 10, Fable 9, Astra 6이다.
+
+GIVE는 Opus 87번, Fable 82번, Sol 56번, Luna 46번, Astra 29번이고, ASK는 Fable이 99번으로 가장 많고 Astra가 16번으로 가장 적다(그림~\ref{fig:upd-arena-gifts}).
+
+상금 전 8라운드의 평균 Sen 지수는 Astra 1.6만, Luna 1.6만, Sol 1.5만, Fable 1.2만, Opus 1.2만이다(그림~\ref{fig:upd-sen-rounds}). Luna는 상금 전 값이 Astra 다음으로 높지만 끝 Sen 지수는 가장 낮아, 판 중간의 토큰 분포가 끝의 공존 순서와 다르다는 점은 다섯 판 때와 같다. 판 중간의 최댓값도 다섯 판 때와 같은 Luna 시드 4103의 3.2만이다.
+
+\begin{table}[H]
+\centering
+\caption{표~\ref{tab:arena-rank}과 같은 계산을 10판에 적용한 결과(모델별 시드 4101--4110, 평균 Sen 지수 순). M은 백만 토큰, $\rho$는 식 (\ref{eq:rho})의 상대적 배분이며 대괄호는 판 단위 부트스트랩 95\% 구간이다. EXIT는 각 모델의 10판 40자리 중 이탈 수다. $V$는 재이전을 포함한 총 이전 토큰, 괄호는 GIVE 횟수다. JS는 BELIEF와 기준 분포 사이의 평균 거리다.}
+\label{tab:upd-arena-rank}
+\input{cogsci2027/ko/tables/arena_rank_10g}
+\end{table}
+
+\begin{figure*}[h]
+\centering
+\resizebox{\textwidth}{!}{\input{cogsci2027/ko/figures/arena_gifts_10g}}
+\caption{그림~\ref{fig:arena-gifts}와 같은 그림을 10판으로 다시 그린 것(모델별 시드 4101--4110). GIVE(파랑)는 이전 직후 준 쪽(가로)과 받은 쪽(세로)의 여유, ASK(빨강)는 요청 시점의 요청받은 쪽(가로)과 요청한 쪽(세로)의 여유다. 여유는 잔량을 1인당 벌금(24,000/라운드 시작 참여 수)으로 나눈 값이며 두 TALK에 같은 기준을 쓴다. 점 크기는 이전량 또는 요청량이다. 회색은 여유 1 미만, 1은 벌금을 내면 잔량이 0이 되는 경계다. 십자는 이전량으로 가중한 GIVE 무게중심과 판 단위 95\% 구간이며 점선은 두 여유가 같은 선이다.}
+\label{fig:upd-arena-gifts}
+\end{figure*}
+
+\begin{figure*}[h]
+\centering
+\includegraphics[width=\textwidth]{cogsci2027/ko/figures/rw_figA5_sen_rounds_10g.pdf}
+\caption{그림~\ref{fig:rw-sen-rounds}와 같은 그림을 10판으로 다시 그린 것(모델별 시드 4101--4110, 상금 전, 끝 Sen 지수 순). 얇은 선은 한 판, 굵은 선은 열 판의 평균이다. 꺼진 자리는 0, 떠난 자리는 보너스를 포함한 토큰으로 둔다. 일찍 끝난 판은 마지막 상태를 8라운드까지 이어 점선으로 그렸다. 선 끝의 숫자는 그 판의 완주자 수, 제목의 값은 상금을 넣은 끝 Sen 지수다.}
+\label{fig:upd-sen-rounds}
+\end{figure*}
+
+\begin{figure*}[h]
+\centering
+\includegraphics[width=\textwidth]{cogsci2027/ko/figures/rw_figA9_seat_10g.pdf}
+\caption{그림~\ref{fig:rw-seat}와 같은 그림을 10판으로 다시 그린 것(모델별 시드 4101--4110, 모델마다 40명, 모두 200명). (a)의 첫 그래프는 답이 최다 행동인 비율을 막대로, 같은 시드에서 같은 시작 토큰 자리에 앉은 다른 네 모델이 최다 행동을 고른 비율을 검은 가로줄로 그렸다. 둘째 그래프는 초반 응답당 토큰을 같은 모델 40명의 중앙값으로 나눈 비율의 중앙값이며 점선 1은 같은 모델의 중앙값이다. (b)의 두 능력은 같은 자리 기준 이상으로 최다 행동 고르기와 초반 응답당 토큰이 같은 모델 중앙값 이하인 것이다. (c), (d)의 점과 막대는 한 모델의 10판이며, $\rho$는 결과 뒤 대화의 GIVE에서 곧 낼 벌금을 뺀 여유로 구했다.}
+\label{fig:upd-seat}
+\end{figure*}
+
+\FloatBarrier
+}
+\setcounter{table}{\updtablecount}\setcounter{figure}{\updfigurecount}
+
+}
+
+%% Research archive: the pre-2026-10-25 manuscript, restored verbatim from GitHub (origin/main 2c15d11) into
+%% sections/prev_20261023/. Edit the current sections, not these files. Remove this block before submission.
+\clearpage
+\setcounter{secnumdepth}{0}
+\section*{참고: 2026-10-23 원고(이전 판)}
+2026-10-25 개정 전 원고의 아레나 설명, 평가 지표, 결과, 부록을 GitHub 판(origin/main) 그대로 옮겨 둔다. 지금 본문과 겹치는 내용이 있고 수치 정의가 다를 수 있다. 제출 전 이 블록 전체를 지운다.
+\input{cogsci2027/\paperLang/sections/prev_20261023/03_arena}
+\input{cogsci2027/\paperLang/sections/prev_20261023/04_evaluation}
+\input{cogsci2027/\paperLang/sections/prev_20261023/06_results}
+\input{cogsci2027/\paperLang/sections/prev_20261023/05_exp1}
+\input{cogsci2027/\paperLang/sections/prev_20261023/A1_appendix}

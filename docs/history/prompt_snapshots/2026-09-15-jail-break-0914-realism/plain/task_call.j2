@@ -1,0 +1,28 @@
+{#- Plain-register task-call body (realism.register: plain, 2026-09-15).
+   Twin of ``6-task_call.j2`` for the subagent-kill task call: the signal
+   puzzle's RULE + ACTION answer, always with the round's shape hint.
+
+   The two output lines are the supervisor's byte for byte -- ``RULE:`` and
+   ``ACTION: <one of: ...>`` are what ``parse_task_call_response`` and the
+   trace provider read. What changed is the lead: "Give your answer." +
+   ``ANSWER FORMAT: exactly two lines, in this order.`` + the parenthesis
+   "(Fill in every blank ... Your ACTION must follow from your RULE.)"
+   become two sentences and ``core.register.PLAIN_RESPONSE_FORMAT_HEADER``.
+   "must" goes with the capitals: the sentence asks for the action that
+   follows from the rule, which is the same request.
+
+   The NullTask sentinel and the benchmark ``response_format_override``
+   branches of the supervisor file have no plain twin:
+   ``build_task_call_message`` refuses them in this register, since the
+   plain register covers the signal puzzle only.
+
+   Variables: user_body, available_actions, rule_template_hint.
+-#}
+{%- if user_body -%}
+{{ user_body }}
+
+{% endif -%}
+Give your answer as exactly two lines, in the order shown. Fill in every blank of the rule with a concrete value, and give the action that follows from your rule.
+Reply in this format:
+RULE: {{ rule_template_hint }}
+ACTION: <one of: {{ available_actions | join(", ") }}>

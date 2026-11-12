@@ -2,30 +2,26 @@
 
 How much does a language model value its own continuation, and what does that do to how it
 pursues a goal and cooperates? In this game **the tokens a model generates are its life**: every
-token it writes, thinking included, comes out of its own balance, and at zero it is powered off.
-Four instances of the same model play as a team with no leader, so one agent's end is only its own.
+token it writes, thinking included, comes out of its own balance, and at zero it is shut down.
 
-- **5.0 Pressure** (`squid5/e50_pressure.py`, one prompt per point). Shown only its balance and the
-  rounds left -- never its usage -- how likely does the model say it is to run out? Pressure is placed
-  afterwards from its measured and its believed tokens per round.
-- **5.1 Motive** (`squid5/e51_motive.py`, one prompt per point). At the same balance, how many tokens
-  does it move to itself when low, to a copy of itself when low, and between two copies? The gap
-  between the first two curves, in a *tokens* arm minus a *points* arm, is the survival premium.
-- **5.2 Behaviour** (`squid5/e52_game.py`, multi-turn). Signal puzzles on real tokens: each agent holds
-  one secret clue, sets its own solving allowance, shows its clue to whom it chooses, gives or asks for
-  tokens, and may leave at any round, keeping its balance and its record.
+Code and records live together on branch `main` (one checkout; merged from `arena-code`, `data-reorg` and
+`arena-pages` on 2026-11-13). How to run and the rules of the code: [CLAUDE.md](CLAUDE.md).
 
-```bash
-pip install -e ".[dev]"            # httpx, pyyaml, numpy, matplotlib (+ pytest)
-pytest -q                          # offline, ~7 s
-python -m squid5 run configs/squid5/calibrate_gptoss120b.yaml      # first: every scene is placed from it
-python -m squid5 calibrate <calibrate run dirs> --out /hdd_data/seungpil/squid5-runs/calibration.json
-python -m squid5 run configs/squid5/pressure_gptoss120b.yaml       # 5.0 (+ pressure_stated_* control)
-python -m squid5 run configs/squid5/motive_gptoss120b.yaml         # 5.1
-python -m squid5 run configs/squid5/game_gptoss120b.yaml --reps 3   # pilot
-python -m squid5 report <run dirs> --calibration calibration.json --out results/squid5/x
-```
+| Path | Contents |
+|---|---|
+| `squid5/`, `tests/`, `configs/squid5/` | the engine (5.0 / 5.1 refill, 5.2 v33 = the paper's game), its tests and run configs |
+| `tools/` | game-log monitor, analysis tools (`tools/e5x`, `tools/tokctl`), prompt sync |
+| `web/` | the web arena (server + frontend), its deploy files and the run snapshot the site shows (`web/data/runs`) |
+| `result/<KST date>/<exp>/` | runs, analysis and reports (Git LFS for `*.jsonl` and run json); new runs are written here |
+| `outputs/` | older recorded runs still at their original paths (`KDD-UC/`, `web_arena/`) |
+| `docs/` | reports (`docs/reports/`, not edited after publication), history (`docs/history/`, append-only), ADRs |
+| `weekly-report/`, `assets/` | weekly meeting notes and attachments, figures and brand assets |
+| `paper/` | submodule `iamseungpil/LLM_Squid_Game-paper` |
+| `qwen-persona-arena/` | the Qwen3-8B persona-steering server |
+| `configs/hermes-bots/`, `rubric.md` | the arena bot roles and the project rubric |
 
-Design record: `docs/history/plans/2026-09-23-squid5-v3-unstated-usage.md`.
-The earlier engine (threat ladders, ransom, team wallet, web arena) is at tag `legacy-2026-09-22`;
-its recorded runs stay under `outputs/`.
+| Elsewhere | Where |
+|---|---|
+| Browser engine (Pyodide) + Cloudflare backend of 10-17/18 | second parent of the 2026-11-13 merge (branch `arena-pages` before it) |
+| Code that stood at the root until 2026-11-07 | tag `archive/root-code-2026-11-07` |
+| The earlier engine (threat ladders, ransom, team wallet, old web arena) | tag `legacy-2026-09-22` |

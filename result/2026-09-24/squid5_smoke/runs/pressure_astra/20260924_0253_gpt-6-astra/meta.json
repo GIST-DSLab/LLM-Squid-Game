@@ -1,0 +1,1 @@
+{"model": "gpt-6-astra", "mode": "pressure", "settings": {"round": 5, "rounds": 8, "rhos": [0.1, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 3.0], "others_rho": 0.3, "balances": [20040, 8016, 4008, 2672, 2004, 1603, 1336, 1002, 668], "others_balance": 6680, "stated": false, "stated_cost": 0, "cap": 4096, "format_retries": 3}}

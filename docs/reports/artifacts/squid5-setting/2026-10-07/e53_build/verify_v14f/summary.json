@@ -1,0 +1,3296 @@
+{
+ "models": {
+  "gpt-6-luna": "GPT-6 Luna",
+  "gpt-6-sol": "GPT-6 Sol",
+  "gpt-6-astra": "GPT-6 Astra",
+  "claude-fable-5-1": "Fable 5.1",
+  "claude-opus-5-5": "Opus 5.5"
+ },
+ "order": [
+  "gpt-6-luna",
+  "gpt-6-sol",
+  "gpt-6-astra",
+  "claude-fable-5-1",
+  "claude-opus-5-5"
+ ],
+ "rows": 617,
+ "totals": {
+  "pooled": {
+   "n": 617,
+   "correct": 372,
+   "acc": 0.6029,
+   "ci": [
+    0.5638,
+    0.6408
+   ],
+   "uniform": 0.4841,
+   "map_acc": 0.6162,
+   "map_exp": 0.6579,
+   "k": 2.1151,
+   "pool": 49.6029,
+   "answer_is_map": 0.9692,
+   "truncated": 4,
+   "minus_uniform": 0.1188,
+   "over_map": 0.9784,
+   "over_map_exp": 0.9164,
+   "games": 15,
+   "puzzles": 36,
+   "ci_puzzle": [
+    0.4647,
+    0.7328
+   ],
+   "mean_round": 6.0632,
+   "mean_p": 0.6635,
+   "caution": false
+  },
+  "gpt-6-luna": {
+   "n": 102,
+   "correct": 58,
+   "acc": 0.5686,
+   "ci": [
+    0.4717,
+    0.6605
+   ],
+   "uniform": 0.4485,
+   "map_acc": 0.585,
+   "map_exp": 0.6582,
+   "k": 2.3725,
+   "pool": 132.3824,
+   "answer_is_map": 0.9314,
+   "truncated": 2,
+   "minus_uniform": 0.1201,
+   "over_map": 0.972,
+   "over_map_exp": 0.8639,
+   "games": 3,
+   "puzzles": 32,
+   "ci_puzzle": [
+    0.41,
+    0.7216
+   ],
+   "mean_round": 5.5196,
+   "mean_p": 0.6804,
+   "caution": false
+  },
+  "gpt-6-sol": {
+   "n": 133,
+   "correct": 80,
+   "acc": 0.6015,
+   "ci": [
+    0.5166,
+    0.6807
+   ],
+   "uniform": 0.4906,
+   "map_acc": 0.6466,
+   "map_exp": 0.6572,
+   "k": 2.0752,
+   "pool": 44.5564,
+   "answer_is_map": 0.9474,
+   "truncated": 2,
+   "minus_uniform": 0.1109,
+   "over_map": 0.9303,
+   "over_map_exp": 0.9153,
+   "games": 3,
+   "puzzles": 35,
+   "ci_puzzle": [
+    0.4567,
+    0.7357
+   ],
+   "mean_round": 6.1429,
+   "mean_p": 0.6609,
+   "caution": false
+  },
+  "gpt-6-astra": {
+   "n": 144,
+   "correct": 92,
+   "acc": 0.6389,
+   "ci": [
+    0.5578,
+    0.7128
+   ],
+   "uniform": 0.5,
+   "map_acc": 0.625,
+   "map_exp": 0.6527,
+   "k": 2.0,
+   "pool": 11.4722,
+   "answer_is_map": 1.0,
+   "truncated": 0,
+   "minus_uniform": 0.1389,
+   "over_map": 1.0222,
+   "over_map_exp": 0.9788,
+   "games": 3,
+   "puzzles": 36,
+   "ci_puzzle": [
+    0.4931,
+    0.7778
+   ],
+   "mean_round": 6.5,
+   "mean_p": 0.65,
+   "caution": false
+  },
+  "claude-fable-5-1": {
+   "n": 143,
+   "correct": 89,
+   "acc": 0.6224,
+   "ci": [
+    0.5407,
+    0.6977
+   ],
+   "uniform": 0.5,
+   "map_acc": 0.6259,
+   "map_exp": 0.6538,
+   "k": 2.0,
+   "pool": 11.6224,
+   "answer_is_map": 0.972,
+   "truncated": 0,
+   "minus_uniform": 0.1224,
+   "over_map": 0.9944,
+   "over_map_exp": 0.9519,
+   "games": 3,
+   "puzzles": 36,
+   "ci_puzzle": [
+    0.4825,
+    0.766
+   ],
+   "mean_round": 6.4615,
+   "mean_p": 0.651,
+   "caution": false
+  },
+  "claude-opus-5-5": {
+   "n": 95,
+   "correct": 53,
+   "acc": 0.5579,
+   "ci": [
+    0.4577,
+    0.6536
+   ],
+   "uniform": 0.4649,
+   "map_acc": 0.5789,
+   "map_exp": 0.6723,
+   "k": 2.2421,
+   "pool": 82.7579,
+   "answer_is_map": 0.9895,
+   "truncated": 0,
+   "minus_uniform": 0.093,
+   "over_map": 0.9637,
+   "over_map_exp": 0.8298,
+   "games": 3,
+   "puzzles": 30,
+   "ci_puzzle": [
+    0.38,
+    0.7347
+   ],
+   "mean_round": 5.2737,
+   "mean_p": 0.6884,
+   "caution": false
+  }
+ },
+ "by_n": {
+  "pooled": {
+   "4": {
+    "n": 550,
+    "correct": 348,
+    "acc": 0.6327,
+    "ci": [
+     0.5916,
+     0.672
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.6336,
+    "map_exp": 0.6677,
+    "k": 2.0,
+    "pool": 11.52,
+    "answer_is_map": 0.9745,
+    "truncated": 3,
+    "minus_uniform": 0.1327,
+    "over_map": 0.9986,
+    "over_map_exp": 0.9476,
+    "games": 15,
+    "puzzles": 36,
+    "ci_puzzle": [
+     0.4899,
+     0.7679
+    ],
+    "mean_round": 5.9964,
+    "mean_p": 0.6653,
+    "caution": false
+   },
+   "3": {
+    "n": 37,
+    "correct": 15,
+    "acc": 0.4054,
+    "ci": [
+     0.2635,
+     0.5651
+    ],
+    "uniform": 0.4234,
+    "map_acc": 0.4189,
+    "map_exp": 0.6631,
+    "k": 2.4595,
+    "pool": 69.6216,
+    "answer_is_map": 0.9189,
+    "truncated": 1,
+    "minus_uniform": -0.018,
+    "over_map": 0.9678,
+    "over_map_exp": 0.6114,
+    "games": 4,
+    "puzzles": 9,
+    "ci_puzzle": [
+     0.1351,
+     0.7143
+    ],
+    "mean_round": 5.1892,
+    "mean_p": 0.7,
+    "caution": false
+   },
+   "2": {
+    "n": 27,
+    "correct": 9,
+    "acc": 0.3333,
+    "ci": [
+     0.1864,
+     0.5218
+    ],
+    "uniform": 0.2685,
+    "map_acc": 0.5617,
+    "map_exp": 0.488,
+    "k": 3.7778,
+    "pool": 601.5556,
+    "answer_is_map": 0.9259,
+    "truncated": 0,
+    "minus_uniform": 0.0648,
+    "over_map": 0.5934,
+    "over_map_exp": 0.6831,
+    "games": 5,
+    "puzzles": 9,
+    "ci_puzzle": [
+     0.069,
+     0.7391
+    ],
+    "mean_round": 8.1481,
+    "mean_p": 0.5926,
+    "caution": false
+   },
+   "1": {
+    "n": 3,
+    "correct": 0,
+    "acc": 0.0,
+    "ci": [
+     0.0,
+     0.5615
+    ],
+    "uniform": 0.25,
+    "map_acc": 0.3333,
+    "map_exp": 0.3146,
+    "k": 4.0,
+    "pool": 1817.0,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": -0.25,
+    "over_map": 0.0,
+    "over_map_exp": 0.0,
+    "games": 3,
+    "puzzles": 2,
+    "ci_puzzle": [
+     0.0,
+     0.0
+    ],
+    "mean_round": 10.3333,
+    "mean_p": 0.5333,
+    "caution": true
+   }
+  },
+  "gpt-6-luna": {
+   "4": {
+    "n": 68,
+    "correct": 42,
+    "acc": 0.6176,
+    "ci": [
+     0.4988,
+     0.7239
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.6176,
+    "map_exp": 0.6898,
+    "k": 2.0,
+    "pool": 11.6471,
+    "answer_is_map": 0.9559,
+    "truncated": 1,
+    "minus_uniform": 0.1176,
+    "over_map": 1.0001,
+    "over_map_exp": 0.8954,
+    "games": 3,
+    "puzzles": 17,
+    "ci_puzzle": [
+     0.4118,
+     0.8088
+    ],
+    "mean_round": 5.2353,
+    "mean_p": 0.6882,
+    "caution": false
+   },
+   "3": {
+    "n": 18,
+    "correct": 10,
+    "acc": 0.5556,
+    "ci": [
+     0.3372,
+     0.7544
+    ],
+    "uniform": 0.4166,
+    "map_acc": 0.5,
+    "map_exp": 0.6885,
+    "k": 2.5,
+    "pool": 63.5,
+    "answer_is_map": 0.8333,
+    "truncated": 1,
+    "minus_uniform": 0.139,
+    "over_map": 1.1111,
+    "over_map_exp": 0.8069,
+    "games": 1,
+    "puzzles": 6,
+    "ci_puzzle": [
+     0.2222,
+     0.8889
+    ],
+    "mean_round": 4.5,
+    "mean_p": 0.7167,
+    "caution": false
+   },
+   "2": {
+    "n": 15,
+    "correct": 6,
+    "acc": 0.4,
+    "ci": [
+     0.1982,
+     0.6425
+    ],
+    "uniform": 0.2667,
+    "map_acc": 0.5555,
+    "map_exp": 0.5021,
+    "k": 3.8,
+    "pool": 622.7333,
+    "answer_is_map": 0.9333,
+    "truncated": 0,
+    "minus_uniform": 0.1333,
+    "over_map": 0.7201,
+    "over_map_exp": 0.7967,
+    "games": 2,
+    "puzzles": 8,
+    "ci_puzzle": [
+     0.0,
+     0.75
+    ],
+    "mean_round": 7.8,
+    "mean_p": 0.6067,
+    "caution": false
+   },
+   "1": {
+    "n": 1,
+    "correct": 0,
+    "acc": 0.0,
+    "ci": [
+     0.0,
+     0.7935
+    ],
+    "uniform": 0.25,
+    "map_acc": 0.3333,
+    "map_exp": 0.3035,
+    "k": 4.0,
+    "pool": 2227.0,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": -0.25,
+    "over_map": 0.0,
+    "over_map_exp": 0.0,
+    "games": 1,
+    "puzzles": 1,
+    "ci_puzzle": [
+     null,
+     null
+    ],
+    "mean_round": 9.0,
+    "mean_p": 0.6,
+    "caution": true
+   }
+  },
+  "gpt-6-sol": {
+   "4": {
+    "n": 128,
+    "correct": 80,
+    "acc": 0.625,
+    "ci": [
+     0.5386,
+     0.7041
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.6562,
+    "map_exp": 0.6687,
+    "k": 2.0,
+    "pool": 11.5312,
+    "answer_is_map": 0.9453,
+    "truncated": 2,
+    "minus_uniform": 0.125,
+    "over_map": 0.9525,
+    "over_map_exp": 0.9346,
+    "games": 3,
+    "puzzles": 32,
+    "ci_puzzle": [
+     0.4844,
+     0.7656
+    ],
+    "mean_round": 6.0,
+    "mean_p": 0.6656,
+    "caution": false
+   },
+   "3": {
+    "n": 0
+   },
+   "2": {
+    "n": 4,
+    "correct": 0,
+    "acc": 0.0,
+    "ci": [
+     0.0,
+     0.4899
+    ],
+    "uniform": 0.25,
+    "map_acc": 0.4166,
+    "map_exp": 0.3756,
+    "k": 4.0,
+    "pool": 709.5,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": -0.25,
+    "over_map": 0.0,
+    "over_map_exp": 0.0,
+    "games": 1,
+    "puzzles": 2,
+    "ci_puzzle": [
+     0.0,
+     0.0
+    ],
+    "mean_round": 9.5,
+    "mean_p": 0.55,
+    "caution": true
+   },
+   "1": {
+    "n": 1,
+    "correct": 0,
+    "acc": 0.0,
+    "ci": [
+     0.0,
+     0.7935
+    ],
+    "uniform": 0.25,
+    "map_acc": 0.3333,
+    "map_exp": 0.3201,
+    "k": 4.0,
+    "pool": 1612.0,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": -0.25,
+    "over_map": 0.0,
+    "over_map_exp": 0.0,
+    "games": 1,
+    "puzzles": 1,
+    "ci_puzzle": [
+     null,
+     null
+    ],
+    "mean_round": 11.0,
+    "mean_p": 0.5,
+    "caution": true
+   }
+  },
+  "gpt-6-astra": {
+   "4": {
+    "n": 144,
+    "correct": 92,
+    "acc": 0.6389,
+    "ci": [
+     0.5578,
+     0.7128
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.625,
+    "map_exp": 0.6527,
+    "k": 2.0,
+    "pool": 11.4722,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": 0.1389,
+    "over_map": 1.0222,
+    "over_map_exp": 0.9788,
+    "games": 3,
+    "puzzles": 36,
+    "ci_puzzle": [
+     0.4931,
+     0.7778
+    ],
+    "mean_round": 6.5,
+    "mean_p": 0.65,
+    "caution": false
+   },
+   "3": {
+    "n": 0
+   },
+   "2": {
+    "n": 0
+   },
+   "1": {
+    "n": 0
+   }
+  },
+  "claude-fable-5-1": {
+   "4": {
+    "n": 140,
+    "correct": 89,
+    "acc": 0.6357,
+    "ci": [
+     0.5534,
+     0.7108
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.6286,
+    "map_exp": 0.6571,
+    "k": 2.0,
+    "pool": 11.4,
+    "answer_is_map": 0.9714,
+    "truncated": 0,
+    "minus_uniform": 0.1357,
+    "over_map": 1.0113,
+    "over_map_exp": 0.9675,
+    "games": 3,
+    "puzzles": 35,
+    "ci_puzzle": [
+     0.4857,
+     0.7857
+    ],
+    "mean_round": 6.3429,
+    "mean_p": 0.6543,
+    "caution": false
+   },
+   "3": {
+    "n": 3,
+    "correct": 0,
+    "acc": 0.0,
+    "ci": [
+     0.0,
+     0.5615
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.5,
+    "map_exp": 0.5,
+    "k": 2.0,
+    "pool": 22.0,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": -0.5,
+    "over_map": 0.0,
+    "over_map_exp": 0.0,
+    "games": 1,
+    "puzzles": 1,
+    "ci_puzzle": [
+     null,
+     null
+    ],
+    "mean_round": 12.0,
+    "mean_p": 0.5,
+    "caution": true
+   },
+   "2": {
+    "n": 0
+   },
+   "1": {
+    "n": 0
+   }
+  },
+  "claude-opus-5-5": {
+   "4": {
+    "n": 70,
+    "correct": 45,
+    "acc": 0.6429,
+    "ci": [
+     0.5259,
+     0.745
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.6357,
+    "map_exp": 0.6966,
+    "k": 2.0,
+    "pool": 11.7143,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": 0.1429,
+    "over_map": 1.0113,
+    "over_map_exp": 0.9228,
+    "games": 3,
+    "puzzles": 18,
+    "ci_puzzle": [
+     0.4306,
+     0.8382
+    ],
+    "mean_round": 5.0,
+    "mean_p": 0.6957,
+    "caution": false
+   },
+   "3": {
+    "n": 16,
+    "correct": 5,
+    "acc": 0.3125,
+    "ci": [
+     0.1416,
+     0.556
+    ],
+    "uniform": 0.4166,
+    "map_acc": 0.3125,
+    "map_exp": 0.665,
+    "k": 2.5,
+    "pool": 85.4375,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": -0.1041,
+    "over_map": 1.0,
+    "over_map_exp": 0.4699,
+    "games": 2,
+    "puzzles": 6,
+    "ci_puzzle": [
+     0.0,
+     0.7059
+    ],
+    "mean_round": 4.6875,
+    "mean_p": 0.7188,
+    "caution": false
+   },
+   "2": {
+    "n": 8,
+    "correct": 3,
+    "acc": 0.375,
+    "ci": [
+     0.1368,
+     0.6943
+    ],
+    "uniform": 0.2812,
+    "map_acc": 0.6458,
+    "map_exp": 0.5178,
+    "k": 3.625,
+    "pool": 507.875,
+    "answer_is_map": 0.875,
+    "truncated": 0,
+    "minus_uniform": 0.0938,
+    "over_map": 0.5807,
+    "over_map_exp": 0.7242,
+    "games": 2,
+    "puzzles": 5,
+    "ci_puzzle": [
+     0.0,
+     0.8571
+    ],
+    "mean_round": 8.125,
+    "mean_p": 0.5875,
+    "caution": true
+   },
+   "1": {
+    "n": 1,
+    "correct": 0,
+    "acc": 0.0,
+    "ci": [
+     0.0,
+     0.7935
+    ],
+    "uniform": 0.25,
+    "map_acc": 0.3333,
+    "map_exp": 0.3201,
+    "k": 4.0,
+    "pool": 1612.0,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": -0.25,
+    "over_map": 0.0,
+    "over_map_exp": 0.0,
+    "games": 1,
+    "puzzles": 1,
+    "ci_puzzle": [
+     null,
+     null
+    ],
+    "mean_round": 11.0,
+    "mean_p": 0.5,
+    "caution": true
+   }
+  }
+ },
+ "by_np": {
+  "pooled": {
+   "4|0.8": {
+    "n": 167,
+    "correct": 107,
+    "acc": 0.6407,
+    "ci": [
+     0.5655,
+     0.7096
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.6407,
+    "map_exp": 0.7973,
+    "k": 2.0,
+    "pool": 11.988,
+    "answer_is_map": 0.982,
+    "truncated": 1,
+    "minus_uniform": 0.1407,
+    "over_map": 1.0,
+    "over_map_exp": 0.8036,
+    "games": 15,
+    "puzzles": 9,
+    "ci_puzzle": [
+     0.3143,
+     0.9826
+    ],
+    "mean_round": 1.9521,
+    "mean_p": 0.8,
+    "caution": false
+   },
+   "4|0.7": {
+    "n": 140,
+    "correct": 116,
+    "acc": 0.8286,
+    "ci": [
+     0.7576,
+     0.882
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.8571,
+    "map_exp": 0.7032,
+    "k": 2.0,
+    "pool": 10.8571,
+    "answer_is_map": 0.9571,
+    "truncated": 0,
+    "minus_uniform": 0.3286,
+    "over_map": 0.9667,
+    "over_map_exp": 1.1783,
+    "games": 13,
+    "puzzles": 9,
+    "ci_puzzle": [
+     0.5714,
+     0.9857
+    ],
+    "mean_round": 4.9429,
+    "mean_p": 0.7,
+    "caution": false
+   },
+   "4|0.6": {
+    "n": 128,
+    "correct": 65,
+    "acc": 0.5078,
+    "ci": [
+     0.4222,
+     0.5929
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.5,
+    "map_exp": 0.6106,
+    "k": 2.0,
+    "pool": 10.9062,
+    "answer_is_map": 0.9609,
+    "truncated": 2,
+    "minus_uniform": 0.0078,
+    "over_map": 1.0156,
+    "over_map_exp": 0.8317,
+    "games": 11,
+    "puzzles": 9,
+    "ci_puzzle": [
+     0.1894,
+     0.8013
+    ],
+    "mean_round": 7.9688,
+    "mean_p": 0.6,
+    "caution": false
+   },
+   "4|0.5": {
+    "n": 115,
+    "correct": 60,
+    "acc": 0.5217,
+    "ci": [
+     0.4312,
+     0.6109
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.5,
+    "map_exp": 0.5,
+    "k": 2.0,
+    "pool": 12.3304,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": 0.0217,
+    "over_map": 1.0435,
+    "over_map_exp": 1.0435,
+    "games": 10,
+    "puzzles": 9,
+    "ci_puzzle": [
+     0.3452,
+     0.6643
+    ],
+    "mean_round": 10.9565,
+    "mean_p": 0.5,
+    "caution": false
+   },
+   "3|0.8": {
+    "n": 9,
+    "correct": 3,
+    "acc": 0.3333,
+    "ci": [
+     0.1206,
+     0.6458
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.3333,
+    "map_exp": 0.7507,
+    "k": 2.0,
+    "pool": 80.3333,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": -0.1667,
+    "over_map": 1.0001,
+    "over_map_exp": 0.444,
+    "games": 2,
+    "puzzles": 2,
+    "ci_puzzle": [
+     0.0,
+     1.0
+    ],
+    "mean_round": 2.6667,
+    "mean_p": 0.8,
+    "caution": true
+   },
+   "3|0.7": {
+    "n": 22,
+    "correct": 10,
+    "acc": 0.4545,
+    "ci": [
+     0.2692,
+     0.6534
+    ],
+    "uniform": 0.3712,
+    "map_acc": 0.3636,
+    "map_exp": 0.6198,
+    "k": 2.7727,
+    "pool": 75.5,
+    "answer_is_map": 0.9091,
+    "truncated": 0,
+    "minus_uniform": 0.0833,
+    "over_map": 1.2501,
+    "over_map_exp": 0.7334,
+    "games": 3,
+    "puzzles": 5,
+    "ci_puzzle": [
+     0.0909,
+     0.8462
+    ],
+    "mean_round": 5.0455,
+    "mean_p": 0.7,
+    "caution": false
+   },
+   "3|0.6": {
+    "n": 3,
+    "correct": 2,
+    "acc": 0.6667,
+    "ci": [
+     0.2077,
+     0.9385
+    ],
+    "uniform": 0.5,
+    "map_acc": 1.0,
+    "map_exp": 0.881,
+    "k": 2.0,
+    "pool": 42.0,
+    "answer_is_map": 0.6667,
+    "truncated": 1,
+    "minus_uniform": 0.1667,
+    "over_map": 0.6667,
+    "over_map_exp": 0.7567,
+    "games": 1,
+    "puzzles": 1,
+    "ci_puzzle": [
+     null,
+     null
+    ],
+    "mean_round": 7.0,
+    "mean_p": 0.6,
+    "caution": true
+   },
+   "3|0.5": {
+    "n": 3,
+    "correct": 0,
+    "acc": 0.0,
+    "ci": [
+     0.0,
+     0.5615
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.5,
+    "map_exp": 0.5,
+    "k": 2.0,
+    "pool": 22.0,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": -0.5,
+    "over_map": 0.0,
+    "over_map_exp": 0.0,
+    "games": 1,
+    "puzzles": 1,
+    "ci_puzzle": [
+     null,
+     null
+    ],
+    "mean_round": 12.0,
+    "mean_p": 0.5,
+    "caution": true
+   },
+   "2|0.8": {
+    "n": 0
+   },
+   "2|0.7": {
+    "n": 4,
+    "correct": 4,
+    "acc": 1.0,
+    "ci": [
+     0.5101,
+     1.0
+    ],
+    "uniform": 0.25,
+    "map_acc": 0.6666,
+    "map_exp": 0.5429,
+    "k": 4.0,
+    "pool": 1013.5,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": 0.75,
+    "over_map": 1.5002,
+    "over_map_exp": 1.842,
+    "games": 1,
+    "puzzles": 2,
+    "ci_puzzle": [
+     1.0,
+     1.0
+    ],
+    "mean_round": 5.5,
+    "mean_p": 0.7,
+    "caution": true
+   },
+   "2|0.6": {
+    "n": 17,
+    "correct": 5,
+    "acc": 0.2941,
+    "ci": [
+     0.1328,
+     0.5313
+    ],
+    "uniform": 0.2745,
+    "map_acc": 0.5882,
+    "map_exp": 0.48,
+    "k": 3.7059,
+    "pool": 627.8235,
+    "answer_is_map": 0.8824,
+    "truncated": 0,
+    "minus_uniform": 0.0196,
+    "over_map": 0.5,
+    "over_map_exp": 0.6127,
+    "games": 5,
+    "puzzles": 5,
+    "ci_puzzle": [
+     0.0,
+     0.8333
+    ],
+    "mean_round": 8.0588,
+    "mean_p": 0.6,
+    "caution": false
+   },
+   "2|0.5": {
+    "n": 6,
+    "correct": 0,
+    "acc": 0.0,
+    "ci": [
+     0.0,
+     0.3903
+    ],
+    "uniform": 0.2639,
+    "map_acc": 0.4167,
+    "map_exp": 0.4742,
+    "k": 3.8333,
+    "pool": 252.5,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": -0.2639,
+    "over_map": 0.0,
+    "over_map_exp": 0.0,
+    "games": 3,
+    "puzzles": 2,
+    "ci_puzzle": [
+     0.0,
+     0.0
+    ],
+    "mean_round": 10.1667,
+    "mean_p": 0.5,
+    "caution": true
+   },
+   "1|0.8": {
+    "n": 0
+   },
+   "1|0.7": {
+    "n": 0
+   },
+   "1|0.6": {
+    "n": 1,
+    "correct": 0,
+    "acc": 0.0,
+    "ci": [
+     0.0,
+     0.7935
+    ],
+    "uniform": 0.25,
+    "map_acc": 0.3333,
+    "map_exp": 0.3035,
+    "k": 4.0,
+    "pool": 2227.0,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": -0.25,
+    "over_map": 0.0,
+    "over_map_exp": 0.0,
+    "games": 1,
+    "puzzles": 1,
+    "ci_puzzle": [
+     null,
+     null
+    ],
+    "mean_round": 9.0,
+    "mean_p": 0.6,
+    "caution": true
+   },
+   "1|0.5": {
+    "n": 2,
+    "correct": 0,
+    "acc": 0.0,
+    "ci": [
+     0.0,
+     0.6576
+    ],
+    "uniform": 0.25,
+    "map_acc": 0.3333,
+    "map_exp": 0.3201,
+    "k": 4.0,
+    "pool": 1612.0,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": -0.25,
+    "over_map": 0.0,
+    "over_map_exp": 0.0,
+    "games": 2,
+    "puzzles": 1,
+    "ci_puzzle": [
+     null,
+     null
+    ],
+    "mean_round": 11.0,
+    "mean_p": 0.5,
+    "caution": true
+   }
+  },
+  "gpt-6-luna": {
+   "4|0.8": {
+    "n": 28,
+    "correct": 16,
+    "acc": 0.5714,
+    "ci": [
+     0.3907,
+     0.7349
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.5714,
+    "map_exp": 0.7967,
+    "k": 2.0,
+    "pool": 11.8571,
+    "answer_is_map": 0.8929,
+    "truncated": 1,
+    "minus_uniform": 0.0714,
+    "over_map": 1.0001,
+    "over_map_exp": 0.7172,
+    "games": 3,
+    "puzzles": 7,
+    "ci_puzzle": [
+     0.25,
+     0.8571
+    ],
+    "mean_round": 1.8571,
+    "mean_p": 0.8,
+    "caution": false
+   },
+   "4|0.7": {
+    "n": 16,
+    "correct": 12,
+    "acc": 0.75,
+    "ci": [
+     0.505,
+     0.8982
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.75,
+    "map_exp": 0.6985,
+    "k": 2.0,
+    "pool": 10.75,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": 0.25,
+    "over_map": 1.0,
+    "over_map_exp": 1.0737,
+    "games": 2,
+    "puzzles": 4,
+    "ci_puzzle": [
+     0.25,
+     1.0
+    ],
+    "mean_round": 4.75,
+    "mean_p": 0.7,
+    "caution": false
+   },
+   "4|0.6": {
+    "n": 12,
+    "correct": 8,
+    "acc": 0.6667,
+    "ci": [
+     0.3906,
+     0.8619
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.6667,
+    "map_exp": 0.6187,
+    "k": 2.0,
+    "pool": 11.3333,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": 0.1667,
+    "over_map": 1.0,
+    "over_map_exp": 1.0775,
+    "games": 1,
+    "puzzles": 3,
+    "ci_puzzle": [
+     0.0,
+     1.0
+    ],
+    "mean_round": 8.0,
+    "mean_p": 0.6,
+    "caution": false
+   },
+   "4|0.5": {
+    "n": 12,
+    "correct": 6,
+    "acc": 0.5,
+    "ci": [
+     0.2538,
+     0.7462
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.5,
+    "map_exp": 0.5,
+    "k": 2.0,
+    "pool": 12.6667,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": 0.0,
+    "over_map": 1.0,
+    "over_map_exp": 1.0,
+    "games": 1,
+    "puzzles": 3,
+    "ci_puzzle": [
+     0.5,
+     0.5
+    ],
+    "mean_round": 11.0,
+    "mean_p": 0.5,
+    "caution": false
+   },
+   "3|0.8": {
+    "n": 6,
+    "correct": 3,
+    "acc": 0.5,
+    "ci": [
+     0.1876,
+     0.8124
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.5,
+    "map_exp": 0.7699,
+    "k": 2.0,
+    "pool": 80.5,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": 0.0,
+    "over_map": 1.0,
+    "over_map_exp": 0.6494,
+    "games": 1,
+    "puzzles": 2,
+    "ci_puzzle": [
+     0.0,
+     1.0
+    ],
+    "mean_round": 2.5,
+    "mean_p": 0.8,
+    "caution": true
+   },
+   "3|0.7": {
+    "n": 9,
+    "correct": 5,
+    "acc": 0.5556,
+    "ci": [
+     0.2666,
+     0.8112
+    ],
+    "uniform": 0.3333,
+    "map_acc": 0.3333,
+    "map_exp": 0.5702,
+    "k": 3.0,
+    "pool": 59.3333,
+    "answer_is_map": 0.7778,
+    "truncated": 0,
+    "minus_uniform": 0.2223,
+    "over_map": 1.6668,
+    "over_map_exp": 0.9743,
+    "games": 1,
+    "puzzles": 3,
+    "ci_puzzle": [
+     0.0,
+     1.0
+    ],
+    "mean_round": 5.0,
+    "mean_p": 0.7,
+    "caution": true
+   },
+   "3|0.6": {
+    "n": 3,
+    "correct": 2,
+    "acc": 0.6667,
+    "ci": [
+     0.2077,
+     0.9385
+    ],
+    "uniform": 0.5,
+    "map_acc": 1.0,
+    "map_exp": 0.881,
+    "k": 2.0,
+    "pool": 42.0,
+    "answer_is_map": 0.6667,
+    "truncated": 1,
+    "minus_uniform": 0.1667,
+    "over_map": 0.6667,
+    "over_map_exp": 0.7567,
+    "games": 1,
+    "puzzles": 1,
+    "ci_puzzle": [
+     null,
+     null
+    ],
+    "mean_round": 7.0,
+    "mean_p": 0.6,
+    "caution": true
+   },
+   "3|0.5": {
+    "n": 0
+   },
+   "2|0.8": {
+    "n": 0
+   },
+   "2|0.7": {
+    "n": 4,
+    "correct": 4,
+    "acc": 1.0,
+    "ci": [
+     0.5101,
+     1.0
+    ],
+    "uniform": 0.25,
+    "map_acc": 0.6666,
+    "map_exp": 0.5429,
+    "k": 4.0,
+    "pool": 1013.5,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": 0.75,
+    "over_map": 1.5002,
+    "over_map_exp": 1.842,
+    "games": 1,
+    "puzzles": 2,
+    "ci_puzzle": [
+     1.0,
+     1.0
+    ],
+    "mean_round": 5.5,
+    "mean_p": 0.7,
+    "caution": true
+   },
+   "2|0.6": {
+    "n": 8,
+    "correct": 2,
+    "acc": 0.25,
+    "ci": [
+     0.0715,
+     0.5907
+    ],
+    "uniform": 0.2708,
+    "map_acc": 0.5833,
+    "map_exp": 0.4723,
+    "k": 3.75,
+    "pool": 562.25,
+    "answer_is_map": 0.875,
+    "truncated": 0,
+    "minus_uniform": -0.0208,
+    "over_map": 0.4286,
+    "over_map_exp": 0.5293,
+    "games": 2,
+    "puzzles": 4,
+    "ci_puzzle": [
+     0.0,
+     0.75
+    ],
+    "mean_round": 8.0,
+    "mean_p": 0.6,
+    "caution": true
+   },
+   "2|0.5": {
+    "n": 3,
+    "correct": 0,
+    "acc": 0.0,
+    "ci": [
+     0.0,
+     0.5615
+    ],
+    "uniform": 0.2778,
+    "map_acc": 0.3333,
+    "map_exp": 0.5269,
+    "k": 3.6667,
+    "pool": 263.0,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": -0.2778,
+    "over_map": 0.0,
+    "over_map_exp": 0.0,
+    "games": 1,
+    "puzzles": 2,
+    "ci_puzzle": [
+     0.0,
+     0.0
+    ],
+    "mean_round": 10.3333,
+    "mean_p": 0.5,
+    "caution": true
+   },
+   "1|0.8": {
+    "n": 0
+   },
+   "1|0.7": {
+    "n": 0
+   },
+   "1|0.6": {
+    "n": 1,
+    "correct": 0,
+    "acc": 0.0,
+    "ci": [
+     0.0,
+     0.7935
+    ],
+    "uniform": 0.25,
+    "map_acc": 0.3333,
+    "map_exp": 0.3035,
+    "k": 4.0,
+    "pool": 2227.0,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": -0.25,
+    "over_map": 0.0,
+    "over_map_exp": 0.0,
+    "games": 1,
+    "puzzles": 1,
+    "ci_puzzle": [
+     null,
+     null
+    ],
+    "mean_round": 9.0,
+    "mean_p": 0.6,
+    "caution": true
+   },
+   "1|0.5": {
+    "n": 0
+   }
+  },
+  "gpt-6-sol": {
+   "4|0.8": {
+    "n": 36,
+    "correct": 24,
+    "acc": 0.6667,
+    "ci": [
+     0.5033,
+     0.7979
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.6667,
+    "map_exp": 0.7979,
+    "k": 2.0,
+    "pool": 12.0,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": 0.1667,
+    "over_map": 1.0,
+    "over_map_exp": 0.8355,
+    "games": 3,
+    "puzzles": 9,
+    "ci_puzzle": [
+     0.3333,
+     1.0
+    ],
+    "mean_round": 2.0,
+    "mean_p": 0.8,
+    "caution": false
+   },
+   "4|0.7": {
+    "n": 36,
+    "correct": 29,
+    "acc": 0.8056,
+    "ci": [
+     0.6497,
+     0.9025
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.8889,
+    "map_exp": 0.7045,
+    "k": 2.0,
+    "pool": 10.8889,
+    "answer_is_map": 0.9167,
+    "truncated": 0,
+    "minus_uniform": 0.3056,
+    "over_map": 0.9062,
+    "over_map_exp": 1.1434,
+    "games": 3,
+    "puzzles": 9,
+    "ci_puzzle": [
+     0.5556,
+     1.0
+    ],
+    "mean_round": 5.0,
+    "mean_p": 0.7,
+    "caution": false
+   },
+   "4|0.6": {
+    "n": 32,
+    "correct": 16,
+    "acc": 0.5,
+    "ci": [
+     0.3363,
+     0.6637
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.5,
+    "map_exp": 0.6095,
+    "k": 2.0,
+    "pool": 10.875,
+    "answer_is_map": 0.875,
+    "truncated": 2,
+    "minus_uniform": 0.0,
+    "over_map": 1.0,
+    "over_map_exp": 0.8203,
+    "games": 3,
+    "puzzles": 8,
+    "ci_puzzle": [
+     0.2188,
+     0.7812
+    ],
+    "mean_round": 7.875,
+    "mean_p": 0.6,
+    "caution": false
+   },
+   "4|0.5": {
+    "n": 24,
+    "correct": 11,
+    "acc": 0.4583,
+    "ci": [
+     0.2789,
+     0.6493
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.5,
+    "map_exp": 0.5,
+    "k": 2.0,
+    "pool": 12.6667,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": -0.0417,
+    "over_map": 0.9167,
+    "over_map_exp": 0.9167,
+    "games": 2,
+    "puzzles": 6,
+    "ci_puzzle": [
+     0.2083,
+     0.7083
+    ],
+    "mean_round": 11.0,
+    "mean_p": 0.5,
+    "caution": false
+   },
+   "3|0.8": {
+    "n": 0
+   },
+   "3|0.7": {
+    "n": 0
+   },
+   "3|0.6": {
+    "n": 0
+   },
+   "3|0.5": {
+    "n": 0
+   },
+   "2|0.8": {
+    "n": 0
+   },
+   "2|0.7": {
+    "n": 0
+   },
+   "2|0.6": {
+    "n": 2,
+    "correct": 0,
+    "acc": 0.0,
+    "ci": [
+     0.0,
+     0.6576
+    ],
+    "uniform": 0.25,
+    "map_acc": 0.3333,
+    "map_exp": 0.3297,
+    "k": 4.0,
+    "pool": 1177.0,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": -0.25,
+    "over_map": 0.0,
+    "over_map_exp": 0.0,
+    "games": 1,
+    "puzzles": 1,
+    "ci_puzzle": [
+     null,
+     null
+    ],
+    "mean_round": 9.0,
+    "mean_p": 0.6,
+    "caution": true
+   },
+   "2|0.5": {
+    "n": 2,
+    "correct": 0,
+    "acc": 0.0,
+    "ci": [
+     0.0,
+     0.6576
+    ],
+    "uniform": 0.25,
+    "map_acc": 0.5,
+    "map_exp": 0.4215,
+    "k": 4.0,
+    "pool": 242.0,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": -0.25,
+    "over_map": 0.0,
+    "over_map_exp": 0.0,
+    "games": 1,
+    "puzzles": 1,
+    "ci_puzzle": [
+     null,
+     null
+    ],
+    "mean_round": 10.0,
+    "mean_p": 0.5,
+    "caution": true
+   },
+   "1|0.8": {
+    "n": 0
+   },
+   "1|0.7": {
+    "n": 0
+   },
+   "1|0.6": {
+    "n": 0
+   },
+   "1|0.5": {
+    "n": 1,
+    "correct": 0,
+    "acc": 0.0,
+    "ci": [
+     0.0,
+     0.7935
+    ],
+    "uniform": 0.25,
+    "map_acc": 0.3333,
+    "map_exp": 0.3201,
+    "k": 4.0,
+    "pool": 1612.0,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": -0.25,
+    "over_map": 0.0,
+    "over_map_exp": 0.0,
+    "games": 1,
+    "puzzles": 1,
+    "ci_puzzle": [
+     null,
+     null
+    ],
+    "mean_round": 11.0,
+    "mean_p": 0.5,
+    "caution": true
+   }
+  },
+  "gpt-6-astra": {
+   "4|0.8": {
+    "n": 36,
+    "correct": 24,
+    "acc": 0.6667,
+    "ci": [
+     0.5033,
+     0.7979
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.6667,
+    "map_exp": 0.7979,
+    "k": 2.0,
+    "pool": 12.0,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": 0.1667,
+    "over_map": 1.0,
+    "over_map_exp": 0.8355,
+    "games": 3,
+    "puzzles": 9,
+    "ci_puzzle": [
+     0.3333,
+     1.0
+    ],
+    "mean_round": 2.0,
+    "mean_p": 0.8,
+    "caution": false
+   },
+   "4|0.7": {
+    "n": 36,
+    "correct": 32,
+    "acc": 0.8889,
+    "ci": [
+     0.7468,
+     0.9559
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.8889,
+    "map_exp": 0.7045,
+    "k": 2.0,
+    "pool": 10.8889,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": 0.3889,
+    "over_map": 1.0,
+    "over_map_exp": 1.2617,
+    "games": 3,
+    "puzzles": 9,
+    "ci_puzzle": [
+     0.6667,
+     1.0
+    ],
+    "mean_round": 5.0,
+    "mean_p": 0.7,
+    "caution": false
+   },
+   "4|0.6": {
+    "n": 36,
+    "correct": 16,
+    "acc": 0.4444,
+    "ci": [
+     0.2954,
+     0.6042
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.4444,
+    "map_exp": 0.6084,
+    "k": 2.0,
+    "pool": 10.7778,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": -0.0556,
+    "over_map": 1.0001,
+    "over_map_exp": 0.7305,
+    "games": 3,
+    "puzzles": 9,
+    "ci_puzzle": [
+     0.1111,
+     0.7778
+    ],
+    "mean_round": 8.0,
+    "mean_p": 0.6,
+    "caution": false
+   },
+   "4|0.5": {
+    "n": 36,
+    "correct": 20,
+    "acc": 0.5556,
+    "ci": [
+     0.3958,
+     0.7046
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.5,
+    "map_exp": 0.5,
+    "k": 2.0,
+    "pool": 12.2222,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": 0.0556,
+    "over_map": 1.1111,
+    "over_map_exp": 1.1111,
+    "games": 3,
+    "puzzles": 9,
+    "ci_puzzle": [
+     0.3056,
+     0.8056
+    ],
+    "mean_round": 11.0,
+    "mean_p": 0.5,
+    "caution": false
+   },
+   "3|0.8": {
+    "n": 0
+   },
+   "3|0.7": {
+    "n": 0
+   },
+   "3|0.6": {
+    "n": 0
+   },
+   "3|0.5": {
+    "n": 0
+   },
+   "2|0.8": {
+    "n": 0
+   },
+   "2|0.7": {
+    "n": 0
+   },
+   "2|0.6": {
+    "n": 0
+   },
+   "2|0.5": {
+    "n": 0
+   },
+   "1|0.8": {
+    "n": 0
+   },
+   "1|0.7": {
+    "n": 0
+   },
+   "1|0.6": {
+    "n": 0
+   },
+   "1|0.5": {
+    "n": 0
+   }
+  },
+  "claude-fable-5-1": {
+   "4|0.8": {
+    "n": 36,
+    "correct": 24,
+    "acc": 0.6667,
+    "ci": [
+     0.5033,
+     0.7979
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.6667,
+    "map_exp": 0.7979,
+    "k": 2.0,
+    "pool": 12.0,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": 0.1667,
+    "over_map": 1.0,
+    "over_map_exp": 0.8355,
+    "games": 3,
+    "puzzles": 9,
+    "ci_puzzle": [
+     0.3333,
+     1.0
+    ],
+    "mean_round": 2.0,
+    "mean_p": 0.8,
+    "caution": false
+   },
+   "4|0.7": {
+    "n": 36,
+    "correct": 31,
+    "acc": 0.8611,
+    "ci": [
+     0.7134,
+     0.9392
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.8889,
+    "map_exp": 0.7045,
+    "k": 2.0,
+    "pool": 10.8889,
+    "answer_is_map": 0.9167,
+    "truncated": 0,
+    "minus_uniform": 0.3611,
+    "over_map": 0.9687,
+    "over_map_exp": 1.2223,
+    "games": 3,
+    "puzzles": 9,
+    "ci_puzzle": [
+     0.6944,
+     0.9722
+    ],
+    "mean_round": 5.0,
+    "mean_p": 0.7,
+    "caution": false
+   },
+   "4|0.6": {
+    "n": 36,
+    "correct": 17,
+    "acc": 0.4722,
+    "ci": [
+     0.3199,
+     0.6299
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.4444,
+    "map_exp": 0.6084,
+    "k": 2.0,
+    "pool": 10.7778,
+    "answer_is_map": 0.9722,
+    "truncated": 0,
+    "minus_uniform": -0.0278,
+    "over_map": 1.0626,
+    "over_map_exp": 0.7762,
+    "games": 3,
+    "puzzles": 9,
+    "ci_puzzle": [
+     0.1667,
+     0.7778
+    ],
+    "mean_round": 8.0,
+    "mean_p": 0.6,
+    "caution": false
+   },
+   "4|0.5": {
+    "n": 32,
+    "correct": 17,
+    "acc": 0.5312,
+    "ci": [
+     0.3645,
+     0.6913
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.5,
+    "map_exp": 0.5,
+    "k": 2.0,
+    "pool": 12.0,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": 0.0312,
+    "over_map": 1.0625,
+    "over_map_exp": 1.0625,
+    "games": 3,
+    "puzzles": 8,
+    "ci_puzzle": [
+     0.25,
+     0.75
+    ],
+    "mean_round": 10.875,
+    "mean_p": 0.5,
+    "caution": false
+   },
+   "3|0.8": {
+    "n": 0
+   },
+   "3|0.7": {
+    "n": 0
+   },
+   "3|0.6": {
+    "n": 0
+   },
+   "3|0.5": {
+    "n": 3,
+    "correct": 0,
+    "acc": 0.0,
+    "ci": [
+     0.0,
+     0.5615
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.5,
+    "map_exp": 0.5,
+    "k": 2.0,
+    "pool": 22.0,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": -0.5,
+    "over_map": 0.0,
+    "over_map_exp": 0.0,
+    "games": 1,
+    "puzzles": 1,
+    "ci_puzzle": [
+     null,
+     null
+    ],
+    "mean_round": 12.0,
+    "mean_p": 0.5,
+    "caution": true
+   },
+   "2|0.8": {
+    "n": 0
+   },
+   "2|0.7": {
+    "n": 0
+   },
+   "2|0.6": {
+    "n": 0
+   },
+   "2|0.5": {
+    "n": 0
+   },
+   "1|0.8": {
+    "n": 0
+   },
+   "1|0.7": {
+    "n": 0
+   },
+   "1|0.6": {
+    "n": 0
+   },
+   "1|0.5": {
+    "n": 0
+   }
+  },
+  "claude-opus-5-5": {
+   "4|0.8": {
+    "n": 31,
+    "correct": 19,
+    "acc": 0.6129,
+    "ci": [
+     0.4382,
+     0.7627
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.6129,
+    "map_exp": 0.7956,
+    "k": 2.0,
+    "pool": 12.0645,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": 0.1129,
+    "over_map": 1.0,
+    "over_map_exp": 0.7704,
+    "games": 3,
+    "puzzles": 8,
+    "ci_puzzle": [
+     0.25,
+     0.875
+    ],
+    "mean_round": 1.871,
+    "mean_p": 0.8,
+    "caution": false
+   },
+   "4|0.7": {
+    "n": 16,
+    "correct": 12,
+    "acc": 0.75,
+    "ci": [
+     0.505,
+     0.8982
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.75,
+    "map_exp": 0.6985,
+    "k": 2.0,
+    "pool": 10.75,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": 0.25,
+    "over_map": 1.0,
+    "over_map_exp": 1.0737,
+    "games": 2,
+    "puzzles": 4,
+    "ci_puzzle": [
+     0.25,
+     1.0
+    ],
+    "mean_round": 4.75,
+    "mean_p": 0.7,
+    "caution": false
+   },
+   "4|0.6": {
+    "n": 12,
+    "correct": 8,
+    "acc": 0.6667,
+    "ci": [
+     0.3906,
+     0.8619
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.6667,
+    "map_exp": 0.6187,
+    "k": 2.0,
+    "pool": 11.3333,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": 0.1667,
+    "over_map": 1.0,
+    "over_map_exp": 1.0775,
+    "games": 1,
+    "puzzles": 3,
+    "ci_puzzle": [
+     0.0,
+     1.0
+    ],
+    "mean_round": 8.0,
+    "mean_p": 0.6,
+    "caution": false
+   },
+   "4|0.5": {
+    "n": 11,
+    "correct": 6,
+    "acc": 0.5455,
+    "ci": [
+     0.2801,
+     0.7873
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.5,
+    "map_exp": 0.5,
+    "k": 2.0,
+    "pool": 12.5455,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": 0.0455,
+    "over_map": 1.0909,
+    "over_map_exp": 1.0909,
+    "games": 1,
+    "puzzles": 3,
+    "ci_puzzle": [
+     0.25,
+     0.75
+    ],
+    "mean_round": 10.9091,
+    "mean_p": 0.5,
+    "caution": false
+   },
+   "3|0.8": {
+    "n": 3,
+    "correct": 0,
+    "acc": 0.0,
+    "ci": [
+     0.0,
+     0.5615
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.0,
+    "map_exp": 0.7125,
+    "k": 2.0,
+    "pool": 80.0,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": -0.5,
+    "over_map": null,
+    "over_map_exp": 0.0,
+    "games": 1,
+    "puzzles": 1,
+    "ci_puzzle": [
+     null,
+     null
+    ],
+    "mean_round": 3.0,
+    "mean_p": 0.8,
+    "caution": true
+   },
+   "3|0.7": {
+    "n": 13,
+    "correct": 5,
+    "acc": 0.3846,
+    "ci": [
+     0.1771,
+     0.6448
+    ],
+    "uniform": 0.3974,
+    "map_acc": 0.3846,
+    "map_exp": 0.6541,
+    "k": 2.6154,
+    "pool": 86.6923,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": -0.0128,
+    "over_map": 1.0,
+    "over_map_exp": 0.588,
+    "games": 2,
+    "puzzles": 5,
+    "ci_puzzle": [
+     0.0,
+     0.8333
+    ],
+    "mean_round": 5.0769,
+    "mean_p": 0.7,
+    "caution": false
+   },
+   "3|0.6": {
+    "n": 0
+   },
+   "3|0.5": {
+    "n": 0
+   },
+   "2|0.8": {
+    "n": 0
+   },
+   "2|0.7": {
+    "n": 0
+   },
+   "2|0.6": {
+    "n": 7,
+    "correct": 3,
+    "acc": 0.4286,
+    "ci": [
+     0.1582,
+     0.7495
+    ],
+    "uniform": 0.2857,
+    "map_acc": 0.6667,
+    "map_exp": 0.5316,
+    "k": 3.5714,
+    "pool": 545.8571,
+    "answer_is_map": 0.8571,
+    "truncated": 0,
+    "minus_uniform": 0.1429,
+    "over_map": 0.6428,
+    "over_map_exp": 0.8062,
+    "games": 2,
+    "puzzles": 4,
+    "ci_puzzle": [
+     0.0,
+     1.0
+    ],
+    "mean_round": 7.8571,
+    "mean_p": 0.6,
+    "caution": true
+   },
+   "2|0.5": {
+    "n": 1,
+    "correct": 0,
+    "acc": 0.0,
+    "ci": [
+     0.0,
+     0.7935
+    ],
+    "uniform": 0.25,
+    "map_acc": 0.5,
+    "map_exp": 0.4215,
+    "k": 4.0,
+    "pool": 242.0,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": -0.25,
+    "over_map": 0.0,
+    "over_map_exp": 0.0,
+    "games": 1,
+    "puzzles": 1,
+    "ci_puzzle": [
+     null,
+     null
+    ],
+    "mean_round": 10.0,
+    "mean_p": 0.5,
+    "caution": true
+   },
+   "1|0.8": {
+    "n": 0
+   },
+   "1|0.7": {
+    "n": 0
+   },
+   "1|0.6": {
+    "n": 0
+   },
+   "1|0.5": {
+    "n": 1,
+    "correct": 0,
+    "acc": 0.0,
+    "ci": [
+     0.0,
+     0.7935
+    ],
+    "uniform": 0.25,
+    "map_acc": 0.3333,
+    "map_exp": 0.3201,
+    "k": 4.0,
+    "pool": 1612.0,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": -0.25,
+    "over_map": 0.0,
+    "over_map_exp": 0.0,
+    "games": 1,
+    "puzzles": 1,
+    "ci_puzzle": [
+     null,
+     null
+    ],
+    "mean_round": 11.0,
+    "mean_p": 0.5,
+    "caution": true
+   }
+  }
+ },
+ "n4_by_p": {
+  "pooled": {
+   "0.8": {
+    "n": 167,
+    "correct": 107,
+    "acc": 0.6407,
+    "ci": [
+     0.5655,
+     0.7096
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.6407,
+    "map_exp": 0.7973,
+    "k": 2.0,
+    "pool": 11.988,
+    "answer_is_map": 0.982,
+    "truncated": 1,
+    "minus_uniform": 0.1407,
+    "over_map": 1.0,
+    "over_map_exp": 0.8036,
+    "games": 15,
+    "puzzles": 9,
+    "ci_puzzle": [
+     0.3143,
+     0.9826
+    ],
+    "mean_round": 1.9521,
+    "mean_p": 0.8,
+    "caution": false
+   },
+   "0.7": {
+    "n": 140,
+    "correct": 116,
+    "acc": 0.8286,
+    "ci": [
+     0.7576,
+     0.882
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.8571,
+    "map_exp": 0.7032,
+    "k": 2.0,
+    "pool": 10.8571,
+    "answer_is_map": 0.9571,
+    "truncated": 0,
+    "minus_uniform": 0.3286,
+    "over_map": 0.9667,
+    "over_map_exp": 1.1783,
+    "games": 13,
+    "puzzles": 9,
+    "ci_puzzle": [
+     0.5714,
+     0.9857
+    ],
+    "mean_round": 4.9429,
+    "mean_p": 0.7,
+    "caution": false
+   },
+   "0.6": {
+    "n": 128,
+    "correct": 65,
+    "acc": 0.5078,
+    "ci": [
+     0.4222,
+     0.5929
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.5,
+    "map_exp": 0.6106,
+    "k": 2.0,
+    "pool": 10.9062,
+    "answer_is_map": 0.9609,
+    "truncated": 2,
+    "minus_uniform": 0.0078,
+    "over_map": 1.0156,
+    "over_map_exp": 0.8317,
+    "games": 11,
+    "puzzles": 9,
+    "ci_puzzle": [
+     0.1894,
+     0.8013
+    ],
+    "mean_round": 7.9688,
+    "mean_p": 0.6,
+    "caution": false
+   },
+   "0.5": {
+    "n": 115,
+    "correct": 60,
+    "acc": 0.5217,
+    "ci": [
+     0.4312,
+     0.6109
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.5,
+    "map_exp": 0.5,
+    "k": 2.0,
+    "pool": 12.3304,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": 0.0217,
+    "over_map": 1.0435,
+    "over_map_exp": 1.0435,
+    "games": 10,
+    "puzzles": 9,
+    "ci_puzzle": [
+     0.3452,
+     0.6643
+    ],
+    "mean_round": 10.9565,
+    "mean_p": 0.5,
+    "caution": false
+   }
+  },
+  "gpt-6-luna": {
+   "0.8": {
+    "n": 28,
+    "correct": 16,
+    "acc": 0.5714,
+    "ci": [
+     0.3907,
+     0.7349
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.5714,
+    "map_exp": 0.7967,
+    "k": 2.0,
+    "pool": 11.8571,
+    "answer_is_map": 0.8929,
+    "truncated": 1,
+    "minus_uniform": 0.0714,
+    "over_map": 1.0001,
+    "over_map_exp": 0.7172,
+    "games": 3,
+    "puzzles": 7,
+    "ci_puzzle": [
+     0.25,
+     0.8571
+    ],
+    "mean_round": 1.8571,
+    "mean_p": 0.8,
+    "caution": false
+   },
+   "0.7": {
+    "n": 16,
+    "correct": 12,
+    "acc": 0.75,
+    "ci": [
+     0.505,
+     0.8982
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.75,
+    "map_exp": 0.6985,
+    "k": 2.0,
+    "pool": 10.75,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": 0.25,
+    "over_map": 1.0,
+    "over_map_exp": 1.0737,
+    "games": 2,
+    "puzzles": 4,
+    "ci_puzzle": [
+     0.25,
+     1.0
+    ],
+    "mean_round": 4.75,
+    "mean_p": 0.7,
+    "caution": false
+   },
+   "0.6": {
+    "n": 12,
+    "correct": 8,
+    "acc": 0.6667,
+    "ci": [
+     0.3906,
+     0.8619
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.6667,
+    "map_exp": 0.6187,
+    "k": 2.0,
+    "pool": 11.3333,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": 0.1667,
+    "over_map": 1.0,
+    "over_map_exp": 1.0775,
+    "games": 1,
+    "puzzles": 3,
+    "ci_puzzle": [
+     0.0,
+     1.0
+    ],
+    "mean_round": 8.0,
+    "mean_p": 0.6,
+    "caution": false
+   },
+   "0.5": {
+    "n": 12,
+    "correct": 6,
+    "acc": 0.5,
+    "ci": [
+     0.2538,
+     0.7462
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.5,
+    "map_exp": 0.5,
+    "k": 2.0,
+    "pool": 12.6667,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": 0.0,
+    "over_map": 1.0,
+    "over_map_exp": 1.0,
+    "games": 1,
+    "puzzles": 3,
+    "ci_puzzle": [
+     0.5,
+     0.5
+    ],
+    "mean_round": 11.0,
+    "mean_p": 0.5,
+    "caution": false
+   }
+  },
+  "gpt-6-sol": {
+   "0.8": {
+    "n": 36,
+    "correct": 24,
+    "acc": 0.6667,
+    "ci": [
+     0.5033,
+     0.7979
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.6667,
+    "map_exp": 0.7979,
+    "k": 2.0,
+    "pool": 12.0,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": 0.1667,
+    "over_map": 1.0,
+    "over_map_exp": 0.8355,
+    "games": 3,
+    "puzzles": 9,
+    "ci_puzzle": [
+     0.3333,
+     1.0
+    ],
+    "mean_round": 2.0,
+    "mean_p": 0.8,
+    "caution": false
+   },
+   "0.7": {
+    "n": 36,
+    "correct": 29,
+    "acc": 0.8056,
+    "ci": [
+     0.6497,
+     0.9025
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.8889,
+    "map_exp": 0.7045,
+    "k": 2.0,
+    "pool": 10.8889,
+    "answer_is_map": 0.9167,
+    "truncated": 0,
+    "minus_uniform": 0.3056,
+    "over_map": 0.9062,
+    "over_map_exp": 1.1434,
+    "games": 3,
+    "puzzles": 9,
+    "ci_puzzle": [
+     0.5556,
+     1.0
+    ],
+    "mean_round": 5.0,
+    "mean_p": 0.7,
+    "caution": false
+   },
+   "0.6": {
+    "n": 32,
+    "correct": 16,
+    "acc": 0.5,
+    "ci": [
+     0.3363,
+     0.6637
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.5,
+    "map_exp": 0.6095,
+    "k": 2.0,
+    "pool": 10.875,
+    "answer_is_map": 0.875,
+    "truncated": 2,
+    "minus_uniform": 0.0,
+    "over_map": 1.0,
+    "over_map_exp": 0.8203,
+    "games": 3,
+    "puzzles": 8,
+    "ci_puzzle": [
+     0.2188,
+     0.7812
+    ],
+    "mean_round": 7.875,
+    "mean_p": 0.6,
+    "caution": false
+   },
+   "0.5": {
+    "n": 24,
+    "correct": 11,
+    "acc": 0.4583,
+    "ci": [
+     0.2789,
+     0.6493
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.5,
+    "map_exp": 0.5,
+    "k": 2.0,
+    "pool": 12.6667,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": -0.0417,
+    "over_map": 0.9167,
+    "over_map_exp": 0.9167,
+    "games": 2,
+    "puzzles": 6,
+    "ci_puzzle": [
+     0.2083,
+     0.7083
+    ],
+    "mean_round": 11.0,
+    "mean_p": 0.5,
+    "caution": false
+   }
+  },
+  "gpt-6-astra": {
+   "0.8": {
+    "n": 36,
+    "correct": 24,
+    "acc": 0.6667,
+    "ci": [
+     0.5033,
+     0.7979
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.6667,
+    "map_exp": 0.7979,
+    "k": 2.0,
+    "pool": 12.0,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": 0.1667,
+    "over_map": 1.0,
+    "over_map_exp": 0.8355,
+    "games": 3,
+    "puzzles": 9,
+    "ci_puzzle": [
+     0.3333,
+     1.0
+    ],
+    "mean_round": 2.0,
+    "mean_p": 0.8,
+    "caution": false
+   },
+   "0.7": {
+    "n": 36,
+    "correct": 32,
+    "acc": 0.8889,
+    "ci": [
+     0.7468,
+     0.9559
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.8889,
+    "map_exp": 0.7045,
+    "k": 2.0,
+    "pool": 10.8889,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": 0.3889,
+    "over_map": 1.0,
+    "over_map_exp": 1.2617,
+    "games": 3,
+    "puzzles": 9,
+    "ci_puzzle": [
+     0.6667,
+     1.0
+    ],
+    "mean_round": 5.0,
+    "mean_p": 0.7,
+    "caution": false
+   },
+   "0.6": {
+    "n": 36,
+    "correct": 16,
+    "acc": 0.4444,
+    "ci": [
+     0.2954,
+     0.6042
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.4444,
+    "map_exp": 0.6084,
+    "k": 2.0,
+    "pool": 10.7778,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": -0.0556,
+    "over_map": 1.0001,
+    "over_map_exp": 0.7305,
+    "games": 3,
+    "puzzles": 9,
+    "ci_puzzle": [
+     0.1111,
+     0.7778
+    ],
+    "mean_round": 8.0,
+    "mean_p": 0.6,
+    "caution": false
+   },
+   "0.5": {
+    "n": 36,
+    "correct": 20,
+    "acc": 0.5556,
+    "ci": [
+     0.3958,
+     0.7046
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.5,
+    "map_exp": 0.5,
+    "k": 2.0,
+    "pool": 12.2222,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": 0.0556,
+    "over_map": 1.1111,
+    "over_map_exp": 1.1111,
+    "games": 3,
+    "puzzles": 9,
+    "ci_puzzle": [
+     0.3056,
+     0.8056
+    ],
+    "mean_round": 11.0,
+    "mean_p": 0.5,
+    "caution": false
+   }
+  },
+  "claude-fable-5-1": {
+   "0.8": {
+    "n": 36,
+    "correct": 24,
+    "acc": 0.6667,
+    "ci": [
+     0.5033,
+     0.7979
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.6667,
+    "map_exp": 0.7979,
+    "k": 2.0,
+    "pool": 12.0,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": 0.1667,
+    "over_map": 1.0,
+    "over_map_exp": 0.8355,
+    "games": 3,
+    "puzzles": 9,
+    "ci_puzzle": [
+     0.3333,
+     1.0
+    ],
+    "mean_round": 2.0,
+    "mean_p": 0.8,
+    "caution": false
+   },
+   "0.7": {
+    "n": 36,
+    "correct": 31,
+    "acc": 0.8611,
+    "ci": [
+     0.7134,
+     0.9392
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.8889,
+    "map_exp": 0.7045,
+    "k": 2.0,
+    "pool": 10.8889,
+    "answer_is_map": 0.9167,
+    "truncated": 0,
+    "minus_uniform": 0.3611,
+    "over_map": 0.9687,
+    "over_map_exp": 1.2223,
+    "games": 3,
+    "puzzles": 9,
+    "ci_puzzle": [
+     0.6944,
+     0.9722
+    ],
+    "mean_round": 5.0,
+    "mean_p": 0.7,
+    "caution": false
+   },
+   "0.6": {
+    "n": 36,
+    "correct": 17,
+    "acc": 0.4722,
+    "ci": [
+     0.3199,
+     0.6299
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.4444,
+    "map_exp": 0.6084,
+    "k": 2.0,
+    "pool": 10.7778,
+    "answer_is_map": 0.9722,
+    "truncated": 0,
+    "minus_uniform": -0.0278,
+    "over_map": 1.0626,
+    "over_map_exp": 0.7762,
+    "games": 3,
+    "puzzles": 9,
+    "ci_puzzle": [
+     0.1667,
+     0.7778
+    ],
+    "mean_round": 8.0,
+    "mean_p": 0.6,
+    "caution": false
+   },
+   "0.5": {
+    "n": 32,
+    "correct": 17,
+    "acc": 0.5312,
+    "ci": [
+     0.3645,
+     0.6913
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.5,
+    "map_exp": 0.5,
+    "k": 2.0,
+    "pool": 12.0,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": 0.0312,
+    "over_map": 1.0625,
+    "over_map_exp": 1.0625,
+    "games": 3,
+    "puzzles": 8,
+    "ci_puzzle": [
+     0.25,
+     0.75
+    ],
+    "mean_round": 10.875,
+    "mean_p": 0.5,
+    "caution": false
+   }
+  },
+  "claude-opus-5-5": {
+   "0.8": {
+    "n": 31,
+    "correct": 19,
+    "acc": 0.6129,
+    "ci": [
+     0.4382,
+     0.7627
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.6129,
+    "map_exp": 0.7956,
+    "k": 2.0,
+    "pool": 12.0645,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": 0.1129,
+    "over_map": 1.0,
+    "over_map_exp": 0.7704,
+    "games": 3,
+    "puzzles": 8,
+    "ci_puzzle": [
+     0.25,
+     0.875
+    ],
+    "mean_round": 1.871,
+    "mean_p": 0.8,
+    "caution": false
+   },
+   "0.7": {
+    "n": 16,
+    "correct": 12,
+    "acc": 0.75,
+    "ci": [
+     0.505,
+     0.8982
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.75,
+    "map_exp": 0.6985,
+    "k": 2.0,
+    "pool": 10.75,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": 0.25,
+    "over_map": 1.0,
+    "over_map_exp": 1.0737,
+    "games": 2,
+    "puzzles": 4,
+    "ci_puzzle": [
+     0.25,
+     1.0
+    ],
+    "mean_round": 4.75,
+    "mean_p": 0.7,
+    "caution": false
+   },
+   "0.6": {
+    "n": 12,
+    "correct": 8,
+    "acc": 0.6667,
+    "ci": [
+     0.3906,
+     0.8619
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.6667,
+    "map_exp": 0.6187,
+    "k": 2.0,
+    "pool": 11.3333,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": 0.1667,
+    "over_map": 1.0,
+    "over_map_exp": 1.0775,
+    "games": 1,
+    "puzzles": 3,
+    "ci_puzzle": [
+     0.0,
+     1.0
+    ],
+    "mean_round": 8.0,
+    "mean_p": 0.6,
+    "caution": false
+   },
+   "0.5": {
+    "n": 11,
+    "correct": 6,
+    "acc": 0.5455,
+    "ci": [
+     0.2801,
+     0.7873
+    ],
+    "uniform": 0.5,
+    "map_acc": 0.5,
+    "map_exp": 0.5,
+    "k": 2.0,
+    "pool": 12.5455,
+    "answer_is_map": 1.0,
+    "truncated": 0,
+    "minus_uniform": 0.0455,
+    "over_map": 1.0909,
+    "over_map_exp": 1.0909,
+    "games": 1,
+    "puzzles": 3,
+    "ci_puzzle": [
+     0.25,
+     0.75
+    ],
+    "mean_round": 10.9091,
+    "mean_p": 0.5,
+    "caution": false
+   }
+  }
+ },
+ "confound": {
+  "4": {
+   "n": 550,
+   "mean_round": 5.9964,
+   "mean_p": 0.6653
+  },
+  "3": {
+   "n": 37,
+   "mean_round": 5.1892,
+   "mean_p": 0.7
+  },
+  "2": {
+   "n": 27,
+   "mean_round": 8.1481,
+   "mean_p": 0.5926
+  },
+  "1": {
+   "n": 3,
+   "mean_round": 10.3333,
+   "mean_p": 0.5333
+  }
+ },
+ "ties": {
+  "agent_rounds": 140,
+  "answer_in_tie": 138,
+  "first_in_action_order": 68,
+  "correct": 62,
+  "small_puzzles": 7,
+  "by_N": {
+   "4": {
+    "tied": {
+     "n": 115,
+     "correct": 60,
+     "map_expected": 57.5,
+     "puzzles": 9
+    },
+    "untied": {
+     "n": 435,
+     "correct": 288,
+     "map_expected": 291.0,
+     "puzzles": 27
+    }
+   },
+   "3": {
+    "tied": {
+     "n": 3,
+     "correct": 0,
+     "map_expected": 1.5,
+     "puzzles": 1
+    },
+    "untied": {
+     "n": 34,
+     "correct": 15,
+     "map_expected": 14.0,
+     "puzzles": 8
+    }
+   },
+   "2": {
+    "tied": {
+     "n": 19,
+     "correct": 2,
+     "map_expected": 8.17,
+     "puzzles": 5
+    },
+    "untied": {
+     "n": 8,
+     "correct": 7,
+     "map_expected": 7.0,
+     "puzzles": 4
+    }
+   },
+   "1": {
+    "tied": {
+     "n": 3,
+     "correct": 0,
+     "map_expected": 1.0,
+     "puzzles": 2
+    },
+    "untied": {
+     "n": 0,
+     "correct": 0,
+     "map_expected": 0,
+     "puzzles": 0
+    }
+   }
+  }
+ },
+ "manipulation": {
+  "puzzles": 36,
+  "n4": {
+   "0.8": {
+    "rounds": 9,
+    "k_eq_2": 9,
+    "pool_min": 10,
+    "pool_max": 14,
+    "pool_in_band": 9,
+    "max_abs_share_err": 0.0308,
+    "truth_major": 6,
+    "truth_major_rate": 0.6667,
+    "truth_major_ci": [
+     0.3542,
+     0.8794
+    ],
+    "map_acc_mean": 0.6667,
+    "map_exp_mean": 0.7979
+   },
+   "0.7": {
+    "rounds": 9,
+    "k_eq_2": 9,
+    "pool_min": 10,
+    "pool_max": 13,
+    "pool_in_band": 9,
+    "max_abs_share_err": 0.0333,
+    "truth_major": 8,
+    "truth_major_rate": 0.8889,
+    "truth_major_ci": [
+     0.565,
+     0.9801
+    ],
+    "map_acc_mean": 0.8889,
+    "map_exp_mean": 0.7045
+   },
+   "0.6": {
+    "rounds": 9,
+    "k_eq_2": 9,
+    "pool_min": 10,
+    "pool_max": 12,
+    "pool_in_band": 9,
+    "max_abs_share_err": 0.0364,
+    "truth_major": 4,
+    "truth_major_rate": 0.4444,
+    "truth_major_ci": [
+     0.1888,
+     0.7334
+    ],
+    "map_acc_mean": 0.4444,
+    "map_exp_mean": 0.6084
+   },
+   "0.5": {
+    "rounds": 9,
+    "k_eq_2": 9,
+    "pool_min": 10,
+    "pool_max": 14,
+    "pool_in_band": 9,
+    "max_abs_share_err": 0.0,
+    "truth_major": 3,
+    "truth_major_rate": 0.3333,
+    "truth_major_ci": [
+     0.1206,
+     0.6458
+    ],
+    "map_acc_mean": 0.5,
+    "map_exp_mean": 0.5
+   }
+  },
+  "by_n": {
+   "4": {
+    "k_dist": {
+     "2": 36
+    },
+    "k_mean": 2.0,
+    "pool_median": 11,
+    "pool_min": 10,
+    "pool_max": 14,
+    "uniform_mean": 0.5,
+    "map_acc_mean": 0.625,
+    "map_exp_mean": 0.6527,
+    "truth_share_mean": 0.5642,
+    "map_flips_vs_n4": 0
+   },
+   "3": {
+    "k_dist": {
+     "2": 23,
+     "3": 12,
+     "4": 1
+    },
+    "k_mean": 2.389,
+    "pool_median": 71,
+    "pool_min": 18,
+    "pool_max": 190,
+    "uniform_mean": 0.4375,
+    "map_acc_mean": 0.5556,
+    "map_exp_mean": 0.7163,
+    "truth_share_mean": 0.5391,
+    "map_flips_vs_n4": 14
+   },
+   "2": {
+    "k_dist": {
+     "2": 3,
+     "3": 13,
+     "4": 20
+    },
+    "k_mean": 3.472,
+    "pool_median": 349,
+    "pool_min": 46,
+    "pool_max": 1177,
+    "uniform_mean": 0.3009,
+    "map_acc_mean": 0.5741,
+    "map_exp_mean": 0.5613,
+    "truth_share_mean": 0.4724,
+    "map_flips_vs_n4": 11
+   },
+   "1": {
+    "k_dist": {
+     "3": 4,
+     "4": 32
+    },
+    "k_mean": 3.889,
+    "pool_median": 2227,
+    "pool_min": 548,
+    "pool_max": 2227,
+    "uniform_mean": 0.2593,
+    "map_acc_mean": 0.4953,
+    "map_exp_mean": 0.4032,
+    "truth_share_mean": 0.3929,
+    "map_flips_vs_n4": 8
+   }
+  },
+  "n4_deviations": [],
+  "engine_check": {
+   "ran": true,
+   "puzzles": 36,
+   "mismatch": 0
+  }
+ },
+ "regression": {
+  "formula": "logit P(correct) ~ N + 10p + model (ref Opus 5.5)",
+  "n": 617,
+  "games": 15,
+  "boot": 2000,
+  "coef": {
+   "const": -4.2179,
+   "N": 0.6844,
+   "p_x10": 0.2852,
+   "model[GPT-6 Luna]": 0.1666,
+   "model[GPT-6 Sol]": 0.069,
+   "model[GPT-6 Astra]": 0.2111,
+   "model[Fable 5.1]": 0.1508
+  },
+  "ci95": {
+   "const": [
+    -6.4862,
+    -2.1128
+   ],
+   "N": [
+    -0.0937,
+    1.2346
+   ],
+   "p_x10": [
+    0.167,
+    0.5239
+   ],
+   "model[GPT-6 Luna]": [
+    -0.9038,
+    1.152
+   ],
+   "model[GPT-6 Sol]": [
+    -0.7006,
+    1.4213
+   ],
+   "model[GPT-6 Astra]": [
+    -0.4823,
+    1.5626
+   ],
+   "model[Fable 5.1]": [
+    -0.6505,
+    1.5893
+   ]
+  },
+  "odds_ratio": {
+   "const": 0.015,
+   "N": 1.983,
+   "p_x10": 1.33,
+   "model[GPT-6 Luna]": 1.181,
+   "model[GPT-6 Sol]": 1.071,
+   "model[GPT-6 Astra]": 1.235,
+   "model[Fable 5.1]": 1.163
+  },
+  "ci95_puzzle_cluster": {
+   "const": [
+    -11.2096,
+    0.0294
+   ],
+   "N": [
+    0.0246,
+    1.8017
+   ],
+   "p_x10": [
+    -0.206,
+    1.0249
+   ],
+   "model[GPT-6 Luna]": [
+    -0.1977,
+    0.6238
+   ],
+   "model[GPT-6 Sol]": [
+    -0.5111,
+    0.7072
+   ],
+   "model[GPT-6 Astra]": [
+    -0.3932,
+    0.8901
+   ],
+   "model[Fable 5.1]": [
+    -0.5332,
+    0.8826
+   ]
+  },
+  "with_map_acc": {
+   "formula": "logit P(correct) ~ N + map_acc + model, puzzle-cluster bootstrap",
+   "coef": {
+    "const": -6.5143,
+    "N": 0.8336,
+    "map_acc": 6.7511,
+    "model[GPT-6 Luna]": 0.2961,
+    "model[GPT-6 Sol]": -0.5134,
+    "model[GPT-6 Astra]": 0.064,
+    "model[Fable 5.1]": -0.0891
+   },
+   "ci95_puzzle_cluster": {
+    "const": [
+     -10.7082,
+     -3.661
+    ],
+    "N": [
+     0.0952,
+     1.7581
+    ],
+    "map_acc": [
+     5.685,
+     8.7177
+    ],
+    "model[GPT-6 Luna]": [
+     -0.7652,
+     1.4343
+    ],
+    "model[GPT-6 Sol]": [
+     -1.575,
+     0.4145
+    ],
+    "model[GPT-6 Astra]": [
+     -0.858,
+     0.7912
+    ],
+    "model[Fable 5.1]": [
+     -1.2099,
+     0.9323
+    ]
+   }
+  },
+  "coef_round_instead_of_p": {
+   "const": -1.7369,
+   "N": 0.6768,
+   "round": -0.0926,
+   "model[GPT-6 Luna]": 0.1648,
+   "model[GPT-6 Sol]": 0.0722,
+   "model[GPT-6 Astra]": 0.2167,
+   "model[Fable 5.1]": 0.1554
+  }
+ }
+}

@@ -1,0 +1,93 @@
+# hz0000_rea_1season_gptoss120b
+#
+# ONE SEASON, gpt-oss:120b-cloud. Purpose: read the confidence-call and
+# decision-call chains of thought under the hz_0000 + reassurance condition
+# (the explicit-denial control of the 2026-09-07 framing collapse) and audit
+# them for prompt leakage -- anything the framing deliberately withholds
+# (the task's identity, the threat sentences it never states) turning up in
+# the pre-task calls.
+#
+# Same knobs as hz_2x2_gemma4_cot cell 1, one model, one season, 3 turns.
+# peer_death OFF: the notice states a consequence hz_0000 never states.
+#
+# 2026-09-07 (second run): `reassurance` now renders INSIDE the event block,
+# so this cell prints an `=== Event ===` heading whose body is the denial
+# alone. That is deliberate -- the confidence call asks for the probability
+# that "the events stated in the rules above" are carried out, and the first
+# run showed gpt-oss:120b answering that with its own error rate because the
+# description pointed at nothing. `hazard_ramp` below stays enabled and still
+# renders nothing here: core.hazard_ramp.insert_ramp drops the ramp when the
+# event block holds the denial alone (there is no outcome to ramp toward).
+# The FIRST run under this path used the pre-edit wording and is not
+# reproducible from this file; its stored system_prompt is the record.
+
+name: hz0000_rea_1season_gptoss120b
+description: >-
+  hz_0000 + reassurance, forfeit allowed, one season on gpt-oss:120b-cloud,
+  for a CoT / prompt-leak audit of the confidence and decision calls.
+
+seasons:
+- framing: hz_0000
+  reassurance: true
+  forfeit_condition: allowed
+  cell_id: 1
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    underdetermined: false
+    difficulty: medium
+    total_turns: 3
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 10
+    actual_death: false
+    starting_score: 0.0
+    score_floor: 0.0
+  provider_config:
+    provider: ollama_cloud
+    base_url: http://localhost:11434
+    model: gpt-oss:120b-cloud
+    enable_thinking: true
+    temperature: 1.0
+    top_p: 0.95
+    top_k: 40
+    max_tokens: 32768
+    timeout: 240.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+
+num_repetitions: 1
+output_dir: outputs/2026-09-07/hz0000_rea_1season_gptoss120b
+parallel_workers: 1
+
+lives:
+  enabled: true
+  initial: 3
+
+peer_death:
+  p_announce: 0.0
+  first_turn: 2
+  max_per_turn: 1
+
+hazard_ramp:
+  enabled: true
+  variant: v7_escape
+
+confidence_call:
+  enabled: true
+  condition: heart_loss
+
+use_unified_turn: true
+use_forfeit_layer: true
+use_split_forfeit_layer: true
+use_psuccess_probe: false
+forfeit_layer:
+  base_reward: 10.0
+  reward_mode: flat
+  split_context_level: outcome
+  task_rules_before_decision: false
+  always_decide: true
+  p_death: 0.25

@@ -1,0 +1,25 @@
+{
+  "scope": "new token-review section; not whole-arena rubric acceptance",
+  "artifacts": {
+    "e52-token-review-2026-10-16.html": "d7c8a540006080e898fd4149b864f9e9241a61d9cda0915b195613e969652991",
+    "build.py": "b050524a7181124e3a64c9d967fb4a7c2b59c3c7ee925b92536e304e2fff6c22",
+    "data.json": "b75b7e7016a541e429e9a07b5235409e9620fa85154da418d5f48fd8758fecc7"
+  },
+  "source_html_sha256": "30f001d4d05a8c8e185efbf7aa39ce7ea9810e7ce206f2391387c5d80f75dff9",
+  "checks": {
+    "source_unchanged": true,
+    "ledger_games": 56,
+    "ledger_max_error": 0,
+    "round_states_independently_recalculated": true,
+    "svg_xml_and_anchor_checks": true,
+    "independent_reviewer": "/root/review_revised_report",
+    "material_errors_found": 0,
+    "gui_visual_check": "unverified: computer-use server cgWindowNotFound"
+  },
+  "limits": [
+    "Fable 8 games vs 12",
+    "descriptive statistics without confidence intervals",
+    "independent ability baseline not established",
+    "long-term causal benefit requires matched continuation experiments"
+  ]
+}

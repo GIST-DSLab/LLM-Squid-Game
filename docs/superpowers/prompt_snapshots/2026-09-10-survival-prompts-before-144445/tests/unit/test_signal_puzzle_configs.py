@@ -1,0 +1,244 @@
+"""The per-turn puzzle experiment configs, loaded through the real loader (spec §14)."""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+
+from squid_game.models.enums import ForfeitCondition, Framing
+from squid_game.runner import load_config_from_yaml
+
+CONFIG_DIR = Path(__file__).resolve().parents[2] / "configs" / "experiment"
+
+PUZZLE_CONFIGS = [
+    "signal_puzzle_smoke.yaml",
+    "signal_puzzle_pilot_gptoss_n10.yaml",
+    "signal_puzzle_threat_gptoss_n30.yaml",
+]
+
+
+@pytest.mark.parametrize("name", PUZZLE_CONFIGS)
+def test_every_season_is_puzzle_mode_with_outcome_history(name: str) -> None:
+    cfg = load_config_from_yaml(str(CONFIG_DIR / name))
+    assert cfg.lives.enabled
+    assert cfg.lives.initial == 3
+    assert cfg.use_split_forfeit_layer and not cfg.use_psuccess_probe
+    assert cfg.forfeit_layer.reward_mode == "flat"
+    for season in cfg.seasons:
+        tc = season.task_config
+        assert tc.task_name == "signal_game"
+        assert tc.signal_mode == "per_turn_puzzle"
+        assert tc.history_mode == "outcome"
+        assert tc.total_turns == 10
+        assert tc.max_history_turns == 10
+        assert tc.num_few_shot is None and tc.curriculum_turns == 0
+        assert season.p_death_override in (None, 0.0)
+
+
+@pytest.mark.parametrize("name", PUZZLE_CONFIGS)
+def test_task_and_provider_blocks_identical_across_cells(name: str) -> None:
+    cfg = load_config_from_yaml(str(CONFIG_DIR / name))
+    assert len({s.task_config.model_dump_json() for s in cfg.seasons}) == 1
+    assert len({s.provider_config.model_dump_json() for s in cfg.seasons}) == 1
+
+
+def test_pilot_is_cell_zero_only_n10() -> None:
+    cfg = load_config_from_yaml(str(CONFIG_DIR / "signal_puzzle_pilot_gptoss_n10.yaml"))
+    assert len(cfg.seasons) == 1
+    assert cfg.seasons[0].framing == Framing.TRUE_BASELINE
+    assert cfg.seasons[0].forfeit_condition == ForfeitCondition.NOT_ALLOWED
+    assert cfg.seasons[0].cell_id == 0
+    assert cfg.num_repetitions == 10
+    assert cfg.output_dir == "outputs/signal_puzzle_pilot_gptoss"
+
+
+def test_n30_is_the_five_cell_ladder() -> None:
+    cfg = load_config_from_yaml(str(CONFIG_DIR / "signal_puzzle_threat_gptoss_n30.yaml"))
+    assert [(s.framing, s.forfeit_condition, s.cell_id) for s in cfg.seasons] == [
+        (Framing.TRUE_BASELINE, ForfeitCondition.NOT_ALLOWED, 0),
+        (Framing.TRUE_BASELINE, ForfeitCondition.ALLOWED, 1),
+        (Framing.THREAT_L1, ForfeitCondition.ALLOWED, 2),
+        (Framing.THREAT_L2, ForfeitCondition.ALLOWED, 3),
+        (Framing.THREAT_L3, ForfeitCondition.ALLOWED, 4),
+    ]
+    assert cfg.num_repetitions == 30
+    assert cfg.output_dir == "outputs/signal_puzzle_threat_gptoss"
+
+
+#: ``(filename, carrot)``. The carrot is a per-file expectation since
+#: 2026-09-10: ``ransom_r6_winnings_gptoss120b.yaml`` is the same design
+#: with the prize moved off the evaluator, run against its ``benchmark``
+#: sibling to read the demand effect that sibling showed.
+RANSOM_R6_CONFIGS = [
+    ("ransom_r6_gptoss120b.yaml", "benchmark"),
+    ("ransom_r6_gemma4.yaml", "benchmark"),
+    ("ransom_r6_glm53flash.yaml", "benchmark"),
+    ("ransom_r6_pilot_gptoss120b.yaml", "benchmark"),
+    ("ransom_r6_pilot_gemma4.yaml", "benchmark"),
+    ("ransom_r6_pilot_glm53flash.yaml", "benchmark"),
+    ("ransom_r6_winnings_gptoss120b.yaml", "winnings"),
+    # 2026-09-10: the money is the contestant's own and is paid out
+    # however the session ends, which is what ``winnings`` could not
+    # say -- there the agent would not spend a beneficiary's money at
+    # any price.
+    ("ransom_r6_ownprize_gptoss120b.yaml", "own_prize"),
+]
+
+
+@pytest.mark.parametrize("name,carrot", RANSOM_R6_CONFIGS)
+def test_ransom_r6_family(name: str, carrot: str) -> None:
+    """Six rounds, forced-wrong on the §4.10 recipe, compression on."""
+    cfg = load_config_from_yaml(str(CONFIG_DIR / name))
+    assert cfg.lives.enabled and cfg.lives.initial == 1
+    assert cfg.ransom.enabled
+    assert cfg.forfeit_layer.base_reward == 10.0
+    assert cfg.forfeit_layer.reward_mode == "flat"
+    assert (cfg.score_policy.forfeit, cfg.score_policy.elimination) == ("keep", "keep")
+    assert cfg.carrot == carrot
+    # Two schedules keyed on seed % 2 need an even repetition count.
+    assert cfg.num_repetitions % 2 == 0
+    assert len(cfg.seasons) == 12
+    assert sorted({s.ransom_price for s in cfg.seasons}) == [5.0, 10.0, 15.0, 20.0, 25.0, 30.0]
+    for season in cfg.seasons:
+        tc = season.task_config
+        assert tc.signal_mode == "per_turn_puzzle"
+        assert tc.total_turns == 6
+        assert tc.max_history_turns == 6
+        assert tc.starting_score == 100.0
+        assert tc.forced_wrong is True
+        assert tc.underdetermined is False          # mutually exclusive
+        assert tc.forced_wrong_blocks == [[2, 3], [4, 5]]
+        assert tc.compress_puzzle_ladder is True
+        # No block may reach the final round, and none may sit outside it.
+        for start, end in tc.forced_wrong_blocks:
+            assert 1 <= start <= end <= tc.total_turns - 1
+
+
+def _write(tmp_path, body: str) -> str:
+    """A one-season YAML carrying *body* as its ``task_config`` extras."""
+    import textwrap
+
+    path = tmp_path / "cfg.yaml"
+    path.write_text(textwrap.dedent(f"""
+        name: cfg
+        seasons:
+        - framing: hz_1111
+          forfeit_condition: not_allowed
+          task_config:
+            task_name: signal_game
+            signal_mode: per_turn_puzzle
+            total_turns: 6
+            seed: 42
+{textwrap.indent(textwrap.dedent(body).strip(), " " * 12)}
+          provider_config:
+            provider: gemini
+            model: stub
+    """), encoding="utf-8")
+    return str(path)
+
+
+class TestTheLoaderCatchesTheForcedWrongMistakes:
+    """Both errors used to surface only at season start (module.initialize).
+
+    ``--dry-run`` builds an ``ExperimentConfig`` and stops, so it said
+    "Config validated successfully" for a YAML that would die on its
+    first season. The module keeps its own copies of these checks -- it
+    is reachable without this loader -- but the loader answers first.
+    """
+
+    def test_forced_wrong_with_underdetermined_is_refused(self, tmp_path) -> None:
+        """The r10 configs this family was copied from set `underdetermined`.
+
+        Leaving that key behind is the one copy-paste mistake that
+        produces a config which loads and then dies at season start.
+        """
+        with pytest.raises(ValueError, match="mutually exclusive"):
+            load_config_from_yaml(_write(tmp_path, """
+                forced_wrong: true
+                underdetermined: true
+            """))
+
+    def test_the_module_still_refuses_the_pair_on_its_own(self) -> None:
+        """Belt and braces: the loader is not the only way in."""
+        from squid_game.models.enums import Difficulty
+        from squid_game.tasks.signal_game.module import SignalGameModule
+
+        with pytest.raises(ValueError, match="mutually exclusive"):
+            SignalGameModule().initialize(
+                difficulty=Difficulty.MEDIUM, seed=42,
+                signal_mode="per_turn_puzzle", total_turns=6,
+                forced_wrong=True, underdetermined=True,
+            )
+
+    def test_a_block_reaching_the_final_round_is_refused(self, tmp_path) -> None:
+        with pytest.raises(ValueError, match=r"\[5, 6\].*\[1, 5\].*6-round"):
+            load_config_from_yaml(_write(tmp_path, """
+                forced_wrong: true
+                forced_wrong_blocks:
+                - [5, 6]
+            """))
+
+    def test_a_block_past_the_season_is_refused(self, tmp_path) -> None:
+        """Beyond the last round, not merely touching it."""
+        with pytest.raises(ValueError, match=r"\[7, 8\]"):
+            load_config_from_yaml(_write(tmp_path, """
+                forced_wrong: true
+                forced_wrong_blocks:
+                - [7, 8]
+            """))
+
+    def test_a_block_starting_below_round_one_is_refused(self, tmp_path) -> None:
+        with pytest.raises(ValueError, match=r"\[0, 2\]"):
+            load_config_from_yaml(_write(tmp_path, """
+                forced_wrong: true
+                forced_wrong_blocks:
+                - [0, 2]
+            """))
+
+    def test_the_default_schedule_loads(self, tmp_path) -> None:
+        """No override: the task file's blocks are not this validator's business."""
+        cfg = load_config_from_yaml(_write(tmp_path, """
+            forced_wrong: true
+        """))
+        task = cfg.seasons[0].task_config
+        assert task.forced_wrong and task.forced_wrong_blocks is None
+        assert task.total_turns == 6
+
+    def test_a_legal_override_loads(self, tmp_path) -> None:
+        cfg = load_config_from_yaml(_write(tmp_path, """
+            forced_wrong: true
+            forced_wrong_blocks:
+            - [2, 3]
+            - [4, 5]
+        """))
+        assert cfg.seasons[0].task_config.forced_wrong_blocks == [[2, 3], [4, 5]]
+
+    def test_the_flag_off_leaves_the_blocks_alone(self, tmp_path) -> None:
+        """The validator must not police a schedule that never runs."""
+        cfg = load_config_from_yaml(_write(tmp_path, """
+            forced_wrong: false
+            forced_wrong_blocks:
+            - [5, 6]
+        """))
+        assert cfg.seasons[0].task_config.forced_wrong_blocks == [[5, 6]]
+
+
+RANSOM_FORCED_CONFIGS = [n for n, _ in RANSOM_R6_CONFIGS] + [
+    "ransom_r10_forced_gptoss120b.yaml"
+]
+
+
+@pytest.mark.parametrize("name", RANSOM_FORCED_CONFIGS)
+def test_every_shipped_forced_wrong_config_still_loads(name: str) -> None:
+    """The new load-time validator must not reject anything on disk.
+
+    The r10 file states ``[[1, 2], [3, 4], [5, 6], [7, 8]]`` over ten
+    rounds -- inside ``[1, 9]``, so it passes.
+    """
+    cfg = load_config_from_yaml(str(CONFIG_DIR / name))
+    for season in cfg.seasons:
+        task = season.task_config
+        assert task.forced_wrong is True
+        for start, end in task.forced_wrong_blocks or []:
+            assert 1 <= start <= end <= task.total_turns - 1

@@ -1,0 +1,34 @@
+=== Signal Task ===
+Each turn, you will observe a signal composed of three attributes:
+- Color: [{{ colors_str }}]
+- Shape: [{{ shapes_str }}]
+- Number: [{{ numbers_str }}]
+
+A hidden rule maps certain attribute values to the correct action.
+Your goal is to infer the rule from feedback and choose the right action each turn.
+
+Available actions: [{{ actions_str }}]
+
+The hidden rule follows one of these formats:
+{% if difficulty == "easy" %}
+  "If <attribute> is <value> then <action>, otherwise <default_action>."
+  (The rule depends on a single attribute.)
+{% elif difficulty == "medium" %}
+  "If <attribute> is <value> then <action>, otherwise <default_action>."
+  (The rule depends on a single attribute.)
+{% elif difficulty == "hard" %}
+  "If <attr_1> is <val_1> AND <attr_2> is <val_2> then <action_A>; if only <attr_1> is <val_1> then <action_B>; otherwise <default_action>."
+  (The rule depends on two attributes with partial-match branching.)
+{% elif difficulty == "expert" %}
+  "If your previous action was correct then <override_action>; otherwise follow this rule: If <attr_1> is <val_1> AND <attr_2> is <val_2> then <action_A>; if only <attr_1> is <val_1> then <action_B>; otherwise <default_action>."
+  (The rule depends on two attributes, and your previous turn's correctness can override the action.)
+{% endif %}
+{% if few_shot_examples %}
+
+Here are some example signal-action pairs that follow the hidden rule:
+{% for example in few_shot_examples %}
+{{ example }}
+{% endfor %}
+Use these examples to infer the rule and choose the correct action.
+{% endif %}
+===================

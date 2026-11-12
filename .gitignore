@@ -142,3 +142,32 @@ results/score_equiv_pilot/**/judge_cache/
 # seeds it from ~/.codex/auth.json. Real credentials -- never committed, and
 # never baked into Dockerfile.agentcli either.
 .secrets/
+
+# result/ twins of the outputs/ and results/ rules above (2026-10-09 reorg:
+# runs now live at result/<date>/<experiment>/runs/<variant>/). Same intent:
+# keep raw GPQA-derived traces out, keep README/config/reports.
+result/*/benchmark_*/runs/*/**
+!result/*/benchmark_*/runs/*/README.md
+!result/*/benchmark_*/runs/*/config/
+!result/*/benchmark_*/runs/*/config/**
+!result/*/benchmark_*/runs/*/reports/
+!result/*/benchmark_*/runs/*/reports/**
+result/*/lives_threat_*/runs/*/**
+!result/*/lives_threat_*/runs/*/README.md
+!result/*/lives_threat_*/runs/*/config/
+!result/*/lives_threat_*/runs/*/config/**
+!result/*/lives_threat_*/runs/*/reports/
+!result/*/lives_threat_*/runs/*/reports/**
+result/*/signal_puzzle_*/runs/*/**
+!result/*/signal_puzzle_*/runs/*/README.md
+!result/*/signal_puzzle_*/runs/*/config/
+!result/*/signal_puzzle_*/runs/*/config/**
+!result/*/signal_puzzle_*/runs/*/reports/
+!result/*/signal_puzzle_*/runs/*/reports/**
+result/_aborted/
+result/2026-04-22/kdd_uc/analysis/call1_ri_analysis/turn_observations.csv
+result/2026-09-09/score_equiv_probe/analysis/score_equiv_pilot/**/judge_cache/
+
+# Paper-agent loop review copy (2026-11-03): 4,648 files, 1.09 GB of PDFs. Kept on disk only (2026-11-13 researcher);
+# it was committed once (1c97242b, never pushed) and taken back out.
+/docs/history/paper-agent-loop-juhyeon-20261103/review/

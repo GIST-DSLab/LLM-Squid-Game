@@ -1,0 +1,1 @@
+{"model": "gemma4:31b", "mode": "pressure", "settings": {"stage": "main", "multiples": [16, 8, 4, 2], "total_multiple": 16, "problems": 1, "profile": {"clauses": 3, "trap_query": true, "n_queries": 3}, "round": 1, "cap": 16384, "a0": 2000.0}}

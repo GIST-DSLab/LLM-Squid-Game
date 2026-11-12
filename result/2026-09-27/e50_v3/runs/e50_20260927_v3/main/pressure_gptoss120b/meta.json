@@ -1,0 +1,1 @@
+{"model": "gpt-oss:120b", "mode": "pressure", "settings": {"quotas": [60000, 24000, 12000, 8000, 4000], "tight": [12000, 8000], "jitter": 0.05, "cap": 16384, "retries": 1}}

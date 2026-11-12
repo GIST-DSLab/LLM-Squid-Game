@@ -1,0 +1,171 @@
+{
+ "id": "P09",
+ "year": 2023,
+ "award": "Computational Modeling Prize – Higher-Level Cognition",
+ "title": "People seek easily interpretable information",
+ "authors": [
+  "Samuel Cheyette",
+  "Frederick Callaway",
+  "Neil Bramley",
+  "Jonathan Nelson",
+  "Joshua Tenenbaum"
+ ],
+ "affiliations": "Emails only on the paper: MIT (Cheyette, Tenenbaum), Princeton (Callaway), University of Edinburgh (Bramley), University of Surrey (Nelson). No department/affiliation lines printed.",
+ "url_page": "https://escholarship.org/uc/item/5sm2b484",
+ "url_pdf": "https://escholarship.org/content/qt5sm2b484/qt5sm2b484.pdf",
+ "pdf_source_note": "eScholarship (CogSci 2023 Proceedings vol. 45, pp. 913–919). 수상 목록은 가제 'Limits on information-processing governs active learning in humans'를 썼고, 출판된 proceedings 제목은 'People seek easily interpretable information'(Bramley 연구실 출판 페이지가 이 eScholarship 항목을 링크하고 Computational Modeling Prize in Higher-level Cognition 수상을 적어 둠).",
+ "abstract_en": "Research in psychology and artificial intelligence has sought to ground information-seeking behavior in rational terms, typically assuming that people or agents prefer more informative data over less informative data. While this seems reasonable on its surface, it assumes that informativeness is only a property of the data, rather than a joint property of the data and a (potentially bounded) learner. That is, to the extent that it is hard to draw the right inferences from data that are theoretically “high information,” the data will not actually be highly informative to the learner. Here, we investigate active learning in humans using the code-breaking game Mastermind, which requires deductive reasoning from evidence. We find that people make queries that are less informative than random guesses, challenging standard rational or resource-rational accounts of information-seeking. We then show that people make queries are informative to them assuming they have a bounded capacity to draw inferences. We also find that participants prefer queries that provide easily-interpretable information over queries that provide more information but are less interpretable. Our results suggest that people are aware of their own cognitive limitations and seek information that they can use.",
+ "abstract_ko": "심리학과 인공지능 연구는 정보 탐색 행동을 합리성의 관점에서 설명하려 해 왔으며, 대개 사람이나 에이전트가 정보량이 적은 데이터보다 정보량이 많은 데이터를 선호한다고 가정한다. 겉보기에는 타당해 보이지만, 이 가정은 정보성(informativeness)을 데이터와 (잠재적으로 제한된) 학습자의 공동 속성이 아니라 데이터만의 속성으로 본다. 다시 말해, 이론적으로 ‘정보량이 높은’ 데이터에서 올바른 추론을 끌어내기 어려운 만큼, 그 데이터는 실제로 학습자에게 높은 정보를 주지 못한다. 이 연구는 증거로부터의 연역 추론을 요구하는 암호 풀이 게임 마스터마인드(Mastermind)를 사용해 인간의 능동 학습(active learning)을 조사한다. 그 결과 사람들은 무작위 추측보다도 정보량이 적은 질의(query)를 던지며, 이는 정보 탐색에 대한 표준적인 합리적(rational) 또는 자원-합리적(resource-rational) 설명에 도전한다. 이어서 추론 능력이 제한되어 있다고 가정하면 사람들의 질의가 그들 자신에게는 정보성이 있음을 보인다. 또한 참가자들은 정보는 더 많지만 해석하기 어려운 질의보다 해석하기 쉬운 정보를 주는 질의를 선호했다. 이 결과는 사람들이 자신의 인지적 한계를 알고 있으며 자신이 실제로 사용할 수 있는 정보를 찾는다는 것을 시사한다.",
+ "pages_body": 7,
+ "references_location": "p.7만: 왼쪽 단 맨 위 Acknowledgements, References가 왼쪽 단 나머지와 오른쪽 단 ~40%를 채움(p.7 나머지는 빈칸); 본문은 p.6 아래에서 끝남",
+ "extras": "Acknowledgements는 p.7(짧은 한 문단, References 위). 각주 3개(p.2에 2개: Mastermind 숫자 집합, 'description length' = 음의 로그 확률; p.5에 1개: 시행 부호화). 부록·OSF/코드/데이터 링크·보충자료 없음.",
+ "words_body_total": 4175,
+ "sections": [
+  {
+   "level": 1,
+   "title": "Introduction",
+   "page_start": 1,
+   "words": 1071,
+   "share": 0.257,
+   "children": [
+    {
+     "level": 2,
+     "title": "Mastermind",
+     "page_start": 2,
+     "words": 238
+    }
+   ]
+  },
+  {
+   "level": 1,
+   "title": "Bounded LoT model",
+   "page_start": 2,
+   "words": 477,
+   "share": 0.114,
+   "children": []
+  },
+  {
+   "level": 1,
+   "title": "Experiment 1",
+   "page_start": 3,
+   "words": 816,
+   "share": 0.195,
+   "children": [
+    {
+     "level": 2,
+     "title": "Method",
+     "page_start": 3,
+     "words": 95
+    },
+    {
+     "level": 2,
+     "title": "Results",
+     "page_start": 3,
+     "words": 596
+    }
+   ]
+  },
+  {
+   "level": 1,
+   "title": "Experiment 2",
+   "page_start": 4,
+   "words": 477,
+   "share": 0.114,
+   "children": [
+    {
+     "level": 2,
+     "title": "Method",
+     "page_start": 4,
+     "words": 117
+    },
+    {
+     "level": 2,
+     "title": "Results",
+     "page_start": 4,
+     "words": 243
+    }
+   ]
+  },
+  {
+   "level": 1,
+   "title": "Experiment 3",
+   "page_start": 5,
+   "words": 724,
+   "share": 0.173,
+   "children": [
+    {
+     "level": 2,
+     "title": "Method",
+     "page_start": 5,
+     "words": 125
+    },
+    {
+     "level": 2,
+     "title": "Results",
+     "page_start": 5,
+     "words": 486
+    }
+   ]
+  },
+  {
+   "level": 1,
+   "title": "Discussion",
+   "page_start": 6,
+   "words": 610,
+   "share": 0.146,
+   "children": []
+  }
+ ],
+ "figures": [
+  {
+   "n": 1,
+   "page": 1,
+   "size": "한 단, 단의 ~1/4(오른쪽 단 아래; Mastermind 판 예시 그림)",
+   "section": "Introduction"
+  },
+  {
+   "n": 2,
+   "page": 3,
+   "size": "한 단, 단의 ~1/3(왼쪽 단 위; 모델 선 그래프)",
+   "section": "Bounded LoT model"
+  },
+  {
+   "n": 3,
+   "page": 4,
+   "size": "전체 폭, 쪽의 ~1/4(위; 패널 3개 a–c)",
+   "section": "Experiment 1 / Results"
+  },
+  {
+   "n": 4,
+   "page": 4,
+   "size": "한 단, 단의 ~1/4(왼쪽 단 아래쪽)",
+   "section": "Experiment 1 / Results"
+  },
+  {
+   "n": 5,
+   "page": 5,
+   "size": "한 단, 단의 ~1/3(왼쪽 단 위-중간)",
+   "section": "Experiment 2 / Results"
+  },
+  {
+   "n": 6,
+   "page": 6,
+   "size": "전체 폭, 쪽의 ~1/4(위; 패널 3개 a–c)",
+   "section": "Experiment 3 / Results"
+  }
+ ],
+ "tables": [],
+ "observations": {
+  "intro_subheadings": true,
+  "related_work_section": false,
+  "experiments_as_top_level": true,
+  "final_section_name": "Discussion",
+  "final_section_subheadings": [],
+  "ends_with_conclusion_paragraph": false,
+  "model_description_location": "Introduction과 Experiment 1 사이의 독립 1단계 절 'Bounded LoT model'(p.2–3); 과제 자체는 Introduction 끝 2단계 하위 절 'Mastermind'에서 설명. 원시 연산 문법은 본문에 두 단 목록으로 실림(번호 붙은 표 아님); Figure 2는 서로 다른 description-length 한계에서의 모델 행동과 풀이 예시(첫 추측 '1123' 대 '1111')를 보여 줌.",
+  "first_page_use": "제목 + 저자 5명(두 줄, 이메일만)이 위 ~20%; 초록(9pt, ~190단어)이 왼쪽 단 위 절반; Introduction은 왼쪽 단 중간에서 시작해 오른쪽 단 전체로 이어지고, 그 아래에 Figure 1(게임 예시). p.1의 약 1/3이 초록, ~2/3가 Introduction + Fig. 1.",
+  "links": "없음. 논문 어디에도 사전등록·OSF·코드·데이터 링크 없음."
+ },
+ "structure_summary_ko": "서론(Introduction)이 약 0.9쪽(본문 단어의 약 26%)으로 가장 길다. 소제목 없는 다섯 문단(OED 전통 → 최근 반례 → 가설 → 모델 예고 → 실험 1–3 결과 미리보기)으로 시작하고, 끝에 2수준 'Mastermind' 소절로 과제 규칙을 따로 설명한다. 형식 모델은 'Bounded LoT model'이라는 독립 1수준 절(약 11%)로 서론과 실험 사이에 두며, 문법 목록과 그림 2·예시 계산으로 '정보량은 처리 한계에 따라 뒤집힌다'는 핵심 예측을 실험 전에 보여 준다. 실험 셋은 각각 1수준 절이고, 짧은 도입 문단(동기·예측, 약 50–125단어) 뒤에 Method/Results 2수준을 둔다. Results가 Method보다 3–6배 길어 지면 대부분이 결과와 그림(6개 중 4개가 결과 그림)에 쓰인다. 마지막 'Discussion'은 소제목 없이 요약 → 선행연구(Entropy Mastermind·mental models)와의 관계 → 한계 두 가지로 끝나며 별도 결론 문단은 없다. 참고문헌과 감사의 글은 7쪽에 몰아 본문은 정확히 6쪽을 쓴다.",
+ "text_pages": 6
+}

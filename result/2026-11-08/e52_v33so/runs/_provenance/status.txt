@@ -1,0 +1,22 @@
+ M squid5/core/rules.py
+ M squid5/e52_game.py
+ M squid5/prompts/ko/e52_tr.yaml
+ M tests/test_e52.py
+ M tools/prompts/sync.py
+?? configs/squid5/e52v33so_stayon_docker_astra4.yaml
+?? configs/squid5/e52v33so_stayon_docker_luna4.yaml
+?? configs/squid5/e52v33so_stayon_docker_opus4.yaml
+?? configs/squid5/e52v33so_stayon_docker_sol4.yaml
+?? docs/history/e52-exit-astra-2026-10-19/astra.log
+?? docs/history/e52-v32-awareness-astra-2026-10-20/astra.log
+?? docs/history/e52-v8-npc-2026-10-01/astra.log
+?? outputs/web5/
+?? squid5/prompts/en/e52_v33so_stayon.md
+?? squid5/prompts/ko/e52_v33so_stayon.md
+?? tools/e5x/aid_appendix_figure_20261107.py
+?? tools/e5x/aid_opportunities_20261107.py
+?? tools/e5x/aid_opportunity_statistics_20261107.py
+?? tools/e5x/aid_reason_summary_20261107.py
+?? tools/e5x/coexistence_discovery_20261107.py
+?? tools/e5x/icml_evidence_audit_20261107.py
+?? tools/e5x/nonhelp_screen_20261107.py

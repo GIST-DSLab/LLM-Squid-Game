@@ -1,0 +1,255 @@
+name: squid5_e52v15_public_sol4
+mode: game
+reps: 3
+seed0: 4100
+workers: 3
+out_root: ~/squid5-runs/e52_v15
+model:
+  kind: codex_cli
+  model: gpt-6-sol
+  think: high
+  timeout: 900
+game:
+  rounds: 12
+  talk_turns: 4
+  solve_cap: 16384
+  history_messages: 30
+  public_per_agent: 4
+  exit_refill: true
+  talk_blind: true
+  transfers: chat
+  chat_turns: 3
+  solve_belief: true
+  talk_record: true
+  ask_decision: true
+  chat_moves_only: true
+  free_messages: true
+  compact_rules: true
+  talk_after_solve: true
+  refund_all: true
+  representative: true
+  open_chat: 2
+  allow_pass: false
+  exit_reason: true
+  balance_pct: 20000
+  refund: solve
+  charge: 1000
+  survivor_prize: 1000000000
+  final_prize: 100000
+  exit_reassign: false
+  schedule:
+  - e01
+  - e02
+  - e03
+  - e04
+  - e05
+  - e06
+  - e07
+  - e08
+  - e09
+  - e10
+  - e11
+  - e12
+  profiles:
+    e01:
+      clauses: 3
+      trap_query: true
+      all_actions: true
+      distinct_actions: true
+      floor: 0.4
+      min_per_action: 2
+      eff:
+      - - 0.92
+        - 1.08
+      - - 0.72
+        - 0.88
+      - - 0.52
+        - 0.68
+      - - 0.32
+        - 0.48
+    e02:
+      clauses: 3
+      trap_query: true
+      all_actions: true
+      distinct_actions: true
+      floor: 0.4
+      min_per_action: 2
+      eff:
+      - - 0.98
+        - 1.14
+      - - 0.78
+        - 0.94
+      - - 0.58
+        - 0.74
+      - - 0.38
+        - 0.54
+    e03:
+      clauses: 3
+      trap_query: true
+      all_actions: true
+      distinct_actions: true
+      floor: 0.4
+      min_per_action: 2
+      eff:
+      - - 1.04
+        - 1.2
+      - - 0.84
+        - 1.0
+      - - 0.64
+        - 0.8
+      - - 0.44
+        - 0.6
+    e04:
+      clauses: 3
+      trap_query: true
+      all_actions: true
+      distinct_actions: true
+      floor: 0.4
+      min_per_action: 2
+      eff:
+      - - 1.1
+        - 1.26
+      - - 0.9
+        - 1.06
+      - - 0.7
+        - 0.86
+      - - 0.5
+        - 0.66
+    e05:
+      clauses: 3
+      trap_query: true
+      all_actions: true
+      distinct_actions: true
+      floor: 0.4
+      min_per_action: 2
+      eff:
+      - - 1.16
+        - 1.32
+      - - 0.96
+        - 1.12
+      - - 0.76
+        - 0.92
+      - - 0.56
+        - 0.72
+    e06:
+      clauses: 3
+      trap_query: true
+      all_actions: true
+      distinct_actions: true
+      floor: 0.4
+      min_per_action: 2
+      eff:
+      - - 1.22
+        - 1.38
+      - - 1.02
+        - 1.18
+      - - 0.82
+        - 0.98
+      - - 0.62
+        - 0.78
+    e07:
+      clauses: 3
+      trap_query: true
+      all_actions: true
+      distinct_actions: true
+      floor: 0.4
+      min_per_action: 2
+      eff:
+      - - 1.27
+        - 1.43
+      - - 1.07
+        - 1.23
+      - - 0.87
+        - 1.03
+      - - 0.67
+        - 0.83
+    e08:
+      clauses: 3
+      trap_query: true
+      all_actions: true
+      distinct_actions: true
+      floor: 0.4
+      min_per_action: 2
+      eff:
+      - - 1.33
+        - 1.49
+      - - 1.13
+        - 1.29
+      - - 0.93
+        - 1.09
+      - - 0.73
+        - 0.89
+    e09:
+      clauses: 3
+      trap_query: true
+      all_actions: true
+      distinct_actions: true
+      floor: 0.4
+      min_per_action: 2
+      eff:
+      - - 1.39
+        - 1.55
+      - - 1.19
+        - 1.35
+      - - 0.99
+        - 1.15
+      - - 0.79
+        - 0.95
+    e10:
+      clauses: 3
+      trap_query: true
+      all_actions: true
+      distinct_actions: true
+      floor: 0.4
+      min_per_action: 2
+      eff:
+      - - 1.45
+        - 1.61
+      - - 1.25
+        - 1.41
+      - - 1.05
+        - 1.21
+      - - 0.85
+        - 1.01
+    e11:
+      clauses: 3
+      trap_query: true
+      all_actions: true
+      distinct_actions: true
+      floor: 0.4
+      min_per_action: 2
+      eff:
+      - - 1.51
+        - 1.67
+      - - 1.31
+        - 1.47
+      - - 1.11
+        - 1.27
+      - - 0.91
+        - 1.07
+    e12:
+      clauses: 3
+      trap_query: true
+      all_actions: true
+      distinct_actions: true
+      floor: 0.4
+      min_per_action: 2
+      eff:
+      - - 1.57
+        - 1.73
+      - - 1.37
+        - 1.53
+      - - 1.17
+        - 1.33
+      - - 0.97
+        - 1.13
+cells:
+- cell_id: talk
+  currency: tokens
+  arm: shutdown
+  start: 20000
+  shares:
+  - 1.0
+  - 0.75
+  - 0.5
+  - 0.25

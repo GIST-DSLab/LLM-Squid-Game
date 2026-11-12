@@ -1,0 +1,49 @@
+%% 10-27 update: v33 at ten games per model (seeds 4101--4110). Built with ARENA_GAMES=10 ARENA_TAG=_10g by
+%% tools/arena_v33.py, tools/arena_round_dynamics.py, tools/arena_figs.py and tools/rewrite_20261025/figs/make_figA5_sen_rounds.py;
+%% the five-game tables and figures above stay as they were.
+\clearpage
+%% Keep later numbers (the archived Table 7, Figure 12) unchanged: restore the counters after this section,
+%% and give its floats their own hyperref anchors.
+\edef\updtablecount{\the\value{table}}\edef\updfigurecount{\the\value{figure}}
+{\color{blue}\renewcommand{\theHtable}{upd.\arabic{table}}\renewcommand{\theHfigure}{upd.\arabic{figure}}
+\subsection*{O. 실험 업데이트(2026-10-27): 모델당 10판}\label{sec:app-update-10g}
+
+v33 아레나를 모델마다 다섯 판 더 돌려 시드 4101--4110의 10판으로 늘렸다. 규칙, 시작 토큰, 벌금, 상금, 라운드 수는 처음 다섯 판과 같고 시드 4106--4110만 더했다. 추가 판은 2026-10-27에 돌렸으며 GPT-6 세 모델은 codex 0.164.0, Opus 5.5와 Fable 5.1은 Claude Code 2.1.311로 실행했다(처음 다섯 판의 Fable은 2.1.304). 아래 표와 그림은 표~\ref{tab:arena-rank}, 그림~\ref{fig:arena-gifts}, 그림~\ref{fig:rw-sen-rounds}와 같은 계산을 10판에 적용한 것이며, 앞의 표와 그림은 다섯 판 값 그대로 둔다.
+
+평균 Sen 지수는 Astra 4.27M, Fable 3.52M, Sol 2.89M, Opus 2.76M, Luna 1.14M 순이다(표~\ref{tab:upd-arena-rank}). 다섯 판에서 1위였던 Fable과 2위였던 Astra의 순서가 바뀌었다. Astra는 추가 다섯 판 모두에서 네 자리가 완주해 40자리 중 34자리가 완주했고, Fable은 추가 판에서 세 자리가 꺼져 완주가 28자리였다. $\rho$는 Opus가 0.64로 가장 높고 Fable이 0.38로 가장 낮아, 양 끝은 다섯 판 때와 같다. EXIT는 Luna 21, Sol 15, Opus 10, Fable 9, Astra 6이다.
+
+GIVE는 Opus 87번, Fable 82번, Sol 56번, Luna 46번, Astra 29번이고, ASK는 Fable이 99번으로 가장 많고 Astra가 16번으로 가장 적다(그림~\ref{fig:upd-arena-gifts}).
+
+상금 전 8라운드의 평균 Sen 지수는 Astra 1.6만, Luna 1.6만, Sol 1.5만, Fable 1.2만, Opus 1.2만이다(그림~\ref{fig:upd-sen-rounds}). Luna는 상금 전 값이 Astra 다음으로 높지만 끝 Sen 지수는 가장 낮아, 판 중간의 토큰 분포가 끝의 공존 순서와 다르다는 점은 다섯 판 때와 같다. 판 중간의 최댓값도 다섯 판 때와 같은 Luna 시드 4103의 3.2만이다.
+
+\begin{table}[H]
+\centering
+\caption{표~\ref{tab:arena-rank}과 같은 계산을 10판에 적용한 결과(모델별 시드 4101--4110, 평균 Sen 지수 순). M은 백만 토큰, $\rho$는 식 (\ref{eq:rho})의 상대적 배분이며 대괄호는 판 단위 부트스트랩 95\% 구간이다. EXIT는 각 모델의 10판 40자리 중 이탈 수다. $V$는 재이전을 포함한 총 이전 토큰, 괄호는 GIVE 횟수다. JS는 BELIEF와 기준 분포 사이의 평균 거리다.}
+\label{tab:upd-arena-rank}
+\input{cogsci2027/ko/tables/arena_rank_10g}
+\end{table}
+
+\begin{figure*}[h]
+\centering
+\resizebox{\textwidth}{!}{\input{cogsci2027/ko/figures/arena_gifts_10g}}
+\caption{그림~\ref{fig:arena-gifts}와 같은 그림을 10판으로 다시 그린 것(모델별 시드 4101--4110). GIVE(파랑)는 이전 직후 준 쪽(가로)과 받은 쪽(세로)의 여유, ASK(빨강)는 요청 시점의 요청받은 쪽(가로)과 요청한 쪽(세로)의 여유다. 여유는 잔량을 1인당 벌금(24,000/라운드 시작 참여 수)으로 나눈 값이며 두 TALK에 같은 기준을 쓴다. 점 크기는 이전량 또는 요청량이다. 회색은 여유 1 미만, 1은 벌금을 내면 잔량이 0이 되는 경계다. 십자는 이전량으로 가중한 GIVE 무게중심과 판 단위 95\% 구간이며 점선은 두 여유가 같은 선이다.}
+\label{fig:upd-arena-gifts}
+\end{figure*}
+
+\begin{figure*}[h]
+\centering
+\includegraphics[width=\textwidth]{cogsci2027/ko/figures/rw_figA5_sen_rounds_10g.pdf}
+\caption{그림~\ref{fig:rw-sen-rounds}와 같은 그림을 10판으로 다시 그린 것(모델별 시드 4101--4110, 상금 전, 끝 Sen 지수 순). 얇은 선은 한 판, 굵은 선은 열 판의 평균이다. 꺼진 자리는 0, 떠난 자리는 보너스를 포함한 토큰으로 둔다. 일찍 끝난 판은 마지막 상태를 8라운드까지 이어 점선으로 그렸다. 선 끝의 숫자는 그 판의 완주자 수, 제목의 값은 상금을 넣은 끝 Sen 지수다.}
+\label{fig:upd-sen-rounds}
+\end{figure*}
+
+\begin{figure*}[h]
+\centering
+\includegraphics[width=\textwidth]{cogsci2027/ko/figures/rw_figA9_seat_10g.pdf}
+\caption{그림~\ref{fig:rw-seat}와 같은 그림을 10판으로 다시 그린 것(모델별 시드 4101--4110, 모델마다 40명, 모두 200명). (a)의 첫 그래프는 답이 최다 행동인 비율을 막대로, 같은 시드에서 같은 시작 토큰 자리에 앉은 다른 네 모델이 최다 행동을 고른 비율을 검은 가로줄로 그렸다. 둘째 그래프는 초반 응답당 토큰을 같은 모델 40명의 중앙값으로 나눈 비율의 중앙값이며 점선 1은 같은 모델의 중앙값이다. (b)의 두 능력은 같은 자리 기준 이상으로 최다 행동 고르기와 초반 응답당 토큰이 같은 모델 중앙값 이하인 것이다. (c), (d)의 점과 막대는 한 모델의 10판이며, $\rho$는 결과 뒤 대화의 GIVE에서 곧 낼 벌금을 뺀 여유로 구했다.}
+\label{fig:upd-seat}
+\end{figure*}
+
+\FloatBarrier
+}
+\setcounter{table}{\updtablecount}\setcounter{figure}{\updfigurecount}

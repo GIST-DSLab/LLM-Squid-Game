@@ -1,0 +1,15 @@
+2026-09-11 18:15:35,117 [INFO] __main__: Resume scan: 118 completed seasons in outputs/main_j0_control_gptoss120b_mt131k/20260911_0307_gpt-oss-120b-cloud_signal-game/
+2026-09-11 18:15:35,120 [INFO] __main__: Deleted orphan trace: d3893fc8348e_turns.jsonl
+2026-09-11 18:15:35,120 [INFO] __main__: Deleted orphan trace: abb0936ec65c_turns.jsonl
+  Cleaned 2 orphan trace file(s).
+Experiment 'main_j0_control_gptoss120b_mt131k': 6 conditions x 20 repetitions = 120 total
+  Resuming: 118 already completed, 2 remaining
+2026-09-11 18:15:35,121 [INFO] __main__: Parallel config: ollama_cloud/gpt-oss:120b-cloud -> 10 worker(s)
+  Parallel config: ollama_cloud/gpt-oss:120b-cloud -> 10 worker(s)
+2026-09-11 18:15:35,121 [INFO] __main__: Running season 1/2 (rep 10): hz_0000 x not_allowed x alone
+  Running season 1/2 (rep 10): hz_0000 x not_allowed x alone
+2026-09-11 18:15:35,121 [INFO] __main__: Running season 2/2 (rep 1): hz_0000 x not_allowed x alone
+  Running season 2/2 (rep 1): hz_0000 x not_allowed x alone
+2026-09-11 18:15:35,185 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting gpt-oss:120b-cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 18:15:35,186 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting gpt-oss:120b-cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 18:15:45,914 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"

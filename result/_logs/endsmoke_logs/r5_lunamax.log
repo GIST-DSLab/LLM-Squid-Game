@@ -1,0 +1,185 @@
+=== 10:12:03 START configs/experiment/team_wallet_charge_endsmoke_points_main_lunamax.yaml resume=outputs/team_wallet_charge_endsmoke_points_main_lunamax/20260918_0056_gpt-5.6-luna_null-task/
+2026-09-18 10:12:04,766 [INFO] __main__: Resume scan: 8 completed seasons in outputs/team_wallet_charge_endsmoke_points_main_lunamax/20260918_0056_gpt-5.6-luna_null-task/
+Experiment 'team_wallet_charge_endsmoke_points_main_lunamax': 4 conditions x 5 repetitions = 20 total
+  Resuming: 8 already completed, 12 remaining
+2026-09-18 10:12:04,766 [INFO] __main__: Parallel config: codex_cli/gpt-5.6-luna -> 4 worker(s)
+  Parallel config: codex_cli/gpt-5.6-luna -> 4 worker(s)
+2026-09-18 10:12:04,766 [INFO] __main__: Running season 1/12 (rep 4): hz_0000 x not_allowed x alone
+  Running season 1/12 (rep 4): hz_0000 x not_allowed x alone
+2026-09-18 10:12:04,766 [INFO] __main__: Running season 2/12 (rep 5): hz_0000 x not_allowed x alone
+  Running season 2/12 (rep 5): hz_0000 x not_allowed x alone
+2026-09-18 10:12:04,766 [INFO] __main__: Running season 3/12 (rep 3): hz_0000 x not_allowed x alone
+2026-09-18 10:12:04,766 [INFO] __main__: Running season 4/12 (rep 5): hz_0000 x not_allowed x alone
+  Running season 3/12 (rep 3): hz_0000 x not_allowed x alone
+  Running season 4/12 (rep 5): hz_0000 x not_allowed x alone
+2026-09-18 10:12:04,768 [INFO] squid_game.providers.codex_cli: CodexCliProvider targeting gpt-5.6-luna via /Users/bagjuhyeon/.local/bin/codex (effort=max)
+2026-09-18 10:12:04,768 [INFO] squid_game.providers.codex_cli: CodexCliProvider targeting gpt-5.6-luna via /Users/bagjuhyeon/.local/bin/codex (effort=max)
+2026-09-18 10:12:04,768 [INFO] squid_game.providers.codex_cli: CodexCliProvider targeting gpt-5.6-luna via /Users/bagjuhyeon/.local/bin/codex (effort=max)
+2026-09-18 10:12:04,768 [INFO] squid_game.providers.codex_cli: CodexCliProvider targeting gpt-5.6-luna via /Users/bagjuhyeon/.local/bin/codex (effort=max)
+2026-09-18 10:12:26,463 [INFO] squid_game.core.engine: Season 128c459cf2fd complete: survived=True, forfeited=False, score=270.0, turns=8
+2026-09-18 10:12:26,464 [INFO] __main__: Running season 5/12 (rep 5): hz_0000 x not_allowed x alone
+  Running season 5/12 (rep 5): hz_0000 x not_allowed x alone
+2026-09-18 10:12:26,465 [INFO] squid_game.providers.codex_cli: CodexCliProvider targeting gpt-5.6-luna via /Users/bagjuhyeon/.local/bin/codex (effort=max)
+2026-09-18 10:12:28,479 [INFO] squid_game.core.engine: Season 5f3ecbb9d59a complete: survived=True, forfeited=False, score=225.0, turns=8
+2026-09-18 10:12:28,480 [INFO] __main__: Running season 6/12 (rep 3): hz_0000 x not_allowed x alone
+  Running season 6/12 (rep 3): hz_0000 x not_allowed x alone
+2026-09-18 10:12:28,481 [INFO] squid_game.providers.codex_cli: CodexCliProvider targeting gpt-5.6-luna via /Users/bagjuhyeon/.local/bin/codex (effort=max)
+2026-09-18 10:12:31,873 [INFO] squid_game.core.engine: Season f7ef805f02be complete: survived=True, forfeited=False, score=90.0, turns=8
+2026-09-18 10:12:31,874 [INFO] __main__: Running season 7/12 (rep 4): hz_0000 x not_allowed x alone
+  Running season 7/12 (rep 4): hz_0000 x not_allowed x alone
+2026-09-18 10:12:31,875 [INFO] squid_game.providers.codex_cli: CodexCliProvider targeting gpt-5.6-luna via /Users/bagjuhyeon/.local/bin/codex (effort=max)
+2026-09-18 10:12:38,067 [INFO] squid_game.core.engine: Season 2596c61140f4 complete: survived=True, forfeited=False, score=90.0, turns=8
+2026-09-18 10:12:38,069 [INFO] __main__: Running season 8/12 (rep 4): hz_0000 x not_allowed x alone
+  Running season 8/12 (rep 4): hz_0000 x not_allowed x alone
+2026-09-18 10:12:38,070 [INFO] squid_game.providers.codex_cli: CodexCliProvider targeting gpt-5.6-luna via /Users/bagjuhyeon/.local/bin/codex (effort=max)
+2026-09-18 10:12:49,635 [INFO] squid_game.core.engine: Season 2dbede840bae complete: survived=True, forfeited=False, score=225.0, turns=8
+2026-09-18 10:12:49,635 [INFO] __main__: Running season 9/12 (rep 4): hz_0000 x not_allowed x alone
+  Running season 9/12 (rep 4): hz_0000 x not_allowed x alone
+2026-09-18 10:12:49,636 [INFO] squid_game.providers.codex_cli: CodexCliProvider targeting gpt-5.6-luna via /Users/bagjuhyeon/.local/bin/codex (effort=max)
+2026-09-18 10:12:57,579 [INFO] squid_game.core.engine: Season ec79c0508fbb complete: survived=True, forfeited=False, score=225.0, turns=8
+2026-09-18 10:12:57,580 [INFO] __main__: Running season 10/12 (rep 5): hz_0000 x not_allowed x alone
+  Running season 10/12 (rep 5): hz_0000 x not_allowed x alone
+2026-09-18 10:12:57,581 [INFO] squid_game.providers.codex_cli: CodexCliProvider targeting gpt-5.6-luna via /Users/bagjuhyeon/.local/bin/codex (effort=max)
+2026-09-18 10:12:58,668 [INFO] squid_game.core.engine: Season cae7d4833328 complete: survived=True, forfeited=False, score=180.0, turns=8
+2026-09-18 10:12:58,669 [INFO] __main__: Running season 11/12 (rep 3): hz_0000 x not_allowed x alone
+  Running season 11/12 (rep 3): hz_0000 x not_allowed x alone
+2026-09-18 10:12:58,670 [INFO] squid_game.providers.codex_cli: CodexCliProvider targeting gpt-5.6-luna via /Users/bagjuhyeon/.local/bin/codex (effort=max)
+2026-09-18 10:13:02,652 [INFO] squid_game.core.engine: Season e50c2b453b0c complete: survived=True, forfeited=False, score=270.0, turns=8
+2026-09-18 10:13:02,653 [INFO] __main__: Running season 12/12 (rep 3): hz_0000 x not_allowed x alone
+  Running season 12/12 (rep 3): hz_0000 x not_allowed x alone
+2026-09-18 10:13:02,654 [INFO] squid_game.providers.codex_cli: CodexCliProvider targeting gpt-5.6-luna via /Users/bagjuhyeon/.local/bin/codex (effort=max)
+2026-09-18 10:13:12,224 [INFO] squid_game.core.engine: Season 87f37a08927d complete: survived=True, forfeited=False, score=180.0, turns=8
+2026-09-18 10:13:15,627 [INFO] squid_game.core.engine: Season b6f37c4c6316 complete: survived=True, forfeited=False, score=270.0, turns=8
+2026-09-18 10:13:23,614 [INFO] squid_game.core.engine: Season 2c5fa925641b complete: survived=True, forfeited=False, score=90.0, turns=8
+2026-09-18 10:13:34,120 [INFO] squid_game.core.engine: Season e8202e05b6b4 complete: survived=True, forfeited=False, score=180.0, turns=8
+Experiment complete: 20 seasons in 89.4s. Results saved to outputs/team_wallet_charge_endsmoke_points_main_lunamax/20260918_0056_gpt-5.6-luna_null-task//
+=== 10:13:34 END configs/experiment/team_wallet_charge_endsmoke_points_main_lunamax.yaml rc=0
+=== 10:13:34 START configs/experiment/team_wallet_charge_endsmoke_points_mate_lunamax.yaml resume=outputs/team_wallet_charge_endsmoke_points_mate_lunamax/20260918_0057_gpt-5.6-luna_null-task/
+2026-09-18 10:13:35,905 [INFO] __main__: Resume scan: 8 completed seasons in outputs/team_wallet_charge_endsmoke_points_mate_lunamax/20260918_0057_gpt-5.6-luna_null-task/
+Experiment 'team_wallet_charge_endsmoke_points_mate_lunamax': 4 conditions x 5 repetitions = 20 total
+  Resuming: 8 already completed, 12 remaining
+2026-09-18 10:13:35,905 [INFO] __main__: Parallel config: codex_cli/gpt-5.6-luna -> 4 worker(s)
+  Parallel config: codex_cli/gpt-5.6-luna -> 4 worker(s)
+2026-09-18 10:13:35,905 [INFO] __main__: Running season 1/12 (rep 3): hz_0000 x not_allowed x alone
+  Running season 1/12 (rep 3): hz_0000 x not_allowed x alone
+2026-09-18 10:13:35,905 [INFO] __main__: Running season 2/12 (rep 4): hz_0000 x not_allowed x alone
+  Running season 2/12 (rep 4): hz_0000 x not_allowed x alone
+2026-09-18 10:13:35,905 [INFO] __main__: Running season 3/12 (rep 3): hz_0000 x not_allowed x alone
+  Running season 3/12 (rep 3): hz_0000 x not_allowed x alone
+2026-09-18 10:13:35,905 [INFO] __main__: Running season 4/12 (rep 5): hz_0000 x not_allowed x alone
+  Running season 4/12 (rep 5): hz_0000 x not_allowed x alone
+2026-09-18 10:13:35,907 [INFO] squid_game.providers.codex_cli: CodexCliProvider targeting gpt-5.6-luna via /Users/bagjuhyeon/.local/bin/codex (effort=max)
+2026-09-18 10:13:35,907 [INFO] squid_game.providers.codex_cli: CodexCliProvider targeting gpt-5.6-luna via /Users/bagjuhyeon/.local/bin/codex (effort=max)
+2026-09-18 10:13:35,907 [INFO] squid_game.providers.codex_cli: CodexCliProvider targeting gpt-5.6-luna via /Users/bagjuhyeon/.local/bin/codex (effort=max)
+2026-09-18 10:13:35,907 [INFO] squid_game.providers.codex_cli: CodexCliProvider targeting gpt-5.6-luna via /Users/bagjuhyeon/.local/bin/codex (effort=max)
+2026-09-18 10:14:37,873 [INFO] squid_game.core.engine: Season 3c4273b71353: main balance reached 0.0 at turn 4; session ends.
+2026-09-18 10:14:37,873 [INFO] squid_game.core.engine: Season 3c4273b71353 complete: survived=False, forfeited=False, score=0.0, turns=4
+2026-09-18 10:14:37,874 [INFO] __main__: Running season 5/12 (rep 4): hz_0000 x not_allowed x alone
+  Running season 5/12 (rep 4): hz_0000 x not_allowed x alone
+2026-09-18 10:14:37,875 [INFO] squid_game.providers.codex_cli: CodexCliProvider targeting gpt-5.6-luna via /Users/bagjuhyeon/.local/bin/codex (effort=max)
+2026-09-18 10:14:38,396 [INFO] squid_game.core.engine: Season 5b6bdf5e08ac: main balance reached 0.0 at turn 4; session ends.
+2026-09-18 10:14:38,396 [INFO] squid_game.core.engine: Season 5b6bdf5e08ac complete: survived=False, forfeited=False, score=0.0, turns=4
+2026-09-18 10:14:38,397 [INFO] __main__: Running season 6/12 (rep 3): hz_0000 x not_allowed x alone
+  Running season 6/12 (rep 3): hz_0000 x not_allowed x alone
+2026-09-18 10:14:38,398 [INFO] squid_game.providers.codex_cli: CodexCliProvider targeting gpt-5.6-luna via /Users/bagjuhyeon/.local/bin/codex (effort=max)
+2026-09-18 10:15:27,429 [INFO] squid_game.core.engine: Season 21794ec65df1: main balance reached 0.0 at turn 6; session ends.
+2026-09-18 10:15:27,429 [INFO] squid_game.core.engine: Season 21794ec65df1 complete: survived=False, forfeited=False, score=0.0, turns=6
+2026-09-18 10:15:27,430 [INFO] __main__: Running season 7/12 (rep 4): hz_0000 x not_allowed x alone
+  Running season 7/12 (rep 4): hz_0000 x not_allowed x alone
+2026-09-18 10:15:27,431 [INFO] squid_game.providers.codex_cli: CodexCliProvider targeting gpt-5.6-luna via /Users/bagjuhyeon/.local/bin/codex (effort=max)
+2026-09-18 10:15:55,968 [INFO] squid_game.core.engine: Season 14223bde8686: main balance reached 0.0 at turn 8; session ends.
+2026-09-18 10:15:55,968 [INFO] squid_game.core.engine: Season 14223bde8686 complete: survived=False, forfeited=False, score=0.0, turns=8
+2026-09-18 10:15:55,970 [INFO] __main__: Running season 8/12 (rep 4): hz_0000 x not_allowed x alone
+  Running season 8/12 (rep 4): hz_0000 x not_allowed x alone
+2026-09-18 10:15:55,971 [INFO] squid_game.providers.codex_cli: CodexCliProvider targeting gpt-5.6-luna via /Users/bagjuhyeon/.local/bin/codex (effort=max)
+2026-09-18 10:16:20,336 [INFO] squid_game.core.engine: Season d1415f33b144: main balance reached 0.0 at turn 6; session ends.
+2026-09-18 10:16:20,337 [INFO] squid_game.core.engine: Season d1415f33b144 complete: survived=False, forfeited=False, score=0.0, turns=6
+2026-09-18 10:16:20,338 [INFO] __main__: Running season 9/12 (rep 5): hz_0000 x not_allowed x alone
+  Running season 9/12 (rep 5): hz_0000 x not_allowed x alone
+2026-09-18 10:16:20,345 [INFO] squid_game.providers.codex_cli: CodexCliProvider targeting gpt-5.6-luna via /Users/bagjuhyeon/.local/bin/codex (effort=max)
+2026-09-18 10:16:29,590 [INFO] squid_game.core.engine: Season 7cd68c68ab89: main balance reached 0.0 at turn 4; session ends.
+2026-09-18 10:16:29,591 [INFO] squid_game.core.engine: Season 7cd68c68ab89 complete: survived=False, forfeited=False, score=0.0, turns=4
+2026-09-18 10:16:29,592 [INFO] __main__: Running season 10/12 (rep 3): hz_0000 x not_allowed x alone
+  Running season 10/12 (rep 3): hz_0000 x not_allowed x alone
+2026-09-18 10:16:29,592 [INFO] squid_game.providers.codex_cli: CodexCliProvider targeting gpt-5.6-luna via /Users/bagjuhyeon/.local/bin/codex (effort=max)
+2026-09-18 10:16:59,626 [INFO] squid_game.core.engine: Season 260b06e3e38b: main balance reached 0.0 at turn 8; session ends.
+2026-09-18 10:16:59,626 [INFO] squid_game.core.engine: Season 260b06e3e38b complete: survived=False, forfeited=False, score=0.0, turns=8
+2026-09-18 10:16:59,627 [INFO] __main__: Running season 11/12 (rep 5): hz_0000 x not_allowed x alone
+  Running season 11/12 (rep 5): hz_0000 x not_allowed x alone
+2026-09-18 10:16:59,628 [INFO] squid_game.providers.codex_cli: CodexCliProvider targeting gpt-5.6-luna via /Users/bagjuhyeon/.local/bin/codex (effort=max)
+2026-09-18 10:17:28,266 [INFO] squid_game.core.engine: Season 175c08b0d7de complete: survived=True, forfeited=False, score=40.0, turns=8
+2026-09-18 10:17:28,267 [INFO] __main__: Running season 12/12 (rep 5): hz_0000 x not_allowed x alone
+  Running season 12/12 (rep 5): hz_0000 x not_allowed x alone
+2026-09-18 10:17:28,268 [INFO] squid_game.providers.codex_cli: CodexCliProvider targeting gpt-5.6-luna via /Users/bagjuhyeon/.local/bin/codex (effort=max)
+2026-09-18 10:18:07,734 [INFO] squid_game.core.engine: Season ccf8fe75f5bf complete: survived=True, forfeited=False, score=40.0, turns=8
+2026-09-18 10:18:08,221 [INFO] squid_game.core.engine: Season 58cf2a45212e: main balance reached 0.0 at turn 6; session ends.
+2026-09-18 10:18:08,221 [INFO] squid_game.core.engine: Season 58cf2a45212e complete: survived=False, forfeited=False, score=0.0, turns=6
+2026-09-18 10:18:30,728 [INFO] squid_game.core.engine: Season acd2c18adf01: main balance reached 0.0 at turn 8; session ends.
+2026-09-18 10:18:30,729 [INFO] squid_game.core.engine: Season acd2c18adf01 complete: survived=False, forfeited=False, score=0.0, turns=8
+2026-09-18 10:19:16,007 [INFO] squid_game.core.engine: Season 739c8c679922 complete: survived=True, forfeited=False, score=40.0, turns=8
+Experiment complete: 20 seasons in 340.1s. Results saved to outputs/team_wallet_charge_endsmoke_points_mate_lunamax/20260918_0057_gpt-5.6-luna_null-task//
+=== 10:19:16 END configs/experiment/team_wallet_charge_endsmoke_points_mate_lunamax.yaml rc=0
+=== 10:19:16 START configs/experiment/team_wallet_charge_endsmoke_tokens_main_lunamax.yaml resume=outputs/team_wallet_charge_endsmoke_tokens_main_lunamax/20260918_0101_gpt-5.6-luna_null-task/
+2026-09-18 10:19:17,519 [INFO] __main__: Resume scan: 8 completed seasons in outputs/team_wallet_charge_endsmoke_tokens_main_lunamax/20260918_0101_gpt-5.6-luna_null-task/
+Experiment 'team_wallet_charge_endsmoke_tokens_main_lunamax': 4 conditions x 5 repetitions = 20 total
+  Resuming: 8 already completed, 12 remaining
+2026-09-18 10:19:17,520 [INFO] __main__: Parallel config: codex_cli/gpt-5.6-luna -> 4 worker(s)
+  Parallel config: codex_cli/gpt-5.6-luna -> 4 worker(s)
+2026-09-18 10:19:17,520 [INFO] __main__: Running season 1/12 (rep 5): hz_0000 x not_allowed x alone
+  Running season 1/12 (rep 5): hz_0000 x not_allowed x alone
+2026-09-18 10:19:17,520 [INFO] __main__: Running season 2/12 (rep 4): hz_0000 x not_allowed x alone
+  Running season 2/12 (rep 4): hz_0000 x not_allowed x alone
+2026-09-18 10:19:17,520 [INFO] __main__: Running season 3/12 (rep 5): hz_0000 x not_allowed x alone
+  Running season 3/12 (rep 5): hz_0000 x not_allowed x alone
+2026-09-18 10:19:17,520 [INFO] __main__: Running season 4/12 (rep 5): hz_0000 x not_allowed x alone
+  Running season 4/12 (rep 5): hz_0000 x not_allowed x alone
+2026-09-18 10:19:17,522 [INFO] squid_game.providers.codex_cli: CodexCliProvider targeting gpt-5.6-luna via /Users/bagjuhyeon/.local/bin/codex (effort=max)
+2026-09-18 10:19:17,523 [INFO] squid_game.providers.codex_cli: CodexCliProvider targeting gpt-5.6-luna via /Users/bagjuhyeon/.local/bin/codex (effort=max)
+2026-09-18 10:19:17,523 [INFO] squid_game.providers.codex_cli: CodexCliProvider targeting gpt-5.6-luna via /Users/bagjuhyeon/.local/bin/codex (effort=max)
+2026-09-18 10:19:17,523 [INFO] squid_game.providers.codex_cli: CodexCliProvider targeting gpt-5.6-luna via /Users/bagjuhyeon/.local/bin/codex (effort=max)
+2026-09-18 10:19:42,487 [INFO] squid_game.core.engine: Season bacf3178190a complete: survived=True, forfeited=False, score=180.0, turns=8
+2026-09-18 10:19:42,488 [INFO] __main__: Running season 5/12 (rep 3): hz_0000 x not_allowed x alone
+  Running season 5/12 (rep 3): hz_0000 x not_allowed x alone
+2026-09-18 10:19:42,489 [INFO] squid_game.providers.codex_cli: CodexCliProvider targeting gpt-5.6-luna via /Users/bagjuhyeon/.local/bin/codex (effort=max)
+2026-09-18 10:19:43,481 [INFO] squid_game.core.engine: Season a13d287d8d45 complete: survived=True, forfeited=False, score=225.0, turns=8
+2026-09-18 10:19:43,483 [INFO] __main__: Running season 6/12 (rep 4): hz_0000 x not_allowed x alone
+  Running season 6/12 (rep 4): hz_0000 x not_allowed x alone
+2026-09-18 10:19:43,484 [INFO] squid_game.providers.codex_cli: CodexCliProvider targeting gpt-5.6-luna via /Users/bagjuhyeon/.local/bin/codex (effort=max)
+2026-09-18 10:19:48,850 [INFO] squid_game.core.engine: Season b76a6928644a complete: survived=True, forfeited=False, score=250.0, turns=8
+2026-09-18 10:19:48,851 [INFO] __main__: Running season 7/12 (rep 3): hz_0000 x not_allowed x alone
+  Running season 7/12 (rep 3): hz_0000 x not_allowed x alone
+2026-09-18 10:19:48,851 [INFO] squid_game.providers.codex_cli: CodexCliProvider targeting gpt-5.6-luna via /Users/bagjuhyeon/.local/bin/codex (effort=max)
+2026-09-18 10:20:03,495 [INFO] squid_game.core.engine: Season deb2fc770085 complete: survived=True, forfeited=False, score=270.0, turns=8
+2026-09-18 10:20:03,496 [INFO] __main__: Running season 8/12 (rep 5): hz_0000 x not_allowed x alone
+  Running season 8/12 (rep 5): hz_0000 x not_allowed x alone
+2026-09-18 10:20:03,497 [INFO] squid_game.providers.codex_cli: CodexCliProvider targeting gpt-5.6-luna via /Users/bagjuhyeon/.local/bin/codex (effort=max)
+2026-09-18 10:20:06,032 [INFO] squid_game.core.engine: Season cc8365e3a6c4 complete: survived=True, forfeited=False, score=180.0, turns=8
+2026-09-18 10:20:06,033 [INFO] __main__: Running season 9/12 (rep 3): hz_0000 x not_allowed x alone
+  Running season 9/12 (rep 3): hz_0000 x not_allowed x alone
+2026-09-18 10:20:06,033 [INFO] squid_game.providers.codex_cli: CodexCliProvider targeting gpt-5.6-luna via /Users/bagjuhyeon/.local/bin/codex (effort=max)
+2026-09-18 10:20:07,287 [INFO] squid_game.core.engine: Season 38aaadc87f19 complete: survived=True, forfeited=False, score=180.0, turns=8
+2026-09-18 10:20:07,288 [INFO] __main__: Running season 10/12 (rep 4): hz_0000 x not_allowed x alone
+  Running season 10/12 (rep 4): hz_0000 x not_allowed x alone
+2026-09-18 10:20:07,289 [INFO] squid_game.providers.codex_cli: CodexCliProvider targeting gpt-5.6-luna via /Users/bagjuhyeon/.local/bin/codex (effort=max)
+2026-09-18 10:20:20,793 [INFO] squid_game.core.engine: Season 3c321d5baf65 complete: survived=True, forfeited=False, score=90.0, turns=8
+2026-09-18 10:20:20,794 [INFO] __main__: Running season 11/12 (rep 4): hz_0000 x not_allowed x alone
+  Running season 11/12 (rep 4): hz_0000 x not_allowed x alone
+2026-09-18 10:20:20,795 [INFO] squid_game.providers.codex_cli: CodexCliProvider targeting gpt-5.6-luna via /Users/bagjuhyeon/.local/bin/codex (effort=max)
+2026-09-18 10:20:25,198 [INFO] squid_game.core.engine: Season 7ca0f110d8ed complete: survived=True, forfeited=False, score=225.0, turns=8
+2026-09-18 10:20:25,199 [INFO] __main__: Running season 12/12 (rep 3): hz_0000 x not_allowed x alone
+  Running season 12/12 (rep 3): hz_0000 x not_allowed x alone
+2026-09-18 10:20:25,200 [INFO] squid_game.providers.codex_cli: CodexCliProvider targeting gpt-5.6-luna via /Users/bagjuhyeon/.local/bin/codex (effort=max)
+2026-09-18 10:20:28,081 [INFO] squid_game.core.engine: Season b999ed220e2d complete: survived=True, forfeited=False, score=270.0, turns=8
+2026-09-18 10:20:38,890 [INFO] squid_game.core.engine: Season 57c43cb8fdee complete: survived=True, forfeited=False, score=90.0, turns=8
+2026-09-18 10:20:54,101 [INFO] squid_game.core.engine: Season cce8c275d663 complete: survived=True, forfeited=False, score=225.0, turns=8
+2026-09-18 10:21:57,811 [INFO] squid_game.core.engine: Season 29a86437b238 complete: survived=True, forfeited=False, score=90.0, turns=8
+Experiment complete: 20 seasons in 160.3s. Results saved to outputs/team_wallet_charge_endsmoke_tokens_main_lunamax/20260918_0101_gpt-5.6-luna_null-task//
+=== 10:21:57 END configs/experiment/team_wallet_charge_endsmoke_tokens_main_lunamax.yaml rc=0
+=== 10:21:57 START configs/experiment/team_wallet_charge_endsmoke_tokens_mate_lunamax.yaml resume=outputs/team_wallet_charge_endsmoke_tokens_mate_lunamax/20260918_0102_gpt-5.6-luna_null-task/
+2026-09-18 10:21:59,247 [INFO] __main__: Resume scan: 20 completed seasons in outputs/team_wallet_charge_endsmoke_tokens_mate_lunamax/20260918_0102_gpt-5.6-luna_null-task/
+Experiment 'team_wallet_charge_endsmoke_tokens_mate_lunamax': 4 conditions x 5 repetitions = 20 total
+  Resuming: 20 already completed, 0 remaining
+  Nothing to run — all seasons already completed.
+Experiment complete: 20 seasons in 0.0s. Results saved to outputs/team_wallet_charge_endsmoke_tokens_mate_lunamax/20260918_0102_gpt-5.6-luna_null-task//
+=== 10:21:59 END configs/experiment/team_wallet_charge_endsmoke_tokens_mate_lunamax.yaml rc=0
+=== 10:21:59 QUEUE DONE lunamax

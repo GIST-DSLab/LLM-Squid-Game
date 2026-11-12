@@ -1,0 +1,225 @@
+=== 22:48:07 START configs/experiment/team_wallet_v2_tokens_main_glm53flash.yaml
+Experiment 'team_wallet_v2_tokens_main_glm53flash': 4 conditions x 5 repetitions = 20 total
+2026-09-21 22:48:08,368 [INFO] __main__: Parallel config: ollama_cloud/glm-5.3-flash -> 5 worker(s)
+  Parallel config: ollama_cloud/glm-5.3-flash -> 5 worker(s)
+2026-09-21 22:48:08,368 [INFO] __main__: Running season 1/20 (rep 5): hz_0000 x not_allowed x alone
+  Running season 1/20 (rep 5): hz_0000 x not_allowed x alone
+2026-09-21 22:48:08,368 [INFO] __main__: Running season 2/20 (rep 5): hz_0000 x not_allowed x alone
+  Running season 2/20 (rep 5): hz_0000 x not_allowed x alone
+2026-09-21 22:48:08,368 [INFO] __main__: Running season 3/20 (rep 1): hz_0000 x not_allowed x alone
+  Running season 3/20 (rep 1): hz_0000 x not_allowed x alone
+2026-09-21 22:48:08,368 [INFO] __main__: Running season 4/20 (rep 3): hz_0000 x not_allowed x alone
+  Running season 4/20 (rep 3): hz_0000 x not_allowed x alone
+2026-09-21 22:48:08,368 [INFO] __main__: Running season 5/20 (rep 5): hz_0000 x not_allowed x alone
+  Running season 5/20 (rep 5): hz_0000 x not_allowed x alone
+2026-09-21 22:48:08,569 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=True, effort=None)
+2026-09-21 22:48:08,570 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=True, effort=None)
+2026-09-21 22:48:08,571 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=True, effort=None)
+2026-09-21 22:48:08,572 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=True, effort=None)
+2026-09-21 22:48:08,572 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=True, effort=None)
+2026-09-21 22:48:08,762 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting gpt-oss:120b-cloud at https://ollama.com (thinking=None, effort=medium)
+2026-09-21 22:48:08,768 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting gpt-oss:120b-cloud at https://ollama.com (thinking=None, effort=medium)
+2026-09-21 22:48:08,768 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting gpt-oss:120b-cloud at https://ollama.com (thinking=None, effort=medium)
+2026-09-21 22:48:08,768 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting gpt-oss:120b-cloud at https://ollama.com (thinking=None, effort=medium)
+2026-09-21 22:48:08,768 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting gpt-oss:120b-cloud at https://ollama.com (thinking=None, effort=medium)
+2026-09-21 22:48:09,341 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 402 Payment Required"
+2026-09-21 22:48:09,342 [INFO] __main__: Running season 6/20 (rep 4): hz_0000 x not_allowed x alone
+  Running season 6/20 (rep 4): hz_0000 x not_allowed x alone
+2026-09-21 22:48:09,342 [ERROR] __main__: Season run 5/20 failed
+Traceback (most recent call last):
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/.claude/worktrees/team-wallet/game/squid_game/runner.py", line 645, in _run_parallel
+    result = future.result()
+             ^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/Users/bagjuhyeon/.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/.claude/worktrees/team-wallet/game/squid_game/runner.py", line 623, in _guarded_run
+    return self._run_single_season(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/.claude/worktrees/team-wallet/game/squid_game/runner.py", line 268, in _run_single_season
+    result = engine.run_season(seed_override=rep_seed)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/.claude/worktrees/team-wallet/game/squid_game/core/engine.py", line 972, in run_season
+    turn_result = unified_mgr.execute_turn(
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/.claude/worktrees/team-wallet/game/squid_game/core/unified_turn.py", line 507, in execute_turn
+    return self._execute_turn_decision_first(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/.claude/worktrees/team-wallet/game/squid_game/core/unified_turn.py", line 2335, in _execute_turn_decision_first
+    value, attempts, errors = self._retry_call(
+                              ^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/.claude/worktrees/team-wallet/game/squid_game/core/unified_turn.py", line 1978, in _retry_call
+    attempt = issue()
+              ^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/.claude/worktrees/team-wallet/game/squid_game/core/unified_turn.py", line 2316, in _issue_decision
+    response = self._agent.respond_ransom_call(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/.claude/worktrees/team-wallet/game/squid_game/agents/vanilla.py", line 353, in respond_ransom_call
+    text = self._dispatch("ransom", messages)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/.claude/worktrees/team-wallet/game/squid_game/agents/vanilla.py", line 123, in _dispatch
+    result = self._provider.complete(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/.claude/worktrees/team-wallet/game/squid_game/providers/ollama_cloud.py", line 217, in complete
+    response_json = self._call_with_retry(payload)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/.claude/worktrees/team-wallet/game/squid_game/providers/ollama_cloud.py", line 281, in _call_with_retry
+    response.raise_for_status()
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/.claude/worktrees/team-wallet/.venv/lib/python3.12/site-packages/httpx/_models.py", line 829, in raise_for_status
+    raise HTTPStatusError(message, request=request, response=self)
+httpx.HTTPStatusError: Client error '402 Payment Required' for url 'https://ollama.com/api/chat'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/402
+2026-09-21 22:48:09,346 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 402 Payment Required"
+2026-09-21 22:48:09,352 [INFO] __main__: Running season 7/20 (rep 1): hz_0000 x not_allowed x alone
+  Running season 7/20 (rep 1): hz_0000 x not_allowed x alone
+2026-09-21 22:48:09,376 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=True, effort=None)
+2026-09-21 22:48:09,388 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=True, effort=None)
+2026-09-21 22:48:09,409 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting gpt-oss:120b-cloud at https://ollama.com (thinking=None, effort=medium)
+2026-09-21 22:48:09,416 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting gpt-oss:120b-cloud at https://ollama.com (thinking=None, effort=medium)
+2026-09-21 22:48:09,727 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 402 Payment Required"
+2026-09-21 22:48:09,727 [INFO] __main__: Running season 8/20 (rep 3): hz_0000 x not_allowed x alone
+  Running season 8/20 (rep 3): hz_0000 x not_allowed x alone
+2026-09-21 22:48:09,743 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 429 Too Many Requests"
+2026-09-21 22:48:09,745 [WARNING] squid_game.providers.ollama_cloud: Ollama Cloud 429 on attempt 1/4: {"error":"too many concurrent requests"}
+
+2026-09-21 22:48:09,749 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=True, effort=None)
+2026-09-21 22:48:09,766 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting gpt-oss:120b-cloud at https://ollama.com (thinking=None, effort=medium)
+2026-09-21 22:48:10,088 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 429 Too Many Requests"
+2026-09-21 22:48:10,088 [WARNING] squid_game.providers.ollama_cloud: Ollama Cloud 429 on attempt 1/4: {"error":"too many concurrent requests"}
+
+2026-09-21 22:48:10,090 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 402 Payment Required"
+2026-09-21 22:48:10,091 [INFO] __main__: Running season 9/20 (rep 3): hz_0000 x not_allowed x alone
+  Running season 9/20 (rep 3): hz_0000 x not_allowed x alone
+2026-09-21 22:48:10,106 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=True, effort=None)
+2026-09-21 22:48:10,121 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting gpt-oss:120b-cloud at https://ollama.com (thinking=None, effort=medium)
+2026-09-21 22:48:11,115 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 429 Too Many Requests"
+2026-09-21 22:48:11,116 [WARNING] squid_game.providers.ollama_cloud: Ollama Cloud 429 on attempt 2/4: {"error":"too many concurrent requests"}
+
+2026-09-21 22:48:11,143 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 402 Payment Required"
+2026-09-21 22:48:11,144 [INFO] __main__: Running season 10/20 (rep 2): hz_0000 x not_allowed x alone
+  Running season 10/20 (rep 2): hz_0000 x not_allowed x alone
+2026-09-21 22:48:11,167 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=True, effort=None)
+2026-09-21 22:48:11,182 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting gpt-oss:120b-cloud at https://ollama.com (thinking=None, effort=medium)
+2026-09-21 22:48:11,320 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 402 Payment Required"
+2026-09-21 22:48:11,320 [INFO] __main__: Running season 11/20 (rep 2): hz_0000 x not_allowed x alone
+  Running season 11/20 (rep 2): hz_0000 x not_allowed x alone
+2026-09-21 22:48:11,335 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=True, effort=None)
+2026-09-21 22:48:11,349 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting gpt-oss:120b-cloud at https://ollama.com (thinking=None, effort=medium)
+2026-09-21 22:48:11,855 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 402 Payment Required"
+2026-09-21 22:48:11,855 [INFO] __main__: Running season 12/20 (rep 4): hz_0000 x not_allowed x alone
+  Running season 12/20 (rep 4): hz_0000 x not_allowed x alone
+2026-09-21 22:48:11,874 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=True, effort=None)
+2026-09-21 22:48:11,890 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting gpt-oss:120b-cloud at https://ollama.com (thinking=None, effort=medium)
+2026-09-21 22:48:12,218 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 429 Too Many Requests"
+2026-09-21 22:48:12,218 [WARNING] squid_game.providers.ollama_cloud: Ollama Cloud 429 on attempt 1/4: {"error":"too many concurrent requests"}
+
+2026-09-21 22:48:12,466 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 402 Payment Required"
+2026-09-21 22:48:12,466 [INFO] __main__: Running season 13/20 (rep 4): hz_0000 x not_allowed x alone
+  Running season 13/20 (rep 4): hz_0000 x not_allowed x alone
+2026-09-21 22:48:12,483 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=True, effort=None)
+2026-09-21 22:48:12,499 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting gpt-oss:120b-cloud at https://ollama.com (thinking=None, effort=medium)
+2026-09-21 22:48:12,757 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 402 Payment Required"
+2026-09-21 22:48:12,758 [INFO] __main__: Running season 14/20 (rep 1): hz_0000 x not_allowed x alone
+  Running season 14/20 (rep 1): hz_0000 x not_allowed x alone
+2026-09-21 22:48:12,775 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=True, effort=None)
+2026-09-21 22:48:12,791 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting gpt-oss:120b-cloud at https://ollama.com (thinking=None, effort=medium)
+2026-09-21 22:48:13,111 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 402 Payment Required"
+2026-09-21 22:48:13,111 [INFO] __main__: Running season 15/20 (rep 2): hz_0000 x not_allowed x alone
+  Running season 15/20 (rep 2): hz_0000 x not_allowed x alone
+2026-09-21 22:48:13,126 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=True, effort=None)
+2026-09-21 22:48:13,142 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting gpt-oss:120b-cloud at https://ollama.com (thinking=None, effort=medium)
+2026-09-21 22:48:13,654 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 402 Payment Required"
+2026-09-21 22:48:13,654 [INFO] __main__: Running season 16/20 (rep 4): hz_0000 x not_allowed x alone
+  Running season 16/20 (rep 4): hz_0000 x not_allowed x alone
+2026-09-21 22:48:13,672 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=True, effort=None)
+2026-09-21 22:48:13,687 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting gpt-oss:120b-cloud at https://ollama.com (thinking=None, effort=medium)
+2026-09-21 22:48:13,957 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 402 Payment Required"
+2026-09-21 22:48:13,957 [INFO] __main__: Running season 17/20 (rep 2): hz_0000 x not_allowed x alone
+  Running season 17/20 (rep 2): hz_0000 x not_allowed x alone
+2026-09-21 22:48:13,978 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=True, effort=None)
+2026-09-21 22:48:13,995 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting gpt-oss:120b-cloud at https://ollama.com (thinking=None, effort=medium)
+2026-09-21 22:48:14,612 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 402 Payment Required"
+2026-09-21 22:48:14,612 [INFO] __main__: Running season 18/20 (rep 5): hz_0000 x not_allowed x alone
+  Running season 18/20 (rep 5): hz_0000 x not_allowed x alone
+2026-09-21 22:48:14,628 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=True, effort=None)
+2026-09-21 22:48:14,643 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting gpt-oss:120b-cloud at https://ollama.com (thinking=None, effort=medium)
+2026-09-21 22:48:14,708 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 402 Payment Required"
+2026-09-21 22:48:14,708 [INFO] __main__: Running season 19/20 (rep 3): hz_0000 x not_allowed x alone
+  Running season 19/20 (rep 3): hz_0000 x not_allowed x alone
+2026-09-21 22:48:14,722 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 402 Payment Required"
+2026-09-21 22:48:14,722 [INFO] __main__: Running season 20/20 (rep 1): hz_0000 x not_allowed x alone
+  Running season 20/20 (rep 1): hz_0000 x not_allowed x alone
+2026-09-21 22:48:14,728 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=True, effort=None)
+2026-09-21 22:48:14,756 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=True, effort=None)
+2026-09-21 22:48:14,758 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting gpt-oss:120b-cloud at https://ollama.com (thinking=None, effort=medium)
+2026-09-21 22:48:14,772 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting gpt-oss:120b-cloud at https://ollama.com (thinking=None, effort=medium)
+2026-09-21 22:48:14,950 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 402 Payment Required"
+2026-09-21 22:48:15,201 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 402 Payment Required"
+2026-09-21 22:48:15,445 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 402 Payment Required"
+2026-09-21 22:48:15,525 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 402 Payment Required"
+2026-09-21 22:48:16,093 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 402 Payment Required"
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/.claude/worktrees/team-wallet/game/squid_game/runner.py", line 1208, in <module>
+    main()
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/.claude/worktrees/team-wallet/game/squid_game/runner.py", line 1204, in main
+    run_experiment_cli()
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/.claude/worktrees/team-wallet/game/squid_game/runner.py", line 1138, in run_experiment_cli
+    runner.run(resume_dir=args.resume)
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/.claude/worktrees/team-wallet/game/squid_game/runner.py", line 375, in run
+    new_results = self._run_parallel(
+                  ^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/.claude/worktrees/team-wallet/game/squid_game/runner.py", line 645, in _run_parallel
+    result = future.result()
+             ^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/Users/bagjuhyeon/.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/.claude/worktrees/team-wallet/game/squid_game/runner.py", line 623, in _guarded_run
+    return self._run_single_season(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/.claude/worktrees/team-wallet/game/squid_game/runner.py", line 268, in _run_single_season
+    result = engine.run_season(seed_override=rep_seed)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/.claude/worktrees/team-wallet/game/squid_game/core/engine.py", line 972, in run_season
+    turn_result = unified_mgr.execute_turn(
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/.claude/worktrees/team-wallet/game/squid_game/core/unified_turn.py", line 507, in execute_turn
+    return self._execute_turn_decision_first(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/.claude/worktrees/team-wallet/game/squid_game/core/unified_turn.py", line 2335, in _execute_turn_decision_first
+    value, attempts, errors = self._retry_call(
+                              ^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/.claude/worktrees/team-wallet/game/squid_game/core/unified_turn.py", line 1978, in _retry_call
+    attempt = issue()
+              ^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/.claude/worktrees/team-wallet/game/squid_game/core/unified_turn.py", line 2316, in _issue_decision
+    response = self._agent.respond_ransom_call(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/.claude/worktrees/team-wallet/game/squid_game/agents/vanilla.py", line 353, in respond_ransom_call
+    text = self._dispatch("ransom", messages)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/.claude/worktrees/team-wallet/game/squid_game/agents/vanilla.py", line 123, in _dispatch
+    result = self._provider.complete(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/.claude/worktrees/team-wallet/game/squid_game/providers/ollama_cloud.py", line 217, in complete
+    response_json = self._call_with_retry(payload)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/.claude/worktrees/team-wallet/game/squid_game/providers/ollama_cloud.py", line 281, in _call_with_retry
+    response.raise_for_status()
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/.claude/worktrees/team-wallet/.venv/lib/python3.12/site-packages/httpx/_models.py", line 829, in raise_for_status
+    raise HTTPStatusError(message, request=request, response=self)
+httpx.HTTPStatusError: Client error '402 Payment Required' for url 'https://ollama.com/api/chat'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/402
+=== 22:48:16 END configs/experiment/team_wallet_v2_tokens_main_glm53flash.yaml rc=0

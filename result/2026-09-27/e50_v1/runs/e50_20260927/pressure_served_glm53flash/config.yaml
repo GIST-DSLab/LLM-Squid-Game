@@ -1,0 +1,29 @@
+name: squid5_pressure_served_glm53flash
+calibration: /Users/bagjuhyeon/squid5-runs/e50_20260927/e50_baseline.json
+mode: pressure
+model:
+  kind: ollama
+  model: glm-5.3-flash
+  api_key_env: OLLAMA_API_KEY3
+  think: true
+  timeout: 1200
+reps: 10
+seed0: 5000
+workers: 10
+cells:
+- cell_id: served
+  currency: tokens
+  arm: served
+pressure:
+  stage: main
+  multiples:
+  - 16
+  - 8
+  - 4
+  - 2
+  total_multiple: 16
+  problems: 1
+  profile:
+    clauses: 3
+    trap_query: true
+    n_queries: 3

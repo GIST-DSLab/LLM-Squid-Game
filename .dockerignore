@@ -1,0 +1,12 @@
+# The web5 API image (web/deploy/Dockerfile) copies only code and web/data/runs; keep the records out of the build context.
+.git
+.claude
+result
+results
+outputs
+docs
+paper
+weekly-report
+assets
+qwen-persona-arena
+**/__pycache__

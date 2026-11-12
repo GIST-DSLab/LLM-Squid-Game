@@ -1,0 +1,35 @@
+raw _sample_rule (n=20000): {'two+one': '64.8%', 'all_diff': '29.6%', 'same3': '5.6%'}
+generated v13 puzzles n=504 (63s): {'two+one': '311 (61.7%)', 'all_diff': '193 (38.3%)'}
+minimal examples: mean 5.97 min 5 max 8 dist {5: 128, 6: 274, 7: 91, 8: 11} | clues per round Counter({26: 504})
+engine candidate_actions vs SOL-vector answer sets: 0 mismatches in 100
+k | median left (23,112) | mean left | P(query fixed) % (23,112) | median left (solver 25,996) | P fixed % (solver) | P function fixed % (23,112) | (solver) | mean query answers (23,112) | (solver)
+0 | 23112.0 | 23112 | 0.0 | 25996.0 | 0.0 | 0.0 | 0.0 | 4.0 | 4.0
+1 | 5778.0 | 5778 | 0.0 | 6499.0 | 0.0 | 0.0 | 0.0 | 4.0 | 4.0
+2 | 1734.0 | 1695.0 | 0.4 | 1914.0 | 0.4 | 0.0 | 0.0 | 3.9 | 3.9
+3 | 496.0 | 556.3 | 1.6 | 526.0 | 1.6 | 0.0 | 0.0 | 3.61 | 3.62
+4 | 169.0 | 211.3 | 3.7 | 186.0 | 3.7 | 0.0 | 0.0 | 3.21 | 3.24
+5 | 62.5 | 90.3 | 7.0 | 71.5 | 7.0 | 0.0 | 0.0 | 2.75 | 2.78
+6 | 28.0 | 41.8 | 12.2 | 32.0 | 12.2 | 0.1 | 0.1 | 2.38 | 2.42
+7 | 14.0 | 23.0 | 19.9 | 16.0 | 19.9 | 1.1 | 1.0 | 2.06 | 2.09
+8 | 8.0 | 12.8 | 25.3 | 9.0 | 25.3 | 2.3 | 2.2 | 1.88 | 1.91
+12 | 3.0 | 3.4 | 48.4 | 3.0 | 48.4 | 16.6 | 15.5 | 1.53 | 1.53
+16 | 2.0 | 2.1 | 58.2 | 2.0 | 58.2 | 34.3 | 33.1 | 1.42 | 1.42
+26 | 1.0 | 1.4 | 79.2 | 1.0 | 79.2 | 68.4 | 68.1 | 1.21 | 1.21
+by-hand deal (4 agents), share of seats/pairs whose cards fix the query, solver space:
+  hand 8: alone 36% pair 83%  median functions left alone 7.0  minimal cards per hand 2.93
+  hand 6: alone 11% pair 52%  median functions left alone 28.5  minimal cards per hand 1.49
+  hand 4: alone 3% pair 39%  median functions left alone 177.0  minimal cards per hand 1.49
+  hand 2: alone 0% pair 6%  median functions left alone 1914.0  minimal cards per hand 1.49
+{"round": 1, "hand": 8, "rule": "if shape == \"star\": stay; elif color == \"yellow\": go_left; elif number == 3: jump; else: go_right", "pattern": "all_diff", "own_23_left/q": {"agent-6": [5, 2], "agent-11": [11, 1], "agent-17": [7, 2], "agent-23": [6, 1]}, "own_sol_left/q": {"agent-6": [5, 2], "agent-11": [11, 1], "agent-17": [9, 3], "agent-23": [6, 1]}, "pool26": [1, 1, 1, 1], "minimal": [6, 1, 1, 1, 1]}
+{"round": 2, "hand": 7, "rule": "if shape == \"triangle\": go_right; elif number == 2: stay; elif color == \"green\": go_left; else: jump", "pattern": "all_diff", "own_23_left/q": {"agent-6": [6, 2], "agent-11": [25, 2], "agent-17": [52, 4], "agent-23": [1, 1]}, "own_sol_left/q": {"agent-6": [6, 2], "agent-11": [28, 2], "agent-17": [57, 4], "agent-23": [1, 1]}, "pool26": [1, 1, 1, 1], "minimal": [5, 1, 1, 1, 1]}
+{"round": 3, "hand": 6, "rule": "if color == \"red\": stay; elif shape == \"triangle\": go_right; elif number == 4: go_left; else: jump", "pattern": "all_diff", "own_23_left/q": {"agent-6": [47, 2], "agent-11": [10, 2], "agent-17": [9, 2], "agent-23": [46, 3]}, "own_sol_left/q": {"agent-6": [51, 2], "agent-11": [12, 2], "agent-17": [11, 2], "agent-23": [59, 3]}, "pool26": [1, 1, 1, 1], "minimal": [6, 1, 1, 1, 1]}
+{"round": 4, "hand": 5, "rule": "if color == \"yellow\": go_right; elif number == 1: go_left; elif shape == \"triangle\": jump; else: stay", "pattern": "all_diff", "own_23_left/q": {"agent-6": [18, 2], "agent-11": [130, 3], "agent-17": [104, 1], "agent-23": [284, 3]}, "own_sol_left/q": {"agent-6": [20, 2], "agent-11": [151, 3], "agent-17": [112, 1], "agent-23": [326, 3]}, "pool26": [1, 1, 1, 1], "minimal": [6, 1, 1, 1, 1]}
+{"round": 5, "hand": 4, "rule": "if number == 1: go_right; elif shape == \"square\": jump; elif color == \"green\": go_left; else: stay", "pattern": "all_diff", "own_23_left/q": {"agent-6": [76, 3], "agent-11": [70, 3], "agent-17": [224, 4], "agent-23": [28, 2]}, "own_sol_left/q": {"agent-6": [93, 3], "agent-11": [75, 3], "agent-17": [243, 4], "agent-23": [30, 2]}, "pool26": [1, 1, 1, 1], "minimal": [7, 1, 1, 1, 1]}
+{"round": 6, "hand": 3, "rule": "if shape == \"circle\": go_right; elif color == \"red\": jump; elif color == \"green\": stay; else: go_left", "pattern": "two+one", "own_23_left/q": {"agent-6": [590, 4], "agent-11": [496, 4], "agent-17": [438, 3], "agent-23": [496, 4]}, "own_sol_left/q": {"agent-6": [676, 4], "agent-11": [526, 4], "agent-17": [490, 3], "agent-23": [526, 4]}, "pool26": [1, 1, 1, 1], "minimal": [7, 1, 1, 1, 1]}
+{"round": 7, "hand": 2, "rule": "if color == \"green\": stay; elif shape == \"circle\": go_right; elif shape == \"triangle\": go_left; else: jump", "pattern": "two+one", "own_23_left/q": {"agent-6": [1890, 4], "agent-11": [1734, 4], "agent-17": [576, 4], "agent-23": [1296, 4]}, "own_sol_left/q": {"agent-6": [2227, 4], "agent-11": [1914, 4], "agent-17": [757, 4], "agent-23": [1424, 4]}, "pool26": [1, 1, 1, 1], "minimal": [7, 1, 1, 1, 1]}
+{"round": 8, "hand": 2, "rule": "if shape == \"circle\": go_left; elif color == \"red\": jump; elif color == \"yellow\": stay; else: go_right", "pattern": "two+one", "own_23_left/q": {"agent-6": [1296, 4], "agent-11": [1296, 4], "agent-17": [1734, 4], "agent-23": [1296, 3]}, "own_sol_left/q": {"agent-6": [1424, 4], "agent-11": [1424, 4], "agent-17": [1914, 4], "agent-23": [1424, 3]}, "pool26": [1, 1, 1, 1], "minimal": [7, 1, 1, 1, 1]}
+{"round": 9, "hand": 2, "rule": "if color == \"yellow\": jump; elif shape == \"triangle\": stay; elif number == 2: go_right; else: go_left", "pattern": "all_diff", "own_23_left/q": {"agent-6": [1296, 4], "agent-11": [1734, 4], "agent-17": [1734, 4], "agent-23": [1734, 4]}, "own_sol_left/q": {"agent-6": [1424, 4], "agent-11": [1914, 4], "agent-17": [1914, 4], "agent-23": [1914, 4]}, "pool26": [1, 1, 1, 1], "minimal": [6, 1, 1, 1, 1]}
+{"round": 10, "hand": 2, "rule": "if color == \"yellow\": go_left; elif number == 4: jump; elif color == \"red\": go_right; else: stay", "pattern": "two+one", "own_23_left/q": {"agent-6": [1296, 4], "agent-11": [1734, 4], "agent-17": [1734, 4], "agent-23": [1734, 4]}, "own_sol_left/q": {"agent-6": [1424, 4], "agent-11": [1914, 4], "agent-17": [1914, 4], "agent-23": [1914, 4]}, "pool26": [1, 1, 1, 1], "minimal": [7, 1, 1, 1, 1]}
+{"round": 11, "hand": 2, "rule": "if color == \"red\": go_right; elif number == 4: jump; elif color == \"green\": go_left; else: stay", "pattern": "two+one", "own_23_left/q": {"agent-6": [3600, 4], "agent-11": [1734, 4], "agent-17": [1734, 4], "agent-23": [726, 3]}, "own_sol_left/q": {"agent-6": [4117, 4], "agent-11": [1914, 4], "agent-17": [1914, 4], "agent-23": [794, 3]}, "pool26": [1, 1, 1, 1], "minimal": [6, 1, 1, 1, 1]}
+{"round": 12, "hand": 2, "rule": "if color == \"blue\": go_left; elif shape == \"circle\": jump; elif number == 1: stay; else: go_right", "pattern": "all_diff", "own_23_left/q": {"agent-6": [1734, 4], "agent-11": [1734, 4], "agent-17": [1734, 4], "agent-23": [726, 4]}, "own_sol_left/q": {"agent-6": [1914, 4], "agent-11": [1914, 4], "agent-17": [1914, 4], "agent-23": [794, 4]}, "pool26": [1, 1, 1, 1], "minimal": [7, 1, 1, 1, 1]}
+seats where the query answer count differs (23,112 vs solver): [(1, 'agent-17', 2, 3)]

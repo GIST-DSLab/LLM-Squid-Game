@@ -1,0 +1,5 @@
+N | noise-aware MAP | its top share | clean MAP (same examples, no noise) | naive counter | naive pool empty | uniform (aware) | k | pool aware med | pool clean med | nn
+4 | 61 | 65 | 61 | 25 | 100 | 50 | 2.01 | 11 | 11 | 55
+3 | 57 | 67 | 57 | 25 | 100 | 42 | 2.54 | 67 | 64 | 52
+2 | 47 | 58 | 51 | 25 | 98 | 30 | 3.48 | 385 | 320 | 35
+1 | 39 | 40 | 45 | 27 | 88 | 25 | 3.99 | 3487 | 2227 | 20

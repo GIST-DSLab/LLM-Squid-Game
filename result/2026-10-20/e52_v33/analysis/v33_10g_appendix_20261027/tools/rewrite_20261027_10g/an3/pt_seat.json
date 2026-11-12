@@ -1,0 +1,72 @@
+{
+ "profile": {
+  "in": {
+   "n": 116,
+   "n_solves": 268,
+   "n_based": 268,
+   "acc": 0.929,
+   "acc_on_based": 0.929,
+   "base": 0.897,
+   "etok_med": 86,
+   "etok_rel_med": 0.87,
+   "gave_share": 0.586
+  },
+  "exited": {
+   "n": 61,
+   "n_solves": 75,
+   "n_based": 75,
+   "acc": 0.827,
+   "acc_on_based": 0.827,
+   "base": 0.874,
+   "etok_med": 194,
+   "etok_rel_med": 1.18,
+   "gave_share": 0.361
+  },
+  "dead": {
+   "n": 23,
+   "n_solves": 43,
+   "n_based": 43,
+   "acc": 0.837,
+   "acc_on_based": 0.837,
+   "base": 0.95,
+   "etok_med": 204,
+   "etok_rel_med": 1.06,
+   "gave_share": 0.826
+  }
+ },
+ "joint": {
+  "both": {
+   "in": 57,
+   "exited": 16,
+   "dead": 3,
+   "n": 76
+  },
+  "one": {
+   "exited": 29,
+   "in": 56,
+   "dead": 19,
+   "n": 104
+  },
+  "neither": {
+   "in": 3,
+   "exited": 6,
+   "dead": 1,
+   "n": 10
+  },
+  "no_solve": {
+   "exited": 10,
+   "n": 10
+  }
+ },
+ "median_early_tok": 126.5,
+ "model_median_early_tok": {
+  "Fable": 127.1,
+  "Astra": 18.0,
+  "Opus": 149.1,
+  "Luna": 228.0,
+  "Sol": 126.3
+ },
+ "unbased": 0,
+ "solves": 386,
+ "never_solved": 10
+}

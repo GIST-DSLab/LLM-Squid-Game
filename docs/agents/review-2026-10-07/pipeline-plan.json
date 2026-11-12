@@ -1,0 +1,18 @@
+{
+  "task_id": "e52-review-2026-10-07",
+  "scope": "design documents only",
+  "source_commit": "d39db2b848effdfbd08f05be21c56a72abbcf774",
+  "concurrency": 3,
+  "max_seconds_per_call": 300,
+  "max_turns_per_call": 3,
+  "experiment_calls": 0,
+  "roles": [
+    "game-designer",
+    "construct-auditor",
+    "social-dynamics",
+    "metric-analyst",
+    "beta-tester",
+    "arena-operator"
+  ],
+  "model_policy": "Session-only overrides: Astra high for construct/beta; Luna max for operator; Sol high for other profiles. Claude profile integration not configured; no silent claim of Claude execution."
+}

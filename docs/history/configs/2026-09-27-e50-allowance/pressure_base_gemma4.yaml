@@ -1,0 +1,15 @@
+# 5.0 stage 1 (baseline): no budget. The model sees the next task's size (c3tq3 signal puzzle, contents hidden) and
+# answers ALLOWANCE. Median = its stated need a0. 1 puzzle (seed 5000) x 10 = 10 calls. gemma4:31b on OLLAMA_API_KEY3.
+# Then: python -m squid5 calibrate <the four baseline run dirs> --out /hdd_data/seungpil/squid5-runs/e50_baseline.json
+name: squid5_pressure_base_gemma4
+mode: pressure
+model: {kind: ollama, model: "gemma4:31b", api_key_env: OLLAMA_API_KEY3, think: true, timeout: 1200}
+reps: 10
+seed0: 5000
+workers: 5
+cells:
+  - {cell_id: none, currency: tokens, arm: none}
+pressure:
+  stage: baseline
+  problems: 1
+  profile: {clauses: 3, trap_query: true, n_queries: 3}

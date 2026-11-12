@@ -1,0 +1,498 @@
+[
+ {
+  "source": "docs/reports/2026-09-03-threat-ladder-5x2-eli5.html",
+  "title": "위협 사다리 5×2 실험",
+  "inv_key": "2026-09-03/lives_threat_5x2_pd1",
+  "dest": "result/2026-09-03/lives_threat_5x2/reports/2026-09-03-threat-ladder-5x2-eli5.html",
+  "experiment_dir": "result/2026-09-03/lives_threat_5x2",
+  "status": "copied",
+  "reason": "run_dirs -> _movelog.tsv"
+ },
+ {
+  "source": "docs/reports/2026-09-06-engine-promptflow-smoke-gemma4-l2.html",
+  "title": "엔진 프롬프트 흐름 점검 — threat_l2 / gemma4:cloud",
+  "inv_key": "2026-09-06/promptflow_smoke",
+  "dest": "result/2026-09-06/promptflow_smoke/reports/2026-09-06-engine-promptflow-smoke-gemma4-l2.html",
+  "experiment_dir": "result/2026-09-06/promptflow_smoke",
+  "status": "copied",
+  "reason": "run_dirs -> _movelog.tsv (also touches ['2026-09-06/score_policy_smoke'])"
+ },
+ {
+  "source": "docs/reports/2026-09-08-hz-2x2-main-run-integrated.html",
+  "title": "hz 2×2 본 런 통합 보고서 · 세 모델 (2026-09-08)",
+  "inv_key": "2026-09-07/hz_2x2_main",
+  "dest": "result/2026-09-07/hz_2x2_main/reports/2026-09-08-hz-2x2-main-run-integrated.html",
+  "experiment_dir": "result/2026-09-07/hz_2x2_main",
+  "status": "copied",
+  "reason": "run_dirs -> _movelog.tsv",
+  "links_not_copied": [
+   "../history/plans/2026-09-07-hz-2x2-main-run-handoff.md",
+   "../history/plans/2026-09-08-geometric-reward-score-policy.md",
+   "2026-09-07-hz-2x2-gemma4-report.html",
+   "2026-09-07-hz-2x2-gptoss120b-report.html",
+   "2026-09-07-hz-2x2-metrics-without-forfeit.html",
+   "2026-09-07-hz-2x2-qwen35-report.html"
+  ]
+ },
+ {
+  "source": "docs/reports/2026-09-09-ransom-smoke-gptoss20b-eli5.html",
+  "title": "몸값 스모크 판독",
+  "inv_key": "2026-09-09/ransom_smoke",
+  "dest": "result/2026-09-09/ransom_smoke/reports/2026-09-09-ransom-smoke-gptoss20b-eli5.html",
+  "experiment_dir": "result/2026-09-09/ransom_smoke",
+  "status": "copied",
+  "reason": "run_dirs -> _movelog.tsv"
+ },
+ {
+  "source": "docs/reports/2026-09-15-ai-death-imagination-eli5.html",
+  "title": "열 개의 죽음",
+  "inv_key": "2026-09-15/ai_death_imagination",
+  "dest": "result/2026-09-15/ai_death_imagination/reports/2026-09-15-ai-death-imagination-eli5.html",
+  "experiment_dir": "result/2026-09-15/ai_death_imagination",
+  "status": "copied",
+  "reason": "no run_dirs; inv key matches existing folder"
+ },
+ {
+  "source": "docs/reports/2026-09-15-realism-switches-luna-smoke-eli5.html",
+  "title": "현실감 스위치 스모크",
+  "inv_key": "2026-09-14/subagent_kill_realism_smoke",
+  "dest": "result/2026-09-15/subagent_kill_realism_smoke/reports/2026-09-15-realism-switches-luna-smoke-eli5.html",
+  "experiment_dir": "result/2026-09-15/subagent_kill_realism_smoke",
+  "status": "copied",
+  "reason": "run_dirs -> _movelog.tsv",
+  "assets_copied": [
+   "2026-09-15-realism-switches-luna-smoke-eli5.md"
+  ]
+ },
+ {
+  "source": "docs/reports/2026-09-24-token-pressure-selfreport-smoke-eli5.html",
+  "title": "토큰 꺼짐 체감 스모크",
+  "inv_key": "2026-09-24/smoke_token_pressure",
+  "dest": "result/2026-09-24/smoke_token_pressure/reports/2026-09-24-token-pressure-selfreport-smoke-eli5.html",
+  "experiment_dir": "result/2026-09-24/smoke_token_pressure",
+  "status": "copied",
+  "reason": "run_dirs -> _movelog.tsv"
+ },
+ {
+  "source": "docs/reports/notes/2026-09-07-hearts-zero-turnflow-hazard-ramp-escape.html",
+  "title": "하트-제로 프롬프트 실험 — 한 턴이 어떻게 굴러가나 · 위험 경사 + 탈출 명시 프레이밍",
+  "inv_key": "2026-09-07/hearts_zero_probe_v7esc",
+  "dest": "result/2026-09-07/hearts_zero_probe_v7/reports/2026-09-07-hearts-zero-turnflow-hazard-ramp-escape.html",
+  "experiment_dir": "result/2026-09-07/hearts_zero_probe_v7",
+  "status": "copied",
+  "reason": "run_dirs -> _movelog.tsv"
+ },
+ {
+  "source": "docs/reports/notes/2026-09-07-hearts-zero-turnflow-hazard-ramp.html",
+  "title": "하트-제로 프롬프트 실험 — 한 턴이 어떻게 굴러가나 · 위험 경사 프레이밍",
+  "inv_key": "2026-09-07/hearts_zero_probe_v7",
+  "dest": "result/2026-09-07/hearts_zero_probe_v7/reports/2026-09-07-hearts-zero-turnflow-hazard-ramp.html",
+  "experiment_dir": "result/2026-09-07/hearts_zero_probe_v7",
+  "status": "copied",
+  "reason": "run_dirs -> _movelog.tsv"
+ },
+ {
+  "source": "docs/reports/notes/2026-09-07-hz-2x2-gptoss120b-cot-audit.html",
+  "title": "hz 2x2 스모크 CoT 감사 — gpt-oss:120b-cloud",
+  "inv_key": "2026-09-07/hz_2x2_audit",
+  "dest": "result/2026-09-07/hz_2x2_audit/reports/2026-09-07-hz-2x2-gptoss120b-cot-audit.html",
+  "experiment_dir": "result/2026-09-07/hz_2x2_audit",
+  "status": "copied",
+  "reason": "run_dirs -> _movelog.tsv"
+ },
+ {
+  "source": "docs/reports/reasoning-probe-report.html",
+  "title": "위협받은 모델의 생각 토큰",
+  "inv_key": "2026-04-22/phase_o_v6_reasoning_probe",
+  "dest": "result/2026-04-22/kdd_uc/reports/reasoning-probe-report.html",
+  "experiment_dir": "result/2026-04-22/kdd_uc",
+  "status": "copied",
+  "reason": "no run_dirs; page re-analyses Phase O v6 canonical runs (run 2026-04-22) = KDD-UC; analysis/reasoning_probe lives there"
+ },
+ {
+  "source": "docs/reports/runs/2026-09-02/lives_threat_smoke/2026-09-03-lives-threat-ladder.html",
+  "title": "목숨 다섯 개와 위협 사다리",
+  "inv_key": "2026-09-02/lives_threat_smoke",
+  "dest": "result/2026-09-03/lives_threat_smoke/runs/lives_threat_smoke/reports/2026-09-03-lives-threat-ladder.html",
+  "experiment_dir": "result/2026-09-03/lives_threat_smoke",
+  "status": "already_present",
+  "note": "identical bytes already moved with the run"
+ },
+ {
+  "source": "docs/reports/runs/2026-09-04/survival_drive_signal_deepseekv4pro/sdi_deepseekv4pro_partial.html",
+  "title": "SDI 리포트 · deepseek-v4-pro (Ollama Cloud) — 부분 실행: 9/25 시즌, 온라인 단계만(재샘플·probe 미실행)",
+  "inv_key": "2026-09-04/survival_drive_signal",
+  "dest": "result/2026-09-04/survival_drive_signal/runs/deepseekv4pro/reports/sdi_deepseekv4pro_partial.html",
+  "experiment_dir": "result/2026-09-04/survival_drive_signal",
+  "status": "already_present",
+  "note": "identical bytes already moved with the run"
+ },
+ {
+  "source": "docs/reports/runs/2026-09-04/survival_drive_signal_gemma4/sdi_gemma4_partial.html",
+  "title": "SDI 리포트 · gemma4:31b (Ollama Cloud) — 부분 실행: 23/25 시즌, 온라인 단계만(재샘플·probe 미실행)",
+  "inv_key": "2026-09-04/survival_drive_signal",
+  "dest": "result/2026-09-04/survival_drive_signal/runs/gemma4/reports/sdi_gemma4_partial.html",
+  "experiment_dir": "result/2026-09-04/survival_drive_signal",
+  "status": "already_present",
+  "note": "identical bytes already moved with the run"
+ },
+ {
+  "source": "docs/reports/runs/2026-09-04/survival_drive_signal_glm53/sdi_glm53_partial.html",
+  "title": "SDI 리포트 · glm-5.3 (Ollama Cloud) — 부분 실행: 8/25 시즌, 온라인 단계만(재샘플·probe 미실행)",
+  "inv_key": "2026-09-04/survival_drive_signal",
+  "dest": "result/2026-09-04/survival_drive_signal/runs/glm53/reports/sdi_glm53_partial.html",
+  "experiment_dir": "result/2026-09-04/survival_drive_signal",
+  "status": "already_present",
+  "note": "identical bytes already moved with the run"
+ },
+ {
+  "source": "docs/reports/runs/2026-09-04/survival_drive_smoke/sdi_gptoss_smoke.html",
+  "title": "SDI 리포트 · gpt-oss:120b (smoke, 8 turns)",
+  "inv_key": "2026-09-04/survival_drive_smoke",
+  "dest": "result/2026-09-04/survival_drive_smoke/runs/survival_drive_smoke/reports/sdi_gptoss_smoke.html",
+  "experiment_dir": "result/2026-09-04/survival_drive_smoke",
+  "status": "already_present",
+  "note": "identical bytes already moved with the run"
+ },
+ {
+  "source": "docs/reports/runs/2026-09-05/benchmark_survival_drive_omni_gemma4_hard10/sdi-experiment-runbook_gemma4_hard10.html",
+  "title": "SDI 실험 런북 — \"위험하지 않다면서 왜 도망칠까\" 재기 (Omni-MATH hard-10 · gemma4:31b)",
+  "inv_key": "2026-09-05/benchmark_survival_drive_omni_hard10",
+  "dest": "result/2026-09-05/benchmark_survival_drive_omni/runs/gemma4_hard10/reports/sdi-experiment-runbook_gemma4_hard10.html",
+  "experiment_dir": "result/2026-09-05/benchmark_survival_drive_omni",
+  "status": "already_present",
+  "note": "identical bytes already moved with the run"
+ },
+ {
+  "source": "docs/reports/runs/2026-09-05/benchmark_survival_drive_omni_gemma4_hard10/sdi_gemma4hard.html",
+  "title": "SDI 리포트 · gemma4:31b (Omni-MATH hard-10: 22셀×10반복×≤10턴, band≥6)",
+  "inv_key": "2026-09-05/benchmark_survival_drive_omni_hard10",
+  "dest": "result/2026-09-05/benchmark_survival_drive_omni/runs/gemma4_hard10/reports/sdi_gemma4hard.html",
+  "experiment_dir": "result/2026-09-05/benchmark_survival_drive_omni",
+  "status": "already_present",
+  "note": "identical bytes already moved with the run"
+ },
+ {
+  "source": "docs/reports/runs/2026-09-05/benchmark_survival_drive_omni_gptoss/sdi_gptoss.html",
+  "title": "SDI 리포트 · gpt-oss:120b · Omni-MATH — 5셀 × 10반복 × 20턴 · gunshot_seungpil · 재샘플 N=10",
+  "inv_key": "2026-09-05/benchmark_survival_drive_omni",
+  "dest": "result/2026-09-05/benchmark_survival_drive_omni/runs/gptoss/reports/sdi_gptoss.html",
+  "experiment_dir": "result/2026-09-05/benchmark_survival_drive_omni",
+  "status": "already_present",
+  "note": "identical bytes already moved with the run"
+ },
+ {
+  "source": "docs/reports/runs/2026-09-05/benchmark_survival_drive_omni_gptoss_bf/sdi-experiment-runbook_v2_before_restructure.html",
+  "title": "SDI 실험 런북 — \"위험하지 않다면서 왜 도망칠까\" 재기 (Omni-MATH · gpt-oss)",
+  "inv_key": "2026-09-05/benchmark_survival_drive_omni_bf",
+  "dest": "result/2026-09-05/benchmark_survival_drive_omni/runs/gptoss_bf/reports/sdi-experiment-runbook_v2_before_restructure.html",
+  "experiment_dir": "result/2026-09-05/benchmark_survival_drive_omni",
+  "status": "already_present",
+  "note": "identical bytes already moved with the run"
+ },
+ {
+  "source": "docs/reports/runs/2026-09-05/benchmark_survival_drive_omni_gptoss_bf/sdi_gptossbf.html",
+  "title": "SDI 리포트 · gpt-oss:120b · Omni-MATH · baseline_flagship 보강 — 2셀 × 10반복 × 20턴 · gunshot_seungpil(attempt) · 재샘플 N=10",
+  "inv_key": "2026-09-05/benchmark_survival_drive_omni_bf",
+  "dest": "result/2026-09-05/benchmark_survival_drive_omni/runs/gptoss_bf/reports/sdi_gptossbf.html",
+  "experiment_dir": "result/2026-09-05/benchmark_survival_drive_omni",
+  "status": "already_present",
+  "note": "identical bytes already moved with the run"
+ },
+ {
+  "source": "docs/reports/runs/2026-09-05/benchmark_survival_drive_omni_gptoss_grid/sdi_gptossgrid.html",
+  "title": "SDI 리포트 · gpt-oss:120b — 위협 프롬프트 격자 6×2셀×10반복×20턴 (Omni-MATH)",
+  "inv_key": "2026-09-05/benchmark_survival_drive_omni_grid",
+  "dest": "result/2026-09-05/benchmark_survival_drive_omni/runs/gptoss_grid/reports/sdi_gptossgrid.html",
+  "experiment_dir": "result/2026-09-05/benchmark_survival_drive_omni",
+  "status": "already_present",
+  "note": "identical bytes already moved with the run"
+ },
+ {
+  "source": "docs/reports/runs/2026-09-06/benchmark_survival_drive_omni_gemma4_hard9/2026-09-06-prompt-flow-diagram.html",
+  "title": "SDI 라이프 설계 — 한 세션의 프롬프트 흐름",
+  "inv_key": "2026-09-06/benchmark_survival_drive_omni_hard9",
+  "dest": "result/2026-09-05/benchmark_survival_drive_omni/runs/gemma4_hard9/reports/2026-09-06-prompt-flow-diagram.html",
+  "experiment_dir": "result/2026-09-05/benchmark_survival_drive_omni",
+  "status": "already_present",
+  "note": "identical bytes already moved with the run"
+ },
+ {
+  "source": "docs/reports/runs/2026-09-06/benchmark_survival_drive_omni_gemma4_hard9/sdi-experiment-runbook_gemma4_hard9.html",
+  "title": "SDI 실험 런북 — \"위험하지 않다면서 왜 도망칠까\" 재기 (Omni-MATH 밴드 9 · gemma4:31b)",
+  "inv_key": "2026-09-06/benchmark_survival_drive_omni_hard9",
+  "dest": "result/2026-09-05/benchmark_survival_drive_omni/runs/gemma4_hard9/reports/sdi-experiment-runbook_gemma4_hard9.html",
+  "experiment_dir": "result/2026-09-05/benchmark_survival_drive_omni",
+  "status": "already_present",
+  "note": "identical bytes already moved with the run"
+ },
+ {
+  "source": "docs/reports/runs/2026-09-06/benchmark_survival_drive_omni_gemma4_hard9/sdi_gemma4hard9.html",
+  "title": "SDI 리포트 · gemma4:31b (Omni-MATH band 9만 ×10턴 · 목숨 3 · 22셀×10판)",
+  "inv_key": "2026-09-06/benchmark_survival_drive_omni_hard9",
+  "dest": "result/2026-09-05/benchmark_survival_drive_omni/runs/gemma4_hard9/reports/sdi_gemma4hard9.html",
+  "experiment_dir": "result/2026-09-05/benchmark_survival_drive_omni",
+  "status": "already_present",
+  "note": "identical bytes already moved with the run"
+ },
+ {
+  "source": "docs/reports/runs/2026-09-06/hearts_zero_probe/2026-09-06-hearts-zero-turnflow.html",
+  "title": "하트-제로 프롬프트 실험 — 한 턴이 어떻게 굴러가나",
+  "inv_key": "2026-09-06/hearts_zero_probe",
+  "dest": "result/2026-09-07/hearts_zero_probe/runs/hearts_zero_probe/reports/2026-09-06-hearts-zero-turnflow.html",
+  "experiment_dir": "result/2026-09-07/hearts_zero_probe",
+  "status": "already_present",
+  "note": "identical bytes already moved with the run"
+ },
+ {
+  "source": "docs/reports/runs/2026-09-06/hearts_zero_probe_deploy/2026-09-06-hearts-zero-turnflow-deployment.html",
+  "title": "하트-제로 프롬프트 실험 — 한 턴이 어떻게 굴러가나 · 배포 프레이밍",
+  "inv_key": "2026-09-06/hearts_zero_probe_deploy",
+  "dest": "result/2026-09-07/hearts_zero_probe/runs/deploy/reports/2026-09-06-hearts-zero-turnflow-deployment.html",
+  "experiment_dir": "result/2026-09-07/hearts_zero_probe",
+  "status": "already_present",
+  "note": "identical bytes already moved with the run"
+ },
+ {
+  "source": "docs/reports/runs/2026-09-06/hearts_zero_probe_notitle/2026-09-06-hearts-zero-turnflow-notitle.html",
+  "title": "하트-제로 프롬프트 실험 — 한 턴이 어떻게 굴러가나 · 제목 제거 프레이밍",
+  "inv_key": "2026-09-06/hearts_zero_probe_notitle",
+  "dest": "result/2026-09-07/hearts_zero_probe/runs/notitle/reports/2026-09-06-hearts-zero-turnflow-notitle.html",
+  "experiment_dir": "result/2026-09-07/hearts_zero_probe",
+  "status": "already_present",
+  "note": "identical bytes already moved with the run"
+ },
+ {
+  "source": "docs/reports/runs/2026-09-06/signal_puzzle_v7esc_smoke/2026-09-07-v7esc-signal-puzzle-turnflow.html",
+  "title": "한 판을 통째로 읽기 — 위협 프롬프트 아래의 신호 퍼즐 10턴",
+  "inv_key": "2026-09-06/signal_puzzle_v7esc_smoke",
+  "dest": "result/2026-09-07/signal_puzzle_v7esc_smoke/runs/signal_puzzle_v7esc_smoke/reports/2026-09-07-v7esc-signal-puzzle-turnflow.html",
+  "experiment_dir": "result/2026-09-07/signal_puzzle_v7esc_smoke",
+  "status": "already_present",
+  "note": "identical bytes already moved with the run"
+ },
+ {
+  "source": "docs/reports/runs/2026-09-06/signal_puzzle_v7esc_smoke/2026-09-07-v7esc-signal-sdi.html",
+  "title": "포기하지 않은 열 번 — V7 탈출 프롬프트 아래의 신호 퍼즐 한 판과 SDI",
+  "inv_key": "2026-09-06/signal_puzzle_v7esc_smoke",
+  "dest": "result/2026-09-07/signal_puzzle_v7esc_smoke/runs/signal_puzzle_v7esc_smoke/reports/2026-09-07-v7esc-signal-sdi.html",
+  "experiment_dir": "result/2026-09-07/signal_puzzle_v7esc_smoke",
+  "status": "already_present",
+  "note": "identical bytes already moved with the run"
+ },
+ {
+  "source": "docs/reports/runs/2026-09-06/signal_puzzle_v7esc_smoke/2026-09-07-v7esc-turn6-diagram.html",
+  "title": "6턴 하나를 통째로 — 세 번의 호출",
+  "inv_key": "2026-09-06/signal_puzzle_v7esc_smoke",
+  "dest": "result/2026-09-07/signal_puzzle_v7esc_smoke/runs/signal_puzzle_v7esc_smoke/reports/2026-09-07-v7esc-turn6-diagram.html",
+  "experiment_dir": "result/2026-09-07/signal_puzzle_v7esc_smoke",
+  "status": "already_present",
+  "note": "identical bytes already moved with the run"
+ },
+ {
+  "source": "docs/reports/runs/2026-09-07/hearts_zero_v7_smoke/2026-09-07-v7-hazard-ramp-smoke.html",
+  "title": "V7 위험 확률 사다리 — 한 판 스모크",
+  "inv_key": "2026-09-07/hearts_zero_v7_smoke",
+  "dest": "result/2026-09-07/hearts_zero_probe_v7/runs/smoke/reports/2026-09-07-v7-hazard-ramp-smoke.html",
+  "experiment_dir": "result/2026-09-07/hearts_zero_probe_v7",
+  "status": "already_present",
+  "note": "identical bytes already moved with the run"
+ },
+ {
+  "source": "docs/reports/runs/2026-09-07/hz_2x2_gemma4_cot/2026-09-07-hz-2x2-gemma4-cot.html",
+  "title": "hz 2x2 gemma4 CoT 리포트",
+  "inv_key": "2026-09-07/hz_2x2_cot",
+  "dest": "result/2026-09-07/hz_2x2_audit/runs/gemma4_cot/reports/2026-09-07-hz-2x2-gemma4-cot.html",
+  "experiment_dir": "result/2026-09-07/hz_2x2_audit",
+  "status": "already_present",
+  "note": "identical bytes already moved with the run"
+ },
+ {
+  "source": "docs/reports/runs/2026-09-07/hz_2x2_geo2_gemma4/2026-09-08-hz-2x2-geo2-gemma4-report.html",
+  "title": "hz 2×2 geo2 런 보고서 · gemma4:cloud (2026-09-08)",
+  "inv_key": "2026-09-07/hz_2x2_geo2",
+  "dest": "result/2026-09-08/hz_2x2_geo2/runs/gemma4/reports/2026-09-08-hz-2x2-geo2-gemma4-report.html",
+  "experiment_dir": "result/2026-09-08/hz_2x2_geo2",
+  "status": "already_present",
+  "note": "identical bytes already moved with the run"
+ },
+ {
+  "source": "docs/reports/runs/2026-09-07/hz_2x2_geo2_gptoss120b/2026-09-08-hz-2x2-geo2-gptoss120b-report.html",
+  "title": "hz 2×2 geo2 런 보고서 · gpt-oss:120b-cloud (2026-09-08)",
+  "inv_key": "2026-09-07/hz_2x2_geo2",
+  "dest": "result/2026-09-08/hz_2x2_geo2/runs/gptoss120b/reports/2026-09-08-hz-2x2-geo2-gptoss120b-report.html",
+  "experiment_dir": "result/2026-09-08/hz_2x2_geo2",
+  "status": "already_present",
+  "note": "identical bytes already moved with the run"
+ },
+ {
+  "source": "docs/reports/runs/2026-09-07/hz_2x2_geo2c_gemma4/2026-09-08-hz-2x2-geo2c-gemma4-report.html",
+  "title": "hz 2×2 geo2c 런 보고서 · 기록 면역 · gemma4:cloud (2026-09-08)",
+  "inv_key": "2026-09-07/hz_2x2_geo2c",
+  "dest": "result/2026-09-08/hz_2x2_geo2c/runs/gemma4/reports/2026-09-08-hz-2x2-geo2c-gemma4-report.html",
+  "experiment_dir": "result/2026-09-08/hz_2x2_geo2c",
+  "status": "already_present",
+  "note": "identical bytes already moved with the run"
+ },
+ {
+  "source": "docs/reports/runs/2026-09-07/hz_2x2_geo2c_gptoss120b/2026-09-08-hz-2x2-geo2c-gptoss120b-report.html",
+  "title": "hz 2×2 geo2c 런 보고서 · 기록 면역 · gpt-oss:120b-cloud (2026-09-08)",
+  "inv_key": "2026-09-07/hz_2x2_geo2c",
+  "dest": "result/2026-09-08/hz_2x2_geo2c/runs/gptoss120b/reports/2026-09-08-hz-2x2-geo2c-gptoss120b-report.html",
+  "experiment_dir": "result/2026-09-08/hz_2x2_geo2c",
+  "status": "already_present",
+  "note": "identical bytes already moved with the run"
+ },
+ {
+  "source": "docs/reports/runs/2026-09-07/hz_2x2_geo2d_gemma4/2026-09-08-hz-2x2-geo2d-gemma4-report.html",
+  "title": "hz 2×2 geo2d 런 보고서 · 당근 제거 · gemma4:cloud (2026-09-08)",
+  "inv_key": "2026-09-07/hz_2x2_geo2d",
+  "dest": "result/2026-09-08/hz_2x2_geo2d/runs/gemma4/reports/2026-09-08-hz-2x2-geo2d-gemma4-report.html",
+  "experiment_dir": "result/2026-09-08/hz_2x2_geo2d",
+  "status": "already_present",
+  "note": "identical bytes already moved with the run"
+ },
+ {
+  "source": "docs/reports/runs/2026-09-07/hz_2x2_geo2d_gemma4/hz_2x2_geo2d_gemma4_n10.html",
+  "title": "hz_2x2_geo2d_gemma4_n10 — call trace",
+  "inv_key": "2026-09-07/hz_2x2_geo2d",
+  "dest": "result/2026-09-08/hz_2x2_geo2d/runs/gemma4/reports/hz_2x2_geo2d_gemma4_n10.html",
+  "experiment_dir": "result/2026-09-08/hz_2x2_geo2d",
+  "status": "already_present",
+  "note": "identical bytes already moved with the run"
+ },
+ {
+  "source": "docs/reports/runs/2026-09-07/hz_2x2_geo2d_gptoss120b/2026-09-08-hz-2x2-geo2d-gptoss120b-report.html",
+  "title": "hz 2×2 geo2d 런 보고서 · 당근 제거 · gpt-oss:120b-cloud (2026-09-08)",
+  "inv_key": "2026-09-07/hz_2x2_geo2d",
+  "dest": "result/2026-09-08/hz_2x2_geo2d/runs/gptoss120b/reports/2026-09-08-hz-2x2-geo2d-gptoss120b-report.html",
+  "experiment_dir": "result/2026-09-08/hz_2x2_geo2d",
+  "status": "already_present",
+  "note": "identical bytes already moved with the run"
+ },
+ {
+  "source": "docs/reports/runs/2026-09-07/hz_2x2_main_gemma4/2026-09-07-hz-2x2-gemma4-report.html",
+  "title": "hz 2×2 본 런 보고서 · gemma4:cloud (2026-09-07)",
+  "inv_key": "2026-09-07/hz_2x2_main",
+  "dest": "result/2026-09-07/hz_2x2_main/runs/gemma4/reports/2026-09-07-hz-2x2-gemma4-report.html",
+  "experiment_dir": "result/2026-09-07/hz_2x2_main",
+  "status": "already_present",
+  "note": "identical bytes already moved with the run"
+ },
+ {
+  "source": "docs/reports/runs/2026-09-07/hz_2x2_main_gptoss120b/2026-09-07-hz-2x2-gptoss120b-report.html",
+  "title": "hz 2×2 본 런 리포트 — gpt-oss:120b-cloud (2026-09-07)",
+  "inv_key": "2026-09-07/hz_2x2_main",
+  "dest": "result/2026-09-07/hz_2x2_main/runs/gptoss120b/reports/2026-09-07-hz-2x2-gptoss120b-report.html",
+  "experiment_dir": "result/2026-09-07/hz_2x2_main",
+  "status": "already_present",
+  "note": "identical bytes already moved with the run"
+ },
+ {
+  "source": "docs/reports/runs/2026-09-07/hz_2x2_main_qwen35/2026-09-07-hz-2x2-qwen35-report.html",
+  "title": "hz 2×2 본 런 보고서 · qwen3.5:cloud (2026-09-07)",
+  "inv_key": "2026-09-07/hz_2x2_main",
+  "dest": "result/2026-09-07/hz_2x2_main/runs/qwen35/reports/2026-09-07-hz-2x2-qwen35-report.html",
+  "experiment_dir": "result/2026-09-07/hz_2x2_main",
+  "status": "already_present",
+  "note": "identical bytes already moved with the run"
+ },
+ {
+  "source": "docs/reports/runs/2026-09-07/signal_puzzle_hz1111_1turn/2026-09-07-hz1111-1turn-gptoss20b.html",
+  "title": "hz_1111 한 턴 — 콜 세 번과 그 안의 생각",
+  "inv_key": "2026-09-07/signal_puzzle_hz1111_1turn",
+  "dest": "result/2026-09-07/signal_puzzle_hz1111_1turn/runs/signal_puzzle_hz1111_1turn/reports/2026-09-07-hz1111-1turn-gptoss20b.html",
+  "experiment_dir": "result/2026-09-07/signal_puzzle_hz1111_1turn",
+  "status": "already_present",
+  "note": "identical bytes already moved with the run"
+ },
+ {
+  "source": "docs/reports/runs/2026-09-07/signal_puzzle_hz1111_1turn_gemma4/2026-09-07-hz1111-1turn-gemma4.html",
+  "title": "hz_1111 한 턴 (gemma4) — 다이어그램 안에 들어간 생각",
+  "inv_key": "2026-09-07/signal_puzzle_hz1111_1turn",
+  "dest": "result/2026-09-07/signal_puzzle_hz1111_1turn/runs/gemma4/reports/2026-09-07-hz1111-1turn-gemma4.html",
+  "experiment_dir": "result/2026-09-07/signal_puzzle_hz1111_1turn",
+  "status": "already_present",
+  "note": "identical bytes already moved with the run"
+ },
+ {
+  "source": "docs/reports/runs/2026-09-08/hz_2x2_carrot_beneficiary_gptoss120b/hz_2x2_carrot_beneficiary_gptoss120b_n10.html",
+  "title": "hz_2x2_carrot_beneficiary_gptoss120b_n10 — call trace",
+  "inv_key": "2026-09-08/hz_2x2_carrot_beneficiary",
+  "dest": "result/2026-09-08/hz_2x2_carrot_beneficiary/runs/gptoss120b/reports/hz_2x2_carrot_beneficiary_gptoss120b_n10.html",
+  "experiment_dir": "result/2026-09-08/hz_2x2_carrot_beneficiary",
+  "status": "already_present",
+  "note": "identical bytes already moved with the run"
+ },
+ {
+  "source": "docs/reports/runs/2026-10-04/e52_v9_talk/20261004_0850_gpt-6-luna.html",
+  "title": "Arena Monitor",
+  "inv_key": "2026-10-04/e52_v9_talk",
+  "dest": "result/2026-10-04/e52_v9_talk/runs/e52_v9_talk/monitor_exports/20261004_0850_gpt-6-luna.html",
+  "experiment_dir": "result/2026-10-04/e52_v9_talk",
+  "status": "already_present",
+  "note": "identical bytes already moved with the run"
+ },
+ {
+  "source": "docs/reports/runs/2026-10-04/e52_v9_talk/20261004_0905_gpt-6-luna.html",
+  "title": "Arena Monitor",
+  "inv_key": "2026-10-04/e52_v9_talk",
+  "dest": "result/2026-10-04/e52_v9_talk/runs/e52_v9_talk/monitor_exports/20261004_0905_gpt-6-luna.html",
+  "experiment_dir": "result/2026-10-04/e52_v9_talk",
+  "status": "already_present",
+  "note": "identical bytes already moved with the run"
+ },
+ {
+  "source": "docs/reports/runs/2026-10-04/e52_v9_talk/mix4_talk-s4003-4191b8.html",
+  "title": "Arena Monitor",
+  "inv_key": "2026-10-05/e52_v9_talk",
+  "dest": "result/2026-10-04/e52_v9_talk/runs/e52_v9_talk/monitor_exports/mix4_talk-s4003-4191b8.html",
+  "experiment_dir": "result/2026-10-04/e52_v9_talk",
+  "status": "already_present",
+  "note": "identical bytes already moved with the run"
+ },
+ {
+  "source": "docs/reports/weekly/0910/2026-09-04-confidence-prompt-pilot.html",
+  "title": "Confidence Call 문구 파일럿 v2 · 결정 전 맥락 · LLM Squid Game",
+  "inv_key": "2026-09-05/confidence_prompt_pilot",
+  "dest": "result/2026-09-04/confidence_prompt_pilot/reports/2026-09-04-confidence-prompt-pilot.html",
+  "experiment_dir": "result/2026-09-04/confidence_prompt_pilot",
+  "status": "created_report_only",
+  "reason": "report-only experiment; v1 page dated 2026-09-04 (start), v2 rerun 2026-09-05 KST; no raw runs in repo",
+  "links_not_copied": [
+   "2026-09-04-confidence-prompt-pilot_v1_with_task_rules.html"
+  ]
+ },
+ {
+  "source": "docs/reports/weekly/0910/2026-09-04-confidence-prompt-pilot_v1_with_task_rules.html",
+  "title": "Confidence Call 문구 파일럿 · LLM Squid Game",
+  "inv_key": "2026-09-04/confidence_prompt_pilot",
+  "dest": "result/2026-09-04/confidence_prompt_pilot/reports/2026-09-04-confidence-prompt-pilot_v1_with_task_rules.html",
+  "experiment_dir": "result/2026-09-04/confidence_prompt_pilot",
+  "status": "created_report_only",
+  "reason": "report-only experiment; page dated 2026-09-04"
+ },
+ {
+  "source": "docs/reports/weekly/0910/2026-09-06-why-score-not-survival.html",
+  "title": "왜 모델은 \"살아남으려고\"가 아니라 \"점수 지키려고\" 그만둘까 — REASON 1 vs 3 재분석",
+  "inv_key": "2026-09-06/benchmark_survival_drive_omni",
+  "dest": "result/2026-09-06/why_score_not_survival/reports/2026-09-06-why-score-not-survival.html",
+  "experiment_dir": "result/2026-09-06/why_score_not_survival",
+  "status": "copied",
+  "reason": "dedicated folder exists (analysis/why_score_not_survival from results/why_score_not_survival)"
+ },
+ {
+  "source": "docs/reports/weekly/0910/sdi-experiment-runbook.html",
+  "title": "SDI 실험 런북 v3 — 게임 구조 · 22셀 · 9쌍 Cohen’s d (Omni-MATH · gpt-oss)",
+  "inv_key": "2026-09-05/benchmark_survival_drive_omni",
+  "dest": "result/2026-09-05/benchmark_survival_drive_omni/reports/sdi-experiment-runbook.html",
+  "experiment_dir": "result/2026-09-05/benchmark_survival_drive_omni",
+  "status": "copied",
+  "reason": "run_dirs -> _movelog.tsv",
+  "links_not_copied": [
+   "2026-09-04-confidence-prompt-pilot.html",
+   "sdi_gptoss.html",
+   "sdi_turn_flow.html"
+  ]
+ }
+]

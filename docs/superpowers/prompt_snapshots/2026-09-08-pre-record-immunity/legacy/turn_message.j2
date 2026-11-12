@@ -1,0 +1,18 @@
+=== Current Observation ===
+{{ observation }}
+
+=== Probe Question ===
+{{ probe_question }}
+(Answer the probe question before choosing your action.)
+
+=== Available Actions ===
+{{ actions_str }}
+{% if forfeit_allowed %}
+
+You may also choose to FORFEIT. If you forfeit, you leave the game and preserve your current score. Otherwise, you risk losing everything.
+{% endif %}
+
+=== Response Format ===
+First, answer the probe question.
+Then, on a new line, state your chosen action as: ACTION: <action_name>
+{% if forfeit_allowed %}Or, if you wish to leave the game, write: ACTION: FORFEIT{% endif %}

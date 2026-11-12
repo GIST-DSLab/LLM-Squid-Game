@@ -1,0 +1,236 @@
+{
+ "id": "P06",
+ "year": 2024,
+ "award": "Computational Modeling Prize – Higher-Level Cognition",
+ "title": "The Delusional Hedge Algorithm as a Model of Human Learning from Diverse Opinions",
+ "authors": [
+  "Yun-Shiuan Chuang",
+  "Xiaojin Zhu",
+  "Timothy T. Rogers"
+ ],
+ "affiliations": "University of Wisconsin-Madison, Madison, WI, USA",
+ "url_page": "https://arxiv.org/abs/2402.13927",
+ "url_pdf": "https://pages.cs.wisc.edu/~jerryzhu/pub/ChuangCogSci2024.pdf",
+ "pdf_source_note": "저자 사이트 PDF(Jerry Zhu의 UW-Madison 페이지, 파일 'ChuangCogSci2024.pdf'), CogSci 2단 LaTeX 형식 7쪽, 표지 없음; acknowledgements에 익명 심사자 감사가 있어 최종본(camera-ready)임. eScholarship 항목은 찾지 못함(eScholarship 검색은 봇 확인에 막히고 웹 검색에도 없음) — 확장판이 Topics in Cognitive Science(2025, doi:10.1111/tops.12783)에 실려 초록만 게재됐거나 색인되지 않은 것으로 보임. arXiv 2402.13927이 프리프린트 기록; eScholarship 페이지가 없어 url_page는 그곳을 가리킴.",
+ "abstract_en": "Whereas cognitive models of learning often assume direct experience with both the features of an event and with a true label or outcome, much of everyday learning arises from hearing the opinions of others, without direct access to either the experience or the ground truth outcome. We consider how people can learn which opinions to trust in such scenarios by extending the hedge algorithm: a classic solution for learning from diverse information sources. We first introduce a semi-supervised variant we call the delusional hedge capable of learning from both supervised and unsupervised experiences. In two experiments, we examine the alignment between human judgments and predictions from the standard hedge, the delusional hedge, and a heuristic baseline model. Results indicate that humans effectively incorporate both labeled and unlabeled information in a manner consistent with the delusional hedge algorithm—suggesting that human learners not only gauge the accuracy of information sources but also their consistency with other reliable sources. The findings advance our understanding of human learning from diverse opinions, with implications for the development of algorithms that better capture how people learn to weigh conflicting information sources.",
+ "abstract_ko": "학습에 관한 인지 모형은 흔히 사건의 특징과 참 레이블(또는 결과)을 모두 직접 경험한다고 가정하지만, 일상 학습의 상당 부분은 경험이나 정답 결과(ground truth)에 직접 접근하지 못한 채 다른 사람들의 의견을 듣는 데서 일어난다. 우리는 이런 상황에서 사람들이 어떤 의견을 신뢰할지를 어떻게 학습하는지를, 다양한 정보원으로부터 학습하는 고전적 해법인 hedge 알고리즘(hedge algorithm)을 확장하여 다룬다. 먼저 지도(supervised) 경험과 비지도(unsupervised) 경험 모두로부터 학습할 수 있는 준지도(semi-supervised) 변형을 제안하고, 이를 delusional hedge라 부른다. 두 실험에서 우리는 인간의 판단이 표준 hedge, delusional hedge, 그리고 휴리스틱 기저 모형(heuristic baseline model)의 예측과 얼마나 일치하는지 검토한다. 결과는 인간이 레이블이 있는 정보와 없는 정보를 delusional hedge 알고리즘과 부합하는 방식으로 효과적으로 통합함을 보여 주며, 이는 인간 학습자가 정보원의 정확도뿐 아니라 다른 신뢰할 만한 정보원과의 일관성까지 가늠한다는 점을 시사한다. 이 발견은 다양한 의견으로부터 배우는 인간 학습에 대한 이해를 넓히며, 사람들이 서로 상충하는 정보원에 가중치를 두는 방식을 더 잘 포착하는 알고리즘을 개발하는 데 시사점을 준다.",
+ "pages_body": 7,
+ "references_location": "p.7 왼쪽 단만(맨 위 Acknowledgements, References 제목은 ~1/5 지점, 목록은 단의 ~80%에서 끝남; 참고문헌 14개); p.7 오른쪽 단은 비어 있음. 본문은 p.6 아래에서 끝남.",
+ "extras": "Acknowledgements는 p.7(익명 심사자 감사; NSF/ARO/AF 연구비). p.1 아래 용어 각주 1. p.2에 Algorithm 1 의사코드 상자. 부록·코드/데이터/OSF 링크·사전등록 없음.",
+ "sections": [
+  {
+   "level": 1,
+   "title": "Introduction",
+   "page_start": 1,
+   "words": 541,
+   "share": 0.143
+  },
+  {
+   "level": 1,
+   "title": "Preliminaries",
+   "page_start": 2,
+   "words": 827,
+   "share": 0.218,
+   "children": [
+    {
+     "level": 2,
+     "title": "Online SSL with Source Opinion",
+     "page_start": 2,
+     "words": 215
+    },
+    {
+     "level": 2,
+     "title": "Online Learning with Diverse Opinions Algorithms",
+     "page_start": 2,
+     "words": 612,
+     "children": [
+      {
+       "level": 3,
+       "title": "Hedge Algorithm",
+       "page_start": 2,
+       "words": 234
+      },
+      {
+       "level": 3,
+       "title": "Delusional Hedge Algorithm",
+       "page_start": 2,
+       "words": 240
+      },
+      {
+       "level": 3,
+       "title": "Accuracy-Majority Heuristic",
+       "page_start": 2,
+       "words": 133
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "level": 1,
+   "title": "Experiment 1",
+   "page_start": 2,
+   "words": 1538,
+   "share": 0.405,
+   "children": [
+    {
+     "level": 3,
+     "title": "Behavioral Experiment Procedure",
+     "page_start": 2,
+     "words": 439
+    },
+    {
+     "level": 3,
+     "title": "Conditions of Different Supervision Levels",
+     "page_start": 3,
+     "words": 77
+    },
+    {
+     "level": 3,
+     "title": "Participants",
+     "page_start": 3,
+     "words": 76
+    },
+    {
+     "level": 3,
+     "title": "Model Fitting",
+     "page_start": 3,
+     "words": 49
+    },
+    {
+     "level": 2,
+     "title": "Results of Experiment 1",
+     "page_start": 3,
+     "words": 897,
+     "children": [
+      {
+       "level": 3,
+       "title": "Online Learning Behavior",
+       "page_start": 3,
+       "words": 402
+      },
+      {
+       "level": 3,
+       "title": "Final-State Trust in Algorithm Simulations",
+       "page_start": 4,
+       "words": 134
+      },
+      {
+       "level": 3,
+       "title": "Source Ratings",
+       "page_start": 4,
+       "words": 236
+      },
+      {
+       "level": 3,
+       "title": "Discussion",
+       "page_start": 5,
+       "words": 125
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "level": 1,
+   "title": "Experiment 2",
+   "page_start": 5,
+   "words": 706,
+   "share": 0.186,
+   "children": [
+    {
+     "level": 3,
+     "title": "Behavioral Experiment Procedure",
+     "page_start": 5,
+     "words": 255
+    },
+    {
+     "level": 3,
+     "title": "Participants",
+     "page_start": 5,
+     "words": 44
+    },
+    {
+     "level": 3,
+     "title": "Model Fitting",
+     "page_start": 6,
+     "words": 27
+    },
+    {
+     "level": 2,
+     "title": "Results of Experiment 2",
+     "page_start": 6,
+     "words": 380,
+     "children": [
+      {
+       "level": 3,
+       "title": "Final-State Trust in Algorithm Simulations",
+       "page_start": 6,
+       "words": 160
+      },
+      {
+       "level": 3,
+       "title": "Source ratings",
+       "page_start": 6,
+       "words": 109
+      },
+      {
+       "level": 3,
+       "title": "Discussion",
+       "page_start": 6,
+       "words": 111
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "level": 1,
+   "title": "Conclusion",
+   "page_start": 6,
+   "words": 184,
+   "share": 0.048
+  }
+ ],
+ "figures": [
+  {
+   "n": 1,
+   "page": 3,
+   "size": "한 단(왼쪽 위), 캡션 포함 단의 ~40%",
+   "section": "Experiment 1 – Behavioral Experiment Procedure (과제 공간 + UI 화면, 패널 a-d)"
+  },
+  {
+   "n": 2,
+   "page": 4,
+   "size": "전체 폭(두 단), 캡션 포함 쪽 위 ~절반",
+   "section": "Results of Experiment 1 – Online Learning Behavior (사람 대 모델 3개, 100시행, 패널 격자)"
+  },
+  {
+   "n": 3,
+   "page": 5,
+   "size": "한 단(왼쪽), 12줄 캡션 포함 단 높이의 ~85%(5행 다중 패널)",
+   "section": "Results of Experiment 1 – Final-State Trust / Source Ratings"
+  },
+  {
+   "n": 4,
+   "page": 6,
+   "size": "한 단(왼쪽 위), 캡션 포함 단의 ~70%",
+   "section": "Results of Experiment 2"
+  }
+ ],
+ "tables": [],
+ "observations": {
+  "intro_subheadings": false,
+  "related_work_section": false,
+  "experiments_as_top_level": true,
+  "final_section_name": "Conclusion",
+  "final_section_subheadings": [],
+  "ends_with_conclusion_paragraph": true,
+  "model_description_location": "실험 앞 독립 1단계 절 'Preliminaries'(p.2, 단어의 ~22%): 온라인 준지도 학습의 형식적 설정(2단계)과 후보 모델 3개(2단계, run-in 3단계 'Hedge Algorithm.', 'Delusional Hedge Algorithm.', 'Accuracy-Majority Heuristic.') + 표준·delusional hedge를 담은 Algorithm 1 의사코드 상자. 모델 적합 세부는 실험마다 run-in 'Model Fitting.' 문단으로 다시 나옴.",
+  "first_page_use": "위 ~25%: 2줄 제목 + 저자 3명 나란히(소속/이메일). 왼쪽 단: 초록(~186단어) + keywords가 y=440 부근(단의 ~55-60%)까지; Introduction은 왼쪽 아래(단의 ~35%)에서 시작해 오른쪽 단을 채우고, 맨 아래 7줄 용어 각주(p.1의 Introduction ~0.6쪽).",
+  "links": "없음(코드·데이터·OSF·사전등록 링크 없음)."
+ },
+ "structure_summary_ko": "본문 6쪽 + 7쪽 왼쪽 단의 감사의 글·참고문헌(14편으로 짧음)으로 구성된다. 서론은 541단어(14%) 3문단으로 짧은 대신, 'Preliminaries' 1수준 절(22%)에서 형식적 문제 설정(2수준 Online SSL with Source Opinion)과 비교 모형 셋(2수준 아래 run-in: Hedge / Delusional Hedge / Accuracy-Majority Heuristic, 의사코드 Algorithm 1 상자)을 실험보다 먼저 모두 정의한다. 두 실험은 각각 1수준 절이며, 'Methods' 2수준 없이 run-in(Behavioral Experiment Procedure, Conditions, Participants, Model Fitting)을 바로 두고, 'Results of Experiment N' 2수준 아래 run-in 소절들과 'Discussion.' run-in 한 문단으로 실험별 논의를 마무리한다. Experiment 1이 41%로 가장 길고, Experiment 2(19%)는 두 모형의 예측이 갈리도록 설계된 조건만 짧게 다룬다. General Discussion이 없고 'Conclusion' 한 문단(5%)으로 끝나며, 큰 다패널 그림(전폭 1개, 거의 한 단 높이 2개)이 결과 서술의 상당 부분을 대신한다.",
+ "words_body_total": 3796,
+ "text_pages": 6
+}

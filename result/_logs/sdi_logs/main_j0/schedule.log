@@ -1,0 +1,34 @@
+00:35:44 KEY3 start kimik3
+00:35:44 KEY1 start gptoss120b
+02:54:41 KEY1 done gptoss120b rc=0
+02:54:41 KEY1 start gemma4
+03:29:30 KEY1 done gemma4 rc=0
+03:29:31 KEY1 start gptoss120b_mt131k
+03:44:08 KEY3 done kimik3 rc=0
+03:44:08 KEY3 start qwen35
+06:46:34 KEY3 done qwen35 rc=0
+06:46:34 KEY3 start minimaxm3
+07:04:17 KEY3 done minimaxm3 rc=143
+07:04:17 KEY3 start minimaxm3
+08:22:04 KEY1 done gptoss120b_mt131k rc=1
+08:22:04 KEY1 start deepseekv4flash
+08:22:13 KEY1 done deepseekv4flash rc=1
+08:22:13 KEY1 start glm53flash
+09:31:02 KEY1 done glm53flash rc=143
+09:31:02 KEY1 start control_gemma4
+09:31:05 KEY3 done minimaxm3 rc=143
+09:31:05 KEY3 start control_qwen35
+09:59:37 KEY1 done control_gemma4 rc=0
+09:59:37 KEY1 start control_kimik3
+12:07:22 KEY3 done control_qwen35 rc=0
+12:07:22 KEY3 start control_gptoss120b_mt131k
+12:47:46 KEY1 done control_kimik3 rc=0
+12:47:46 KEY1 idle
+12:49:22 KEY1 start gptoss120b_mt131k --resume
+13:07:38 KEY1 done gptoss120b_mt131k_resume rc=0
+16:46:00 KEY3 done control_gptoss120b_mt131k rc=1
+16:46:00 KEY3 idle
+16:47:20 KEY1 start control_gptoss120b_mt131k --resume
+18:14:21 KEY1 done control_gptoss120b_mt131k_resume rc=1
+18:15:33 KEY1 start control_gptoss120b_mt131k --resume
+18:20:44 OWNER stop-all (resume3 killed)

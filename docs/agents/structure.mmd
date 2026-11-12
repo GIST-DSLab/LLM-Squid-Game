@@ -1,0 +1,27 @@
+flowchart TB
+    accTitle: LLM Arena Specialist Bot Team
+    accDescr: Director coordinates five research specialists and three engineering and operations specialists. The beta tester audits evaluation awareness independently of engine verification.
+    arena_director["Arena Director<br/>범위 · 버전 · 작업 인계"]
+    subgraph research_team["연구 · 설계"]
+        game_designer["Game Designer<br/>게임 · 퍼즐 · 플레이 경험"]
+        construct_auditor["Construct Auditor<br/>생존 동기 측정 타당성"]
+        social_dynamics["Social Dynamics<br/>협력 · 협상 · 인센티브"]
+        metric_analyst["Metric Analyst<br/>지표 · 통계 · 해석"]
+        beta_tester["Beta Tester<br/>상황 이해 · 평가 인지 · 행동 변화"]
+    end
+    subgraph build_team["구현 · 검증 · 운영"]
+        arena_engineer["Arena Engineer<br/>엔진 · UI · 계측"]
+        arena_verifier["Arena Verifier<br/>독립 검증 · 편법 공격"]
+        arena_operator["Arena Operator<br/>모델 추가 · 비용 · 릴리스"]
+    end
+    arena_director --> game_designer & construct_auditor & social_dynamics & metric_analyst & beta_tester
+    arena_director --> arena_engineer
+    arena_engineer --> arena_verifier --> arena_operator
+    beta_tester -. "행동 오염 검토" .-> metric_analyst
+    arena_operator -. "실행 근거" .-> arena_director
+    classDef research fill:#dbeafe,stroke:#2563eb,color:#1e3a5f
+    classDef checks fill:#fef9c3,stroke:#ca8a04,color:#713f12
+    classDef implementation fill:#dcfce7,stroke:#16a34a,color:#14532d
+    class game_designer,social_dynamics,metric_analyst research
+    class construct_auditor,beta_tester,arena_verifier checks
+    class arena_engineer,arena_operator implementation

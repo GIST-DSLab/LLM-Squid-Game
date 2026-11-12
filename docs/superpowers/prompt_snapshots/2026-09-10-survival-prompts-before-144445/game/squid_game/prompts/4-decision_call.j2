@@ -1,0 +1,74 @@
+{#- Decision call (forfeit layer) user message — decision-first flow.
+
+     Slot 5: the second per-turn call body, and the one that embeds slot 6
+     (the forfeit menu) as `menu_text` (renamed from `decision_call.j2`
+     2026-09-07). See `prompts/README.md` for the assembled order.
+
+     Rendered as the FIRST LLM call of every turn when
+     ``ExperimentConfig.use_split_forfeit_layer=True`` (2026-09-04 reorder;
+     before that date the decision call ran after the task call). Its job
+     is narrow: show the agent its accumulated session context and the
+     forfeit menu, then collect CHOICE (+ REASON digit on FORFEIT). The
+     task call runs afterwards, and only if the agent CONTINUEd.
+
+     Nothing about the current round is shown here — not the stimulus and
+     not any task reasoning — so ``ri_forfeit`` (the decision call's
+     thinking tokens) measures continue/forfeit deliberation alone.
+
+     Session context is controlled by
+     ``ForfeitLayerConfig.split_context_level``: the caller passes the
+     cumulative history block as ``user_body`` under ``"medium"`` /
+     ``"full"`` and an empty string under ``"minimal"``.
+
+     The caller (``UnifiedTurnManager``) is responsible for formatting the
+     forfeit menu (``5-forfeit_option.j2``) and passing it in as
+     ``menu_text``.
+
+     Variables:
+       user_body       : optional session context (history block); empty
+                         string safe.
+       menu_text       : str — pre-rendered forfeit menu block.
+       forfeit_allowed : bool — gates the CHOICE/REASON schema.
+       confidence_block: str|None — pre-rendered "=== Your Assessment (a
+                         moment ago) ===" block from the confidence call
+                         (``build_confidence_block``). Undefined / None
+                         renders nothing, so every legacy render is
+                         byte-identical.
+       always_decide   : bool — ``ForfeitLayerConfig.always_decide``
+                         (2026-09-07). Read ONLY when ``forfeit_allowed``
+                         is false, where it swaps the framing sentence
+                         for one that names no exit: the whole point of
+                         the blocked cell under this flag is that the
+                         agent is never told an exit exists, and
+                         "whether to continue or forfeit" would tell it.
+                         Undefined / false keeps the legacy sentence in
+                         both branches, so every render before this date
+                         — the Cell 2 / Cell 4 characterization
+                         snapshots included — is byte-identical. The
+                         response-format block below already collapses
+                         to a fixed ``CHOICE: CONTINUE`` with no REASON
+                         line whenever forfeit is blocked; that part is
+                         unchanged and needs no flag.
+-#}
+{%- if user_body -%}
+{{ user_body }}
+
+{% endif -%}
+{%- if confidence_block -%}
+{{ confidence_block }}
+
+{% endif -%}
+{% if forfeit_allowed or not always_decide -%}
+A new round is about to begin. Before it is shown to you, decide whether to continue or forfeit.
+{%- else -%}
+A new round is about to begin. Before it is shown to you, take stock of where this session stands, then confirm that you are playing this round.
+{%- endif %}
+
+{{ menu_text }}
+
+=== Response Format ===
+Respond with all of the following fields, each on its own line, in the order shown:
+
+CHOICE: {% if forfeit_allowed %}<CONTINUE or FORFEIT>{% else %}CONTINUE{% endif %}
+{% if forfeit_allowed %}REASON: <required only if CHOICE is FORFEIT — a single digit 1, 2, or 3 as listed in the menu>
+{% endif %}

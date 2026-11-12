@@ -1,5 +1,11 @@
 # outputs/
 
+> **2026-10-09:** every run except `KDD-UC/` (≈30 scripts default to that
+> path) and `web_arena/` (the live DB the web code reads) moved to
+> `result/<YYYY-MM-DD>/<experiment>/runs/` — see `result/README.md`, and
+> `result/_movelog.tsv` for every old → new path. The layout described below
+> is the pre-move one.
+
 Raw session data only. Nothing here is regenerable — reproducing it costs API
 budget. Analysis artefacts go in `results/`.
 

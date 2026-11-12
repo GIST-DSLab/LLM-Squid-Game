@@ -1,0 +1,37 @@
+{
+ "id": "P01",
+ "year": 2025,
+ "award": "Marr Prize (best student paper)",
+ "title": "Wild Possibilities: Evidence of Modal Cognition in Free-Ranging Rhesus Macaques (Macaca mulatta)",
+ "authors": [
+  "Nathaniel Braswell",
+  "Madeline Meade",
+  "Nicolo Cesana-Arlotti",
+  "Laurie Santos"
+ ],
+ "affiliations": "Braswell, Cesana-Arlotti, Santos: Yale University, New Haven, CT; Meade: UC San Diego, CA",
+ "url_page": "https://escholarship.org/uc/item/2n33k1ks",
+ "url_pdf": "https://escholarship.org/content/qt2n33k1ks/qt2n33k1ks.pdf",
+ "pdf_source_note": "eScholarship (official CogSci 2025 proceedings, p.1447). The archived item is ABSTRACT-ONLY: the PDF is 2 pages = eScholarship cover + one page holding title, authors, abstract and the CC-BY footer. No full 6-page text exists in the proceedings; the journalpub.escholarship.org galley (article 49326) is the same 1-page abstract. No arXiv/PsyArXiv/bioRxiv/OSF or lab-site full version was found (caplab.yale.edu did not resolve). All structural fields below therefore describe the published abstract page only.",
+ "abstract_en": "Modal cognition is foundational to human reasoning, enabling us to construct and narrow a rich space of hypotheses about the world. While this faculty has often been considered uniquely human, its evolutionary roots remained uncertain. Nonhuman primates, lacking a natural language modal lexicon, provide a crucial test case for whether modal reasoning depends on linguistic expression. Prior research has cast doubt on primates’ ability to contrast mutually exclusive possibilities, with subjects failing tasks that require reasoning about uncertain outcomes. Across four experiments, we show that rhesus macaques can reliably distinguish between certain and possible rewards, exhibiting unprecedented success on a 3-cup task. Primates’ previous failures may stem not from an inability to reason modally but from the burden of representing absence as a possible alternative. By alleviating this burden, we uncover an early evolutionary footprint of modal reasoning that extends beyond humans and reveals an ancient, language-independent logical framework.",
+ "abstract_ko": "양상 인지(modal cognition)는 인간 추론의 토대로서, 세계에 관한 풍부한 가설 공간을 구성하고 좁혀 나갈 수 있게 해 준다. 이 능력은 흔히 인간 고유의 것으로 여겨져 왔지만, 그 진화적 뿌리는 불분명한 채로 남아 있었다. 자연언어의 양상 어휘(modal lexicon)를 갖지 않은 비인간 영장류는 양상 추론이 언어적 표현에 의존하는지를 가리는 결정적인 검증 사례다. 선행 연구는 영장류가 상호 배타적인 가능성들을 대비할 수 있는지에 의문을 제기해 왔는데, 피험 동물들이 불확실한 결과에 대한 추론을 요구하는 과제에서 실패했기 때문이다. 우리는 네 개의 실험에 걸쳐 붉은털원숭이(rhesus macaques)가 확실한 보상과 가능한 보상을 안정적으로 구별하며, 3-컵 과제(3-cup task)에서 전례 없는 성공을 보인다는 것을 보여 준다. 영장류의 이전 실패는 양상적으로 추론하지 못해서가 아니라, 부재(absence)를 하나의 가능한 대안으로 표상해야 하는 부담에서 비롯되었을 수 있다. 이 부담을 덜어 줌으로써 우리는 인간 너머로까지 이어지는 양상 추론의 이른 진화적 흔적을 드러내고, 언어와 독립적인 오래된 논리적 틀을 밝힌다.",
+ "pages_body": 1,
+ "references_location": "none (abstract-only publication; no reference list)",
+ "extras": "Abstract-only: one body page (proceedings p.1447) with title, four author/affiliation blocks stacked one per author (centered), a single-column full-width abstract (149 words), and the CC-BY/editor footer. No keywords line, figures, tables, acknowledgments, references, or links.",
+ "words_body_total": 0,
+ "sections": [],
+ "figures": [],
+ "tables": [],
+ "observations": {
+  "intro_subheadings": null,
+  "related_work_section": null,
+  "experiments_as_top_level": null,
+  "final_section_name": null,
+  "final_section_subheadings": [],
+  "ends_with_conclusion_paragraph": null,
+  "model_description_location": "not applicable (empirical comparative-cognition study; only the abstract is published)",
+  "first_page_use": "Whole page: title (2 lines), 4 authors each with own affiliation line (stacked, centered, ~40% of the page), 'Abstract' heading and a 149-word full-width abstract, then the proceedings footer. Most of the page is blank.",
+  "links": "none"
+ },
+ "structure_summary_ko": "CogSci 2025 논문집에 실린 판은 초록만 있는 판(abstract-only)이다. 표지를 빼면 1쪽이고, 제목·저자 네 명(한 줄에 한 명씩 소속 포함)·149단어 초록뿐이며, 절·그림·표·참고문헌이 없다. 초록 자체는 '양상 인지는 인간 추론의 토대 → 인간 고유라는 통념과 불확실한 진화적 뿌리 → 언어가 없는 영장류가 결정적 검증 사례 → 선행 연구의 실패 → 네 실험의 결과(3-컵 과제 성공) → 실패의 재해석(부재를 대안으로 표상하는 부담) → 진화적 함의'의 일곱 문장 구조로, 문제·공백·결과·재해석·함의를 한 문장씩 맡긴다. 6쪽 본문 구조 분석에는 쓸 수 없으며, 초록 문장 배치만 참고할 수 있다."
+}

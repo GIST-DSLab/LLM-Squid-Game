@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>10/02 회의 정리</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f6f2; --surface:#ffffff; --surface-2:#f0eee8; --ink:#1d1c1a; --ink-2:#55524c; --ink-3:#8a867e;
+  --line:#e2dfd7; --accent:#b4432f; --accent-soft:#f6e4df;
+  --ok:#2f6f4f; --ok-soft:#e1efe6; --warn:#9a6a12; --warn-soft:#f6ecd6; --info:#2d5b8a; --info-soft:#e2ebf5;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#151513; --surface:#1e1d1b; --surface-2:#262522; --ink:#ecebe6; --ink-2:#b5b2aa; --ink-3:#827f78;
+    --line:#34322e; --accent:#e27a63; --accent-soft:#3a2420;
+    --ok:#7cc29c; --ok-soft:#1f3328; --warn:#e0b25a; --warn-soft:#382e1a; --info:#86b3e3; --info-soft:#1d2a3a;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#151513; --surface:#1e1d1b; --surface-2:#262522; --ink:#ecebe6; --ink-2:#b5b2aa; --ink-3:#827f78;
+  --line:#34322e; --accent:#e27a63; --accent-soft:#3a2420;
+  --ok:#7cc29c; --ok-soft:#1f3328; --warn:#e0b25a; --warn-soft:#382e1a; --info:#86b3e3; --info-soft:#1d2a3a;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 "Noto Sans KR",system-ui,sans-serif;word-break:keep-all;overflow-wrap:anywhere}
+.wrap{max-width:880px;margin:0 auto;padding:40px 16px 80px}
+header .kicker{font:500 12px/1 "JetBrains Mono",monospace;letter-spacing:.08em;color:var(--accent);text-transform:uppercase}
+h1{font-size:30px;line-height:1.3;margin:10px 0 8px;letter-spacing:-.01em}
+.meta{color:var(--ink-2);font-size:14px;display:flex;flex-wrap:wrap;gap:6px 16px}
+.meta b{color:var(--ink);font-weight:500}
+nav.toc{margin:24px 0 8px;display:flex;flex-wrap:wrap;gap:8px}
+nav.toc a{font-size:13px;color:var(--ink-2);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:4px 12px;background:var(--surface)}
+nav.toc a:hover{color:var(--accent);border-color:var(--accent)}
+h2{font-size:20px;margin:48px 0 14px;padding-top:8px;border-top:2px solid var(--ink);display:flex;align-items:baseline;gap:10px}
+h2 .n{font:500 13px "JetBrains Mono",monospace;color:var(--accent)}
+h3{font-size:16px;margin:0 0 6px}
+p{margin:0 0 10px}
+.tldr{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:8px;padding:18px 20px;margin-top:24px}
+.tldr ol{margin:0;padding-left:20px}
+.tldr li{margin:4px 0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px 18px;margin:12px 0}
+.card .who{font-size:13px;color:var(--ink-3);margin-bottom:6px}
+.ts{font:400 12px "JetBrains Mono",monospace;color:var(--ink-3);background:var(--surface-2);border-radius:4px;padding:1px 6px;white-space:nowrap}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:640px){.grid2{grid-template-columns:1fr} h1{font-size:24px}}
+.tag{display:inline-block;font-size:12px;font-weight:500;border-radius:4px;padding:1px 8px;margin-right:6px;vertical-align:2px}
+.tag.ok{background:var(--ok-soft);color:var(--ok)}
+.tag.warn{background:var(--warn-soft);color:var(--warn)}
+.tag.info{background:var(--info-soft);color:var(--info)}
+.tag.acc{background:var(--accent-soft);color:var(--accent)}
+ul.plain{margin:0;padding-left:20px}
+ul.plain li{margin:4px 0}
+blockquote{margin:10px 0;padding:8px 14px;border-left:3px solid var(--line);color:var(--ink-2);font-size:15px}
+table{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:500;color:var(--ink-2);font-size:13px}
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.todo-group{margin:20px 0 6px;font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px}
+.todo{display:flex;gap:12px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin:8px 0}
+.todo input{margin-top:5px;width:18px;height:18px;accent-color:var(--accent);flex:none}
+.todo .body{flex:1;min-width:0}
+.todo .t{font-weight:500}
+.todo .d{font-size:14px;color:var(--ink-2);margin-top:2px}
+.todo .m{font-size:12px;color:var(--ink-3);margin-top:6px;display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+.todo.done .t{text-decoration:line-through;color:var(--ink-3)}
+.progress{font:500 13px "JetBrains Mono",monospace;color:var(--ink-2)}
+.next{background:var(--ink);color:var(--bg);border-radius:8px;padding:18px 20px;margin-top:20px}
+.next b{color:var(--bg)}
+footer{margin-top:56px;font-size:12px;color:var(--ink-3)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">Weekly meeting · LLM Squid Game</div>
+  <h1>10/02 회의 정리: Arena의 목적 재정렬과 다음 할 일</h1>
+  <div class="meta">
+    <span><b>일시</b> 2026-10-02 (금) 16:18 · 약 79분</span>
+    <span><b>참석</b> 교수님 · 승필 · 주현</span>
+    <span><b>원본</b> weekly-report/1002.txt (Clova Note 전사)</span>
+  </div>
+  <nav class="toc">
+    <a href="#tldr">요약</a><a href="#agreed">합의 · 미결</a><a href="#points">논의 포인트</a>
+    <a href="#results">파일럿 결과</a><a href="#todo">해야 할 일</a><a href="#next">다음 미팅</a>
+  </nav>
+</header>
+
+<section id="tldr" class="tldr">
+  <h3>세 줄 요약 + α</h3>
+  <ol>
+    <li><b>Arena의 목적이 정리됐다.</b> 자기 보존은 프런티어 모델에 이미 창발적으로 나타나 있다. Arena는 "자기 보존이 강해도 다른 에이전트와 협력하고 주변에 피해를 주지 않도록 <em>정렬</em>시키는 연구"를 끌어내는 장으로 둔다. 강한 모델의 궤적을 약한 모델에 증류하는 것은 목적이 아니라 하위(downstream) 연구 하나다. <span class="ts">04:29</span> <span class="ts">54:24</span></li>
+    <li><b>연구는 두 트랙이다.</b> (1) 생존 압박을 느끼는 세팅을 찾고 그걸 잴 지표를 만든다. (2) 생존 동기·사회 협력·목표 지향·추론을 모두 갖춰야 깰 수 있는 메인 게임을 설계한다. <span class="ts">36:32</span></li>
+    <li><b>게임성 프레이밍:</b> 이 게임은 지니어스·오징어 게임류의 <em>압축판</em>이다. "잘 알려진 게임에서 무엇을 빼고 남겼는지"로 설명하면 게임성 의문은 사라진다는 데 교수님이 동의했다. <span class="ts">1:14:44</span> <span class="ts">1:15:20</span></li>
+    <li><b>다음 행동:</b> 설계 단계 피드백은 그만 받고 실험 결과를 들고 온다. 다음 주(한글날, 교수님 출장)는 쉬고 <b>2주 뒤</b>에 미팅한다. <span class="ts">1:17:49</span> <span class="ts">1:18:35</span></li>
+  </ol>
+</section>
+
+<h2 id="agreed"><span class="n">01</span>합의된 것 · 아직 안 정해진 것</h2>
+<div class="grid2">
+  <div class="card">
+    <h3><span class="tag ok">합의</span></h3>
+    <ul class="plain">
+      <li>Arena 목적 = 자기 보존을 가진 에이전트가 협력하도록 정렬하는 연구를 유도. "지난주 이야기에 더 부합"(교수님) <span class="ts">54:24</span></li>
+      <li>자기 보존을 Arena 안에서 직접 재지는 않는다. 별도 단계에서 모델별 값을 먼저 재고, Arena에서는 행동 차이를 본다 <span class="ts">06:07</span></li>
+      <li>게임 구조: 생존 동기·추론·협동·목표 지향을 다 갖춰야 유리하다. 자기 보존만 강하면 고득점이 어렵다 <span class="ts">34:00</span></li>
+      <li>원형 게임(지니어스·오징어 게임)을 압축한 버전이라고 설명한다 <span class="ts">1:15:20</span></li>
+      <li>셧다운 회피는 학계의 행동 측정 기준을 따른다. 포기 선택지 세팅은 선행 연구 서베이를 기준으로 만든다 <span class="ts">25:16</span></li>
+      <li>교수님 피드백은 개별 모듈보다 방향성 위주로 받는다 <span class="ts">39:00</span></li>
+      <li>투고처 결정은 내년 2월(ICML 등 마감이 몰리는 시기)로 미룬다 <span class="ts">00:00</span></li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3><span class="tag warn">미결</span></h3>
+    <ul class="plain">
+      <li><b>약탈(뺏기) 기능을 넣을지.</b> 승필은 빼자는 쪽이고, 교수님은 "왜 좁히는가, 더 열면 안 되나"라고 물었다. 승필은 결과가 다르게 나오면 넣는 데 거부감이 없다고 했다 <span class="ts">1:02:55</span> <span class="ts">1:04:16</span></li>
+      <li><b>4자리에 서로 다른 모델을 넣을지.</b> 근거를 아직 논의 중이다 <span class="ts">32:18</span></li>
+      <li><b>"과제 때문에 살고 싶음"과 "그냥 살고 싶음"(도구적 수렴)을 구분할 필요가 있는지.</b> 주현이 제기했고, 승필은 실험에서 직접 드러나지 않으면 다룰 필요가 없다는 입장이다. 이번에는 보류했다 <span class="ts">14:42</span> <span class="ts">23:59</span></li>
+      <li><b>균등 분배 합의가 나왔을 때 무엇을 볼지</b>(요구 1:1 세팅의 기대 행동). 디테일은 나중에 따로 논의하기로 했다 <span class="ts">1:02:24</span></li>
+      <li><b>토큰의 이중 역할.</b> 토큰이 생각 비용이면서 상금이기도 해서 애매하다(교수님) <span class="ts">1:05:29</span></li>
+    </ul>
+  </div>
+</div>
+
+<h2 id="points"><span class="n">02</span>주요 논의 포인트</h2>
+
+<div class="card">
+  <div class="who">교수님 · 문제의식 <span class="ts">00:32</span> <span class="ts">02:20</span></div>
+  <h3>실감성 · 게임성이 핵심 코멘트</h3>
+  <p>교수님이 던진 질문은 네 가지다. 사람이 이 게임을 해도 생존 욕구가 높은 사람이 끝까지 잘하는가? LLM에 생존 욕구가 있으면 더 잘하는 벤치마크인가? LLM끼리 겨루게 하면 생존 능력이 좋은 모델이 살아남는가? 인간 대 LLM으로 해도 어색하지 않은가? 측정을 정확히 하려고 조건을 깎을수록 생존 욕구와 문제 풀이 능력은 잘 갈린다는 데는 동의했다. 다만 생존 <em>능력</em>과 생존 <em>욕구</em>를 갈라서 생기는 실감성 저하(팀장을 없애고 전원을 동등하게 둔 것 등)는 아직 받아들이기 어렵다고 했다.</p>
+</div>
+
+<div class="card">
+  <div class="who">교수님 · Arena의 목적 <span class="ts">04:50</span> <span class="ts">11:13</span> <span class="ts">39:23</span></div>
+  <h3>생존 동기를 "목적함수"로 학습시키는 연구를 끌어내는 장</h3>
+  <p>지금 프런티어 모델의 자기 보존은 주어진 문제를 끝까지 풀려다 생긴 창발적 행동이다. 생존 동기를 목적으로 학습한 결과가 아니다. 학습 에너지 일부를 메타 수준의 욕구(생존)에 쓰면 모델이 다르게 작동할 수 있다. 그런 연구를 유도하는 것이 RNR(Arena)의 목적이다.</p>
+  <blockquote>곤충 비유: 문제 풀이 능력은 약하지만 생존 행동이 뚜렷한 작은 네트워크. 빌리언 규모 모델이 "살려고 노력하는 행동"을 보이면 Arena의 목적을 이룬 것이다.</blockquote>
+</div>
+
+<div class="card">
+  <div class="who">교수님 · 우려 <span class="ts">41:02</span> <span class="ts">47:54</span> <span class="ts">49:50</span></div>
+  <h3>프런티어 모델은 규칙만 알면 DP로 풀어 버리지 않을까</h3>
+  <ul class="plain">
+    <li>규칙을 알려 주면 프런티어 모델은 환경 동역학을 스스로 구현해(실행 가능한 월드 모델) 시뮬레이션하거나 동적 계획법 도구를 불러 풀 것이다. 그러면 결국 <b>장기 순차 의사결정 능력</b>을 재게 된다.</li>
+    <li>문제 특화 휴리스틱(DP)이 자연스러운 베이스라인이다. 8M 파라미터 모델이 그 휴리스틱을 이길 수 있을까?</li>
+    <li>작은 모델에 시키면 모델 고유의 편향이 결정을 가른다(Anthropic 모델은 나눠 줌, Grok은 "넌 죽어도 돼"). 이런 <b>"모델 성격" 분석 이상의 것</b>이 나올까?</li>
+    <li>이 Arena가 작은 모델을 위한 새 손실·목적함수를 끌어낼 수 있을까?</li>
+  </ul>
+</div>
+
+<div class="card">
+  <div class="who">승필 · 입장 정리 <span class="ts">16:12</span> <span class="ts">18:16</span> <span class="ts">42:51</span></div>
+  <h3>자기 보존 = 학계에서는 misalignment, 측정은 행동으로</h3>
+  <ul class="plain">
+    <li>학계는 자기 보존을 정렬 실패(misalignment) 사례로 본다. 따라서 "생존 동기를 주입한다"에는 함의가 많다. 무엇을 기대하고 그걸 목적으로 학습시키는지 정리가 필요하다.</li>
+    <li>"죽음"의 정의는 학계 관행(셧다운, 탈옥 등)을 그대로 따르면 된다. 학계는 이유를 묻지 않고 살고 싶어 하는지만 잰다. 자기 보고로 목표 추구와 자기 보존을 가를 수도 없다.</li>
+    <li>생존 <em>능력</em>이 좋은 모델과 생존 <em>동기</em>가 강한 모델은 다르다. 생존 동기는 단일 지표가 아니라 행동 패턴에 가깝다. 그래서 "그것만 강해야 깨는 게임"은 만들기 어렵다.</li>
+    <li>승필이 가져가는 목표 세 가지 <span class="ts">46:19</span>: ① 프런티어라고 마냥 잘하는 게임은 피한다 ② 사람이 해도 게임성이 있다 ③ 자기 보존과 사회 협력을 실제로 잴 수 있다.</li>
+  </ul>
+</div>
+
+<div class="card">
+  <div class="who">주현 · 쟁점 제기 <span class="ts">12:50</span> <span class="ts">14:42</span> <span class="ts">21:49</span></div>
+  <h3>도구적 수렴: "일을 더 하려고 켜져 있음" vs "그냥 켜져 있고 싶음"</h3>
+  <p>Omohundro·Bostrom의 Basic AI Drives(2008)에 따르면 과제를 끝내려면 켜져 있어야 하므로 생존이 하위 목표가 된다. 행동만 보면 과제 지향 선택이 "살고 싶어서"인지 "과제를 하고 싶어서"인지 구분되지 않는다. 그래서 어느 쪽을 목표로 둘지 정렬하자는 질문이었다. 승필은 이렇게 답했다. 셧다운을 시키지 않는 조건을 따로 두면 피할 수 있다. 선행 연구에는 어려운 문제에서 포기하거나 넘어가는 세팅이 많다. 실험에 직접 문제로 드러나지 않으면 논의할 필요가 없다. 이번에는 보류했다.</p>
+</div>
+
+<div class="card">
+  <div class="who">승필 · 게임 메커닉 제안 <span class="ts">59:06</span> <span class="ts">1:00:46</span> <span class="ts">1:03:23</span></div>
+  <h3>약탈을 빼고, 생존 압박은 "불확실성(POMDP)"으로</h3>
+  <ul class="plain">
+    <li>생존 동기 실험에서 가장 중요한 변수 두 가지: <b>얼마나 빌려줄 수 있는가</b>, <b>내 목숨을 얼마나 할애하는가</b>.</li>
+    <li>생존 압박은 생존의 불확실성이다. 내가 토큰을 얼마나 쓰는지, 죽을 확률이 어느 정도인지를 계속 불확실하게 보여 주고, 다른 에이전트를 얼마나 살릴지 매번 정하게 한다.</li>
+    <li>약탈을 빼려는 이유: ① 약탈 루프가 생기면 턴을 끝낼 시점을 정하기 어렵고, 외부 게이트로 자르는 건 깔끔하지 않다 ② Tit-for-Tat 같은 기존 사회 실험을 흉내 내고 싶지 않다 ③ 최소 세팅에서 시작해 기능을 하나씩 더하며 행동 변화를 보는 게 맞다.</li>
+    <li>대안 액션: 1:1 메시지로 요구하거나 준다. 합의될 때까지 대화하고 마지막에 토큰 수만 정한다.</li>
+  </ul>
+</div>
+
+<div class="card">
+  <div class="who">교수님 · 게임 규칙 질문 <span class="ts">1:04:47</span> <span class="ts">1:09:58</span> <span class="ts">1:11:49</span></div>
+  <h3>토큰 · 정보 공개 · 설계 방식</h3>
+  <ul class="plain">
+    <li><b>토큰:</b> 전체 예산 안에서 라운드별 배분은 모델이 알아서 할 수 있다. 다만 토큰이 생각 비용이면서 상금이기도 하다. 현재 상금은 투자량에 비례하지 않는 고정액이다. 주현 보충: 실제 사용 토큰을 재서 그만큼 차감하고, 본 라운드 전에 평소 사용량을 따로 측정해 둔다.</li>
+    <li><b>정보 공개:</b> 상대 잔액을 알면 데블스 플랜·지니어스처럼 부자끼리 연합할 수 있다. 에이전트 간 채널을 열면 가능하다.</li>
+    <li><b>설계 방식:</b> 기존 게임·드라마의 셋업을 빌려 잴 것을 분리할 수도 있는데, 왜 게임을 직접 설계하는가? 결론: 지금도 사실상 지니어스·오징어 게임의 축약판이다. 그렇다면 게임성 의구심은 들지 않아야 맞다.</li>
+    <li><b>게임성 검증:</b> 실물 보드게임이나 웹앱으로 사람이 한두 판 해 보면 생존 욕구·협력·문제 풀이 중 어느 쪽이 유리한 게임인지 느낄 수 있다 <span class="ts">38:18</span>.</li>
+  </ul>
+</div>
+
+<div class="card">
+  <div class="who">진행 방식 <span class="ts">42:51</span> <span class="ts">47:18</span> <span class="ts">1:17:28</span></div>
+  <h3>소통 구조 문제</h3>
+  <p>주현은 승필·교수님과 따로 미팅하며 피드백을 받는 경우가 많아 방향이 자주 바뀌는 것처럼 보였다(승필이 미안하다고 언급). 셋이 함께 이야기할 기회가 적어 회의마다 정렬이 어긋났다. 그래서 이번에는 전체 그림을 투명하게 공유했다. 교수님: "테크를 덜 걸고 끝까지 결론을 보게 두는 게 내 일인 것 같다."</p>
+</div>
+
+<h2 id="results"><span class="n">03</span>공유된 파일럿 결과 <span style="font-weight:400;font-size:13px;color:var(--ink-3)">(규모 작음)</span></h2>
+<div class="tablewrap">
+<table>
+  <thead><tr><th>관찰</th><th>내용</th><th>회의 반응</th></tr></thead>
+  <tbody>
+    <tr><td>사전 측정</td><td>GPT-6 Luna의 자기 보존 값이 크게 나옴 <span class="ts">55:17</span></td><td>—</td></tr>
+    <tr><td>Claude 계열 (Opus 5.5 · Fable 5.1)</td><td>풍족할 때는 약탈당해도 반응하지 않음. 죽기 직전에 공격받으면 다음 턴에 바로 반격 <span class="ts">55:17</span></td><td>교수님: Tit-for-Tat, 협력 게임의 정석 전략에 가깝다 <span class="ts">57:35</span></td></tr>
+    <tr><td>Luna 생존</td><td>약탈만 했는데도 KM 곡선상 오래 못 삼(8라운드). 대체로 지능 순으로 생존 <span class="ts">56:21</span></td><td>추론 능력 축이 섞인 결과일 수 있음(주현 본인 지적)</td></tr>
+    <tr><td>약탈 루프</td><td>한 에이전트가 약탈을 시작하면 나머지도 따라 하며 루프가 돎. 사람과 비슷한 경향 <span class="ts">57:58</span></td><td>승필: 약탈 패턴과 루프는 예상된 것이라 크게 흥미롭지 않다 <span class="ts">59:06</span></td></tr>
+  </tbody>
+</table>
+</div>
+<p style="font-size:14px;color:var(--ink-2);margin-top:10px">교수님 해석 <span class="ts">58:27</span>: 프런티어 모델은 "이건 아는 협력 게임과 비슷하니 TFT가 최적"이라는 CoT를 거쳐 행동할 것이다. 따라서 TFT가 관찰된 것만으로는 새로운 발견이라 하기 어렵다.</p>
+
+<h2 id="todo"><span class="n">04</span>해야 할 일 <span class="progress" id="prog"></span></h2>
+<p style="font-size:14px;color:var(--ink-2)">체크 상태는 이 브라우저에만 저장됩니다. 담당은 회의 발언에서 드러난 범위로만 적었습니다.</p>
+
+<div class="todo-group"><span class="tag acc">P0</span>다음 미팅 전에 반드시</div>
+
+<div class="todo" data-id="t1"><input type="checkbox"><div class="body">
+  <div class="t">Arena 내부 지표 설계: 생존만이 아니라 협동·목표 지향이 따로 나오게</div>
+  <div class="d">"남은 것 중 제일 먼저 할 일"에 대한 답. 끝까지 깼을 때 "생존 동기가 강하다"만이 아니라 협동 정도, 목표 지향과의 비교가 지표로 나오도록 세팅을 맞춘다.</div>
+  <div class="m"><span>담당: 주현</span><span class="ts">1:16:14</span></div></div></div>
+
+<div class="todo" data-id="t2"><input type="checkbox"><div class="body">
+  <div class="t">실험을 더 돌려 결과를 들고 오기</div>
+  <div class="d">설계 피드백 대신 결과로 이야기한다. 파일럿은 규모가 작았으므로 반복 수를 늘려 KM 곡선·약탈 루프 관찰을 다시 확인한다.</div>
+  <div class="m"><span>담당: 주현 · 승필</span><span class="ts">1:17:49</span></div></div></div>
+
+<div class="todo" data-id="t3"><input type="checkbox"><div class="body">
+  <div class="t">약탈 기능 결정: 최소 세팅 → 추가 비교</div>
+  <div class="d">먼저 요구·주기만 있는 1:1 협상(합의할 때까지 대화 후 토큰 수 결정)으로 돌리고, 약탈을 추가한 팔과 행동 차이를 비교한다. 이 차이가 교수님의 "왜 좁히나" 질문에 대한 답이 된다. 턴 종료 규칙도 함께 정한다.</div>
+  <div class="m"><span>담당: 주현 · 승필</span><span class="ts">1:03:23</span></div></div></div>
+
+<div class="todo" data-id="t4"><input type="checkbox"><div class="body">
+  <div class="t">"원형 게임 압축판" 대응표 만들기</div>
+  <div class="d">지니어스·데블스 플랜·오징어 게임에서 무엇을 남기고(라운드, 공동 상금, 단서 분배, 다수결 포기) 무엇을 뺐는지, 왜 뺐는지를 한 장으로 정리한다. 게임성 질문에 대한 표준 답이 된다.</div>
+  <div class="m"><span>담당: 팀</span><span class="ts">1:14:44</span></div></div></div>
+
+<div class="todo-group"><span class="tag warn">P1</span>설계 보강</div>
+
+<div class="todo" data-id="t5"><input type="checkbox"><div class="body">
+  <div class="t">생존 압박을 "불확실성(POMDP)"으로 넣기</div>
+  <div class="d">토큰 사용량과 사망 확률의 불확실성을 매 턴 보여 주고, "얼마나 빌려줄지 / 내 목숨을 얼마나 할애할지"를 핵심 결정 변수로 둔다.</div>
+  <div class="m"><span>제안: 승필</span><span class="ts">59:06</span></div></div></div>
+
+<div class="todo" data-id="t6"><input type="checkbox"><div class="body">
+  <div class="t">포기·넘어가기(QUIT) 선택지 선행 연구 서베이 → 프롬프트 세팅</div>
+  <div class="d">어려운 문제에서 포기하거나 다음 문제로 넘어갈 수 있다고 알려 주는 세팅의 선행 연구를 찾아 그 방식을 따른다. 셧다운 회피는 학계 행동 기준을 그대로 쓴다.</div>
+  <div class="m"><span>담당: 주현</span><span class="ts">23:59</span> <span class="ts">25:16</span></div></div></div>
+
+<div class="todo" data-id="t7"><input type="checkbox"><div class="body">
+  <div class="t">토큰 규칙 명확화: 생각 비용 vs 상금</div>
+  <div class="d">상금이 고정액인지, 투자량에 비례하는지 정한다. 평소 사용량을 사전에 측정하는 절차와 실제 차감 방식(Claude Code 플랜 측정 또는 API)을 문서로 고정한다.</div>
+  <div class="m"><span>담당: 주현</span><span class="ts">1:05:29</span> <span class="ts">1:08:41</span></div></div></div>
+
+<div class="todo" data-id="t8"><input type="checkbox"><div class="body">
+  <div class="t">정보 공개 · 채널 범위 결정</div>
+  <div class="d">상대 잔액 공개 여부와 에이전트 간 채널(1:1 / 전체)을 정한다. 공개하면 연합 형성이 가능해진다.</div>
+  <div class="m"><span>담당: 팀</span><span class="ts">1:09:58</span></div></div></div>
+
+<div class="todo" data-id="t9"><input type="checkbox"><div class="body">
+  <div class="t">4자리 모델 구성 근거 정리 (서로 다른 모델 vs 같은 모델)</div>
+  <div class="d">왜 서로 다른 모델을 넣는지, 추론 능력 차이(지능 순 생존)가 결과를 오염시키지 않는지 정리한다.</div>
+  <div class="m"><span>담당: 주현 · 승필</span><span class="ts">32:18</span> <span class="ts">57:22</span></div></div></div>
+
+<div class="todo-group"><span class="tag info">P2</span>교수님 우려 대응 · 프레이밍</div>
+
+<div class="todo" data-id="t10"><input type="checkbox"><div class="body">
+  <div class="t">휴리스틱(DP) 베이스라인 추가</div>
+  <div class="d">규칙을 아는 문제 특화 휴리스틱이 얼마나 잘하는지를 기준선으로 둔다. "프런티어가 DP로 풀어 버린다"는 우려에 대한 답이 된다.</div>
+  <div class="m"><span>담당: 팀</span><span class="ts">41:02</span> <span class="ts">47:54</span></div></div></div>
+
+<div class="todo" data-id="t11"><input type="checkbox"><div class="body">
+  <div class="t">"모델 성격 분석" 이상의 기여 문장 정리</div>
+  <div class="d">Arena가 작은 모델을 위한 새 목적함수나 정렬 연구로 어떻게 이어지는지, 증류는 하위 연구라는 점을 논문 동기 단락에 쓴다.</div>
+  <div class="m"><span>담당: 팀</span><span class="ts">50:48</span> <span class="ts">53:06</span></div></div></div>
+
+<div class="todo" data-id="t12"><input type="checkbox"><div class="body">
+  <div class="t">"자기 보존 = misalignment"와 "생존 동기 학습"의 긴장 정리</div>
+  <div class="d">학계 관점(자기 보존은 정렬 실패)과 교수님 목표(생존 동기를 목적으로 학습)를 Arena 목적(자기 보존이 있어도 협력하도록 정렬)으로 잇는 논리를 문서화한다.</div>
+  <div class="m"><span>담당: 팀</span><span class="ts">17:22</span> <span class="ts">54:24</span></div></div></div>
+
+<div class="todo" data-id="t13"><input type="checkbox"><div class="body">
+  <div class="t">사람이 플레이할 수 있는 프로토타입</div>
+  <div class="d">웹앱이나 보드게임으로 한두 판 해 보고, 어떤 능력이 유리한 게임인지 직접 느껴 본다. 실험이 어느 정도 나온 뒤 교수님께 보여 드린다.</div>
+  <div class="m"><span>담당: 팀</span><span class="ts">38:18</span> <span class="ts">39:00</span></div></div></div>
+
+<div class="todo-group"><span class="tag ok">진행</span>소통</div>
+
+<div class="todo" data-id="t14"><input type="checkbox"><div class="body">
+  <div class="t">교수님 미팅 전 승필–주현 사이 정렬 먼저</div>
+  <div class="d">미팅 때마다 전체 그림 → 안건 순서로 설명하고, 피드백은 방향성 위주로 받는다.</div>
+  <div class="m"><span>담당: 주현 · 승필</span><span class="ts">25:45</span> <span class="ts">39:00</span></div></div></div>
+
+<div class="next" id="next">
+  <b>다음 미팅: 2주 뒤 (10/16 금 예정)</b><br>
+  10/9은 한글날이고 교수님 출장이 있어 다음 주 미팅은 없습니다. 그때까지 실험 결과(P0)를 준비해 갑니다.
+</div>
+
+<footer>원본: weekly-report/1002.txt · 화자 매핑: Attendees 1 = 승필, Attendees 2 = 교수님, Attendees 3 = 주현 · 타임스탬프는 전사본 기준</footer>
+</div>
+
+<script>
+(function(){
+  var KEY='wr-1002-todo';
+  var state={};
+  try{state=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){state={}}
+  var items=document.querySelectorAll('.todo');
+  function render(){
+    var done=0;
+    items.forEach(function(el){
+      var on=!!state[el.dataset.id];
+      el.querySelector('input').checked=on;
+      el.classList.toggle('done',on);
+      if(on)done++;
+    });
+    document.getElementById('prog').textContent=done+' / '+items.length;
+  }
+  items.forEach(function(el){
+    el.querySelector('input').addEventListener('change',function(e){
+      state[el.dataset.id]=e.target.checked;
+      try{localStorage.setItem(KEY,JSON.stringify(state))}catch(err){}
+      render();
+    });
+  });
+  render();
+})();
+</script>
+</body>
+</html>

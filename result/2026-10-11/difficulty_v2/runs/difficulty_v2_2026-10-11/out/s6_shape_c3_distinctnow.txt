@@ -1,0 +1,6 @@
+c3_distinct (now): ok 36/36 fail 0; functions in space 25996; first round (incl. space build) 1.0s; time med 0.24 p90 0.61 max 0.98
+N | map | uni | k | samp | b10 | nn | single | nn_isMAP | pool_med
+4 | 56% | 50% | 2.00 | 53% | 55% | 47% | 41% | 90% | 10
+3 | 56% | 40% | 2.61 | 48% | 51% | 53% | 36% | 86% | 68
+2 | 46% | 29% | 3.56 | 39% | 44% | 33% | 29% | 67% | 371
+1 | 42% | 26% | 3.92 | 34% | 40% | 25% | 22% | 50% | 2227

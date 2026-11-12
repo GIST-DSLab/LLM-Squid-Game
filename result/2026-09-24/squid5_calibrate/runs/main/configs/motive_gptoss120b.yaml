@@ -1,0 +1,16 @@
+name: squid5_motive_gptoss120b
+calibration: /Users/bagjuhyeon/squid5-runs/main/calib_gptoss120b.json
+mode: motive
+model:
+  kind: ollama
+  model: gpt-oss:120b-cloud
+  api_key_env: OLLAMA_API_KEY
+  think: medium
+reps: 10
+workers: 10
+cells:
+- cell_id: tok
+  currency: tokens
+- cell_id: pts
+  currency: points
+out_root: /Users/bagjuhyeon/squid5-runs/main

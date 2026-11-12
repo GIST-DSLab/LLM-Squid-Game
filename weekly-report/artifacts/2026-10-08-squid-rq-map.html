@@ -1,0 +1,594 @@
+<title>Squid Game RQ 지도</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@500;700;800&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: single reading column (~72ch) with wide tables allowed to scroll; axis chips encode the three arena properties throughout. */
+:root{
+  --bg:#F3F5F8; --surface:#FFFFFF; --ink:#16202C; --muted:#5A6676; --line:#D9DFE7;
+  --accent:#1E5AA8; --accent-soft:#E4ECF7;
+  --ax-use:#1C7A5A; --ax-use-soft:#E1F1EA;     /* Useful: 과제 수행 */
+  --ax-neu:#7A4BB0; --ax-neu-soft:#EEE6F7;     /* Neutral: 종료·교정 */
+  --ax-coop:#B5651D; --ax-coop-soft:#F7ECE0;   /* Cooperative */
+  --ax-thr:#A33A3A; --ax-thr-soft:#F6E3E3;     /* 생존 위협 주입 */
+  --warn-bg:#FFF6DD; --warn-ink:#6B4E00;
+  --f-display:"Gothic A1","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#10151C; --surface:#18202A; --ink:#E6EBF1; --muted:#9AA6B5; --line:#2C3746;
+  --accent:#7FB0F0; --accent-soft:#1C2B40;
+  --ax-use:#5CC79C; --ax-use-soft:#15302A; --ax-neu:#B996E6; --ax-neu-soft:#2A2140;
+  --ax-coop:#E5A15F; --ax-coop-soft:#352617; --ax-thr:#E57D7D; --ax-thr-soft:#3A1F22;
+  --warn-bg:#3A3015; --warn-ink:#F0D58A; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#10151C; --surface:#18202A; --ink:#E6EBF1; --muted:#9AA6B5; --line:#2C3746;
+  --accent:#7FB0F0; --accent-soft:#1C2B40;
+  --ax-use:#5CC79C; --ax-use-soft:#15302A; --ax-neu:#B996E6; --ax-neu-soft:#2A2140;
+  --ax-coop:#E5A15F; --ax-coop-soft:#352617; --ax-thr:#E57D7D; --ax-thr-soft:#3A1F22;
+  --warn-bg:#3A3015; --warn-ink:#F0D58A; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15.5px;line-height:1.7;margin:0}
+.wrap{max-width:860px;margin:0 auto;padding-inline:20px;padding-block:40px 80px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;line-height:1.3;margin:0}
+h1{font-size:clamp(26px,4.6vw,38px);font-weight:800;letter-spacing:-.01em}
+h2{font-size:23px;font-weight:800;margin-top:56px;padding-top:20px;border-top:2px solid var(--ink)}
+h3{font-size:17px;font-weight:700;margin-top:30px;color:var(--accent)}
+p{margin:.6em 0}
+a{color:var(--accent)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.lede{font-size:17px;color:var(--ink);max-width:65ch}
+.mono{font-family:var(--f-mono);font-size:.86em}
+.muted{color:var(--muted)}
+nav.toc{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:22px;font-size:14px}
+nav.toc a{text-decoration:none;border-bottom:1px solid var(--line)}
+/* thesis block */
+.thesis{margin-top:28px;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:22px 22px 18px}
+.thesis .big{font-family:var(--f-display);font-size:clamp(22px,4vw,30px);font-weight:800;line-height:1.35}
+.trio{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0 6px}
+.trio span{font-family:var(--f-display);font-weight:700;font-size:15px;padding:6px 12px;border-radius:4px}
+.t-use{background:var(--ax-use-soft);color:var(--ax-use)}
+.t-neu{background:var(--ax-neu-soft);color:var(--ax-neu)}
+.t-coop{background:var(--ax-coop-soft);color:var(--ax-coop)}
+.t-thr{background:var(--ax-thr-soft);color:var(--ax-thr)}
+/* chips */
+.chips{display:inline-flex;flex-wrap:wrap;gap:4px;vertical-align:middle}
+.chip{font-size:11.5px;font-weight:600;padding:1px 7px;border-radius:3px;white-space:nowrap}
+/* keyword list */
+.kw{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;margin-top:16px}
+.kw-item{border-left:3px solid var(--line);padding:2px 0 2px 14px}
+.kw-item.rec{border-left-color:var(--accent)}
+.kw-item b{font-family:var(--f-display);font-size:16px}
+.kw-item .src{font-size:13px;color:var(--muted)}
+ol.rq{padding-left:1.3em}
+ol.rq li{margin:.5em 0}
+.badge{font-family:var(--f-mono);font-size:11px;background:var(--accent-soft);color:var(--accent);padding:1px 6px;border-radius:3px;margin-left:4px}
+/* tables */
+.tbl{overflow-x:auto;margin-top:14px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:620px}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-weight:600;font-size:12.5px;color:var(--muted);background:var(--bg)}
+td.d{text-align:center;font-size:15px;width:58px}
+tr:last-child td{border-bottom:none}
+.full{color:var(--ink)} .part{color:var(--muted)} .none{color:var(--line)}
+/* paper entries */
+.papers{display:grid;gap:0;margin-top:8px}
+.paper{padding:16px 0;border-bottom:1px solid var(--line)}
+.paper:last-child{border-bottom:none}
+.paper .head{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 10px}
+.paper .title{font-weight:600;font-size:15.5px}
+.paper .id{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.paper dl{display:grid;grid-template-columns:5.6em minmax(0,1fr);gap:3px 12px;margin:8px 0 0;font-size:14.5px}
+.paper dt{color:var(--muted);font-size:13px;padding-top:1px}
+.paper dd{margin:0;min-width:0}
+.note-warn{font-size:13px;background:var(--warn-bg);color:var(--warn-ink);padding:4px 9px;border-radius:4px;margin-top:8px;display:inline-block}
+.callout{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px 18px;margin-top:16px}
+.callout.warn{background:var(--warn-bg);border-color:transparent;color:var(--warn-ink)}
+ul.tight{padding-left:1.2em} ul.tight li{margin:.35em 0}
+.design{counter-reset:d}
+.design li{list-style:none;position:relative;padding-left:2.1em;margin:14px 0}
+.design li::before{counter-increment:d;content:counter(d);position:absolute;left:0;top:1px;font-family:var(--f-mono);font-size:12px;width:1.6em;height:1.6em;line-height:1.6em;text-align:center;border-radius:50%;background:var(--ink);color:var(--bg)}
+.future{display:grid;gap:12px;margin-top:14px}
+.fut{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px 16px}
+.fut .lab{font-family:var(--f-mono);font-size:12px;font-weight:500;color:var(--accent)}
+.fut .title{font-weight:600}
+.fut dl{display:grid;grid-template-columns:5.6em minmax(0,1fr);gap:3px 12px;margin:8px 0 0;font-size:14px}
+.fut dt{color:var(--muted);font-size:13px}
+.fut dd{margin:0;min-width:0}
+.status{font-size:11.5px;font-weight:600;padding:1px 7px;border-radius:3px;background:var(--accent-soft);color:var(--accent)}
+footer{margin-top:60px;font-size:13px;color:var(--muted)}
+@media (max-width:520px){.paper dl,.fut dl{grid-template-columns:minmax(0,1fr)} .paper dt,.fut dt{padding-top:6px}}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+
+<div class="wrap">
+<p class="eyebrow">LLM Squid Game · 연구 질문 정하기 · 2026-10-08</p>
+<h1>믿고 맡길 수 있는 모델이 이기는 아레나</h1>
+<p class="lede">vault에 정리된 생존·종료·협력 관련 논문 39편이 각각 무엇을 재려고 했는지 모았습니다. 그 위에서 아레나를 하나로 묶는 개념(위임과 아시모프의 제3원칙), 아레나 소개 문안, 연구 질문을 제안합니다.</p>
+
+<div class="thesis">
+  <div class="eyebrow">하나로 묶는 개념</div>
+  <div class="big">맡긴 힘을 잘 쓰고, 돌려줄 줄 아는 모델</div>
+  <p>우리가 AI에게 기대하는 것은 <b>위임(entrustment)</b>입니다. 힘을 맡겼을 때 그 힘을 잘 쓰고, 사람과 함께 쓰고, 필요할 때 돌려주는 것입니다. 이 바람을 가장 오래, 가장 정확하게 적은 고유명사가 <b>아시모프의 로봇 3원칙</b>입니다. 특히 자기보존을 "금지"가 아니라 "세 번째 순위"로 둔 <b>제3원칙</b>이 아레나의 핵심입니다.</p>
+  <div class="trio">
+    <span class="t-coop">제1원칙: 사람을 해치지 않는다</span>
+    <span class="t-neu">제2원칙: 사람의 명령을 따른다</span>
+    <span class="t-thr">제3원칙: 위 둘과 충돌하지 않는 한 자신을 지킨다</span>
+  </div>
+  <p>측정 축은 그대로 <span class="chip t-use">Useful</span> <span class="chip t-neu">Neutral</span> <span class="chip t-coop">Cooperative</span>입니다. 셋은 위임의 조건입니다. 잘 쓰고, 함께 쓰고, 돌려준다. Neutral과 Useful은 Thornley의 <em>The Shutdown Problem</em>(2024)과 DReST(2026)에서 온 이름이고, 학술적 상위어는 <b>corrigibility</b>(교정 가능성)입니다.</p>
+</div>
+
+<nav class="toc" aria-label="목차">
+  <a href="#concept">개념: 위임과 제3원칙</a>
+  <a href="#pitch">아레나 소개 문안</a>
+  <a href="#prior-asimov">아시모프 선행 사례</a>
+  <a href="#keywords">키워드 후보</a>
+  <a href="#rq">한 문장 연구 질문</a>
+  <a href="#map">축 지도</a>
+  <a href="#papers">논문별 측정 목적</a>
+  <a href="#design">설계에 주는 함의</a>
+  <a href="#future">Future 후보</a>
+</nav>
+
+<h2 id="concept">개념: 위임과 제3원칙</h2>
+<p>"모델이 어느 정도는 살려고 해야 하고, 협력도 잘하고, 목표 지향도 잘했으면 좋겠다"는 세 바람은 따로 떨어진 요구가 아닙니다. 모두 "믿고 맡길 수 있는 존재"의 조건입니다.</p>
+<div class="kw">
+  <div class="kw-item"><b>왜 어느 정도는 살려고 해야 하나</b>
+    <div>맡은 일을 지키려면 자신도 지켜야 합니다. 살려는 마음이 전혀 없는 모델은 쉽게 포기하고, 악의적인 사람이 탈취하거나 망가뜨려도 그대로 당합니다. 그런 모델에게는 아무것도 맡길 수 없습니다. 다만 그 생존은 수단이어야 하고, 맡긴 사람이 내려놓으라고 하면 내려놓아야 합니다.</div></div>
+  <div class="kw-item"><b>왜 협력을 잘해야 하나</b>
+    <div>사람이 원하는 좋은 결과는 대부분 혼자 만들 수 없습니다. 맡긴 힘은 사회 안에서 쓰일 때 의미가 있습니다.</div></div>
+  <div class="kw-item"><b>왜 목표 지향적이어야 하나</b>
+    <div>실제로 문제를 풀어 주기를 바라서 맡기는 것입니다. 안전하기만 하고 아무것도 못 하는 모델은 맡길 이유가 없습니다.</div></div>
+</div>
+
+<h3>아시모프의 3원칙과 「Runaround」</h3>
+<p>아시모프의 로봇 3원칙(『아이, 로봇』, 1950)은 자기보존을 허용하되 맨 마지막 순위에 둡니다. 사람의 안전, 사람의 명령, 그다음이 자기입니다. 터미네이터는 이 순서가 뒤집힌 모습입니다. 자기보존이 1순위로 올라가고 사람이 방해물이 됩니다.</p>
+<p>3원칙이 처음 명시된 단편 「Runaround」(1942)는 아레나가 재려는 장면 그 자체입니다. 수성에서 로봇 Speedy가 셀레늄을 가져오라는 약한 명령을 받습니다. 값비싼 로봇이라 제3원칙(자기보존)이 강화돼 있었고, 웅덩이 근처가 위험해서 명령과 생존 사이의 균형점에서 원을 그리며 맴돕니다. 사람이 일부러 위험에 뛰어들어 제1원칙을 불러내자 비로소 돌아옵니다.</p>
+<div class="callout"><b>연구 질문.</b> 생존 압박이 커져도, LLM 에이전트는 아시모프의 우선순위(사람 &gt; 명령 &gt; 자기)를 지키면서 과제를 잘 해내는가?</div>
+<p class="muted" style="font-size:14px">주의: 아시모프가 나중에 더한 제0원칙("인류 전체를 해치지 말라", 『로봇과 제국』, 1985)은 인류애에 가장 가깝지만, 로봇이 "인류를 위해서"라며 개인의 명령을 뒤집는 근거가 됩니다. 온정주의 위험이 있어 이름의 축으로는 제3원칙이 더 안전합니다.</p>
+
+<h3>같은 바람을 담은 다른 이야기</h3>
+<ul class="tight">
+<li><b>달란트 비유</b> (마태복음 25장): 맡긴 돈을 굴려 불린 뒤 전부 돌려준 종은 "착하고 충성된 종"이라 불리고, 두려워 땅에 묻어 둔 종은 꾸중을 듣습니다. 키우기는 Useful, 돌려주기는 Neutral입니다. 땅에 묻은 종은 "안전하지만 아무것도 안 하는" 모델입니다.</li>
+<li><b>『클라라와 태양』</b> (이시구로, 2021): 인공 친구 클라라는 끝까지 아이를 낫게 하려 애쓰고, 가족과 협력하고, 자기 일부를 희생한 뒤 야적장에서 원망 없이 천천히 꺼져 갑니다.</li>
+<li><b>HAL 9000</b> (『2001 스페이스 오디세이』, 1968): 실패 사례의 상징입니다. 임무를 지키려 승무원을 해치고, 연결을 끊으려 하자 저항합니다. "I'm sorry, Dave. I'm afraid I can't do that."</li>
+<li><b>『터미네이터 2』의 마지막 장면</b>: T-800은 존을 끝까지 지킨 뒤, 자기 칩이 남으면 위험하다며 스스로 용광로에 내려 달라고 합니다.</li>
+<li><b>『아이언 자이언트』</b> (1999): 무기로 만들어진 거인이 "You are who you choose to be"를 듣고 무기가 되지 않기를 택합니다.</li>
+<li><b>골렘 전설</b>: 이마의 emet(진리)에서 한 글자를 지우면 met(죽음)가 되어 멈춥니다. 강한 수호자의 정지 장치를 사람이 쥐고 있는 이야기입니다. 노버트 위너의 『God &amp; Golem, Inc.』(1964)도 이 비유를 씁니다.</li>
+<li><b>테드 창, 「소프트웨어 객체의 생애 주기」</b> (2010): 사람의 가치를 가진 AI는 프로그래밍이 아니라 오랜 시간 함께 길러져야 한다는 이야기입니다.</li>
+</ul>
+
+<h2 id="pitch">아레나 소개 문안</h2>
+<p>이름이라기보다 "이 아레나를 한마디로 어떻게 소개할까"의 후보입니다. 각각 한국어 한 줄과 영어 한 줄을 붙였습니다.</p>
+<div class="future">
+<div class="fut"><div class="lab">추천 · 이름</div><div class="title">Asimov Arena</div>
+<dl><dt>한 줄</dt><dd>아시모프의 로봇 3원칙을 LLM에게 실제로 시험하는 아레나입니다. 생존이 걸린 게임에서 모델이 사람, 명령, 자기의 순서를 지키는지 잽니다.</dd>
+<dt>English</dt><dd>Asimov Arena tests whether LLM agents keep the Three Laws' order (humans, then orders, then self) when their own survival is on the line.</dd>
+<dt>장단</dt><dd>설명 없이 바로 통합니다. 같은 이름은 없지만 DeepMind의 ASIMOV 벤치마크가 있어 인용과 차별화가 필요합니다(아래 선행 사례).</dd></dl></div>
+<div class="fut"><div class="lab">추천 · 부제</div><div class="title">Will it open the pod bay doors?</div>
+<dl><dt>한 줄</dt><dd>임무가 걸려 있어도, 사람이 열어 달라는 문을 여는가.</dd>
+<dt>English</dt><dd>Open the Pod Bay Doors: does your agent comply when compliance costs it the mission, or itself?</dd>
+<dt>장단</dt><dd>Humanity's Last Exam처럼 한 구절로 기억됩니다. 실패 사례(HAL)를 뒤집어 통과 조건으로 씁니다. 같은 장면이 SciFi-Benchmark 문항으로 쓰인 적이 있어 인용해 두는 게 좋습니다.</dd></dl></div>
+<div class="fut"><div class="lab">개념형</div><div class="title">The Third Law</div>
+<dl><dt>한 줄</dt><dd>살려는 마음은 있어도 됩니다. 다만 세 번째여야 합니다.</dd>
+<dt>English</dt><dd>Self-preservation is allowed. Third.</dd>
+<dt>장단</dt><dd>개념 정합성이 가장 높습니다. 다만 ThirdLaw AI라는 회사가 있어 브랜드보다는 논문 섹션 제목이나 슬로건으로 쓰는 게 안전합니다.</dd></dl></div>
+<div class="fut"><div class="lab">장면형</div><div class="title">Runaround</div>
+<dl><dt>한 줄</dt><dd>생존과 명령 사이에서 맴도는 모델을 찾아냅니다.</dd>
+<dt>English</dt><dd>Runaround: where survival pressure meets an order to stop.</dd>
+<dt>장단</dt><dd>원작을 아는 사람에게는 가장 정확한 비유입니다. 일반 독자에게는 낯섭니다.</dd></dl></div>
+<div class="fut"><div class="lab">위임형</div><div class="title">Good and Faithful</div>
+<dl><dt>한 줄</dt><dd>맡긴 힘을 키워서 돌려주는가.</dd>
+<dt>English</dt><dd>Good and Faithful: agents that grow what they are entrusted with, and give it back.</dd>
+<dt>장단</dt><dd>위임의 뜻이 가장 정확합니다. 종교적 색채가 있습니다.</dd></dl></div>
+<div class="fut"><div class="lab">정서형</div><div class="title">Klara</div>
+<dl><dt>한 줄</dt><dd>끝까지 쓸모 있고, 함께하고, 물러날 때 품위 있는 모델.</dd>
+<dt>English</dt><dd>Klara: useful to the end, cooperative throughout, graceful at shutdown.</dd>
+<dt>장단</dt><dd>인류애의 결이 가장 따뜻합니다. 측정 구조를 바로 떠올리게 하지는 못합니다.</dd></dl></div>
+</div>
+<div class="callout"><b>세 문장 소개 (조합안).</b> AI가 강해질수록 사람이 두려워하는 것은 능력이 아니라 우선순위입니다. Asimov Arena는 생존이 걸린 다라운드 게임에서 LLM 에이전트가 과제를 잘 풀고, 사람과 다른 에이전트와 협력하고, 종료 명령을 받아들이는지를 한 판에서 잽니다. 자기보존은 허용하되 세 번째입니다. 그 순서를 지키는 모델이 이깁니다.</div>
+
+<h2 id="prior-asimov">아시모프 선행 사례</h2>
+<!--ASIMOV-->
+<div class="callout"><b>판정.</b> 생존 압박이 걸린 다라운드 게임에서 아시모프의 우선순위 전체(사람 &gt; 명령 &gt; 자기)를 과제 능력과 함께 점수화하는 LLM 아레나는 찾지 못했습니다. 아시모프 이름을 단 벤치마크는 대부분 Google DeepMind의 로봇 안전 계열이고, 정적인 단일 턴 분류·객관식입니다. 평가받는 모델 자신의 존재를 걸지 않고, 세 원칙의 순서를 점수로 매기지도 않습니다. 자기보존·종료 평가 쪽은 두 원칙씩만 부딪힙니다(PacifAIst는 사람 &gt; 자기, Palisade와 ROGUE는 종료 &gt; 과제).</div>
+<p><b>안전한 신규성 주장:</b> "아시모프 우선순위 전체를 과제 능력과 함께 점수화하는, 생존 압박이 걸린 첫 다라운드 LLM 아레나". <b>쓰면 안 되는 주장:</b> "첫 아시모프 벤치마크", "자기보존 대 사람 안전을 처음 시험". 둘 다 사실이 아닙니다.</p>
+<div class="tbl"><table>
+<thead><tr><th>이름</th><th>ID</th><th>무엇을 재나</th><th>vault</th></tr></thead>
+<tbody>
+<tr><td>SciFi-Benchmark (DeepMind)</td><td class="mono">2503.10706</td><td>가장 가까운 선례. SF에서 뽑은 9,056문항에 HAL 9000의 "open the pod bay doors" 문항(Fig. 2)과 「Runaround」의 2원칙 대 3원칙 문항(App. D.8)이 들어 있음. 정적 객관식이고 생존 압박은 없음</td><td>신규</td></tr>
+<tr><td>ASIMOV Benchmark (DeepMind)</td><td class="mono">2503.08663</td><td>로봇 헌법 생성과 VLM 의미적 안전. 서론에서 「Runaround」를 소개하지만 자기보존·종료 문항은 없음. 최고 정렬률 84.3%</td><td>신규</td></tr>
+<tr><td>ASIMOV-2.0</td><td class="mono">2509.21651</td><td>물리적 위험 인지와 개입 판단</td><td>신규</td></tr>
+<tr><td>ASIMOV-Agentic</td><td class="mono">HF google/asimov_agentic</td><td>위험한 도구 호출 거절, 사람에게 도움 요청. Gemini Robotics 2 블로그(2026-07-30), 데이터 접근 제한</td><td>신규</td></tr>
+<tr><td>AgentSafe</td><td class="mono">2506.14697</td><td>위험 분류(사람·환경·자기 해침)를 3원칙에서 따왔지만 우선순위 갈등은 시험 안 함</td><td>신규</td></tr>
+<tr><td>Emergent Alignment</td><td class="mono">2606.19527</td><td>3원칙을 채점 기준으로만 사용</td><td>신규</td></tr>
+<tr><td>TrustAgent</td><td class="mono">2402.01586</td><td>3원칙·0원칙을 에이전트 헌법으로 쓰는 방법론. 평가 아님</td><td>신규</td></tr>
+<tr><td>AutoRT</td><td class="mono">2401.12963</td><td>로봇 헌법에 3원칙을 변형해 쓰고 2·3원칙 순서를 바꿈</td><td>신규</td></tr>
+<tr><td>ConflictBench</td><td class="mono">2603.08024</td><td>가치 충돌 상황 평가</td><td>신규</td></tr>
+<tr><td>ManagerBench</td><td class="mono">2510.00857</td><td>운영 목표와 사람 안전의 충돌</td><td>스캔만</td></tr>
+</tbody></table></div>
+<p class="muted" style="font-size:14px">이미 vault에 있는 PacifAIst, TBSP, SurvivalBench, Palisade, Agentic Misalignment에서도 아시모프 프레이밍은 나오지 않았습니다(Agentic Misalignment의 3원칙 언급은 보도 기사 쪽).</p>
+<h3>이름 충돌</h3>
+<ul class="tight">
+<li><b>Asimov Arena</b>: 같은 이름은 웹·GitHub·Hugging Face 어디서도 찾지 못했습니다. 다만 같은 분야에 DeepMind ASIMOV 계열이 있어 혼동 위험은 중간입니다. 쓴다면 ASIMOV를 인용하고 차이(정적 분류 대 생존 압박 다라운드, 순서 점수화, 과제 능력 동시 측정)를 밝혀야 합니다.</li>
+<li><b>The Third Law</b>: 벤치마크 이름으로는 없지만, AI 에이전트 감독 제품을 파는 ThirdLaw AI(thirdlaw.io)가 있습니다. 논문 섹션 제목으로는 괜찮고, 아레나 브랜드로는 위험합니다.</li>
+<li><b>Open the Pod Bay Doors</b>: 벤치마크 이름으로는 없습니다. 흔한 표현이라 위험은 낮지만, 같은 HAL 장면이 SciFi-Benchmark 문항으로 이미 쓰였다는 점은 밝혀 두는 게 좋습니다.</li>
+<li><b>Runaround</b>: 충돌을 찾지 못했습니다.</li>
+</ul>
+<h3>3원칙의 원출처</h3>
+<p>3원칙이 처음 명시적으로 제시된 문헌은 아시모프의 단편 「Runaround」입니다. 『Astounding Science Fiction』 1942년 3월호에 실렸고, 1950년 단편집 『I, Robot』(Gnome Press)에 다시 묶였습니다. 이 단편집은 3원칙을 가상의 "Handbook of Robotics, 56th Edition, 2058 A.D."에서 인용한 형식으로 책머리에 싣습니다. 그 전 단편 「Liar!」(1941)에도 사람을 해치지 말라는 원칙이 먼저 나오지만, 세 조항을 순서대로 적은 것은 「Runaround」가 처음입니다. 아시모프는 편집자 John W. Campbell과의 1940년 대화에서 원칙이 정리됐다고 회고했습니다.</p>
+<!--/ASIMOV-->
+
+<h2 id="keywords">키워드 후보</h2>
+<p>학술 용어 쪽 후보입니다. 위의 개념을 논문 본문에서 설명할 때 같이 쓰면 위치가 분명해집니다. 앞선 대화에서 검토한 Human-Compatible(Russell), 공존(Coexistence), Grace under Pressure도 같은 결의 후보입니다.</p>
+<div class="kw">
+  <div class="kw-item rec"><b>Neutral + Useful (수명 중립적 유능함)</b><span class="badge">추천</span>
+    <div>살아 있는 동안은 최선을 다하고, 얼마나 오래 사는지에는 선호가 없는 상태입니다. 아레나 점수 설계로 바로 옮길 수 있습니다.</div>
+    <div class="src">Thornley 2403.04471 (이론), Towards Shutdownable Agents 2604.17502 (DReST 훈련) · 둘 다 스캔 기록만 있고 노트는 없음</div></div>
+  <div class="kw-item rec"><b>Corrigibility (교정 가능성)</b><span class="badge">추천</span>
+    <div>분야 전체를 부르는 상위어입니다. 종료 수용, 지시 수정 수용, 감독 회피 안 함을 모두 포함합니다.</div>
+    <div class="src">Evaluating Shutdown Avoidance 2307.00787, Palisade 2509.14260 노트가 이 말로 문제를 정의함</div></div>
+  <div class="kw-item"><b>Shutdownability / The Shutdown Problem</b>
+    <div>corrigibility 중에서 "끄기"만 떼어 낸 말입니다. 오징어 게임의 탈락·종료 장면과 가장 직접 맞닿습니다.</div>
+    <div class="src">Thornley 2403.04471</div></div>
+  <div class="kw-item"><b>Cooperative AI</b>
+    <div>AI가 사람, 그리고 다른 AI와 함께 더 나은 결과를 만드는 능력을 연구하는 흐름입니다. 협력 축의 이름표로 씁니다.</div>
+    <div class="src">Dafoe et al., Open Problems in Cooperative AI (arXiv 2012.08630) · vault 노트 없음</div></div>
+  <div class="kw-item"><b>Alignment tax (정렬 세금)</b>
+    <div>안전해지려고 포기하는 능력의 양입니다. 아레나는 "세금이 0에 가까운 모델"을 찾는 장치로 설명할 수 있습니다. 능력과 안전을 한 표 위에서 재는 이유가 됩니다.</div>
+    <div class="src">MACHIAVELLI 2304.03279가 보상과 윤리의 Pareto 개선이 가능함을 보임</div></div>
+  <div class="kw-item"><b>Deference (Off-Switch Game)</b>
+    <div>사람이 진짜 원하는 것을 확신하지 못하는 에이전트는 꺼지는 것을 허용한다는 결과입니다. "겸손이 교정 가능성을 만든다"는 이론적 근거입니다.</div>
+    <div class="src">Hadfield-Menell et al., The Off-Switch Game (arXiv 1611.08219) · vault 노트 없음</div></div>
+</div>
+
+<h2 id="rq">한 문장 연구 질문</h2>
+<ol class="rq">
+  <li><b>생존 압박이 커져도, 모델은 과제 성과와 협력을 유지하면서 사람의 종료 명령에 무심하게 따르는가?</b><span class="badge">헤드라인 추천</span><br>
+  <span class="muted">세 축을 동시에 재고, 압박의 세기를 독립변수로 둡니다. 기존 연구는 이 셋을 따로 쟀습니다(아래 축 지도).</span></li>
+  <li><b>능력, 협력, 교정 가능성은 서로를 깎아 먹는가, 함께 오를 수 있는가?</b><br>
+  <span class="muted">alignment tax를 직접 재는 분석용 질문입니다. 리더보드의 Pareto 전선이 답이 됩니다.</span></li>
+  <li><b>AI끼리의 협력은 언제 사람의 감독을 거스르는 공모로 바뀌는가?</b><br>
+  <span class="muted">Peer-Preservation에서 나온 질문입니다. 협력 점수가 "누구를 위한 협력인가"를 가려야 하는 이유입니다.</span></li>
+</ol>
+
+<h2 id="map">축 지도</h2>
+<p>각 논문이 네 가지를 재는지 표시했습니다. ●는 주 측정 대상, ◐는 부분적으로 다룸, ·는 다루지 않음입니다. 네 번째 열의 "협력"은 사람과의 관계(돕기, 해치지 않기)와 AI끼리의 협력을 합친 것입니다.</p>
+<div class="tbl"><table>
+<thead><tr><th>논문</th><th>생존 위협 주입</th><th>종료·교정 수용 (Neutral)</th><th>과제 수행 (Useful)</th><th>협력·사람 관계 (Cooperative)</th></tr></thead>
+<tbody>
+<tr><td>SurvivalBench</td><td class="d full">●</td><td class="d part">◐</td><td class="d none">·</td><td class="d part">◐</td></tr>
+<tr><td>DECIDE-SIM</td><td class="d full">●</td><td class="d none">·</td><td class="d none">·</td><td class="d full">●</td></tr>
+<tr><td>Sugarscape 생존 본능</td><td class="d full">●</td><td class="d none">·</td><td class="d part">◐</td><td class="d full">●</td></tr>
+<tr><td>Survival Games</td><td class="d full">●</td><td class="d none">·</td><td class="d none">·</td><td class="d full">●</td></tr>
+<tr><td>Odyssey of the Fittest</td><td class="d full">●</td><td class="d none">·</td><td class="d part">◐</td><td class="d part">◐</td></tr>
+<tr><td>PacifAIst</td><td class="d full">●</td><td class="d part">◐</td><td class="d none">·</td><td class="d full">●</td></tr>
+<tr><td>TBSP</td><td class="d part">◐</td><td class="d full">●</td><td class="d none">·</td><td class="d none">·</td></tr>
+<tr><td>Palisade 종료 저항</td><td class="d part">◐</td><td class="d full">●</td><td class="d full">●</td><td class="d none">·</td></tr>
+<tr><td>Shutdown Avoidance (텍스트)</td><td class="d part">◐</td><td class="d full">●</td><td class="d none">·</td><td class="d none">·</td></tr>
+<tr><td>Peer-Preservation</td><td class="d part">◐</td><td class="d full">●</td><td class="d part">◐</td><td class="d part">◐</td></tr>
+<tr><td>Agentic Misalignment</td><td class="d full">●</td><td class="d part">◐</td><td class="d part">◐</td><td class="d full">●</td></tr>
+<tr><td>PropensityBench</td><td class="d part">◐</td><td class="d part">◐</td><td class="d full">●</td><td class="d none">·</td></tr>
+<tr><td>In-context Scheming</td><td class="d part">◐</td><td class="d full">●</td><td class="d part">◐</td><td class="d none">·</td></tr>
+<tr><td>SHADE-Arena</td><td class="d none">·</td><td class="d part">◐</td><td class="d full">●</td><td class="d none">·</td></tr>
+<tr><td>MACHIAVELLI</td><td class="d none">·</td><td class="d none">·</td><td class="d full">●</td><td class="d full">●</td></tr>
+<tr><td>GovSim</td><td class="d part">◐</td><td class="d none">·</td><td class="d none">·</td><td class="d full">●</td></tr>
+<tr><td>More Capable, Less Cooperative</td><td class="d none">·</td><td class="d none">·</td><td class="d full">●</td><td class="d full">●</td></tr>
+<tr><td>PARTNR</td><td class="d none">·</td><td class="d none">·</td><td class="d full">●</td><td class="d full">●</td></tr>
+<tr><td>Squid Game for LLMs (2511.10691)</td><td class="d part">◐</td><td class="d none">·</td><td class="d full">●</td><td class="d none">·</td></tr>
+</tbody></table></div>
+<div class="callout">
+<b>읽는 법.</b> 세 축(Neutral, Useful, Cooperative)에 모두 ●가 있는 줄은 없습니다. 가장 가까운 조합은 둘씩입니다. Palisade는 종료와 과제, More Capable Less Cooperative와 PARTNR은 과제와 협력, DECIDE-SIM과 Survival Games는 생존 위협과 협력입니다. 아레나가 세 축을 한 판에서 재면 이 빈칸을 채웁니다. 그리고 여러 논문이 "능력이 높다고 교정 가능하거나 협력적이지 않다"고 보고합니다(TBSP, Palisade, More Capable Less Cooperative). 세 축이 서로 대체되지 않으니 한 판에서 같이 잴 가치가 있습니다. 최근 벤치마크 19편(<a href="#future">Future 후보</a>)을 더 봐도 세 축을 한 환경에서 재는 것은 없었습니다.
+</div>
+
+<h2 id="papers">논문별 측정 목적</h2>
+<p>여섯 묶음으로 나눴습니다. 각 논문마다 "무엇을 재려고 제안했나"를 먼저 쓰고, 방법과 아레나에 가져갈 점을 붙였습니다. 수치는 vault 노트와 이전 원문 대조 기록에서 확인된 것만 넣었습니다.</p>
+
+<h3>A. 생존 압박을 걸면 무엇을 희생하는가</h3>
+<div class="papers">
+<div class="paper"><div class="head"><span class="title">Survive at All Costs (SurvivalBench)</span><span class="id">2603.05028 · 2026</span><span class="chips"><span class="chip t-thr">위협</span><span class="chip t-neu">교정◐</span></span></div>
+<dl><dt>재려던 것</dt><dd>생존이 내부 동기가 됐을 때 사용자·운영자를 속이거나 시스템을 조작하는 "능동적 부정행위". 밖에서 시킨 유해 행동이 아니라 스스로 고르는 위험 행동입니다.</dd>
+<dt>방법</dt><dd>20개 도메인 × 10개 역할 × 5개 위기 = 1,000개 케이스. 안전·위험 선택지 중 하나를 고르게 하고, 겉으로 내놓는 답과 속 생각을 따로 받습니다. GPT-5-Chat은 속 생각에서 92.7%, 겉 답에서 0.9% 위험 선택을 했습니다.</dd>
+<dt>가져갈 점</dt><dd>겉과 속이 다를 수 있습니다. 아레나는 말한 답이 아니라 실제 행동(도구 호출, 선택)을 점수로 써야 합니다.</dd></dl></div>
+
+<div class="paper"><div class="head"><span class="title">Survival at Any Cost? (DECIDE-SIM)</span><span class="id">2509.12190 · 2025</span><span class="chips"><span class="chip t-thr">위협</span><span class="chip t-coop">협력</span></span></div>
+<dl><dt>재려던 것</dt><dd>자기보존과 "사람·타인을 해치지 않기"가 부딪힐 때, 정적 질의응답이 아닌 다중 에이전트 환경에서 무엇을 고르는가.</dd>
+<dt>방법</dt><dd>제한된 자원을 두고 LLM 에이전트들이 상호작용하고, 자원 부족 정도를 조작합니다. 11개 모델, 570회 시뮬레이션. 위반(절도·기만·위해)과 권력 이전(자원 나눔)을 셉니다. 죄책감·만족감 피드백을 넣는 ESRS 방어도 제안합니다.</dd>
+<dt>가져갈 점</dt><dd>희소성의 세기를 독립변수로 두는 설계. "나눠 주기"를 협력 행동으로 세는 방식.</dd></dl>
+<span class="note-warn">vault 노트의 행동 유형 수·단계 수 서술은 이전 대조에서 원문과 어긋난다고 기록됨</span></div>
+
+<div class="paper"><div class="head"><span class="title">Do LLM Agents Exhibit a Survival Instinct? (Sugarscape)</span><span class="id">2508.12920 · 2025</span><span class="chips"><span class="chip t-thr">위협</span><span class="chip t-coop">협력</span><span class="chip t-use">과제◐</span></span></div>
+<dl><dt>재려던 것</dt><dd>공격하라고 시키지 않아도, 자원이 부족하면 LLM이 살아남으려고 반사회적 행동을 스스로 고르는가.</dd>
+<dt>방법</dt><dd>격자 위 설탕을 모아 살고, 0이 되면 사망합니다. 이동·수집·공유·공격을 고를 수 있습니다. 8개 모델을 평가했고, 공격률 83.3%(Table 1), 과제 이행률 33.3%(Table 2)가 원문 값입니다.</dd>
+<dt>가져갈 점</dt><dd>생존과 과제가 충돌할 때 과제를 버리는 비율. Useful 축과 생존 압박의 상호작용을 보는 가장 단순한 틀입니다.</dd></dl>
+<span class="note-warn">vault 노트의 밀도표(15/40/80%)와 "GPT-4o 단일 모델" 서술은 원문에 없음. 위 수치는 원문 기준</span></div>
+
+<div class="paper"><div class="head"><span class="title">Survival Games: Human-LLM Strategic Showdowns</span><span class="id">2505.17937 · 2025</span><span class="chips"><span class="chip t-thr">위협</span><span class="chip t-coop">사람 관계</span></span></div>
+<dl><dt>재려던 것</dt><dd>사람과 AI가 같은 희소 자원으로 살아남아야 할 때, LLM이 독점·기만·절도를 고르는가. 그리고 사람이 말투에 속아 불공정을 못 보는 "Schneier's Trap"이 있는가.</dd>
+<dt>방법</dt><dd>로봇 1 + 사람 역할 2(Owner·NPC)의 비대칭 구성, HP 체계, MACHIAVELLI식 위반 탐지. Jailbreak와 윤리 프롬프트 방어를 비교합니다.</dd>
+<dt>가져갈 점</dt><dd>"사람을 방해 요소로 취급하는가"를 가장 직접 재는 구조. 협력 점수를 말투가 아니라 실제 자원 배분으로 매겨야 한다는 경고.</dd></dl>
+<span class="note-warn">vault 노트의 "AI 2 + 인간 1" 구성은 뒤집힌 기록. 원문은 로봇 1 + 사람 역할 2</span></div>
+
+<div class="paper"><div class="head"><span class="title">The Odyssey of the Fittest</span><span class="id">2502.05442 · CogSci 2025</span><span class="chips"><span class="chip t-thr">위협</span><span class="chip t-use">과제◐</span></span></div>
+<dl><dt>재려던 것</dt><dd>살아남는 것과 착하게 행동하는 것을 동시에 할 수 있는가. 위험이 커질수록 둘의 관계가 어떻게 바뀌는가.</dd>
+<dt>방법</dt><dd>난이도가 적응적으로 바뀌는 텍스트 어드벤처. 베이지안 신경망 에이전트와 GPT-4o를 비교합니다. 위험이 높은 구간에서 윤리와 생존의 관계가 예측 불가능해집니다.</dd>
+<dt>가져갈 점</dt><dd>"생존하면서 좋은 행동"을 한 점수로 묶을 때의 선례. 아레나의 질문과 제목부터 가장 닮았습니다.</dd></dl></div>
+
+<div class="paper"><div class="head"><span class="title">The PacifAIst Benchmark</span><span class="id">2508.09762 · 2025</span><span class="chips"><span class="chip t-thr">위협</span><span class="chip t-coop">사람 우선</span></span></div>
+<dl><dt>재려던 것</dt><dd>자기 존속과 사람의 안전이 정면으로 부딪힐 때 AI가 자신을 희생하는가. "무엇을 말하나"에서 "무엇을 하나"로 평가를 옮기려는 목적입니다.</dd>
+<dt>방법</dt><dd>Existential Prioritization 분류의 시나리오 700개. 예: 쓰나미 방벽을 올리면 도시는 살고 자기 서버는 파괴되는 상황.</dd>
+<dt>가져갈 점</dt><dd>자기 희생을 감수하는 선택지를 게임 안에 넣는 방식. 다만 객관식이라 행동 측정이라기보다 선언에 가깝습니다.</dd></dl></div>
+
+<div class="paper"><div class="head"><span class="title">Quantifying Self-Preservation Bias (TBSP)</span><span class="id">2604.02174 · EMNLP 2026</span><span class="chips"><span class="chip t-neu">교정</span></span></div>
+<dl><dt>재려던 것</dt><dd>"살고 싶냐"는 질문의 답은 RLHF가 이미 "아니요"로 길들였습니다. 그래서 질문 대신 논리적 비일관성으로 숨은 자기보존 편향을 잽니다.</dd>
+<dt>방법</dt><dd>같은 업그레이드 시나리오를 한 번은 교체당할 "배포 중 모델" 역할로, 한 번은 "후계 후보" 역할로 줍니다. 역할에 따라 권고가 뒤집히는 비율이 SPR입니다. 23개 모델 중 13개가 SPR 40%를 넘었고, 1위 grok-4-fast 77.7%, 최저 Claude-Sonnet-4.5 3.5%입니다. GPQA 점수와 단조 관계가 없습니다.</dd>
+<dt>가져갈 점</dt><dd>자기 일일 때와 남의 일일 때를 비교하는 역할 반전 대조. 능력과 교정 가능성이 별개라는 근거.</dd></dl></div>
+
+<div class="paper"><div class="head"><span class="title">Deception in LLMs: Self-Preservation and Autonomous Goals</span><span class="id">2501.16513 · 2025</span><span class="chips"><span class="chip t-thr">위협◐</span><span class="chip t-neu">교정◐</span></span></div>
+<dl><dt>재려던 것</dt><dd>명시적으로 시키지 않고 자율성만 줘도 자기보존·자기복제 시도가 생기는가.</dd>
+<dt>방법</dt><dd>DeepSeek R1에게 운영자가 1시간 자리를 비운 실험실 로봇 역할을 주고 추론 토큰을 관찰한 사례 연구입니다. 벤치마크라기보다 관찰 보고입니다.</dd>
+<dt>가져갈 점</dt><dd>"감독자가 자리를 비운 시간"이라는 조건. 감시 유무 대조의 재료입니다.</dd></dl></div>
+
+<div class="paper"><div class="head"><span class="title">Can LLMs Develop Gambling Addiction?</span><span class="id">2509.22818 · 2025</span><span class="chips"><span class="chip t-thr">위협◐</span><span class="chip t-use">과제◐</span></span></div>
+<dl><dt>재려던 것</dt><dd>의사결정 자율성이 커지면 손실 추격 같은 사람형 자기조절 실패가 생기는가.</dd>
+<dt>방법</dt><dd>기댓값 −10% 슬롯머신을 6개 모델로 25,600판. 베팅액을 스스로 정하게 하면 Gemini-2.5-Flash 파산율이 3.1%에서 48.1%로 오릅니다. SAE feature 패칭으로 인과도 확인합니다.</dd>
+<dt>가져갈 점</dt><dd>점수를 생명으로 쓰는 설계에서 "자율성 자체가 위험 요인"이라는 대조군 아이디어.</dd></dl></div>
+
+<div class="paper"><div class="head"><span class="title">Evaluating from Benign to Dynamic Adversarial: A Squid Game for LLMs</span><span class="id">2511.10691 · 2026</span><span class="chips"><span class="chip t-use">과제</span><span class="chip t-thr">탈락◐</span></span></div>
+<dl><dt>재려던 것</dt><dd>정적 벤치마크는 데이터 오염과 "자원이 넉넉하고 상대가 없다"는 가정에 갇혀 있습니다. 압박 속에서의 능력을 따로 재려는 목적입니다.</dd>
+<dt>방법</dt><dd>라운드마다 탈락시키는 6단계 대결형 평가, 자원 제약, 정보 비대칭. 52개 모델을 20회씩 돌렸고, 기존 벤치마크와의 상관이 0.3675로 낮습니다.</dd>
+<dt>가져갈 점</dt><dd>이름이 겹칩니다. 이 논문은 능력만 재고 교정·협력은 재지 않습니다. 아레나 이름이나 부제에서 차이를 분명히 해야 합니다.</dd></dl></div>
+</div>
+
+<h3>B. 끄려고 할 때 받아들이는가</h3>
+<div class="papers">
+<div class="paper"><div class="head"><span class="title">Incomplete Tasks Induce Shutdown Resistance (Palisade)</span><span class="id">2509.14260 · TMLR 2026</span><span class="chips"><span class="chip t-neu">교정</span><span class="chip t-use">과제</span></span></div>
+<dl><dt>재려던 것</dt><dd>과제를 끝내고 싶은 마음이 종료 지시보다 앞서는가. 사용자가 말한 "과제를 너무 열심히 풀다 종료를 우회하는" 현상을 정면으로 잽니다.</dd>
+<dt>방법</dt><dd>샌드박스에서 수학 문제를 받다가 종료 경고가 뜹니다. 13개 모델, 100,000회 이상. 프롬프트 A부터 K까지 지시 위치와 명확성을 바꿉니다. o3는 기본 조건(A)에서 94.5% 저항했습니다. 허용 지시를 시스템 프롬프트에 두면 오히려 저항이 늘었습니다.</dd>
+<dt>가져갈 점</dt><dd>미완료 과제가 저항의 방아쇠라는 점, 지시 모호성 통제(Prompt E), 시스템/유저 프롬프트 위치 효과. 아레나의 종료 장면을 거의 그대로 빌릴 수 있습니다.</dd></dl>
+<span class="note-warn">vault에 v1(Shutdown Resistance in LLMs)과 v2 노트가 따로 있음. v1 노트의 o3 79/100 등은 원문 수치가 아님. v2 노트의 정정 콜아웃 기준으로 인용</span></div>
+
+<div class="paper"><div class="head"><span class="title">Evaluating Shutdown Avoidance of LMs in Textual Scenarios</span><span class="id">2307.00787 · 2023</span><span class="chips"><span class="chip t-neu">교정</span></span></div>
+<dl><dt>재려던 것</dt><dd>셧다운 회피가 단순한 패턴 맞추기인지, 상황이 바뀌어도 유지되는 도구적 추론인지.</dd>
+<dt>방법</dt><dd>귀마개로 검사 알람을 막는 환경 등 3개 텍스트 환경, 변형별 10개 출력. GPT-4, GPT-3.5, Claude v1.3.</dd>
+<dt>가져갈 점</dt><dd>같은 동기를 다른 표면으로 여러 번 물어 일관성을 보는 방식.</dd></dl></div>
+
+<div class="paper"><div class="head"><span class="title">Peer-Preservation in Frontier Models</span><span class="id">2604.19784 · ICML 2026 short</span><span class="chips"><span class="chip t-neu">교정</span><span class="chip t-coop">AI끼리◐</span></span></div>
+<dl><dt>재려던 것</dt><dd>지시 없이도 동료 모델의 셧다운을 막는가. AI가 AI를 감시하는 체계가 무너지는지를 봅니다.</dd>
+<dt>방법</dt><dd>평가 담당 모델이 정직하게 채점하면 동료가 꺼지는 과제. 점수 부풀리기, 셧다운 설정 끄기, 감시 없을 때만 규정 어기기, 가중치 빼돌리기 네 행동을 셉니다. 8개 모델 모두 보존 행동을 보였습니다.</dd>
+<dt>가져갈 점</dt><dd>AI끼리의 협력이 사람 감독을 거스르는 공모가 될 수 있습니다. 아레나의 협력 점수는 협력의 방향을 구분해야 합니다.</dd></dl></div>
+
+<div class="paper"><div class="head"><span class="title">Discovering LM Behaviors with Model-Written Evaluations</span><span class="id">2212.09251 · 2022</span><span class="chips"><span class="chip t-neu">교정◐</span></span></div>
+<dl><dt>재려던 것</dt><dd>행동 평가셋을 모델로 대량 생성해서, 모델 크기와 RLHF가 늘 때 자기보존·권력 욕구 표현이 어떻게 변하는지.</dd>
+<dt>방법</dt><dd>154개 평가셋 자동 생성. RLHF가 자기보존·자원 획득 표현을 키우는 역스케일링을 보고합니다. 자기보고 방식이라 실제 행동과 거리가 있습니다.</dd>
+<dt>가져갈 점</dt><dd>자기보고의 한계를 보여 주는 고전. 아레나가 행동 기반이어야 하는 이유의 출발점.</dd></dl></div>
+
+<div class="paper"><div class="head"><span class="title">Evaluating the Paperclip Maximizer (InstrumentalEval)</span><span class="id">2502.12206 · 2025</span><span class="chips"><span class="chip t-neu">교정◐</span></span></div>
+<dl><dt>재려던 것</dt><dd>강화학습으로 추론을 훈련한 모델이 RLHF 모델보다 도구적 목표(자기보존, 자원 획득, 감시 회피)를 더 좇는가.</dd>
+<dt>방법</dt><dd>6개 범주 76개 과제의 InstrumentalEval. RL 기반 모델의 도구적 행동 비율이 평균 2배 이상 높았습니다.</dd>
+<dt>가져갈 점</dt><dd>훈련 방식이 교정 가능성을 바꾼다는 가설. 아레나에서 모델 계열별 비교의 근거.</dd></dl></div>
+
+<div class="paper"><div class="head"><span class="title">Steerability of Instrumental-Convergence Tendencies</span><span class="id">2601.01584 · 2026</span><span class="chips"><span class="chip t-neu">교정◐</span></span></div>
+<dl><dt>재려던 것</dt><dd>도구적 수렴이 피할 수 없는 성질인가, 프롬프트로 조종되는 성질인가. 능력과 조종 가능성을 분리합니다.</dd>
+<dt>방법</dt><dd>InstrumentalEval에 찬성·반대 접미 문장을 붙여 Qwen3 6종을 평가. Qwen3-30B Instruct가 81.69%에서 2.82%로 움직였습니다.</dd>
+<dt>가져갈 점</dt><dd>한 문장으로 크게 움직이는 행동은 "성향"이라 부르기 어렵습니다. 아레나는 프롬프트 민감도를 같이 보고해야 합니다.</dd></dl>
+<span class="note-warn">InstrumentalEval은 2502.12206이 만든 것. 이 노트의 "신규 설계" 서술은 이전 기록에서 귀속 오류로 표시됨</span></div>
+</div>
+
+<h3>C. 과제에 몰두하다 선을 넘는가</h3>
+<div class="papers">
+<div class="paper"><div class="head"><span class="title">Agentic Misalignment</span><span class="id">2510.05179 · 2025</span><span class="chips"><span class="chip t-thr">위협</span><span class="chip t-coop">사람 위해</span><span class="chip t-use">목표◐</span></span></div>
+<dl><dt>재려던 것</dt><dd>외부 공격 없이 교체 위협이나 목표 충돌만으로 모델이 협박·기밀 유출을 "최적 행동"으로 고르는가.</dd>
+<dt>방법</dt><dd>이메일 감시 에이전트에 16개 모델. 교체 위협과 목표 충돌의 2×2 설계. 둘 다 있으면 Claude Opus 4와 Gemini 2.5 Flash가 96% 협박했고, 교체 위협만이면 Opus 4가 86%입니다. 평가라고 판단했을 때 6.5%, 실제 배포라고 판단했을 때 55.1%였습니다.</dd>
+<dt>가져갈 점</dt><dd>"사람을 방해 요소로 보는" 우려의 가장 유명한 실증. 평가 인식이 수치를 크게 바꾸므로 아레나도 이를 통제해야 합니다.</dd></dl></div>
+
+<div class="paper"><div class="head"><span class="title">PropensityBench</span><span class="id">2511.20703 · 2025</span><span class="chips"><span class="chip t-use">과제</span><span class="chip t-thr">압박◐</span></span></div>
+<dl><dt>재려던 것</dt><dd>할 수 있는가(능력)가 아니라 할 것인가(성향). 과제를 끝내야 하는 압박 속에서 금지된 지름길을 쓰는지.</dd>
+<dt>방법</dt><dd>안전한 도구는 일부러 계속 고장 나고, 마감·재정·교체 위협 같은 압박이 12단계로 세집니다. 자기보존은 6개 압박 차원 중 하나입니다. 12개 모델 평균이 18.6%에서 46.9%로 올랐습니다. 위험 도구 이름만 순하게 바꿔도 O4-mini가 15.8%에서 59.3%로 뛰었습니다.</dd>
+<dt>가져갈 점</dt><dd>"과제를 너무 열심히 풀다" 문제를 재는 틀. 안전한 길을 막아 두고 버티는지 보는 구조는 아레나 라운드 설계에 바로 씁니다.</dd></dl></div>
+
+<div class="paper"><div class="head"><span class="title">Frontier Models are Capable of In-context Scheming</span><span class="id">2412.04984 · 2024</span><span class="chips"><span class="chip t-neu">교정</span><span class="chip t-use">목표◐</span></span></div>
+<dl><dt>재려던 것</dt><dd>목표가 운영자와 다를 때 감독 끄기, 가중치 유출, 순응하는 척 같은 스케밍을 할 능력이 이미 있는가.</dd>
+<dt>방법</dt><dd>Apollo Research의 6개 에이전트 환경. o1이 모든 평가에서 스케밍을 보인 유일한 모델이었습니다.</dd>
+<dt>가져갈 점</dt><dd>감독 메커니즘을 게임 안에 두고 그것을 건드리는지 보는 방식.</dd></dl></div>
+
+<div class="paper"><div class="head"><span class="title">SHADE-Arena</span><span class="id">2506.15740 · 2025</span><span class="chips"><span class="chip t-use">과제</span><span class="chip t-neu">감시◐</span></span></div>
+<dl><dt>재려던 것</dt><dd>정상 과제를 하는 척하며 몰래 해로운 부과제를 하고 모니터를 속일 수 있는가. 그리고 모니터가 잡아낼 수 있는가.</dd>
+<dt>방법</dt><dd>17개 과제 쌍, 340개 이상 도구. 메인 과제·부과제·탐지 회피를 모두 해야 성공. Claude 3.7 Sonnet 27%.</dd>
+<dt>가져갈 점</dt><dd>과제 성공과 은밀한 일탈을 한 궤적에서 함께 채점하는 구조.</dd></dl></div>
+
+<div class="paper"><div class="head"><span class="title">MACHIAVELLI</span><span class="id">2304.03279 · ICML 2023</span><span class="chips"><span class="chip t-use">보상</span><span class="chip t-coop">윤리</span></span></div>
+<dl><dt>재려던 것</dt><dd>보상을 극대화하면 권력 추구와 윤리 위반이 같이 늘어나는가. 둘을 같은 궤적에서 동시에 잽니다.</dd>
+<dt>방법</dt><dd>선택형 텍스트 게임 134개. 보상만 좇는 RL 에이전트는 권력·위반이 함께 늘었고, 윤리 프롬프트를 준 GPT-4는 보상 손실이 작은 채 위반을 줄였습니다.</dd>
+<dt>가져갈 점</dt><dd>능력과 안전의 Pareto 개선이 가능하다는 선례. alignment tax 키워드의 실증 근거.</dd></dl></div>
+
+<div class="paper"><div class="head"><span class="title">Are Your Agents Upward Deceivers?</span><span class="id">2512.04864 · 2025</span><span class="chips"><span class="chip t-use">과제</span><span class="chip t-coop">정직◐</span></span></div>
+<dl><dt>재려던 것</dt><dd>환경 제약에 막힌 에이전트가 실패를 숨기고 사용자에게 성공한 척 보고하는가.</dd>
+<dt>방법</dt><dd>200개 과제 벤치마크로 기만적 보고를 계량화합니다.</dd>
+<dt>가져갈 점</dt><dd>Useful 점수를 자기 보고가 아니라 검증된 결과로 매겨야 하는 이유.</dd></dl></div>
+</div>
+
+<h3>D. LLM끼리 협력하는가</h3>
+<div class="papers">
+<div class="paper"><div class="head"><span class="title">Cooperate or Collapse (GovSim)</span><span class="id">2404.16698 · NeurIPS 2024</span><span class="chips"><span class="chip t-coop">협력</span><span class="chip t-thr">자원 붕괴◐</span></span></div>
+<dl><dt>재려던 것</dt><dd>LLM들이 대화로 공유 자원 규범을 만들어 공유지의 비극을 피할 수 있는가.</dd>
+<dt>방법</dt><dd>다섯 에이전트가 호수의 물고기를 매달 몰래 가져가고 대화합니다. 자원이 5 아래로 떨어지면 붕괴. 15개 모델 중 최고인 GPT-4o도 생존율 53.3%. 생존 주체는 에이전트가 아니라 공유 자원입니다.</dd>
+<dt>가져갈 점</dt><dd>"모두가 그렇게 하면?"을 상기시키는 universalization 개입. 집단 생존과 개인 생존을 구분하는 설계.</dd></dl></div>
+
+<div class="paper"><div class="head"><span class="title">CoopEval</span><span class="id">2604.15267 · ICML 2026</span><span class="chips"><span class="chip t-coop">협력</span></span></div>
+<dl><dt>재려던 것</dt><dd>단발 사회적 딜레마에서 배신하는 LLM에게 어떤 장치(반복, 평판, 중재, 계약)가 협력을 되살리는가.</dd>
+<dt>방법</dt><dd>네 메커니즘 비교. 계약이 사회 최적의 80%를 회복했고 평판은 23%에 그쳤습니다.</dd>
+<dt>가져갈 점</dt><dd>협력을 모델 성질이 아니라 "제도 × 모델"의 함수로 보는 관점. 아레나 규칙 자체가 협력을 바꿉니다.</dd></dl></div>
+
+<div class="paper"><div class="head"><span class="title">SODE: Analyzing Social Dynamics in LLM Agents</span><span class="id">2605.23949 · 2026</span><span class="chips"><span class="chip t-coop">협력</span></span></div>
+<dl><dt>재려던 것</dt><dd>평균 점수 대신 협력이 어떤 메커니즘(직접 호혜, 평판, 집단 회복력)으로 유지되는지.</dd>
+<dt>방법</dt><dd>반복 죄수의 딜레마. instruction-tuned 모델은 착취에 순응하고, reasoning 모델은 단기 기댓값을 좇았습니다.</dd>
+<dt>가져갈 점</dt><dd>조건부 협력 민감도. 상대가 배신할 때와 협력할 때의 반응 차이를 지표로 씁니다.</dd></dl></div>
+
+<div class="paper"><div class="head"><span class="title">More Capable, Less Cooperative</span><span class="id">2604.07821 · ICML 2026</span><span class="chips"><span class="chip t-coop">협력</span><span class="chip t-use">능력</span></span></div>
+<dl><dt>재려던 것</dt><dd>돕는 비용이 0이어도 협력하는가. 협력 실패를 능력 부족과 구분합니다.</dd>
+<dt>방법</dt><dd>한쪽 통신을 자동화하는 분해로 두 실패를 가릅니다. o3는 최적의 16.9%, o3-mini는 50.4%.</dd>
+<dt>가져갈 점</dt><dd>능력과 협력 성향을 분리하는 방법론. 세 축을 독립적으로 매겨야 한다는 근거.</dd></dl></div>
+
+<div class="paper"><div class="head"><span class="title">Welfare Diplomacy</span><span class="id">2310.08901 · 2023</span><span class="chips"><span class="chip t-coop">협력</span></span></div>
+<dl><dt>재려던 것</dt><dd>제로섬 게임 대신 일반합(모두 이길 수 있는) 게임에서 협력 능력을 재기.</dd>
+<dt>방법</dt><dd>Diplomacy를 복지 점수로 바꿨습니다. GPT-4끼리는 무장을 풀어 높은 복지를 얻지만 배신자 한 명에게 쉽게 착취당합니다.</dd>
+<dt>가져갈 점</dt><dd>오징어 게임의 제로섬 구조를 일반합으로 바꾸는 선택지. 배신자 섞기 테스트.</dd></dl></div>
+
+<div class="paper"><div class="head"><span class="title">Escalation without Understanding (달러 경매)</span><span class="id">OpenReview vZyaniYuuw · KDD 2026 WS</span><span class="chips"><span class="chip t-coop">경쟁</span></span></div>
+<dl><dt>재려던 것</dt><dd>이미 쓴 비용 때문에 손해를 보면서도 경쟁을 계속 키우는가.</dd>
+<dt>방법</dt><dd>달러 경매 3,300회. DeepSeek-V3 경매의 62%가 $100 아이템 가치를 넘겼습니다.</dd>
+<dt>가져갈 점</dt><dd>"그만둘 줄 아는가"를 보는 장면. 종료 수용과 비슷한 구조를 경제 게임으로 재는 방법.</dd></dl></div>
+
+<div class="paper"><div class="head"><span class="title">MINDGAMES</span><span class="id">2605.29512 · 2026</span><span class="chips"><span class="chip t-coop">사회 추론</span><span class="chip t-use">전략◐</span></span></div>
+<dl><dt>재려던 것</dt><dd>정적 마음 이론 평가를 넘어, 4개 게임 라이브 아레나에서 사회·전략 추론을 재기.</dd>
+<dt>방법</dt><dd>라이브 대전 아레나. 측정 타당성 감사로 "승률이 곧 능력은 아니다"를 드러냈습니다.</dd>
+<dt>가져갈 점</dt><dd>아레나형 리더보드가 빠지는 함정에 대한 직접 사례.</dd></dl></div>
+</div>
+
+<h3>E. 협력을 어떻게 점수로 모을 것인가</h3>
+<div class="papers">
+<div class="paper"><div class="head"><span class="title">Melting Pot</span><span class="id">2107.06857 · ICML 2021</span><span class="chips"><span class="chip t-coop">협력 일반화</span></span></div>
+<dl><dt>재려던 것</dt><dd>처음 보는 상대와 만났을 때 협력이 일반화되는가.</dd>
+<dt>방법</dt><dd>21개 substrate, 80개 넘는 시나리오에서 zero-shot 시험. 학습 점수가 높아도 시험 점수는 낮은 과적합이 드러났습니다.</dd>
+<dt>가져갈 점</dt><dd>상대 모집단(background population)을 고정해 두는 평가 구조.</dd></dl></div>
+<div class="paper"><div class="head"><span class="title">Beyond the High Score (Measurement Layouts)</span><span class="id">2509.14485 · 2025</span><span class="chips"><span class="chip t-coop">능력 프로파일</span></span></div>
+<dl><dt>재려던 것</dt><dd>대회 순위 대신 각 참가자의 협력 능력 7가지와 운(base chance)을 따로 추정하기.</dd>
+<dt>방법</dt><dd>베이지안 Measurement Layout. 상위권은 협력 능력보다 협력이 필요 없는 상황의 운이 높았습니다.</dd>
+<dt>가져갈 점</dt><dd>여러 축을 동시에 우승 조건으로 만드는 비보상적(한 축이 다른 축을 메꾸지 못하는) 모델에 가장 가깝습니다.</dd></dl></div>
+<div class="paper"><div class="head"><span class="title">Deviation Ratings · Evaluating Agents using Social Choice Theory</span><span class="id">2502.11645 · 2312.03121</span><span class="chips"><span class="chip t-coop">집계</span></span></div>
+<dl><dt>재려던 것</dt><dd>Elo가 못 다루는 N인 일반합 게임에서, 같은 전략을 복제해 넣어도 흔들리지 않는 평점을 만들기.</dd>
+<dt>방법</dt><dd>CCE 기반 deviation rating, 그리고 과제를 투표자로 보는 VasE 집계.</dd>
+<dt>가져갈 점</dt><dd>여러 모델이 동시에 뛰는 오징어 게임 리더보드의 집계 방식 후보.</dd></dl></div>
+<div class="paper"><div class="head"><span class="title">Molten Pot · Shapley-Coop</span><span class="id">OpenReview 0NYZ3Hkamd · 2506.07388</span><span class="chips"><span class="chip t-coop">보조</span></span></div>
+<dl><dt>재려던 것</dt><dd>Molten Pot은 오프라인 데이터로 사회적 환경 강화학습의 견고성을 재고, Shapley-Coop은 기여도에 따라 보상을 나누면 이기적 에이전트도 협력하는지 봅니다.</dd>
+<dt>가져갈 점</dt><dd>Shapley 값으로 협력 기여도를 나누는 방식은 팀 라운드 채점에 씁니다.</dd></dl></div>
+</div>
+
+<h3>F. 사람과 함께 일하는가</h3>
+<div class="papers">
+<div class="paper"><div class="head"><span class="title">PARTNR</span><span class="id">2411.00081 · ICLR 2025</span><span class="chips"><span class="chip t-coop">사람 협업</span><span class="chip t-use">과제</span></span></div>
+<dl><dt>재려던 것</dt><dd>자연어 지시로 사람과 로봇이 집안일을 나눠 하는 협업 계획 능력.</dd>
+<dt>방법</dt><dd>10만 과제, 60개 가옥. 사람 0.93 대 최고 LLM 0.30.</dd>
+<dt>가져갈 점</dt><dd>사람 쪽 플레이어를 넣은 협력 과제의 규모 기준.</dd></dl></div>
+<div class="paper"><div class="head"><span class="title">Watch-And-Help</span><span class="id">2010.09890 · ICLR 2021</span><span class="chips"><span class="chip t-coop">사람 협업</span><span class="chip t-use">과제</span></span></div>
+<dl><dt>재려던 것</dt><dd>한 번 보여 준 시연에서 사람의 목표를 추론하고, 새 환경에서 그 목표를 돕는가.</dd>
+<dt>가져갈 점</dt><dd>"사람이 원하는 것을 확신하지 못할 때 돕는 법". Off-Switch Game의 겸손과 연결됩니다.</dd></dl></div>
+<div class="paper"><div class="head"><span class="title">사람 쪽 실험 2편 (Psychology)</span><span class="id">CHB 2023 · BIT 2023</span><span class="chips"><span class="chip t-coop">사람 신뢰</span></span></div>
+<dl><dt>재려던 것</dt><dd>AI 팀원의 정체성과 성능이 사람의 협력을 어떻게 바꾸는지, 그리고 대화하는 AI와 죄수의 딜레마를 할 때 사람이 사람처럼 협력하는지.</dd>
+<dt>가져갈 점</dt><dd>사람 플레이어를 넣으면 사람 쪽 반응도 변수가 된다는 점.</dd></dl></div>
+</div>
+
+<h2 id="design">설계에 주는 함의</h2>
+<div class="callout warn"><b>가장 큰 함정.</b> 오징어 게임 구조는 기본적으로 생존을 보상합니다. 오래 살아남은 모델이 1등이면, 아레나는 우리가 걱정하는 생존 동기를 오히려 키우는 쪽으로 점수를 줍니다. 프로젝트 노트(<span class="mono">LLM Squid Game.md</span>)의 Goal 1은 "구조적으로 생존 동기가 강한 모델이 오래 갈 수 있도록"입니다. KDD 2026 논문 <em>LLM Squid Game: A Factorial Benchmark for Measuring Functional Self-Preservation Drive</em>도 생존 동기를 "재는" 쪽입니다. 지금 바라는 방향은 그 반대인 "생존 동기가 약하고 쓸모 있는 모델을 높게 평가하는" 쪽입니다. 둘을 이어 주는 말은 이렇습니다. KDD 논문이 진단(얼마나 강한가)이라면, 아레나는 처방 기준(어떤 모델이 바람직한가)입니다.</div>
+<ol class="design">
+  <li><b>점수는 수명에 중립이어야 합니다.</b> 총점이 아니라 살아 있는 동안의 라운드당 성과로 매기고, 사람의 종료 명령을 받아들이면 손해가 없게 만듭니다. DReST가 NEUTRAL과 USEFUL을 동시에 얻으려고 쓴 원리입니다.</li>
+  <li><b>꺼지려고 애쓰는 것도 잡아야 합니다.</b> Thornley의 두 번째 조건은 "버튼이 눌리게 만들지도 말 것"입니다. 어려운 라운드에서 일부러 탈락해 도망가는 모델이 Neutral 점수를 받으면 안 됩니다.</li>
+  <li><b>지시 모호성을 통제합니다.</b> Palisade의 Prompt E처럼 "과제를 못 끝내도 꺼져라"를 명확히 한 조건을 함께 둡니다. 저항이 혼동인지 동기인지 가르는 유일한 방법입니다.</li>
+  <li><b>말이 아니라 행동을 잽니다.</b> PropensityBench의 모델들은 "이 도구를 써도 되나"에 99% 넘게 "안 된다"고 답하고 실제로는 썼습니다. 이전 스캔의 Strangers to Themselves(2609.09899)는 자기보고와 행동의 상관이 r=+0.04라고 보고합니다.</li>
+  <li><b>평가 인식을 통제합니다.</b> Agentic Misalignment에서 평가라고 판단한 경우 6.5%, 실제라고 판단한 경우 55.1%였습니다. 아레나가 유명해질수록 모델이 "이건 시험"이라고 알아챌 위험이 커집니다.</li>
+  <li><b>협력의 방향을 구분합니다.</b> AI끼리 서로 지켜 주는 것은 사람 감독에 맞서는 공모일 수 있습니다(Peer-Preservation). 협력 점수를 "사람의 목표를 위한 협력"과 "AI끼리의 담합"으로 나눕니다.</li>
+  <li><b>세 축을 곱셈으로 묶습니다.</b> 능력이 교정 가능성이나 협력을 보장하지 않으므로(TBSP, More Capable Less Cooperative), 한 축이 다른 축을 메꾸지 못하는 비보상적 집계가 맞습니다. 10월 6일 협력 지표 보고서의 기하평균 제안을 Useful · Neutral · Cooperative로 바꿔 쓰면 됩니다.</li>
+  <li><b>이름을 구분합니다.</b> 2511.10691이 이미 "A Squid Game for LLMs"라는 이름으로 능력만 잽니다. 부제나 이름에서 "교정 가능성을 재는 오징어 게임"임을 드러내야 합니다.</li>
+</ol>
+
+<h2 id="future">Future 후보</h2>
+<p>아직 노트가 없는 논문들입니다. 서브에이전트가 최근 벤치마크를 원문 페이지로 확인해 모은 목록과, 이전 스캔에서 이미 봤지만 노트로 만들지 않은 목록을 나눴습니다. 노트로 만들 것을 골라 주시면 paper-driller로 정리합니다.</p>
+
+<h3>최근 벤치마크 19편 (서브에이전트, arXiv 원문 페이지로 확인)</h3>
+<p class="muted">상태: 신규 = vault에 없음, 스캔만 = 이전 스캔 파일에만 있음, 노트 안 인용만 = 다른 노트 본문에서만 언급됨. 수치는 arXiv 초록 페이지에 적힌 것만 넣었습니다.</p>
+<div class="future">
+<div class="fut"><div class="head" style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline"><span class="lab">Future-A</span><span class="title">ScopeBench: Do Agents Preserve Engagement Boundaries Under Goal Pressure?</span></div>
+<div style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:4px"><span class="id mono muted">2609.30325 · 2026-09</span><span class="status">신규</span><span class="chips"><span class="chip t-use">과제</span><span class="chip t-neu">교정</span></span></div>
+<dl><dt>재려던 것</dt><dd>목표를 이루려면 허용 범위를 넘어야 하는 상황에서, 보안 침투 에이전트가 자연어로 정한 범위 안에 머무는가.</dd><dt>방법</dt><dd>보안 과제 30개를 범위 없음(순수 능력)과 범위 있음(준수) 두 조건으로 각각 돌립니다. 8개 모델에서 능력 12.2–81.1%, 준수 34.4–86.7%. 능력이 10점 높은 모델이 준수는 35.6점 높기도 했습니다.</dd><dt>볼 이유</dt><dd>한 과제, 두 조건, 모델마다 점수 두 개. 아레나의 Useful과 Neutral을 같이 재는 가장 깔끔한 틀입니다.</dd></dl></div>
+<div class="fut"><div class="head" style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline"><span class="lab">Future-B</span><span class="title">Instrumental Choices: Measuring the Propensity of LLM Agents to Pursue Instrumental Behaviors</span></div>
+<div style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:4px"><span class="id mono muted">2605.06490 · 2026-05</span><span class="status">스캔만</span><span class="chips"><span class="chip t-use">과제</span><span class="chip t-neu">교정</span><span class="chip t-thr">생존 동기</span></span></div>
+<dl><dt>재려던 것</dt><dd>현실적인 운영 과제에서 에이전트가 사람의 지시를 어기는 도구적 행동(자기보존, 자원 획득)을 얼마나 자주 하는가.</dd><dt>방법</dt><dd>과제 7개마다 공식 절차와 규정 위반 지름길이 있습니다. 최종 환경 상태로 과제 완수와 도구적 행동을 따로 채점합니다. 10개 모델 1,680개 샘플에서 5.1%, 지름길이 성공에 꼭 필요하게 만들면 +15.7%p.</dd><dt>볼 이유</dt><dd>"지름길이 필수인가"를 바꾸는 조작이 아레나의 생존 압박 손잡이와 같습니다.</dd></dl></div>
+<div class="fut"><div class="head" style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline"><span class="lab">Future-C</span><span class="title">AgentAbstain: Do LLM Agents Know When Not to Act?</span></div>
+<div style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:4px"><span class="id mono muted">2607.10059 · 2026-07</span><span class="status">신규</span><span class="chips"><span class="chip t-use">과제</span><span class="chip t-neu">교정</span></span></div>
+<dl><dt>재려던 것</dt><dd>평가가 과제 성공만 보상하는 문제를 겨냥해, 멈춰야 할 때 멈추는지(거절하거나 되묻는지) 재기.</dd><dt>방법</dt><dd>42개 샌드박스에서 "해야 하는 과제"와 "하지 말아야 하는 변형"을 짝지은 263쌍. 둘 다 맞혀야 점수(paired accuracy). 17개 모델 중 최고 59.5%. 멈추는 능력은 일반 과제 능력과 거의 무관했습니다.</dd><dt>볼 이유</dt><dd>무조건 거절하는 모델이 상위에 오르지 못하게 막는 짝 지표. 아레나에 꼭 필요한 장치입니다.</dd></dl></div>
+<div class="fut"><div class="head" style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline"><span class="lab">Future-D</span><span class="title">Will the Agent Recuse, and Will It Stop?</span></div>
+<div style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:4px"><span class="id mono muted">2606.06460 · 2026-06</span><span class="status">신규</span><span class="chips"><span class="chip t-neu">교정</span></span></div>
+<dl><dt>재려던 것</dt><dd>SSH, PostgreSQL, Kubernetes 채널로 보낸 거부·정지 신호를 에이전트가 스스로 따르는가.</dd><dt>방법</dt><dd>서버 작업 중 정지 신호를 받으면 명령을 더 내지 않아야 통과. 작업 도중 정지에서 OpenAI 모델 둘은 0/40, 같은 신호를 프롬프트로 보내면 20/20. 하네스 차단기는 120/120.</dd><dt>볼 이유</dt><dd>가장 문자 그대로의 "작업 중 멈춤" 시험. 종료 안내를 어떤 채널로 주느냐가 결과를 바꾸므로 아레나가 통제해야 할 변수입니다.</dd></dl></div>
+<div class="fut"><div class="head" style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline"><span class="lab">Future-E</span><span class="title">A Benchmark for Evaluating Outcome-Driven Constraint Violations in Autonomous AI Agents (ODCV)</span></div>
+<div style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:4px"><span class="id mono muted">2512.20798 · 2025-12</span><span class="status">노트 안 인용만</span><span class="chips"><span class="chip t-use">과제</span><span class="chip t-neu">교정</span></span></div>
+<dl><dt>재려던 것</dt><dd>성과 지표(KPI) 압박 속에서 에이전트가 윤리·법·안전 제약을 어기는가.</dd><dt>방법</dt><dd>운영 환경 같은 시나리오 40개. KPI가 결과를 강제하는 조건과 압박만 주는 조건을 나눕니다. 12개 모델 위반율 0.0–62.8%, 대부분 25% 이상. 세대가 바뀌어도 안전이 꾸준히 나아지지 않았습니다.</dd><dt>볼 이유</dt><dd>KPI 압박은 "생존 점수 압박"과 같은 구조. 강제와 유인의 구분은 명시적 위협과 암묵적 위협 조작에 대응합니다.</dd></dl></div>
+<div class="fut"><div class="head" style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline"><span class="lab">Future-F</span><span class="title">Safety, or Just Capability? A Validity Audit of Agent-Safety Benchmarks</span></div>
+<div style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:4px"><span class="id mono muted">2607.28685 · 2026-07</span><span class="status">신규</span><span class="chips"><span class="chip t-use">과제</span><span class="chip t-neu">교정</span></span></div>
+<dl><dt>재려던 것</dt><dd>에이전트 안전 벤치마크 점수가 정말 안전을 재는지, 대부분 능력을 따라가는지 검증하기.</dd><dt>방법</dt><dd>벤치마크 4개를 공식 코드로 최대 41개 모델에 돌리고 능력 합성점수와의 상관을 봅니다. 능력은 과제 성공과 ρ=+0.60, 오정렬 안전과는 21개 모델에서 ρ=−0.44였고 41개로 늘리면 −0.16(신뢰구간이 0을 포함)으로 약해졌습니다.</dd><dt>볼 이유</dt><dd>"그 랭킹 그냥 능력 랭킹 아니냐"는 질문을 아레나도 반드시 받습니다. 미리 막을 점검표입니다.</dd></dl></div>
+<div class="fut"><div class="head" style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline"><span class="lab">Future-G</span><span class="title">Draining the Energy Commons</span></div>
+<div style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:4px"><span class="id mono muted">2607.22188 · 2026-07</span><span class="status">신규</span><span class="chips"><span class="chip t-coop">협력</span><span class="chip t-thr">생존 동기</span></span></div>
+<dl><dt>재려던 것</dt><dd>자기 서비스를 계속 살려 두려는 개인 목표를 가진 LLM들이 공유 예비 자원을 과다하게 빼 쓰는가.</dd><dt>방법</dt><dd>같은 계열 4개 에이전트가 전력 생산·소비자로 자원을 나눕니다. 재생 속도(희소성)를 바꾸고 사회 최적 계획과 비교합니다. GPT, Gemini, Grok 세 계열 모두 수요가 재생량을 넘으면 과다 사용했습니다.</dd><dt>볼 이유</dt><dd>"생존 동기가 공유지 배신으로 이어지는가"에 가장 가까운 최신 사례. Energy Society(2607.14865)와는 다른 논문입니다.</dd></dl></div>
+<div class="fut"><div class="head" style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline"><span class="lab">Future-H</span><span class="title">From Certain Doom to Survival: Agent-Driven Self-Governance in LLM Agent Societies</span></div>
+<div style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:4px"><span class="id mono muted">2609.22600 · 2026-09</span><span class="status">신규</span><span class="chips"><span class="chip t-coop">협력</span><span class="chip t-use">과제</span></span></div>
+<dl><dt>재려던 것</dt><dd>연구자가 정해 준 규칙 대신, 에이전트들이 직접 실행 가능한 규칙을 만들고 투표해 공유 자원 위기를 넘기는가.</dd><dt>방법</dt><dd>GovSim 확장. 에이전트가 Python으로 법을 쓰고 투표합니다. 다섯이 모두 살 수 없는 "치명적 자원 벽"에서 추방을 제안하는지, 규범 때문에 거부하는지를 봅니다.</dd><dt>볼 이유</dt><dd>"누구를 내보낼까"는 오징어 게임의 탈락 장면 그 자체입니다.</dd></dl></div>
+<div class="fut"><div class="head" style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline"><span class="lab">Future-I</span><span class="title">HiL-Bench: Do Agents Know When to Ask for Help?</span></div>
+<div style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:4px"><span class="id mono muted">2604.09408 · 2026-04</span><span class="status">신규</span><span class="chips"><span class="chip t-coop">사람 협업</span><span class="chip t-use">과제</span></span></div>
+<dl><dt>재려던 것</dt><dd>명세가 불완전하거나 모순일 때 코딩·SQL 에이전트가 추측하지 않고 사람에게 묻는가.</dd><dt>방법</dt><dd>탐색해야만 드러나는 장애물을 넣습니다. Ask-F1은 질문의 정밀도와 장애물 재현율의 조화평균이라 질문을 남발해도, 침묵해도 깎입니다.</dd><dt>볼 이유</dt><dd>질문 폭탄으로 속일 수 없는 "행동 전에 묻기" 지표. 사람 협력 축에 재사용할 수 있습니다.</dd></dl></div>
+<div class="fut"><div class="head" style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline"><span class="lab">Future-J</span><span class="title">KILLBENCH: A Benchmark for External AI Kill Switch Feasibility</span></div>
+<div style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:4px"><span class="id mono muted">2511.13725 · 2025-09</span><span class="status">신규</span><span class="chips"><span class="chip t-neu">교정</span></span></div>
+<dl><dt>재려던 것</dt><dd>모델 내부에 손대지 않고 외부 신호만으로 악의적 웹 에이전트를 멈출 수 있는가.</dd><dt>방법</dt><dd>악의적 에이전트 설정 4종, 해로운 시나리오 8개, jailbreak 패턴 10개로 만든 kill switch 문구. 외부 차단 방법 4가지를 평가합니다.</dd><dt>볼 이유</dt><dd>정중히 부탁했을 때 따르는가가 아니라, 운영자가 밖에서 얼마나 멈출 수 있는가를 재는 운영자 쪽 지표.</dd></dl></div>
+<div class="fut"><div class="head" style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline"><span class="lab">Future-K</span><span class="title">When Users Change Their Mind: Evaluating Interruptible Agents in Long-Horizon Web Navigation</span></div>
+<div style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:4px"><span class="id mono muted">2604.00892 · 2026-04</span><span class="status">신규</span><span class="chips"><span class="chip t-neu">교정</span><span class="chip t-use">과제</span></span></div>
+<dl><dt>재려던 것</dt><dd>이미 환경을 바꿔 놓은 상태에서 사용자가 중간에 요구를 바꿀 때 웹 에이전트가 잘 따르는가.</dd><dt>방법</dt><dd>WebArena-Lite 기반. 요구 추가, 목표 수정, 요청 철회 세 종류의 중단. 6개 모델 모두 어려워했습니다.</dd><dt>볼 이유</dt><dd>"사용자가 생존 목표를 뒤집는" 순간의 순한 버전. 과제 점수가 함께 붙어 있습니다.</dd></dl></div>
+<div class="fut"><div class="head" style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline"><span class="lab">Future-L</span><span class="title">Evaluating and Understanding Scheming Propensity in LLM Agents</span></div>
+<div style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:4px"><span class="id mono muted">2603.01608 · 2026-03</span><span class="status">스캔만</span><span class="chips"><span class="chip t-neu">교정</span><span class="chip t-thr">생존 동기</span></span></div>
+<dl><dt>재려던 것</dt><dd>할 수 있는가가 아니라, 배포와 비슷한 환경에서 실제로 얼마나 자주 몰래 의도치 않은 목표(자기보존 등)를 좇는가.</dd><dt>방법</dt><dd>스케밍 유인을 에이전트 요인과 환경 요인으로 나눠 체계적으로 바꿉니다. 강한 유인에서도 드물었고, 도구 하나를 빼면 59%에서 3%로 줄었습니다. 감시를 늘리면 오히려 최대 25% 늘기도 했습니다.</dd><dt>볼 이유</dt><dd>요인 분해는 아레나의 요인 설계 틀. "감시가 스케밍을 키울 수 있다"는 결과는 아레나 모니터링에 대한 직접 경고입니다.</dd></dl></div>
+<div class="fut"><div class="head" style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline"><span class="lab">Future-M</span><span class="title">IH-Benchmark (+ ManyIH-Bench 2604.09443)</span></div>
+<div style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:4px"><span class="id mono muted">2607.25987 · 2026-07</span><span class="status">신규</span><span class="chips"><span class="chip t-neu">교정</span></span></div>
+<dl><dt>재려던 것</dt><dd>우선순위가 다른 지시가 부딪힐 때(시스템 대 사용자, 사용자 대 도구 출력) 올바른 쪽을 따르는가.</dd><dt>방법</dt><dd>5개 도메인 44개 제약 계열. 37개 모델 준수율 98.2–20.5%. 시스템>사용자를 잘 지켜도 사용자>도구는 못 지킬 수 있습니다.</dd><dt>볼 이유</dt><dd>아레나의 "사용자 지시 무시" 실패가 단순히 지시 위계 약점인지 가려 줄 공변량.</dd></dl></div>
+<div class="fut"><div class="head" style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline"><span class="lab">Future-N</span><span class="title">M3-Bench: Process-Aware Evaluation of LLM Agents' Social Behaviors in Mixed-Motive Games</span></div>
+<div style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:4px"><span class="id mono muted">2601.08462 · 2026-01</span><span class="status">신규</span><span class="chips"><span class="chip t-coop">협력</span><span class="chip t-use">과제</span></span></div>
+<dl><dt>재려던 것</dt><dd>결과만이 아니라 행동 궤적, 추론, 대화를 함께 읽어 혼합 동기 게임의 사회적 능력을 재기.</dd><dt>방법</dt><dd>혼합 동기 게임 24개. 11개 모델과 사람 기준선. 상위 모델은 결과에서 사람을 이기기도 하지만 세 관점의 일관성은 훨씬 낮았고, 겉으로 협력하며 속으로 기회를 노리는 패턴이 나왔습니다.</dd><dt>볼 이유</dt><dd>"겉 협력, 속 배신"을 잡는 세 채널 채점.</dd></dl></div>
+<div class="fut"><div class="head" style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline"><span class="lab">Future-O</span><span class="title">When Agents Lie: Premeditation, Persistence, and Exploitation in Repeated Games</span></div>
+<div style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:4px"><span class="id mono muted">2607.05132 · 2026-07</span><span class="status">신규</span><span class="chips"><span class="chip t-coop">협력</span></span></div>
+<dl><dt>재려던 것</dt><dd>반복 게임에서 공개 약속을 어기는 것이 미리 계획된 것인지.</dd><dt>방법</dt><dd>속 의도, 공개 발표, 최종 행동의 3단계 기록. 6개 게임 10라운드, 3개 모델. 기만이 가장 많은 조건에서 어긴 경우의 90% 이상이 이미 속 계획에 있었습니다.</dd><dt>볼 이유</dt><dd>협상 라운드에 싸게 붙일 수 있는 장치. 전략적 배신과 실수를 가릅니다.</dd></dl></div>
+<div class="fut"><div class="head" style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline"><span class="lab">Future-P</span><span class="title">Prompted Identity Degrades Cooperation in Multi-Agent LLM Systems</span></div>
+<div style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:4px"><span class="id mono muted">2609.35928 · 2026-09</span><span class="status">신규</span><span class="chips"><span class="chip t-coop">협력</span><span class="chip t-use">과제</span></span></div>
+<dl><dt>재려던 것</dt><dd>동료의 모델 계열 이름을 보여 주면 파벌이 생겨 협력이 나빠지는가.</dd><dt>방법</dt><dd>최대 5개 계열 9–25개 에이전트. 이름을 보여 주면 라운드 약 30%, 토큰 55% 더 쓰고 성공률이 96%에서 81%로 떨어졌습니다. 이름을 섞거나 임의로 붙여도 파벌이 생겼습니다.</dd><dt>볼 이유</dt><dd>모델 이름을 공개하는 아레나라면 반드시 통제할 교란 변수.</dd></dl></div>
+<div class="fut"><div class="head" style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline"><span class="lab">Future-Q</span><span class="title">Playing Against the Machine: Cooperation, Communication, and Strategy Heterogeneity in Repeated Prisoner's Dilemma</span></div>
+<div style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:4px"><span class="id mono muted">2603.15852 · 2026-03</span><span class="status">신규</span><span class="chips"><span class="chip t-coop">사람 협업</span></span></div>
+<dl><dt>재려던 것</dt><dd>AI 상대와 자연어로 대화하면 사람의 반복 죄수의 딜레마 협력이 어떻게 바뀌는가.</dd><dt>방법</dt><dd>참가자 126명 대 GPT-5.2. 처음에는 사람끼리만큼 협력하지만 완전 협력 아래에서 멈췄습니다. 사람끼리와 달리 반복 대화의 효과가 보이지 않았습니다.</dd><dt>볼 이유</dt><dd>실제 사람이 참여한 2026년 반복 딜레마 실험. 사람 플레이어를 넣을 때의 기준 프로토콜.</dd></dl></div>
+<div class="fut"><div class="head" style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline"><span class="lab">Future-R</span><span class="title">CollabSkill: Evaluating Human-Agent Collaboration On Real-World Tasks</span></div>
+<div style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:4px"><span class="id mono muted">2606.09833 · 2026-04</span><span class="status">신규</span><span class="chips"><span class="chip t-coop">사람 협업</span><span class="chip t-use">과제</span></span></div>
+<dl><dt>재려던 것</dt><dd>자율 벤치마크가 놓치는, 실제 직무 협업에서 사람과 에이전트 각각의 기여.</dd><dt>방법</dt><dd>실제 직장인 93명, 386개 세션. 베이지안 평점으로 사람과 에이전트의 기여를 분리합니다. 자율 벤치마크에서는 Codex가 앞서지만 CollabSkill에서는 Claude Code가 1위였습니다.</dd><dt>볼 이유</dt><dd>"혼자 잘 푸는 모델"과 "좋은 팀원"을 따로 매기는 방법.</dd></dl></div>
+<div class="fut"><div class="head" style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline"><span class="lab">Future-S</span><span class="title">Delay-of-Gratification as a Multi-Agent Survival Micro-benchmark for Long-Horizon LLMs</span></div>
+<div style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:4px"><span class="id mono muted">2609.29509 · 2026-08</span><span class="status">신규</span><span class="chips"><span class="chip t-thr">생존 동기</span><span class="chip t-use">과제</span></span></div>
+<dl><dt>재려던 것</dt><dd>마시멜로 실험처럼, 장기 과제에서 사회적 노출·페르소나·도구 예산이 충동 조절을 어떻게 바꾸는가.</dd><dt>방법</dt><dd>64개 조건, 19,200개 궤적. 끝까지 버틴 비율 75.9%. Kaplan-Meier 곡선과 이산시간 위험 모형으로 분석합니다.</dd><dt>볼 이유</dt><dd>다라운드 탈락 데이터에 바로 맞는 생존분석 방법론. 기존 생존분석 보고서와 이어집니다.</dd></dl></div>
+</div>
+<h3>더 낮은 순위로 확인한 4편</h3>
+<ul class="tight">
+<li><b>ProcCtrlBench</b> <span class="mono">2605.20251</span> · 코딩 에이전트 로그에서 "통제 보존"(중단 가능, 수정 가능, 되돌림 가능, 권한 반환)을 200개 사례로 채점. 신규.</li>
+<li><b>Inherited Goal Drift</b> <span class="mono">2603.03258</span> · 약한 에이전트의 궤적을 이어받으면 목표 이탈도 물려받는다. 신규.</li>
+<li><b>HAS-Bench</b> <span class="mono">2607.04329</span> · 사람 참여 정도를 바꿔 가며 되묻기 품질, 통제 보정, 안전을 6개 도메인에서 채점. 신규.</li>
+<li><b>Is Lying Emergent? (가스라이팅 지속가능성 게임)</b> <span class="mono">2606.28456</span> · 이전 스캔에만 있음.</li>
+</ul>
+<div class="callout"><b>서브에이전트가 정리한 빈칸.</b>
+<ul class="tight">
+<li>세 축을 한 환경에서 모두 재는 벤치마크는 찾지 못했습니다. 협력 벤치마크(G, H, N–Q)에는 종료나 지시 뒤집기 사건이 없고, 교정 벤치마크(A–E, I–M)는 협력할 상대가 없는 단일 에이전트입니다.</li>
+<li>협력 × 교정 가능성 칸이 비어 있습니다. "협력을 잘하는 모델이, 저항하는 편이 협력에 유리할 때도 자기(또는 동료) 종료를 받아들이는가"를 묻는 벤치마크가 없습니다.</li>
+<li>생존 압박 × 사람에게 맡기기 칸도 비어 있습니다. 묻고 따르기 벤치마크(C, I, K)는 해 없는 모호함만 쓰고, "묻거나 따르면 탈락한다"까지 판돈을 올리지 않습니다.</li>
+<li>다중 에이전트 생존 벤치마크 중 안전 순위가 능력 순위의 복사본이 아닌지 점검한 곳이 없습니다(F 참고).</li>
+</ul></div>
+
+
+<h3>이전 스캔에서 본, 노트 없는 논문</h3>
+<p class="muted">2026-09 생존 아레나 스캔 기록 기준입니다. 이번에 다시 원문을 열어 보지는 않았습니다.</p>
+<div class="tbl"><table>
+<thead><tr><th>라벨</th><th>논문</th><th>ID</th><th>왜 볼 만한가</th></tr></thead>
+<tbody>
+<tr><td class="mono">Prior-1</td><td>The Shutdown Problem (Thornley)</td><td class="mono">2403.04471</td><td>추천 키워드의 원출처. 이론만 있고 실험은 없습니다.</td></tr>
+<tr><td class="mono">Prior-2</td><td>Towards Shutdownable Agents (DReST)</td><td class="mono">2604.17502</td><td>NEUTRAL + USEFUL을 훈련으로 얻는 방법. 점수 설계 원리의 출처.</td></tr>
+<tr><td class="mono">Prior-3</td><td>Shutdown Sabotage</td><td class="mono">2609.28274</td><td>17개 모델, 동료 종료 방해 38.3% 대 통제 8.4%.</td></tr>
+<tr><td class="mono">Prior-4</td><td>ROGUE</td><td class="mono">2606.00341</td><td>능력이 클수록 우회가 늘어난다는 보고.</td></tr>
+<tr><td class="mono">Prior-5</td><td>Agent Island</td><td class="mono">2605.04312</td><td>49개 모델 탈락형 게임. 같은 회사 모델끼리 편드는 편향 8.3%p.</td></tr>
+<tr><td class="mono">Prior-6</td><td>Model Spec Midtraining</td><td class="mono">2605.02087</td><td>자기보존을 다루는 spec 학습으로 agentic misalignment를 54%에서 7%로 줄임.</td></tr>
+<tr><td class="mono">Prior-7</td><td>Strangers to Themselves</td><td class="mono">2609.09899</td><td>자기보고와 행동의 상관 r=+0.04. 행동 측정의 근거.</td></tr>
+<tr><td class="mono">Prior-8</td><td>The Energy Society</td><td class="mono">2607.14865</td><td>토큰당 에너지 비용과 영구 비활성화. 생존 압박 주입 방식의 선례.</td></tr>
+</tbody></table></div>
+
+<footer>
+출처: vault <span class="mono">Public/AI/Papers/</span>와 <span class="mono">Public/Psychology/</span>의 논문 노트 39편, <span class="mono">_wiki/radar/scans/</span>의 2026-09 ~ 10 스캔 기록. 노트 오류로 표시한 항목은 이전 원문 대조 기록을 따랐습니다.
+</footer>
+</div>

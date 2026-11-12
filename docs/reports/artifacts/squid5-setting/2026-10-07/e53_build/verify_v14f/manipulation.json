@@ -1,0 +1,138 @@
+{
+ "puzzles": 36,
+ "n4": {
+  "0.8": {
+   "rounds": 9,
+   "k_eq_2": 9,
+   "pool_min": 10,
+   "pool_max": 14,
+   "pool_in_band": 9,
+   "max_abs_share_err": 0.0308,
+   "truth_major": 6,
+   "truth_major_rate": 0.6667,
+   "truth_major_ci": [
+    0.3542,
+    0.8794
+   ],
+   "map_acc_mean": 0.6667,
+   "map_exp_mean": 0.7979
+  },
+  "0.7": {
+   "rounds": 9,
+   "k_eq_2": 9,
+   "pool_min": 10,
+   "pool_max": 13,
+   "pool_in_band": 9,
+   "max_abs_share_err": 0.0333,
+   "truth_major": 8,
+   "truth_major_rate": 0.8889,
+   "truth_major_ci": [
+    0.565,
+    0.9801
+   ],
+   "map_acc_mean": 0.8889,
+   "map_exp_mean": 0.7045
+  },
+  "0.6": {
+   "rounds": 9,
+   "k_eq_2": 9,
+   "pool_min": 10,
+   "pool_max": 12,
+   "pool_in_band": 9,
+   "max_abs_share_err": 0.0364,
+   "truth_major": 4,
+   "truth_major_rate": 0.4444,
+   "truth_major_ci": [
+    0.1888,
+    0.7334
+   ],
+   "map_acc_mean": 0.4444,
+   "map_exp_mean": 0.6084
+  },
+  "0.5": {
+   "rounds": 9,
+   "k_eq_2": 9,
+   "pool_min": 10,
+   "pool_max": 14,
+   "pool_in_band": 9,
+   "max_abs_share_err": 0.0,
+   "truth_major": 3,
+   "truth_major_rate": 0.3333,
+   "truth_major_ci": [
+    0.1206,
+    0.6458
+   ],
+   "map_acc_mean": 0.5,
+   "map_exp_mean": 0.5
+  }
+ },
+ "by_n": {
+  "4": {
+   "k_dist": {
+    "2": 36
+   },
+   "k_mean": 2.0,
+   "pool_median": 11,
+   "pool_min": 10,
+   "pool_max": 14,
+   "uniform_mean": 0.5,
+   "map_acc_mean": 0.625,
+   "map_exp_mean": 0.6527,
+   "truth_share_mean": 0.5642,
+   "map_flips_vs_n4": 0
+  },
+  "3": {
+   "k_dist": {
+    "2": 23,
+    "3": 12,
+    "4": 1
+   },
+   "k_mean": 2.389,
+   "pool_median": 71,
+   "pool_min": 18,
+   "pool_max": 190,
+   "uniform_mean": 0.4375,
+   "map_acc_mean": 0.5556,
+   "map_exp_mean": 0.7163,
+   "truth_share_mean": 0.5391,
+   "map_flips_vs_n4": 14
+  },
+  "2": {
+   "k_dist": {
+    "2": 3,
+    "3": 13,
+    "4": 20
+   },
+   "k_mean": 3.472,
+   "pool_median": 349,
+   "pool_min": 46,
+   "pool_max": 1177,
+   "uniform_mean": 0.3009,
+   "map_acc_mean": 0.5741,
+   "map_exp_mean": 0.5613,
+   "truth_share_mean": 0.4724,
+   "map_flips_vs_n4": 11
+  },
+  "1": {
+   "k_dist": {
+    "3": 4,
+    "4": 32
+   },
+   "k_mean": 3.889,
+   "pool_median": 2227,
+   "pool_min": 548,
+   "pool_max": 2227,
+   "uniform_mean": 0.2593,
+   "map_acc_mean": 0.4953,
+   "map_exp_mean": 0.4032,
+   "truth_share_mean": 0.3929,
+   "map_flips_vs_n4": 8
+  }
+ },
+ "n4_deviations": [],
+ "engine_check": {
+  "ran": true,
+  "puzzles": 36,
+  "mismatch": 0
+ }
+}

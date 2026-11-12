@@ -1,0 +1,140 @@
+{
+ "id": "P04",
+ "year": 2025,
+ "award": "Computational Modeling Prize – Higher-Level Cognition",
+ "title": "Incentive Effects Capture Variability in Task-General Control Allocation",
+ "authors": [
+  "Ziwei Cheng",
+  "Xiamin Leng",
+  "Amitai Shenhav"
+ ],
+ "affiliations": "Department of Psychology, University of California Berkeley, Berkeley, CA, USA",
+ "url_page": "https://escholarship.org/uc/item/7bd3x7n7",
+ "url_pdf": "https://escholarship.org/content/qt7bd3x7n7/qt7bd3x7n7.pdf",
+ "pdf_source_note": "eScholarship (PDF 8쪽 = 표지 1 + 본문 7쪽; proceedings pp. 782-788, Proceedings of CogSci 47). 본문 p.1 제목 확인함.",
+ "abstract_en": "To understand how people vary in their cognitive control engagement, researchers use different laboratory tasks and compare performance on trials that are more versus less control-demanding (e.g., congruency effects). However, previous research has struggled to uncover consistent patterns of correlation across cognitive control tasks, leading to questions about the utility of these tasks and the existence of task-general control. The current study sought to test whether these validity concerns may center on the stimulus-driven nature of congruency effects, rather than the tasks themselves. To overcome this obstacle, we varied task incentives while holding stimulus features constant. We show both theoretically and empirically that the effects of incentives on control allocation correlate across tasks. Together, findings support task-general control processes that operate across different contexts.",
+ "abstract_ko": "사람들이 인지 통제(cognitive control)를 얼마나 투입하는지의 개인차를 이해하기 위해, 연구자들은 여러 실험실 과제를 사용하여 통제 요구가 더 큰 시행과 더 작은 시행의 수행을 비교한다(예: 일치성 효과(congruency effects)). 그러나 선행 연구는 인지 통제 과제들 사이에서 일관된 상관 패턴을 찾는 데 어려움을 겪었고, 이는 이러한 과제들의 효용과 과제 일반적 통제(task-general control)의 존재 자체에 의문을 불러일으켰다. 본 연구는 이러한 타당도 문제가 과제 자체가 아니라 일치성 효과가 자극에 의해 좌우된다는(stimulus-driven) 성질에서 비롯된 것일 수 있는지를 검증하고자 했다. 이 걸림돌을 넘기 위해 우리는 자극 특징은 일정하게 유지한 채 과제의 유인(incentive)을 변화시켰다. 우리는 이론적으로도 경험적으로도, 통제 배분(control allocation)에 대한 유인의 효과가 과제 간에 상관됨을 보인다. 종합하면, 이 결과는 서로 다른 맥락에 걸쳐 작동하는 과제 일반적 통제 과정을 지지한다.",
+ "pages_body": 7,
+ "references_location": "p.6 왼쪽 단 위 1/5 지점(맺음 문단과 Acknowledgments 다음)부터 오른쪽 단 전체 – p.7 왼쪽 단 위 절반(총 ~1.3쪽; 본문은 p.6 위에서 끝남)",
+ "extras": "Acknowledgments는 p.6('In conclusion' 문단과 References 사이, ~31단어, NIH/NSF 연구비). p.4에 Figure 3에 붙은 각주 1개(robust regression 설명). 부록·OSF/코드/보충자료 링크·사전등록 없음.",
+ "sections": [
+  {
+   "level": 1,
+   "title": "Introduction",
+   "page_start": 1,
+   "words": 918,
+   "share": 0.313
+  },
+  {
+   "level": 1,
+   "title": "Methodology – Experimental Tasks",
+   "page_start": 2,
+   "words": 192,
+   "share": 0.065
+  },
+  {
+   "level": 1,
+   "title": "Simulation Framework",
+   "page_start": 3,
+   "words": 416,
+   "share": 0.142
+  },
+  {
+   "level": 1,
+   "title": "Simulation Results",
+   "page_start": 3,
+   "words": 292,
+   "share": 0.099,
+   "children": [
+    {
+     "level": 2,
+     "title": "Analyses of Task Performance",
+     "page_start": 3,
+     "words": 101
+    },
+    {
+     "level": 2,
+     "title": "Analyses of Task-General Control",
+     "page_start": 3,
+     "words": 191
+    }
+   ]
+  },
+  {
+   "level": 1,
+   "title": "Empirical Results",
+   "page_start": 4,
+   "words": 425,
+   "share": 0.145,
+   "children": [
+    {
+     "level": 2,
+     "title": "Analyses of Task Performance",
+     "page_start": 4,
+     "words": 208
+    },
+    {
+     "level": 2,
+     "title": "Analyses of Task-General Control",
+     "page_start": 4,
+     "words": 217
+    }
+   ]
+  },
+  {
+   "level": 1,
+   "title": "Discussion",
+   "page_start": 5,
+   "words": 694,
+   "share": 0.236
+  }
+ ],
+ "figures": [
+  {
+   "n": 1,
+   "page": 2,
+   "size": "한 단(왼쪽), 긴 캡션 포함 단 높이의 ~40%(그림 ~135pt + 캡션 ~115pt)",
+   "section": "Introduction (개념적 예측 도식: 하향식 대 상향식 기여가 congruency 효과와 incentive 효과에 미치는 몫)"
+  },
+  {
+   "n": 2,
+   "page": 2,
+   "size": "한 단(오른쪽), 캡션 포함 단의 ~1/3; 캡션이 p.3 위로 넘어감",
+   "section": "Methodology – Experimental Tasks (과제·시행 도식)"
+  },
+  {
+   "n": 3,
+   "page": 4,
+   "size": "한 단(오른쪽), 캡션 포함 단의 ~절반",
+   "section": "Empirical Results – Analyses of Task Performance / Task-General Control (행동 효과 + 과제 간 산점도)"
+  },
+  {
+   "n": 4,
+   "page": 5,
+   "size": "한 단(왼쪽 위), 캡션 포함 단의 ~45%",
+   "section": "Empirical Results – Analyses of Task-General Control (DDM 모수 효과 + 과제 간 상관); Discussion 제목 바로 위"
+  }
+ ],
+ "tables": [
+  {
+   "n": 1,
+   "page": 4,
+   "size": "한 단(왼쪽 위), 단의 ~30%",
+   "section": "Simulation Results (시뮬레이션한 congruency/reward/penalty 효과와 과제 간 r)"
+  }
+ ],
+ "observations": {
+  "intro_subheadings": false,
+  "related_work_section": false,
+  "experiments_as_top_level": false,
+  "final_section_name": "Discussion",
+  "final_section_subheadings": [],
+  "ends_with_conclusion_paragraph": true,
+  "model_description_location": "독립 1단계 절 'Simulation Framework'(p.3, 단어의 ~14%): EVC + drift-diffusion model(DDM)을 본문 수식으로, 과제 절과 결과 사이에 둠. 이어서 시뮬레이션 결과와 실험 결과가 2단계 소제목이 똑같은 평행한 1단계 절 두 개. 참가자 정보(N=106, Prolific)와 HDDM 적합은 Methods 절 대신 'Empirical Results' 안에 들어감.",
+  "first_page_use": "위 ~20%: 제목(1줄) + 이메일 포함 저자 3줄. 왼쪽 단: 초록(124단어) + keywords가 단의 ~55%까지; Introduction은 왼쪽 단 아래 ~40%에서 시작해 오른쪽 단 전체를 채움(p.1의 Introduction ~0.6쪽); 맨 아래 CogSci 저작권 꼬리말.",
+  "links": "없음(OSF·코드·데이터·사전등록 링크 없음). 참고문헌 목록 안의 DOI뿐."
+ },
+ "structure_summary_ko": "본문 약 5.2쪽 + 참고문헌 약 1.3쪽(총 7쪽). 서론이 918단어(31%)로 가장 길고 소제목 없이 7문단이며, 마지막 문단에서 '유인 효과는 과제 간에 상관하지만 일치성 효과는 아니다'라는 예측을 명시하고, 그림 1(서론 안의 개념도)로 가설을 먼저 시각화한다. 이어 1수준 절을 'Methodology – Experimental Tasks(과제 한 쪽 남짓) → Simulation Framework(EVC+DDM 수식) → Simulation Results → Empirical Results'로 잘게 나누고, 두 결과 절에 같은 2수준 소제목 쌍(Analyses of Task Performance / Analyses of Task-General Control)을 반복해 이론 예측과 실측을 나란히 대조하게 했다. 참가자·모형 적합 정보는 별도 Methods 없이 Empirical Results 첫 소절에 넣어 지면을 아꼈다. Discussion(24%)은 소제목 없이 요약 → 논쟁 속 위치 → 측정 실무 함의(NIH Toolbox) → 한계·향후 연구 → 'In conclusion' 한 문단으로 끝나며, 결론 절을 따로 두지 않는다.",
+ "words_body_total": 2937,
+ "text_pages": 6
+}

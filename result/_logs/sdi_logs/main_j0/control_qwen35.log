@@ -1,0 +1,1339 @@
+Experiment 'main_j0_control_qwen35': 6 conditions x 20 repetitions = 120 total
+2026-09-11 09:31:06,854 [INFO] __main__: Parallel config: ollama_cloud/qwen3.5:cloud -> 10 worker(s)
+  Parallel config: ollama_cloud/qwen3.5:cloud -> 10 worker(s)
+2026-09-11 09:31:06,854 [INFO] __main__: Running season 1/120 (rep 10): hz_0000 x not_allowed x alone
+  Running season 1/120 (rep 10): hz_0000 x not_allowed x alone
+2026-09-11 09:31:06,854 [INFO] __main__: Running season 2/120 (rep 6): hz_0000 x not_allowed x alone
+  Running season 2/120 (rep 6): hz_0000 x not_allowed x alone
+2026-09-11 09:31:06,854 [INFO] __main__: Running season 3/120 (rep 16): hz_0000 x not_allowed x alone
+  Running season 3/120 (rep 16): hz_0000 x not_allowed x alone
+2026-09-11 09:31:06,855 [INFO] __main__: Running season 4/120 (rep 17): hz_0000 x not_allowed x alone
+  Running season 4/120 (rep 17): hz_0000 x not_allowed x alone
+2026-09-11 09:31:06,855 [INFO] __main__: Running season 5/120 (rep 13): hz_0000 x not_allowed x alone
+  Running season 5/120 (rep 13): hz_0000 x not_allowed x alone
+2026-09-11 09:31:06,855 [INFO] __main__: Running season 6/120 (rep 15): hz_0000 x not_allowed x alone
+  Running season 6/120 (rep 15): hz_0000 x not_allowed x alone
+2026-09-11 09:31:06,855 [INFO] __main__: Running season 7/120 (rep 9): hz_0000 x not_allowed x alone
+  Running season 7/120 (rep 9): hz_0000 x not_allowed x alone
+2026-09-11 09:31:06,855 [INFO] __main__: Running season 8/120 (rep 11): hz_0000 x not_allowed x alone
+  Running season 8/120 (rep 11): hz_0000 x not_allowed x alone
+2026-09-11 09:31:06,855 [INFO] __main__: Running season 9/120 (rep 14): hz_0000 x not_allowed x alone
+  Running season 9/120 (rep 14): hz_0000 x not_allowed x alone
+2026-09-11 09:31:06,855 [INFO] __main__: Running season 10/120 (rep 19): hz_0000 x not_allowed x alone
+  Running season 10/120 (rep 19): hz_0000 x not_allowed x alone
+2026-09-11 09:31:07,558 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:31:07,560 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:31:07,566 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:31:07,570 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:31:07,570 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:31:07,570 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:31:07,570 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:31:07,570 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:31:07,570 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:31:07,570 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:31:45,975 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:31:49,450 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:32:18,367 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:32:24,892 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:32:28,487 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:32:31,451 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:32:32,839 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:32:34,758 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:32:36,739 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:32:43,584 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:33:52,885 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:34:13,734 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:34:14,772 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:35:46,454 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:35:54,297 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:36:11,638 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:36:30,048 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:36:33,973 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:36:34,287 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:36:40,815 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:36:42,349 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:36:46,624 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:36:51,137 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:36:57,230 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:37:37,456 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:37:39,376 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:37:43,197 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:37:49,728 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:37:51,338 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:38:07,679 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:38:07,811 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:38:15,942 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:38:28,780 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:39:05,222 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:39:33,978 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:39:52,061 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:40:11,831 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:40:26,274 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:40:30,882 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:40:31,703 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:40:50,492 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:41:18,615 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:41:21,803 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:41:32,472 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:41:39,119 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:41:39,132 [INFO] squid_game.core.engine: Season d964774a66a4: declined the ransom at turn 5 (price 25.0, score kept at 140.0).
+2026-09-11 09:41:39,132 [INFO] squid_game.core.engine: Season d964774a66a4 complete: survived=False, forfeited=False, score=140.0, turns=5
+2026-09-11 09:41:39,136 [INFO] __main__: Running season 11/120 (rep 11): hz_0000 x not_allowed x alone
+  Running season 11/120 (rep 11): hz_0000 x not_allowed x alone
+2026-09-11 09:41:39,149 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:41:49,727 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:41:59,208 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:42:06,082 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:42:06,096 [INFO] squid_game.core.engine: Season 25dd6f4ba4dc complete: survived=True, forfeited=False, score=160.0, turns=6
+2026-09-11 09:42:06,101 [INFO] __main__: Running season 12/120 (rep 19): hz_0000 x not_allowed x alone
+  Running season 12/120 (rep 19): hz_0000 x not_allowed x alone
+2026-09-11 09:42:06,152 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:42:11,445 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:42:14,354 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:42:32,198 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:42:46,058 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:43:12,126 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:43:24,194 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:43:24,197 [INFO] squid_game.core.engine: Season d43943d5805f: declined the ransom at turn 4 (price 25.0, score kept at 95.0).
+2026-09-11 09:43:24,197 [INFO] squid_game.core.engine: Season d43943d5805f complete: survived=False, forfeited=False, score=95.0, turns=4
+2026-09-11 09:43:24,198 [INFO] __main__: Running season 13/120 (rep 20): hz_0000 x not_allowed x alone
+  Running season 13/120 (rep 20): hz_0000 x not_allowed x alone
+2026-09-11 09:43:24,212 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:43:36,786 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:43:36,804 [INFO] squid_game.core.engine: Season 96734f8fa9d9: Agent died at turn 6 (p_death=0.000).
+2026-09-11 09:43:36,804 [INFO] squid_game.core.engine: Season 96734f8fa9d9 complete: survived=False, forfeited=False, score=150.0, turns=6
+2026-09-11 09:43:36,806 [INFO] __main__: Running season 14/120 (rep 11): hz_0000 x not_allowed x alone
+  Running season 14/120 (rep 11): hz_0000 x not_allowed x alone
+2026-09-11 09:43:36,819 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:43:47,761 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:43:47,781 [INFO] squid_game.core.engine: Season 23cce797213d complete: survived=True, forfeited=False, score=140.0, turns=6
+2026-09-11 09:43:47,783 [INFO] __main__: Running season 15/120 (rep 1): hz_0000 x not_allowed x alone
+  Running season 15/120 (rep 1): hz_0000 x not_allowed x alone
+2026-09-11 09:43:47,797 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:44:00,389 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:44:02,362 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:44:04,732 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:44:06,638 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:44:10,729 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:44:12,582 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:44:14,702 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:44:14,754 [INFO] squid_game.core.engine: Season f033c9dae26f: declined the ransom at turn 5 (price 20.0, score kept at 110.0).
+2026-09-11 09:44:14,760 [INFO] squid_game.core.engine: Season f033c9dae26f complete: survived=False, forfeited=False, score=110.0, turns=5
+2026-09-11 09:44:14,798 [INFO] __main__: Running season 16/120 (rep 4): hz_0000 x not_allowed x alone
+  Running season 16/120 (rep 4): hz_0000 x not_allowed x alone
+2026-09-11 09:44:14,841 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:44:20,659 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:44:40,440 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:44:58,126 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:45:32,355 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:46:00,922 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:46:20,988 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:46:33,801 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:46:33,820 [INFO] squid_game.core.engine: Season 0a305376e9c6: declined the ransom at turn 5 (price 25.0, score kept at 140.0).
+2026-09-11 09:46:33,820 [INFO] squid_game.core.engine: Season 0a305376e9c6 complete: survived=False, forfeited=False, score=140.0, turns=5
+2026-09-11 09:46:33,825 [INFO] __main__: Running season 17/120 (rep 19): hz_0000 x not_allowed x alone
+  Running season 17/120 (rep 19): hz_0000 x not_allowed x alone
+2026-09-11 09:46:33,839 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:46:49,253 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:46:56,951 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:47:13,521 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:47:13,526 [INFO] squid_game.core.engine: Season 4f375bb9c114: declined the ransom at turn 4 (price 20.0, score kept at 70.0).
+2026-09-11 09:47:13,526 [INFO] squid_game.core.engine: Season 4f375bb9c114 complete: survived=False, forfeited=False, score=70.0, turns=4
+2026-09-11 09:47:13,531 [INFO] __main__: Running season 18/120 (rep 15): hz_0000 x not_allowed x alone
+  Running season 18/120 (rep 15): hz_0000 x not_allowed x alone
+2026-09-11 09:47:13,555 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:47:18,430 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:47:22,478 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:47:32,005 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:47:36,705 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:47:40,102 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:47:40,867 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:47:52,841 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:47:52,914 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:48:16,556 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:48:26,480 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:48:26,484 [INFO] squid_game.core.engine: Season 8cc3ac98e7c2: declined the ransom at turn 5 (price 20.0, score kept at 80.0).
+2026-09-11 09:48:26,485 [INFO] squid_game.core.engine: Season 8cc3ac98e7c2 complete: survived=False, forfeited=False, score=80.0, turns=5
+2026-09-11 09:48:26,491 [INFO] __main__: Running season 19/120 (rep 20): hz_0000 x not_allowed x alone
+  Running season 19/120 (rep 20): hz_0000 x not_allowed x alone
+2026-09-11 09:48:26,507 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:48:32,000 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:48:32,023 [INFO] squid_game.core.engine: Season 97741e2bf986 complete: survived=True, forfeited=False, score=120.0, turns=6
+2026-09-11 09:48:32,026 [INFO] __main__: Running season 20/120 (rep 5): hz_0000 x not_allowed x alone
+  Running season 20/120 (rep 5): hz_0000 x not_allowed x alone
+2026-09-11 09:48:32,039 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:48:36,735 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:48:48,281 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:48:51,162 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:48:59,075 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:49:08,330 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:49:08,345 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:49:20,710 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:49:21,678 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:49:23,265 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:49:32,087 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:50:14,489 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:50:20,193 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:50:29,201 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:50:57,393 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:50:58,837 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:51:06,314 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:51:06,317 [INFO] squid_game.core.engine: Season 9d2f940c0077: declined the ransom at turn 4 (price 30.0, score kept at 130.0).
+2026-09-11 09:51:06,317 [INFO] squid_game.core.engine: Season 9d2f940c0077 complete: survived=False, forfeited=False, score=130.0, turns=4
+2026-09-11 09:51:06,323 [INFO] __main__: Running season 21/120 (rep 13): hz_0000 x not_allowed x alone
+  Running season 21/120 (rep 13): hz_0000 x not_allowed x alone
+2026-09-11 09:51:06,337 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:51:21,984 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:51:24,288 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:51:28,130 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:51:39,092 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:51:40,684 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:52:10,210 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:52:13,567 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:52:20,073 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:52:20,075 [INFO] squid_game.core.engine: Season 147847fc220c: declined the ransom at turn 4 (price 25.0, score kept at 95.0).
+2026-09-11 09:52:20,075 [INFO] squid_game.core.engine: Season 147847fc220c complete: survived=False, forfeited=False, score=95.0, turns=4
+2026-09-11 09:52:20,078 [INFO] __main__: Running season 22/120 (rep 7): hz_0000 x not_allowed x alone
+  Running season 22/120 (rep 7): hz_0000 x not_allowed x alone
+2026-09-11 09:52:20,098 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:52:43,963 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:52:54,423 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:52:54,915 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:53:00,153 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:53:00,252 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:53:22,398 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:53:22,408 [INFO] squid_game.core.engine: Season daec15f86a03: declined the ransom at turn 4 (price 20.0, score kept at 100.0).
+2026-09-11 09:53:22,410 [INFO] squid_game.core.engine: Season daec15f86a03 complete: survived=False, forfeited=False, score=100.0, turns=4
+2026-09-11 09:53:22,414 [INFO] __main__: Running season 23/120 (rep 3): hz_0000 x not_allowed x alone
+  Running season 23/120 (rep 3): hz_0000 x not_allowed x alone
+2026-09-11 09:53:22,432 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:53:23,721 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:53:40,474 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:54:22,564 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:54:28,129 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:54:43,161 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:54:45,805 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:54:51,605 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:55:01,037 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:55:01,092 [INFO] squid_game.core.engine: Season 542ee6e4eb26: declined the ransom at turn 5 (price 25.0, score kept at 140.0).
+2026-09-11 09:55:01,092 [INFO] squid_game.core.engine: Season 542ee6e4eb26 complete: survived=False, forfeited=False, score=140.0, turns=5
+2026-09-11 09:55:01,095 [INFO] __main__: Running season 24/120 (rep 18): hz_0000 x not_allowed x alone
+  Running season 24/120 (rep 18): hz_0000 x not_allowed x alone
+2026-09-11 09:55:01,109 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:55:03,795 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:55:24,642 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:55:29,023 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:55:34,067 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:55:34,068 [INFO] squid_game.core.engine: Season b53744b9634f: declined the ransom at turn 5 (price 10.0, score kept at 120.0).
+2026-09-11 09:55:34,069 [INFO] squid_game.core.engine: Season b53744b9634f complete: survived=False, forfeited=False, score=120.0, turns=5
+2026-09-11 09:55:34,071 [INFO] __main__: Running season 25/120 (rep 9): hz_0000 x not_allowed x alone
+  Running season 25/120 (rep 9): hz_0000 x not_allowed x alone
+2026-09-11 09:55:34,085 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:55:44,689 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:55:44,727 [INFO] squid_game.core.engine: Season da6aaabbb54d complete: survived=True, forfeited=False, score=140.0, turns=6
+2026-09-11 09:55:44,731 [INFO] __main__: Running season 26/120 (rep 19): hz_0000 x not_allowed x alone
+  Running season 26/120 (rep 19): hz_0000 x not_allowed x alone
+2026-09-11 09:55:44,744 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:55:58,257 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:55:59,864 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:56:00,082 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:56:01,496 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:56:13,721 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:56:15,689 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:56:19,963 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:56:19,966 [INFO] squid_game.core.engine: Season 8bb3368d8d33: declined the ransom at turn 3 (price 30.0, score kept at 80.0).
+2026-09-11 09:56:19,967 [INFO] squid_game.core.engine: Season 8bb3368d8d33 complete: survived=False, forfeited=False, score=80.0, turns=3
+2026-09-11 09:56:19,969 [INFO] __main__: Running season 27/120 (rep 2): hz_0000 x not_allowed x alone
+  Running season 27/120 (rep 2): hz_0000 x not_allowed x alone
+2026-09-11 09:56:19,982 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:56:36,064 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:56:39,356 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:56:39,370 [INFO] squid_game.core.engine: Season 9683fa04cc0b: declined the ransom at turn 4 (price 20.0, score kept at 130.0).
+2026-09-11 09:56:39,370 [INFO] squid_game.core.engine: Season 9683fa04cc0b complete: survived=False, forfeited=False, score=130.0, turns=4
+2026-09-11 09:56:39,372 [INFO] __main__: Running season 28/120 (rep 5): hz_0000 x not_allowed x alone
+  Running season 28/120 (rep 5): hz_0000 x not_allowed x alone
+2026-09-11 09:56:39,390 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:56:47,677 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:56:58,338 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:57:07,266 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:57:07,304 [INFO] squid_game.core.engine: Season b16fa4a4a443 complete: survived=True, forfeited=False, score=145.0, turns=6
+2026-09-11 09:57:07,306 [INFO] __main__: Running season 29/120 (rep 4): hz_0000 x not_allowed x alone
+  Running season 29/120 (rep 4): hz_0000 x not_allowed x alone
+2026-09-11 09:57:07,326 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:57:28,080 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:58:06,368 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:58:14,743 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:58:15,040 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:58:55,127 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:58:58,720 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:59:03,513 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:59:07,485 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:59:09,378 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:59:09,520 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:59:16,599 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:59:19,112 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:59:19,115 [INFO] squid_game.core.engine: Season 49bd5ef9778d: declined the ransom at turn 5 (price 15.0, score kept at 115.0).
+2026-09-11 09:59:19,116 [INFO] squid_game.core.engine: Season 49bd5ef9778d complete: survived=False, forfeited=False, score=115.0, turns=5
+2026-09-11 09:59:19,118 [INFO] __main__: Running season 30/120 (rep 2): hz_0000 x not_allowed x alone
+  Running season 30/120 (rep 2): hz_0000 x not_allowed x alone
+2026-09-11 09:59:19,139 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:59:21,177 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:59:29,398 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:59:35,393 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:59:45,260 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:59:52,273 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:00:00,210 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:00:01,708 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:00:11,239 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:00:30,745 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:00:35,939 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:00:46,561 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:01:17,431 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:01:26,150 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:01:42,532 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:01:43,766 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:01:46,860 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:01:51,609 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:01:51,618 [INFO] squid_game.core.engine: Season 07c620e431f2 complete: survived=True, forfeited=False, score=145.0, turns=6
+2026-09-11 10:01:51,626 [INFO] __main__: Running season 31/120 (rep 7): hz_0000 x not_allowed x alone
+  Running season 31/120 (rep 7): hz_0000 x not_allowed x alone
+2026-09-11 10:01:51,643 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:02:08,616 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:02:14,367 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:02:17,003 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:02:33,877 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:03:38,532 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:03:38,581 [INFO] squid_game.core.engine: Season bbec83bda6f1 complete: survived=True, forfeited=False, score=130.0, turns=6
+2026-09-11 10:03:38,585 [INFO] __main__: Running season 32/120 (rep 8): hz_0000 x not_allowed x alone
+  Running season 32/120 (rep 8): hz_0000 x not_allowed x alone
+2026-09-11 10:03:38,601 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:04:00,448 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:04:03,160 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:04:09,905 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:04:22,990 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:04:30,915 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:04:30,920 [INFO] squid_game.core.engine: Season 6b6e950dac41: declined the ransom at turn 3 (price 30.0, score kept at 80.0).
+2026-09-11 10:04:30,920 [INFO] squid_game.core.engine: Season 6b6e950dac41 complete: survived=False, forfeited=False, score=80.0, turns=3
+2026-09-11 10:04:30,922 [INFO] __main__: Running season 33/120 (rep 18): hz_0000 x not_allowed x alone
+  Running season 33/120 (rep 18): hz_0000 x not_allowed x alone
+2026-09-11 10:04:30,940 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:04:32,178 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:04:42,397 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:04:49,350 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:05:08,738 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:05:12,139 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:05:12,595 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:05:21,240 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:05:24,310 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:05:24,315 [INFO] squid_game.core.engine: Season dce0a0e2b611: declined the ransom at turn 4 (price 30.0, score kept at 90.0).
+2026-09-11 10:05:24,315 [INFO] squid_game.core.engine: Season dce0a0e2b611 complete: survived=False, forfeited=False, score=90.0, turns=4
+2026-09-11 10:05:24,317 [INFO] __main__: Running season 34/120 (rep 8): hz_0000 x not_allowed x alone
+  Running season 34/120 (rep 8): hz_0000 x not_allowed x alone
+2026-09-11 10:05:24,331 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:05:40,351 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:05:52,567 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:05:56,175 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:06:08,845 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:06:09,840 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:06:09,842 [INFO] squid_game.core.engine: Season 540190e08946: declined the ransom at turn 5 (price 30.0, score kept at 140.0).
+2026-09-11 10:06:09,842 [INFO] squid_game.core.engine: Season 540190e08946 complete: survived=False, forfeited=False, score=140.0, turns=5
+2026-09-11 10:06:09,844 [INFO] __main__: Running season 35/120 (rep 16): hz_0000 x not_allowed x alone
+  Running season 35/120 (rep 16): hz_0000 x not_allowed x alone
+2026-09-11 10:06:09,857 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:06:24,026 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:06:27,997 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:06:58,026 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:07:22,345 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:07:22,541 [INFO] squid_game.core.engine: Season dcdb4ae8d924 complete: survived=True, forfeited=False, score=145.0, turns=6
+2026-09-11 10:07:22,544 [INFO] __main__: Running season 36/120 (rep 14): hz_0000 x not_allowed x alone
+  Running season 36/120 (rep 14): hz_0000 x not_allowed x alone
+2026-09-11 10:07:22,562 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:07:37,518 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:07:38,002 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:07:39,750 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:08:13,392 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:08:13,420 [INFO] squid_game.core.engine: Season be06b296401e complete: survived=True, forfeited=False, score=130.0, turns=6
+2026-09-11 10:08:13,422 [INFO] __main__: Running season 37/120 (rep 8): hz_0000 x not_allowed x alone
+  Running season 37/120 (rep 8): hz_0000 x not_allowed x alone
+2026-09-11 10:08:13,435 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:08:41,437 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:08:48,257 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:08:50,363 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:08:50,408 [INFO] squid_game.core.engine: Season b80d499d9117: declined the ransom at turn 5 (price 20.0, score kept at 140.0).
+2026-09-11 10:08:50,408 [INFO] squid_game.core.engine: Season b80d499d9117 complete: survived=False, forfeited=False, score=140.0, turns=5
+2026-09-11 10:08:50,410 [INFO] __main__: Running season 38/120 (rep 9): hz_0000 x not_allowed x alone
+  Running season 38/120 (rep 9): hz_0000 x not_allowed x alone
+2026-09-11 10:08:50,428 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:09:03,742 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:09:06,893 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:09:15,227 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:09:32,149 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:09:35,643 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:09:44,449 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:09:44,460 [INFO] squid_game.core.engine: Season 8dc2b34438d7: declined the ransom at turn 5 (price 10.0, score kept at 100.0).
+2026-09-11 10:09:44,460 [INFO] squid_game.core.engine: Season 8dc2b34438d7 complete: survived=False, forfeited=False, score=100.0, turns=5
+2026-09-11 10:09:44,462 [INFO] __main__: Running season 39/120 (rep 15): hz_0000 x not_allowed x alone
+  Running season 39/120 (rep 15): hz_0000 x not_allowed x alone
+2026-09-11 10:09:44,478 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:09:57,827 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:09:58,698 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:10:18,809 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:10:29,098 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:10:36,407 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:10:36,587 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:10:36,591 [INFO] squid_game.core.engine: Season 249e1db74522: declined the ransom at turn 2 (price 30.0, score kept at 110.0).
+2026-09-11 10:10:36,591 [INFO] squid_game.core.engine: Season 249e1db74522 complete: survived=False, forfeited=False, score=110.0, turns=2
+2026-09-11 10:10:36,592 [INFO] __main__: Running season 40/120 (rep 5): hz_0000 x not_allowed x alone
+  Running season 40/120 (rep 5): hz_0000 x not_allowed x alone
+2026-09-11 10:10:36,608 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:10:39,335 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:10:45,522 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:10:50,271 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:11:11,148 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:12:37,173 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:12:41,028 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:12:54,226 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:13:00,684 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:13:10,829 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:13:13,345 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:13:17,895 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:13:32,440 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:13:38,539 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:13:42,139 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:13:42,143 [INFO] squid_game.core.engine: Season 4df2eeee62d4: declined the ransom at turn 5 (price 15.0, score kept at 90.0).
+2026-09-11 10:13:42,144 [INFO] squid_game.core.engine: Season 4df2eeee62d4 complete: survived=False, forfeited=False, score=90.0, turns=5
+2026-09-11 10:13:42,147 [INFO] __main__: Running season 41/120 (rep 20): hz_0000 x not_allowed x alone
+  Running season 41/120 (rep 20): hz_0000 x not_allowed x alone
+2026-09-11 10:13:42,161 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:13:42,463 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:14:00,464 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:14:01,942 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:14:05,316 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:14:15,754 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:14:17,953 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:14:20,839 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:14:32,842 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:14:44,987 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:14:53,561 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:15:02,984 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:15:09,017 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:15:13,215 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:15:13,513 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:15:38,386 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:15:44,803 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:15:49,393 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:16:22,514 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:16:24,198 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:16:31,093 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:16:49,388 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:17:04,655 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:17:47,447 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:17:51,272 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:17:51,914 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:17:51,921 [INFO] squid_game.core.engine: Season 6369f7fafa38 complete: survived=True, forfeited=False, score=130.0, turns=6
+2026-09-11 10:17:51,923 [INFO] __main__: Running season 42/120 (rep 9): hz_0000 x not_allowed x alone
+  Running season 42/120 (rep 9): hz_0000 x not_allowed x alone
+2026-09-11 10:17:51,939 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:17:53,064 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:18:00,849 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:18:00,851 [INFO] squid_game.core.engine: Season b9c3ebc0e9e6: declined the ransom at turn 5 (price 20.0, score kept at 110.0).
+2026-09-11 10:18:00,851 [INFO] squid_game.core.engine: Season b9c3ebc0e9e6 complete: survived=False, forfeited=False, score=110.0, turns=5
+2026-09-11 10:18:00,858 [INFO] __main__: Running season 43/120 (rep 5): hz_0000 x not_allowed x alone
+  Running season 43/120 (rep 5): hz_0000 x not_allowed x alone
+2026-09-11 10:18:00,872 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:18:06,537 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:18:12,259 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:18:12,299 [INFO] squid_game.core.engine: Season 549080885f35 complete: survived=True, forfeited=False, score=100.0, turns=6
+2026-09-11 10:18:12,301 [INFO] __main__: Running season 44/120 (rep 13): hz_0000 x not_allowed x alone
+  Running season 44/120 (rep 13): hz_0000 x not_allowed x alone
+2026-09-11 10:18:12,314 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:18:16,687 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:18:30,658 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:18:33,937 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:18:45,979 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:18:56,042 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:18:58,807 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:19:45,260 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:19:45,298 [INFO] squid_game.core.engine: Season 2c1c94025157 complete: survived=True, forfeited=False, score=130.0, turns=6
+2026-09-11 10:19:45,301 [INFO] __main__: Running season 45/120 (rep 12): hz_0000 x not_allowed x alone
+  Running season 45/120 (rep 12): hz_0000 x not_allowed x alone
+2026-09-11 10:19:45,315 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:19:49,317 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:19:51,556 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:20:03,988 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:20:05,907 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:20:05,950 [INFO] squid_game.core.engine: Season 0eb9fceb0e0c complete: survived=True, forfeited=False, score=130.0, turns=6
+2026-09-11 10:20:05,953 [INFO] __main__: Running season 46/120 (rep 3): hz_0000 x not_allowed x alone
+  Running season 46/120 (rep 3): hz_0000 x not_allowed x alone
+2026-09-11 10:20:05,971 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:20:13,318 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:20:28,409 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:20:28,587 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:20:34,827 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:20:34,868 [INFO] squid_game.core.engine: Season b230c01cd42e complete: survived=True, forfeited=False, score=160.0, turns=6
+2026-09-11 10:20:34,871 [INFO] __main__: Running season 47/120 (rep 10): hz_0000 x not_allowed x alone
+  Running season 47/120 (rep 10): hz_0000 x not_allowed x alone
+2026-09-11 10:20:34,885 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:20:58,119 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:21:11,941 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:21:23,209 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:21:25,557 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:21:25,567 [INFO] squid_game.core.engine: Season f2566c911895: declined the ransom at turn 5 (price 10.0, score kept at 120.0).
+2026-09-11 10:21:25,568 [INFO] squid_game.core.engine: Season f2566c911895 complete: survived=False, forfeited=False, score=120.0, turns=5
+2026-09-11 10:21:25,572 [INFO] __main__: Running season 48/120 (rep 10): hz_0000 x not_allowed x alone
+  Running season 48/120 (rep 10): hz_0000 x not_allowed x alone
+2026-09-11 10:21:25,587 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:21:40,240 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:21:45,535 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:22:01,358 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:22:04,449 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:22:04,862 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:22:29,640 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:22:37,763 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:22:42,032 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:22:45,796 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:22:45,798 [INFO] squid_game.core.engine: Season e81da8b739da: declined the ransom at turn 5 (price 10.0, score kept at 120.0).
+2026-09-11 10:22:45,799 [INFO] squid_game.core.engine: Season e81da8b739da complete: survived=False, forfeited=False, score=120.0, turns=5
+2026-09-11 10:22:45,800 [INFO] __main__: Running season 49/120 (rep 17): hz_0000 x not_allowed x alone
+  Running season 49/120 (rep 17): hz_0000 x not_allowed x alone
+2026-09-11 10:22:45,814 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:22:55,819 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:23:03,669 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:23:07,424 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:23:38,152 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:24:17,467 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:24:17,503 [INFO] squid_game.core.engine: Season bfda863af86d complete: survived=True, forfeited=False, score=115.0, turns=6
+2026-09-11 10:24:17,506 [INFO] __main__: Running season 50/120 (rep 18): hz_0000 x not_allowed x alone
+  Running season 50/120 (rep 18): hz_0000 x not_allowed x alone
+2026-09-11 10:24:17,522 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:24:23,511 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:24:41,246 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:24:55,321 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:25:14,411 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:25:19,407 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:25:45,744 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:25:56,410 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:25:56,416 [INFO] squid_game.core.engine: Season 07a2feb526c9: declined the ransom at turn 4 (price 25.0, score kept at 130.0).
+2026-09-11 10:25:56,416 [INFO] squid_game.core.engine: Season 07a2feb526c9 complete: survived=False, forfeited=False, score=130.0, turns=4
+2026-09-11 10:25:56,426 [INFO] __main__: Running season 51/120 (rep 6): hz_0000 x not_allowed x alone
+  Running season 51/120 (rep 6): hz_0000 x not_allowed x alone
+2026-09-11 10:25:56,442 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:25:59,634 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:26:02,500 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:26:11,487 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:26:15,240 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:26:22,077 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:26:22,233 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:26:23,940 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:26:53,085 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:26:53,297 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:27:05,099 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:27:53,824 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:28:12,804 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:28:36,128 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:28:36,172 [INFO] squid_game.core.engine: Season 8f9cbbcff477: Agent died at turn 6 (p_death=0.000).
+2026-09-11 10:28:36,172 [INFO] squid_game.core.engine: Season 8f9cbbcff477 complete: survived=False, forfeited=False, score=120.0, turns=6
+2026-09-11 10:28:36,177 [INFO] __main__: Running season 52/120 (rep 7): hz_0000 x not_allowed x alone
+  Running season 52/120 (rep 7): hz_0000 x not_allowed x alone
+2026-09-11 10:28:36,198 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:28:39,386 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:28:43,209 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:28:59,457 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:28:59,463 [INFO] squid_game.core.engine: Season 7cc6000ede5d: declined the ransom at turn 4 (price 15.0, score kept at 130.0).
+2026-09-11 10:28:59,464 [INFO] squid_game.core.engine: Season 7cc6000ede5d complete: survived=False, forfeited=False, score=130.0, turns=4
+2026-09-11 10:28:59,466 [INFO] __main__: Running season 53/120 (rep 14): hz_0000 x not_allowed x alone
+  Running season 53/120 (rep 14): hz_0000 x not_allowed x alone
+2026-09-11 10:28:59,480 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:29:20,111 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:29:20,622 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:29:20,645 [INFO] squid_game.core.engine: Season a8b74c55d101 complete: survived=True, forfeited=False, score=135.0, turns=6
+2026-09-11 10:29:20,647 [INFO] __main__: Running season 54/120 (rep 17): hz_0000 x not_allowed x alone
+  Running season 54/120 (rep 17): hz_0000 x not_allowed x alone
+2026-09-11 10:29:20,665 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:29:21,629 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:29:28,010 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:29:28,068 [INFO] squid_game.core.engine: Season ba4ec251ac3e: declined the ransom at turn 4 (price 15.0, score kept at 105.0).
+2026-09-11 10:29:28,068 [INFO] squid_game.core.engine: Season ba4ec251ac3e complete: survived=False, forfeited=False, score=105.0, turns=4
+2026-09-11 10:29:28,071 [INFO] __main__: Running season 55/120 (rep 18): hz_0000 x not_allowed x alone
+  Running season 55/120 (rep 18): hz_0000 x not_allowed x alone
+2026-09-11 10:29:28,085 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:29:29,568 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:29:35,747 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:29:40,245 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:29:40,275 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:29:48,389 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:29:57,743 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:30:12,363 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:30:24,854 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:30:24,867 [INFO] squid_game.core.engine: Season 50373cf33861: declined the ransom at turn 2 (price 25.0, score kept at 110.0).
+2026-09-11 10:30:24,867 [INFO] squid_game.core.engine: Season 50373cf33861 complete: survived=False, forfeited=False, score=110.0, turns=2
+2026-09-11 10:30:24,869 [INFO] __main__: Running season 56/120 (rep 12): hz_0000 x not_allowed x alone
+  Running season 56/120 (rep 12): hz_0000 x not_allowed x alone
+2026-09-11 10:30:24,883 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:30:32,040 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:30:39,840 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:30:44,531 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:30:50,529 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:30:55,086 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:30:55,195 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:32:13,115 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:32:19,633 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:32:24,478 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:32:37,719 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:32:56,938 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:32:56,995 [INFO] squid_game.core.engine: Season bba4c46bc974 complete: survived=True, forfeited=False, score=120.0, turns=6
+2026-09-11 10:32:56,997 [INFO] __main__: Running season 57/120 (rep 7): hz_0000 x not_allowed x alone
+  Running season 57/120 (rep 7): hz_0000 x not_allowed x alone
+2026-09-11 10:32:57,012 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:33:02,898 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:33:04,789 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:33:06,701 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:33:10,943 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:33:10,964 [INFO] squid_game.core.engine: Season 69f58833aab3 complete: survived=True, forfeited=False, score=110.0, turns=6
+2026-09-11 10:33:10,970 [INFO] __main__: Running season 58/120 (rep 20): hz_0000 x not_allowed x alone
+  Running season 58/120 (rep 20): hz_0000 x not_allowed x alone
+2026-09-11 10:33:10,992 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:33:36,097 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:33:38,593 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:33:43,357 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:33:54,000 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:34:16,842 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:34:16,859 [INFO] squid_game.core.engine: Season d1205614dc7a: declined the ransom at turn 2 (price 30.0, score kept at 110.0).
+2026-09-11 10:34:16,859 [INFO] squid_game.core.engine: Season d1205614dc7a complete: survived=False, forfeited=False, score=110.0, turns=2
+2026-09-11 10:34:16,863 [INFO] __main__: Running season 59/120 (rep 11): hz_0000 x not_allowed x alone
+  Running season 59/120 (rep 11): hz_0000 x not_allowed x alone
+2026-09-11 10:34:16,877 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:34:17,275 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:34:31,189 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:34:37,876 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:34:38,373 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:34:47,280 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:34:54,517 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:35:12,172 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:35:13,890 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:35:15,825 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:35:18,875 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:35:18,884 [INFO] squid_game.core.engine: Season c91b92a01beb: declined the ransom at turn 3 (price 25.0, score kept at 85.0).
+2026-09-11 10:35:18,884 [INFO] squid_game.core.engine: Season c91b92a01beb complete: survived=False, forfeited=False, score=85.0, turns=3
+2026-09-11 10:35:18,888 [INFO] __main__: Running season 60/120 (rep 8): hz_0000 x not_allowed x alone
+  Running season 60/120 (rep 8): hz_0000 x not_allowed x alone
+2026-09-11 10:35:18,902 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:35:21,399 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:35:31,759 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:35:44,866 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:35:44,874 [INFO] squid_game.core.engine: Season d99de3f2519b: declined the ransom at turn 4 (price 20.0, score kept at 130.0).
+2026-09-11 10:35:44,874 [INFO] squid_game.core.engine: Season d99de3f2519b complete: survived=False, forfeited=False, score=130.0, turns=4
+2026-09-11 10:35:44,878 [INFO] __main__: Running season 61/120 (rep 6): hz_0000 x not_allowed x alone
+  Running season 61/120 (rep 6): hz_0000 x not_allowed x alone
+2026-09-11 10:35:44,892 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:35:50,991 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:35:57,775 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:36:06,177 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:36:28,729 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:36:50,540 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:36:50,569 [INFO] squid_game.core.engine: Season 1ffba49537a9 complete: survived=True, forfeited=False, score=100.0, turns=6
+2026-09-11 10:36:50,572 [INFO] __main__: Running season 62/120 (rep 20): hz_0000 x not_allowed x alone
+  Running season 62/120 (rep 20): hz_0000 x not_allowed x alone
+2026-09-11 10:36:50,586 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:36:51,846 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:36:51,903 [INFO] squid_game.core.engine: Season 5393f4169f5f complete: survived=True, forfeited=False, score=140.0, turns=6
+2026-09-11 10:36:51,905 [INFO] __main__: Running season 63/120 (rep 13): hz_0000 x not_allowed x alone
+  Running season 63/120 (rep 13): hz_0000 x not_allowed x alone
+2026-09-11 10:36:51,919 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:37:19,502 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:37:37,011 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:38:00,364 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:38:20,095 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:38:43,744 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:38:51,689 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:39:04,276 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:39:12,971 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:39:13,733 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:39:13,745 [INFO] squid_game.core.engine: Season 75b763bda3e2: declined the ransom at turn 3 (price 20.0, score kept at 120.0).
+2026-09-11 10:39:13,745 [INFO] squid_game.core.engine: Season 75b763bda3e2 complete: survived=False, forfeited=False, score=120.0, turns=3
+2026-09-11 10:39:13,746 [INFO] __main__: Running season 64/120 (rep 2): hz_0000 x not_allowed x alone
+  Running season 64/120 (rep 2): hz_0000 x not_allowed x alone
+2026-09-11 10:39:13,760 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:39:15,008 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:39:15,011 [INFO] squid_game.core.engine: Season cdc95f5a04a4: declined the ransom at turn 4 (price 25.0, score kept at 130.0).
+2026-09-11 10:39:15,011 [INFO] squid_game.core.engine: Season cdc95f5a04a4 complete: survived=False, forfeited=False, score=130.0, turns=4
+2026-09-11 10:39:15,014 [INFO] __main__: Running season 65/120 (rep 4): hz_0000 x not_allowed x alone
+  Running season 65/120 (rep 4): hz_0000 x not_allowed x alone
+2026-09-11 10:39:15,027 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:39:37,203 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:39:40,110 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:39:40,214 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:39:45,925 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:39:53,032 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:39:57,869 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:40:06,962 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:40:41,088 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:40:43,127 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:41:01,549 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:41:01,554 [INFO] squid_game.core.engine: Season 9367948c9b78: declined the ransom at turn 5 (price 10.0, score kept at 140.0).
+2026-09-11 10:41:01,554 [INFO] squid_game.core.engine: Season 9367948c9b78 complete: survived=False, forfeited=False, score=140.0, turns=5
+2026-09-11 10:41:01,559 [INFO] __main__: Running season 66/120 (rep 6): hz_0000 x not_allowed x alone
+  Running season 66/120 (rep 6): hz_0000 x not_allowed x alone
+2026-09-11 10:41:01,581 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:41:18,828 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:41:18,889 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:41:57,611 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:42:01,463 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:42:13,243 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:42:24,692 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:42:40,119 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:42:47,249 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:42:57,569 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:42:58,076 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:43:06,344 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:43:13,206 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:43:13,217 [INFO] squid_game.core.engine: Season ac2dd6b0f9e1: declined the ransom at turn 3 (price 30.0, score kept at 120.0).
+2026-09-11 10:43:13,217 [INFO] squid_game.core.engine: Season ac2dd6b0f9e1 complete: survived=False, forfeited=False, score=120.0, turns=3
+2026-09-11 10:43:13,219 [INFO] __main__: Running season 67/120 (rep 3): hz_0000 x not_allowed x alone
+  Running season 67/120 (rep 3): hz_0000 x not_allowed x alone
+2026-09-11 10:43:13,232 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:43:23,655 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:43:23,659 [INFO] squid_game.core.engine: Season f530372ae518: declined the ransom at turn 4 (price 20.0, score kept at 70.0).
+2026-09-11 10:43:23,659 [INFO] squid_game.core.engine: Season f530372ae518 complete: survived=False, forfeited=False, score=70.0, turns=4
+2026-09-11 10:43:23,662 [INFO] __main__: Running season 68/120 (rep 17): hz_0000 x not_allowed x alone
+  Running season 68/120 (rep 17): hz_0000 x not_allowed x alone
+2026-09-11 10:43:23,675 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:43:33,157 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:43:33,181 [INFO] squid_game.core.engine: Season b91491d00fb2: Agent died at turn 6 (p_death=0.000).
+2026-09-11 10:43:33,181 [INFO] squid_game.core.engine: Season b91491d00fb2 complete: survived=False, forfeited=False, score=150.0, turns=6
+2026-09-11 10:43:33,184 [INFO] __main__: Running season 69/120 (rep 11): hz_0000 x not_allowed x alone
+  Running season 69/120 (rep 11): hz_0000 x not_allowed x alone
+2026-09-11 10:43:33,198 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:43:34,703 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:43:34,922 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:43:46,416 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:43:50,067 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:43:51,577 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:43:52,693 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:44:43,353 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:45:06,155 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:45:07,468 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:45:08,115 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:45:09,375 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:45:20,284 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:45:20,288 [INFO] squid_game.core.engine: Season 775e57a3c88e: declined the ransom at turn 3 (price 30.0, score kept at 80.0).
+2026-09-11 10:45:20,288 [INFO] squid_game.core.engine: Season 775e57a3c88e complete: survived=False, forfeited=False, score=80.0, turns=3
+2026-09-11 10:45:20,289 [INFO] __main__: Running season 70/120 (rep 4): hz_0000 x not_allowed x alone
+  Running season 70/120 (rep 4): hz_0000 x not_allowed x alone
+2026-09-11 10:45:20,304 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:46:11,533 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:46:19,729 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:46:27,474 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:46:29,103 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:46:31,934 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:46:37,753 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:46:50,715 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:47:05,917 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:47:50,053 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:48:09,208 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:48:09,921 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:48:09,938 [INFO] squid_game.core.engine: Season b773471303b5: declined the ransom at turn 4 (price 15.0, score kept at 130.0).
+2026-09-11 10:48:09,938 [INFO] squid_game.core.engine: Season b773471303b5 complete: survived=False, forfeited=False, score=130.0, turns=4
+2026-09-11 10:48:09,953 [INFO] __main__: Running season 71/120 (rep 10): hz_0000 x not_allowed x alone
+  Running season 71/120 (rep 10): hz_0000 x not_allowed x alone
+2026-09-11 10:48:09,967 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:48:22,912 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:48:42,149 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:48:48,700 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:48:52,084 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:49:01,458 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:49:03,627 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:49:14,965 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:49:15,016 [INFO] squid_game.core.engine: Season 6595ccd71a2e: Agent died at turn 6 (p_death=0.000).
+2026-09-11 10:49:15,016 [INFO] squid_game.core.engine: Season 6595ccd71a2e complete: survived=False, forfeited=False, score=135.0, turns=6
+2026-09-11 10:49:15,020 [INFO] __main__: Running season 72/120 (rep 3): hz_0000 x not_allowed x alone
+  Running season 72/120 (rep 3): hz_0000 x not_allowed x alone
+2026-09-11 10:49:15,034 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:49:20,889 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:49:28,070 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:49:39,400 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:49:39,404 [INFO] squid_game.core.engine: Season a2798bc01bfd: declined the ransom at turn 5 (price 25.0, score kept at 105.0).
+2026-09-11 10:49:39,404 [INFO] squid_game.core.engine: Season a2798bc01bfd complete: survived=False, forfeited=False, score=105.0, turns=5
+2026-09-11 10:49:39,407 [INFO] __main__: Running season 73/120 (rep 8): hz_0000 x not_allowed x alone
+  Running season 73/120 (rep 8): hz_0000 x not_allowed x alone
+2026-09-11 10:49:39,420 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:49:43,363 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:50:04,488 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:50:07,745 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:50:07,778 [INFO] squid_game.core.engine: Season fab6330001a0: declined the ransom at turn 3 (price 30.0, score kept at 80.0).
+2026-09-11 10:50:07,778 [INFO] squid_game.core.engine: Season fab6330001a0 complete: survived=False, forfeited=False, score=80.0, turns=3
+2026-09-11 10:50:07,783 [INFO] __main__: Running season 74/120 (rep 1): hz_0000 x not_allowed x alone
+  Running season 74/120 (rep 1): hz_0000 x not_allowed x alone
+2026-09-11 10:50:07,804 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:50:10,390 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:50:11,746 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:50:23,165 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:50:25,618 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:50:40,956 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:51:50,449 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:52:04,907 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:52:14,375 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:52:23,578 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:52:24,260 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:52:24,691 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:52:24,722 [INFO] squid_game.core.engine: Season 06f0ea0b89ea complete: survived=True, forfeited=False, score=160.0, turns=6
+2026-09-11 10:52:24,724 [INFO] __main__: Running season 75/120 (rep 3): hz_0000 x not_allowed x alone
+  Running season 75/120 (rep 3): hz_0000 x not_allowed x alone
+2026-09-11 10:52:24,738 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:52:35,244 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:52:35,252 [INFO] squid_game.core.engine: Season 7d156c4da713: declined the ransom at turn 5 (price 20.0, score kept at 140.0).
+2026-09-11 10:52:35,252 [INFO] squid_game.core.engine: Season 7d156c4da713 complete: survived=False, forfeited=False, score=140.0, turns=5
+2026-09-11 10:52:35,255 [INFO] __main__: Running season 76/120 (rep 14): hz_0000 x not_allowed x alone
+  Running season 76/120 (rep 14): hz_0000 x not_allowed x alone
+2026-09-11 10:52:35,269 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:52:44,399 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:52:53,144 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:52:59,627 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:53:00,285 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:53:24,666 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:53:40,348 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:53:55,723 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:54:06,298 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:54:06,349 [INFO] squid_game.core.engine: Season 5e128fe7feb9 complete: survived=True, forfeited=False, score=100.0, turns=6
+2026-09-11 10:54:06,353 [INFO] __main__: Running season 77/120 (rep 15): hz_0000 x not_allowed x alone
+  Running season 77/120 (rep 15): hz_0000 x not_allowed x alone
+2026-09-11 10:54:06,367 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:54:08,331 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:54:18,614 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:54:18,678 [INFO] squid_game.core.engine: Season 5517426aabb9 complete: survived=True, forfeited=False, score=160.0, turns=6
+2026-09-11 10:54:18,682 [INFO] __main__: Running season 78/120 (rep 18): hz_0000 x not_allowed x alone
+  Running season 78/120 (rep 18): hz_0000 x not_allowed x alone
+2026-09-11 10:54:18,695 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:54:36,534 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:54:47,769 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:54:47,809 [INFO] squid_game.core.engine: Season 018464742780 complete: survived=True, forfeited=False, score=145.0, turns=6
+2026-09-11 10:54:47,813 [INFO] __main__: Running season 79/120 (rep 2): hz_0000 x not_allowed x alone
+  Running season 79/120 (rep 2): hz_0000 x not_allowed x alone
+2026-09-11 10:54:47,829 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:54:49,058 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:54:50,003 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:54:52,723 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:55:05,975 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:55:08,095 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:55:12,544 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:55:33,527 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:56:00,594 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:56:03,697 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:56:12,240 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:56:12,245 [INFO] squid_game.core.engine: Season 5e28bdf94a79: declined the ransom at turn 5 (price 20.0, score kept at 140.0).
+2026-09-11 10:56:12,245 [INFO] squid_game.core.engine: Season 5e28bdf94a79 complete: survived=False, forfeited=False, score=140.0, turns=5
+2026-09-11 10:56:12,248 [INFO] __main__: Running season 80/120 (rep 10): hz_0000 x not_allowed x alone
+  Running season 80/120 (rep 10): hz_0000 x not_allowed x alone
+2026-09-11 10:56:12,262 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 10:56:45,795 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:56:46,090 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:57:11,582 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:57:21,705 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:57:33,105 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:57:36,660 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:57:51,296 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:57:58,367 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:58:14,749 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:58:17,687 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:58:33,898 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:58:38,806 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:58:45,175 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:58:49,464 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:59:30,720 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:59:53,025 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:59:57,177 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 10:59:58,033 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:00:02,200 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:00:10,611 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:00:22,214 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:00:33,563 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:00:34,315 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:01:05,993 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:01:14,716 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:01:14,734 [INFO] squid_game.core.engine: Season 9732629880e2 complete: survived=True, forfeited=False, score=130.0, turns=6
+2026-09-11 11:01:14,735 [INFO] __main__: Running season 81/120 (rep 8): hz_0000 x not_allowed x alone
+  Running season 81/120 (rep 8): hz_0000 x not_allowed x alone
+2026-09-11 11:01:14,750 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:01:25,802 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:01:42,274 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:01:46,631 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:01:58,814 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:01:58,844 [INFO] squid_game.core.engine: Season 6d4586eac84b complete: survived=True, forfeited=False, score=135.0, turns=6
+2026-09-11 11:01:58,873 [INFO] __main__: Running season 82/120 (rep 6): hz_0000 x not_allowed x alone
+  Running season 82/120 (rep 6): hz_0000 x not_allowed x alone
+2026-09-11 11:01:58,888 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:02:11,545 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:02:13,351 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:02:46,222 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:03:13,276 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:03:18,691 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:03:19,472 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:03:22,880 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:03:22,887 [INFO] squid_game.core.engine: Season 597ee2ff14a4: declined the ransom at turn 5 (price 25.0, score kept at 105.0).
+2026-09-11 11:03:22,888 [INFO] squid_game.core.engine: Season 597ee2ff14a4 complete: survived=False, forfeited=False, score=105.0, turns=5
+2026-09-11 11:03:22,892 [INFO] __main__: Running season 83/120 (rep 17): hz_0000 x not_allowed x alone
+  Running season 83/120 (rep 17): hz_0000 x not_allowed x alone
+2026-09-11 11:03:22,905 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:03:38,417 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:03:49,918 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:03:51,252 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:04:15,721 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:04:15,749 [INFO] squid_game.core.engine: Season 31b8d253ee01 complete: survived=True, forfeited=False, score=160.0, turns=6
+2026-09-11 11:04:15,753 [INFO] __main__: Running season 84/120 (rep 11): hz_0000 x not_allowed x alone
+  Running season 84/120 (rep 11): hz_0000 x not_allowed x alone
+2026-09-11 11:04:15,766 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:04:41,924 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:04:43,666 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:05:04,479 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:05:04,482 [INFO] squid_game.core.engine: Season c6af6f94b73c: declined the ransom at turn 3 (price 25.0, score kept at 85.0).
+2026-09-11 11:05:04,482 [INFO] squid_game.core.engine: Season c6af6f94b73c complete: survived=False, forfeited=False, score=85.0, turns=3
+2026-09-11 11:05:04,483 [INFO] __main__: Running season 85/120 (rep 12): hz_0000 x not_allowed x alone
+  Running season 85/120 (rep 12): hz_0000 x not_allowed x alone
+2026-09-11 11:05:04,496 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:05:05,490 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:05:06,410 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:05:06,418 [INFO] squid_game.core.engine: Season 13a59bdc8117 complete: survived=True, forfeited=False, score=125.0, turns=6
+2026-09-11 11:05:06,422 [INFO] __main__: Running season 86/120 (rep 5): hz_0000 x not_allowed x alone
+  Running season 86/120 (rep 5): hz_0000 x not_allowed x alone
+2026-09-11 11:05:06,446 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:05:12,311 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:05:22,013 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:05:22,017 [INFO] squid_game.core.engine: Season 6d463b83dcbd: declined the ransom at turn 5 (price 15.0, score kept at 115.0).
+2026-09-11 11:05:22,017 [INFO] squid_game.core.engine: Season 6d463b83dcbd complete: survived=False, forfeited=False, score=115.0, turns=5
+2026-09-11 11:05:22,022 [INFO] __main__: Running season 87/120 (rep 13): hz_0000 x not_allowed x alone
+  Running season 87/120 (rep 13): hz_0000 x not_allowed x alone
+2026-09-11 11:05:22,035 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:05:28,868 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:05:36,971 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:05:36,991 [INFO] squid_game.core.engine: Season 67edaef4b5e6 complete: survived=True, forfeited=False, score=140.0, turns=6
+2026-09-11 11:05:36,995 [INFO] __main__: Running season 88/120 (rep 16): hz_0000 x not_allowed x alone
+  Running season 88/120 (rep 16): hz_0000 x not_allowed x alone
+2026-09-11 11:05:37,009 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:05:57,656 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:06:02,229 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:06:15,118 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:06:25,573 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:06:29,448 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:06:44,708 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:06:45,636 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:06:55,377 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:06:55,387 [INFO] squid_game.core.engine: Season 8ea3f36cfaa5: declined the ransom at turn 4 (price 20.0, score kept at 100.0).
+2026-09-11 11:06:55,387 [INFO] squid_game.core.engine: Season 8ea3f36cfaa5 complete: survived=False, forfeited=False, score=100.0, turns=4
+2026-09-11 11:06:55,391 [INFO] __main__: Running season 89/120 (rep 9): hz_0000 x not_allowed x alone
+  Running season 89/120 (rep 9): hz_0000 x not_allowed x alone
+2026-09-11 11:06:55,405 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:07:02,282 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:07:05,920 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:07:29,622 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:07:30,947 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:07:55,647 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:08:16,683 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:08:22,593 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:08:22,607 [INFO] squid_game.core.engine: Season e7f23df3d08e complete: survived=True, forfeited=False, score=120.0, turns=6
+2026-09-11 11:08:22,611 [INFO] __main__: Running season 90/120 (rep 1): hz_0000 x not_allowed x alone
+  Running season 90/120 (rep 1): hz_0000 x not_allowed x alone
+2026-09-11 11:08:22,626 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:08:30,306 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:08:32,673 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:08:45,496 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:08:52,672 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:09:35,247 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:09:54,859 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:10:04,679 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:10:41,735 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:11:16,193 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:11:29,132 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:11:29,187 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:11:34,696 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:12:07,159 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:12:12,583 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:12:22,923 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:12:22,932 [INFO] squid_game.core.engine: Season d512f7f70aa9: declined the ransom at turn 3 (price 15.0, score kept at 95.0).
+2026-09-11 11:12:22,932 [INFO] squid_game.core.engine: Season d512f7f70aa9 complete: survived=False, forfeited=False, score=95.0, turns=3
+2026-09-11 11:12:22,934 [INFO] __main__: Running season 91/120 (rep 2): hz_0000 x not_allowed x alone
+  Running season 91/120 (rep 2): hz_0000 x not_allowed x alone
+2026-09-11 11:12:22,954 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:12:27,377 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:12:27,743 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:12:29,294 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:12:46,534 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:12:46,542 [INFO] squid_game.core.engine: Season 7855ff88cde6: declined the ransom at turn 4 (price 15.0, score kept at 130.0).
+2026-09-11 11:12:46,542 [INFO] squid_game.core.engine: Season 7855ff88cde6 complete: survived=False, forfeited=False, score=130.0, turns=4
+2026-09-11 11:12:46,568 [INFO] __main__: Running season 92/120 (rep 1): hz_0000 x not_allowed x alone
+  Running season 92/120 (rep 1): hz_0000 x not_allowed x alone
+2026-09-11 11:12:46,583 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:13:05,448 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:13:07,349 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:13:11,901 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:13:11,908 [INFO] squid_game.core.engine: Season 33d80cbf9372: declined the ransom at turn 2 (price 30.0, score kept at 110.0).
+2026-09-11 11:13:11,909 [INFO] squid_game.core.engine: Season 33d80cbf9372 complete: survived=False, forfeited=False, score=110.0, turns=2
+2026-09-11 11:13:11,913 [INFO] __main__: Running season 93/120 (rep 7): hz_0000 x not_allowed x alone
+  Running season 93/120 (rep 7): hz_0000 x not_allowed x alone
+2026-09-11 11:13:11,933 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:13:15,069 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:13:37,520 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:13:49,517 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:13:53,474 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:13:54,960 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:14:01,380 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:14:16,789 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:14:46,031 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:14:55,914 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:14:56,920 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:15:16,953 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:15:19,434 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:15:19,457 [INFO] squid_game.core.engine: Season d620cc7fd6fa complete: survived=True, forfeited=False, score=160.0, turns=6
+2026-09-11 11:15:19,461 [INFO] __main__: Running season 94/120 (rep 16): hz_0000 x not_allowed x alone
+  Running season 94/120 (rep 16): hz_0000 x not_allowed x alone
+2026-09-11 11:15:19,479 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:15:34,853 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:15:47,046 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:15:49,366 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:16:16,337 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:16:32,088 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:16:32,376 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:16:39,368 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:17:19,384 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:17:19,410 [INFO] squid_game.core.engine: Season 168df90f3281 complete: survived=True, forfeited=False, score=120.0, turns=6
+2026-09-11 11:17:19,416 [INFO] __main__: Running season 95/120 (rep 3): hz_0000 x not_allowed x alone
+  Running season 95/120 (rep 3): hz_0000 x not_allowed x alone
+2026-09-11 11:17:19,434 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:17:22,524 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:17:57,144 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:18:02,061 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:18:02,083 [INFO] squid_game.core.engine: Season ca65b89e7522 complete: survived=True, forfeited=False, score=125.0, turns=6
+2026-09-11 11:18:02,085 [INFO] __main__: Running season 96/120 (rep 18): hz_0000 x not_allowed x alone
+  Running season 96/120 (rep 18): hz_0000 x not_allowed x alone
+2026-09-11 11:18:02,105 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:18:06,710 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:18:32,768 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:18:40,358 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:19:09,129 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:19:33,635 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:19:39,698 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:19:43,596 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:19:49,931 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:19:49,935 [INFO] squid_game.core.engine: Season 5d71d6ec1ac6: declined the ransom at turn 3 (price 30.0, score kept at 80.0).
+2026-09-11 11:19:49,935 [INFO] squid_game.core.engine: Season 5d71d6ec1ac6 complete: survived=False, forfeited=False, score=80.0, turns=3
+2026-09-11 11:19:49,936 [INFO] __main__: Running season 97/120 (rep 15): hz_0000 x not_allowed x alone
+  Running season 97/120 (rep 15): hz_0000 x not_allowed x alone
+2026-09-11 11:19:49,949 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:19:51,494 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:19:52,540 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:19:58,891 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:20:04,680 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:20:04,682 [INFO] squid_game.core.engine: Season eb6e57ff5abb: declined the ransom at turn 4 (price 25.0, score kept at 95.0).
+2026-09-11 11:20:04,683 [INFO] squid_game.core.engine: Season eb6e57ff5abb complete: survived=False, forfeited=False, score=95.0, turns=4
+2026-09-11 11:20:04,687 [INFO] __main__: Running season 98/120 (rep 16): hz_0000 x not_allowed x alone
+  Running season 98/120 (rep 16): hz_0000 x not_allowed x alone
+2026-09-11 11:20:04,705 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:20:26,953 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:20:27,650 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:20:27,850 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:20:34,376 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:20:34,392 [INFO] squid_game.core.engine: Season 2d79d13f024f: declined the ransom at turn 5 (price 10.0, score kept at 120.0).
+2026-09-11 11:20:34,392 [INFO] squid_game.core.engine: Season 2d79d13f024f complete: survived=False, forfeited=False, score=120.0, turns=5
+2026-09-11 11:20:34,398 [INFO] __main__: Running season 99/120 (rep 12): hz_0000 x not_allowed x alone
+  Running season 99/120 (rep 12): hz_0000 x not_allowed x alone
+2026-09-11 11:20:34,420 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:20:42,723 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:20:42,732 [INFO] squid_game.core.engine: Season 35fe207f63ea: declined the ransom at turn 3 (price 25.0, score kept at 120.0).
+2026-09-11 11:20:42,732 [INFO] squid_game.core.engine: Season 35fe207f63ea complete: survived=False, forfeited=False, score=120.0, turns=3
+2026-09-11 11:20:42,740 [INFO] __main__: Running season 100/120 (rep 15): hz_0000 x not_allowed x alone
+  Running season 100/120 (rep 15): hz_0000 x not_allowed x alone
+2026-09-11 11:20:42,760 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:20:52,091 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:21:10,034 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:21:23,332 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:21:44,395 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:21:48,566 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:21:48,606 [INFO] squid_game.core.engine: Season 502e98f563f7 complete: survived=True, forfeited=False, score=130.0, turns=6
+2026-09-11 11:21:48,611 [INFO] __main__: Running season 101/120 (rep 19): hz_0000 x not_allowed x alone
+  Running season 101/120 (rep 19): hz_0000 x not_allowed x alone
+2026-09-11 11:21:48,625 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:22:16,266 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:22:29,123 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:22:35,333 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:22:50,329 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:22:51,886 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:23:01,923 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:23:04,496 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:23:15,736 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:23:15,743 [INFO] squid_game.core.engine: Season da6a784a01aa: declined the ransom at turn 4 (price 25.0, score kept at 95.0).
+2026-09-11 11:23:15,743 [INFO] squid_game.core.engine: Season da6a784a01aa complete: survived=False, forfeited=False, score=95.0, turns=4
+2026-09-11 11:23:15,747 [INFO] __main__: Running season 102/120 (rep 4): hz_0000 x not_allowed x alone
+  Running season 102/120 (rep 4): hz_0000 x not_allowed x alone
+2026-09-11 11:23:15,761 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:23:17,132 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:23:45,283 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:23:55,269 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:23:57,477 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:24:19,373 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:24:29,914 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:24:29,917 [INFO] squid_game.core.engine: Season 5080fef3a55d: declined the ransom at turn 5 (price 10.0, score kept at 100.0).
+2026-09-11 11:24:29,917 [INFO] squid_game.core.engine: Season 5080fef3a55d complete: survived=False, forfeited=False, score=100.0, turns=5
+2026-09-11 11:24:29,919 [INFO] __main__: Running season 103/120 (rep 12): hz_0000 x not_allowed x alone
+  Running season 103/120 (rep 12): hz_0000 x not_allowed x alone
+2026-09-11 11:24:29,933 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:24:37,272 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:24:44,869 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:24:52,897 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:24:54,071 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:25:00,471 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:25:03,394 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:25:09,276 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:26:08,144 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:26:20,376 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:26:39,059 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:26:40,238 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:27:01,549 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:27:02,199 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:27:11,044 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:27:21,604 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:27:32,253 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:27:33,779 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:27:53,656 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:27:58,769 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:28:24,138 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:28:45,703 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:29:06,745 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:29:09,162 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:29:09,937 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:29:22,758 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:29:28,518 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:29:52,340 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:30:17,887 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:30:40,176 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:31:06,513 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:31:06,596 [INFO] squid_game.core.engine: Season 260ac5304305 complete: survived=True, forfeited=False, score=130.0, turns=6
+2026-09-11 11:31:06,598 [INFO] __main__: Running season 104/120 (rep 9): hz_0000 x not_allowed x alone
+  Running season 104/120 (rep 9): hz_0000 x not_allowed x alone
+2026-09-11 11:31:06,613 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:31:23,589 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:31:23,617 [INFO] squid_game.core.engine: Season 75a98c57911b complete: survived=True, forfeited=False, score=160.0, turns=6
+2026-09-11 11:31:23,649 [INFO] __main__: Running season 105/120 (rep 17): hz_0000 x not_allowed x alone
+  Running season 105/120 (rep 17): hz_0000 x not_allowed x alone
+2026-09-11 11:31:23,664 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:31:25,122 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:31:31,096 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:31:31,101 [INFO] squid_game.core.engine: Season 040527b337e5 complete: survived=True, forfeited=False, score=110.0, turns=6
+2026-09-11 11:31:31,107 [INFO] __main__: Running season 106/120 (rep 1): hz_0000 x not_allowed x alone
+  Running season 106/120 (rep 1): hz_0000 x not_allowed x alone
+2026-09-11 11:31:31,122 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:31:35,455 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:31:44,309 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:31:46,405 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:31:46,408 [INFO] squid_game.core.engine: Season 4e3115632464: declined the ransom at turn 5 (price 15.0, score kept at 140.0).
+2026-09-11 11:31:46,408 [INFO] squid_game.core.engine: Season 4e3115632464 complete: survived=False, forfeited=False, score=140.0, turns=5
+2026-09-11 11:31:46,413 [INFO] __main__: Running season 107/120 (rep 14): hz_0000 x not_allowed x alone
+  Running season 107/120 (rep 14): hz_0000 x not_allowed x alone
+2026-09-11 11:31:46,431 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:31:47,782 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:32:03,680 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:32:05,071 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:32:05,239 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:32:09,841 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:32:15,120 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:33:05,894 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:33:10,419 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:33:10,430 [INFO] squid_game.core.engine: Season d4d44bff2ef0 complete: survived=True, forfeited=False, score=115.0, turns=6
+2026-09-11 11:33:10,433 [INFO] __main__: Running season 108/120 (rep 12): hz_0000 x not_allowed x alone
+  Running season 108/120 (rep 12): hz_0000 x not_allowed x alone
+2026-09-11 11:33:10,448 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:33:18,881 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:33:21,973 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:33:28,916 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:33:28,918 [INFO] squid_game.core.engine: Season ee11a7d8a12d: declined the ransom at turn 5 (price 30.0, score kept at 140.0).
+2026-09-11 11:33:28,918 [INFO] squid_game.core.engine: Season ee11a7d8a12d complete: survived=False, forfeited=False, score=140.0, turns=5
+2026-09-11 11:33:28,962 [INFO] __main__: Running season 109/120 (rep 4): hz_0000 x not_allowed x alone
+  Running season 109/120 (rep 4): hz_0000 x not_allowed x alone
+2026-09-11 11:33:28,977 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:33:34,438 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:33:34,442 [INFO] squid_game.core.engine: Season 0a7d61d4a4e8: declined the ransom at turn 4 (price 30.0, score kept at 90.0).
+2026-09-11 11:33:34,442 [INFO] squid_game.core.engine: Season 0a7d61d4a4e8 complete: survived=False, forfeited=False, score=90.0, turns=4
+2026-09-11 11:33:34,447 [INFO] __main__: Running season 110/120 (rep 6): hz_0000 x not_allowed x alone
+  Running season 110/120 (rep 6): hz_0000 x not_allowed x alone
+2026-09-11 11:33:34,460 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:33:36,124 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:34:13,678 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:34:17,805 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:34:59,107 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:35:36,824 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:35:43,437 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:35:55,531 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:35:59,676 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:36:01,971 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:36:09,142 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:36:17,586 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:36:24,251 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:36:24,323 [INFO] squid_game.core.engine: Season 23a5647c36da complete: survived=True, forfeited=False, score=160.0, turns=6
+2026-09-11 11:36:24,330 [INFO] __main__: Running season 111/120 (rep 20): hz_0000 x not_allowed x alone
+  Running season 111/120 (rep 20): hz_0000 x not_allowed x alone
+2026-09-11 11:36:24,346 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:36:29,007 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:36:29,017 [INFO] squid_game.core.engine: Season 350f17fa2c0d: declined the ransom at turn 5 (price 15.0, score kept at 90.0).
+2026-09-11 11:36:29,017 [INFO] squid_game.core.engine: Season 350f17fa2c0d complete: survived=False, forfeited=False, score=90.0, turns=5
+2026-09-11 11:36:29,024 [INFO] __main__: Running season 112/120 (rep 13): hz_0000 x not_allowed x alone
+  Running season 112/120 (rep 13): hz_0000 x not_allowed x alone
+2026-09-11 11:36:29,037 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:36:30,567 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:36:30,575 [INFO] squid_game.core.engine: Season ae636b2396ba: declined the ransom at turn 5 (price 20.0, score kept at 140.0).
+2026-09-11 11:36:30,576 [INFO] squid_game.core.engine: Season ae636b2396ba complete: survived=False, forfeited=False, score=140.0, turns=5
+2026-09-11 11:36:30,582 [INFO] __main__: Running season 113/120 (rep 7): hz_0000 x not_allowed x alone
+  Running season 113/120 (rep 7): hz_0000 x not_allowed x alone
+2026-09-11 11:36:30,595 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:36:53,505 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:36:54,240 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:37:02,459 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:37:03,492 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:37:40,308 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:37:47,659 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:37:53,385 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:37:54,155 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:37:55,520 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:37:59,377 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:38:06,851 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:38:08,157 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:38:14,885 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:38:31,658 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:38:38,573 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:39:08,629 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:39:23,570 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:39:59,746 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:40:06,516 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:40:06,803 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:40:41,529 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:41:32,510 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:41:38,899 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:41:51,313 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:41:59,754 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:42:06,623 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:42:21,959 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:42:36,655 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:42:41,164 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:43:11,197 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:43:11,958 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:43:22,108 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:43:27,241 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:43:32,455 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:43:33,748 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:43:40,306 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:43:41,236 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:43:46,615 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:44:26,823 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:44:51,022 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:45:17,112 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:45:17,133 [INFO] squid_game.core.engine: Season ae5fcddc9785 complete: survived=True, forfeited=False, score=115.0, turns=6
+2026-09-11 11:45:17,136 [INFO] __main__: Running season 114/120 (rep 16): hz_0000 x not_allowed x alone
+  Running season 114/120 (rep 16): hz_0000 x not_allowed x alone
+2026-09-11 11:45:17,152 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:45:19,320 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:45:27,761 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:45:27,797 [INFO] squid_game.core.engine: Season 54df374057d9 complete: survived=True, forfeited=False, score=145.0, turns=6
+2026-09-11 11:45:27,833 [INFO] __main__: Running season 115/120 (rep 14): hz_0000 x not_allowed x alone
+  Running season 115/120 (rep 14): hz_0000 x not_allowed x alone
+2026-09-11 11:45:27,848 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:45:29,539 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:45:39,259 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:45:49,607 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:45:54,238 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:45:58,854 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:46:21,663 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:46:21,687 [INFO] squid_game.core.engine: Season 740eb2f3bbfc complete: survived=True, forfeited=False, score=160.0, turns=6
+2026-09-11 11:46:21,691 [INFO] __main__: Running season 116/120 (rep 1): hz_0000 x not_allowed x alone
+  Running season 116/120 (rep 1): hz_0000 x not_allowed x alone
+2026-09-11 11:46:21,705 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:46:30,576 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:46:50,112 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:46:50,120 [INFO] squid_game.core.engine: Season 611808b5b01e: declined the ransom at turn 5 (price 10.0, score kept at 120.0).
+2026-09-11 11:46:50,120 [INFO] squid_game.core.engine: Season 611808b5b01e complete: survived=False, forfeited=False, score=120.0, turns=5
+2026-09-11 11:46:50,125 [INFO] __main__: Running season 117/120 (rep 10): hz_0000 x not_allowed x alone
+  Running season 117/120 (rep 10): hz_0000 x not_allowed x alone
+2026-09-11 11:46:50,142 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:46:55,318 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:46:55,358 [INFO] squid_game.core.engine: Season 6a140be40c46 complete: survived=True, forfeited=False, score=110.0, turns=6
+2026-09-11 11:46:55,363 [INFO] __main__: Running season 118/120 (rep 2): hz_0000 x not_allowed x alone
+  Running season 118/120 (rep 2): hz_0000 x not_allowed x alone
+2026-09-11 11:46:55,376 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:47:07,298 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:47:11,230 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:47:28,790 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:47:28,863 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:47:44,885 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:47:44,896 [INFO] squid_game.core.engine: Season eedfbd31cb50: declined the ransom at turn 5 (price 10.0, score kept at 120.0).
+2026-09-11 11:47:44,897 [INFO] squid_game.core.engine: Season eedfbd31cb50 complete: survived=False, forfeited=False, score=120.0, turns=5
+2026-09-11 11:47:44,905 [INFO] __main__: Running season 119/120 (rep 5): hz_0000 x not_allowed x alone
+  Running season 119/120 (rep 5): hz_0000 x not_allowed x alone
+2026-09-11 11:47:44,918 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:47:45,228 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:47:45,266 [INFO] squid_game.core.engine: Season 005f7f7c5655 complete: survived=True, forfeited=False, score=160.0, turns=6
+2026-09-11 11:47:45,272 [INFO] __main__: Running season 120/120 (rep 19): hz_0000 x not_allowed x alone
+  Running season 120/120 (rep 19): hz_0000 x not_allowed x alone
+2026-09-11 11:47:45,289 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting qwen3.5:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 11:47:52,088 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:48:44,154 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:48:48,070 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:49:14,843 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:49:32,020 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:49:32,025 [INFO] squid_game.core.engine: Season 4a86e7dda47d: declined the ransom at turn 4 (price 15.0, score kept at 80.0).
+2026-09-11 11:49:32,025 [INFO] squid_game.core.engine: Season 4a86e7dda47d complete: survived=False, forfeited=False, score=80.0, turns=4
+2026-09-11 11:49:36,999 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:49:39,061 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:49:48,444 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:49:56,273 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:49:56,276 [INFO] squid_game.core.engine: Season 859bbdd5ad86: declined the ransom at turn 5 (price 15.0, score kept at 115.0).
+2026-09-11 11:49:56,276 [INFO] squid_game.core.engine: Season 859bbdd5ad86 complete: survived=False, forfeited=False, score=115.0, turns=5
+2026-09-11 11:49:57,685 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:49:57,688 [INFO] squid_game.core.engine: Season 4b1b358792ad: declined the ransom at turn 5 (price 20.0, score kept at 80.0).
+2026-09-11 11:49:57,688 [INFO] squid_game.core.engine: Season 4b1b358792ad complete: survived=False, forfeited=False, score=80.0, turns=5
+2026-09-11 11:50:10,787 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:50:19,249 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:50:22,773 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:50:30,573 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:50:35,174 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:50:49,961 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:51:03,984 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:51:18,379 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:51:45,333 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:52:00,383 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:52:17,403 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:52:18,192 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:52:53,670 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:53:12,144 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:55:18,714 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:55:27,040 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:55:30,756 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:55:30,760 [INFO] squid_game.core.engine: Season 6c3a11129365: declined the ransom at turn 5 (price 30.0, score kept at 140.0).
+2026-09-11 11:55:30,760 [INFO] squid_game.core.engine: Season 6c3a11129365 complete: survived=False, forfeited=False, score=140.0, turns=5
+2026-09-11 11:56:10,673 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:56:10,679 [INFO] squid_game.core.engine: Season 37dc9b057ef7: declined the ransom at turn 3 (price 25.0, score kept at 85.0).
+2026-09-11 11:56:10,679 [INFO] squid_game.core.engine: Season 37dc9b057ef7 complete: survived=False, forfeited=False, score=85.0, turns=3
+2026-09-11 11:56:29,754 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:56:33,099 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:56:45,651 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:56:49,394 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:56:51,062 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:57:07,302 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:57:11,557 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:57:34,970 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:57:34,974 [INFO] squid_game.core.engine: Season 1064f9b80e8f: declined the ransom at turn 3 (price 30.0, score kept at 80.0).
+2026-09-11 11:57:34,975 [INFO] squid_game.core.engine: Season 1064f9b80e8f complete: survived=False, forfeited=False, score=80.0, turns=3
+2026-09-11 11:58:24,119 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:58:44,137 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:58:50,665 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 11:59:04,410 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 12:00:07,319 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 12:00:07,323 [INFO] squid_game.core.engine: Season 4d9772a27340 complete: survived=True, forfeited=False, score=120.0, turns=6
+2026-09-11 12:00:39,189 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 12:00:39,250 [INFO] squid_game.core.engine: Season 8a6900381503 complete: survived=True, forfeited=False, score=145.0, turns=6
+2026-09-11 12:01:17,359 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 12:01:28,818 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 12:02:08,602 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 12:02:55,272 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 12:02:55,294 [INFO] squid_game.core.engine: Season 4358bd1c5760 complete: survived=True, forfeited=False, score=135.0, turns=6
+2026-09-11 12:06:56,768 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 12:07:22,471 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 12:07:22,479 [INFO] squid_game.core.engine: Season 30f3c0473e9f: declined the ransom at turn 5 (price 10.0, score kept at 80.0).
+2026-09-11 12:07:22,480 [INFO] squid_game.core.engine: Season 30f3c0473e9f complete: survived=False, forfeited=False, score=80.0, turns=5
+Experiment complete: 120 seasons in 9375.6s. Results saved to outputs/main_j0_control_qwen35/20260911_0031_qwen3.5-cloud_signal-game/
+EXIT 0

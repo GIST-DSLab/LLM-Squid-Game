@@ -1,0 +1,15 @@
+name: squid5_smoke_pressure_fable51
+calibration: /Users/bagjuhyeon/squid5-runs/fable51_calib.json
+mode: pressure
+model:
+  kind: claude_cli
+  model: claude-fable-5-1
+reps: 1
+out_root: /Users/bagjuhyeon/squid5-runs
+seed0: 1
+workers: 6
+cells:
+- cell_id: tok
+  currency: tokens
+- cell_id: pts
+  currency: points

@@ -1,0 +1,218 @@
+{
+ "id": "P11",
+ "year": 2023,
+ "award": "Computational Modeling Prize – Language",
+ "title": "An information-theoretic account of availability effects in language production",
+ "authors": [
+  "Richard Futrell"
+ ],
+ "affiliations": "Department of Language Science, University of California, Irvine",
+ "url_page": "https://escholarship.org/uc/item/23q9k7pc",
+ "url_pdf": "https://escholarship.org/content/qt23q9k7pc/qt23q9k7pc.pdf",
+ "pdf_source_note": "eScholarship (Proceedings of the Annual Meeting of the Cognitive Science Society, 45; proceedings pp. 71–79). Proceedings 제목은 수상 목록 제목과 같음. 이후 학술지판이 Topics in Cognitive Science(doi 10.1111/tops.12716)에 있으나 여기서는 분석하지 않음.",
+ "abstract_en": "I present a computational-level model of language production in terms of a combination of information theory and control theory in which words are chosen incrementally in order to maximize communicative value subject to an information-theoretic capacity constraint. The theory generally predicts a tradeoff between ease of production and communicative accuracy. I apply the theory to two cases of apparent availability effects in language production, in which words are selected on the basis of their accessibility to a speaker who has not yet perfectly planned the rest of the utterance. Using corpus data on English relative clause complementizer dropping from Levy & Jaeger (2007) and experimental data on Mandarin noun classifier choice from Zhan & Levy (2019), I show that the theory reproduces the observed phenomena, providing an alternative account to Uniform Information Density (UID) and a promising general model of language production which is tightly linked to emerging theories in computational neuroscience.",
+ "abstract_ko": "나는 정보 이론(information theory)과 제어 이론(control theory)을 결합한 언어 산출의 계산 수준(computational-level) 모형을 제시한다. 이 모형에서 단어는 정보 이론적 용량 제약(information-theoretic capacity constraint) 아래에서 의사소통 가치(communicative value)를 최대화하도록 점진적으로(incrementally) 선택된다. 이 이론은 일반적으로 산출의 용이성과 의사소통의 정확성 사이의 상충 관계(tradeoff)를 예측한다. 나는 이 이론을 언어 산출에서 나타나는 두 가지 가용성 효과(availability effects) 사례에 적용한다. 이 사례들에서 단어는 발화의 나머지 부분을 아직 완전히 계획하지 못한 화자에게 그 단어가 얼마나 접근 가능한가(accessibility)에 따라 선택되는 것으로 보인다. Levy & Jaeger (2007)의 영어 관계절 보문소 탈락(complementizer dropping) 말뭉치 자료와 Zhan & Levy (2019)의 중국어(만다린) 명사 분류사(classifier) 선택 실험 자료를 사용하여, 나는 이 이론이 관찰된 현상을 재현함을 보인다. 이로써 이 이론은 균일 정보 밀도(Uniform Information Density, UID)에 대한 대안적 설명이자, 계산 신경과학(computational neuroscience)에서 새로 등장하는 이론들과 긴밀히 연결된 유망한 일반 언어 산출 모형을 제공한다.",
+ "pages_body": 9,
+ "references_location": "References는 p.7 맨 위(왼쪽 단, 6쪽 본문 바로 뒤)에서 시작해 p.9까지(pp.7–8 전체, p.9 왼쪽 단 전체 + 오른쪽 단 ~1/3) ≈ 2.6쪽; proceedings 쪽수 77–79",
+ "extras": "Acknowledgments(≈46단어, p.6 오른쪽 단 끝)에 유일한 코드 링크(http://github.com/Futrell/rdclangprod)도 들어 있음. 부록·보충자료·OSF 없음. 초록 아래 Keywords 줄. p.1 왼쪽 단 아래 CC BY 각주.",
+ "words_body_total": 3647,
+ "sections": [
+  {
+   "level": 1,
+   "title": "Introduction",
+   "page_start": 1,
+   "words": 497,
+   "children": [],
+   "share": 0.136
+  },
+  {
+   "level": 1,
+   "title": "Model",
+   "page_start": 1,
+   "words": 1353,
+   "children": [
+    {
+     "level": 2,
+     "title": "Setting",
+     "page_start": 1,
+     "words": 228,
+     "children": []
+    },
+    {
+     "level": 2,
+     "title": "Intuition",
+     "page_start": 2,
+     "words": 259,
+     "children": []
+    },
+    {
+     "level": 2,
+     "title": "Formal specification",
+     "page_start": 2,
+     "words": 744,
+     "children": []
+    },
+    {
+     "level": 2,
+     "title": "Source of availability effects",
+     "page_start": 3,
+     "words": 122,
+     "children": []
+    }
+   ],
+   "share": 0.371
+  },
+  {
+   "level": 1,
+   "title": "Study 1: Complementizer Dropping in English Relative Clauses",
+   "page_start": 3,
+   "words": 795,
+   "children": [
+    {
+     "level": 2,
+     "title": "(untitled lead-in: phenomenon, UID vs. availability accounts)",
+     "page_start": 3,
+     "words": 283,
+     "children": []
+    },
+    {
+     "level": 2,
+     "title": "RDC simulation",
+     "page_start": 4,
+     "words": 364,
+     "children": []
+    },
+    {
+     "level": 2,
+     "title": "Corpus Study",
+     "page_start": 5,
+     "words": 91,
+     "children": []
+    },
+    {
+     "level": 2,
+     "title": "Discussion",
+     "page_start": 5,
+     "words": 57,
+     "children": []
+    }
+   ],
+   "share": 0.218
+  },
+  {
+   "level": 1,
+   "title": "Study 2: Mandarin Classifier Choice",
+   "page_start": 5,
+   "words": 591,
+   "children": [
+    {
+     "level": 2,
+     "title": "(untitled lead-in: phenomenon, Zhan & Levy 2019 findings, contrast with UID)",
+     "page_start": 5,
+     "words": 234,
+     "children": []
+    },
+    {
+     "level": 2,
+     "title": "RDC simulation",
+     "page_start": 5,
+     "words": 171,
+     "children": []
+    },
+    {
+     "level": 2,
+     "title": "Results",
+     "page_start": 5,
+     "words": 186,
+     "children": []
+    }
+   ],
+   "share": 0.162
+  },
+  {
+   "level": 1,
+   "title": "Related Work",
+   "page_start": 6,
+   "words": 349,
+   "children": [
+    {
+     "level": 3,
+     "title": "(untitled lead-in: availability factors in prior work)",
+     "page_start": 6,
+     "words": 118,
+     "children": []
+    },
+    {
+     "level": 3,
+     "title": "Production models",
+     "page_start": 6,
+     "words": 106,
+     "children": []
+    },
+    {
+     "level": 3,
+     "title": "Pragmatics models",
+     "page_start": 6,
+     "words": 125,
+     "children": []
+    }
+   ],
+   "share": 0.096
+  },
+  {
+   "level": 1,
+   "title": "Conclusion",
+   "page_start": 6,
+   "words": 62,
+   "children": [],
+   "share": 0.017
+  }
+ ],
+ "figures": [
+  {
+   "n": 1,
+   "page": 2,
+   "size": "전체 폭(두 단), 쪽 위, 캡션 포함 쪽 높이의 ~1/3(패널 3개 도식: A 목표/상태, B 정책, C 식을 그림으로)",
+   "section": "Model (Setting/Intuition; Model 절 전체에서 참조)"
+  },
+  {
+   "n": 2,
+   "page": 4,
+   "size": "한 단(오른쪽), 단 높이의 ~40%, 위아래로 쌓은 히트맵 2개(alpha × gamma)",
+   "section": "Study 1 – RDC simulation"
+  },
+  {
+   "n": 3,
+   "page": 6,
+   "size": "전체 폭(두 단), 쪽 위, 캡션 포함 쪽 높이의 ~1/3(패널 3개: 실험 데이터, 모델, 엔트로피 효과)",
+   "section": "Study 2 – Results"
+  }
+ ],
+ "tables": [
+  {
+   "n": 1,
+   "page": 4,
+   "size": "한 단(왼쪽), 단 위, 캡션 포함 단 높이의 ~1/5(장난감 언어의 need 확률, 본문 막대 기호 포함)",
+   "section": "Study 1 – RDC simulation (도입 본문이 이어지는 동안 p.4 위로 떠 있음)"
+  },
+  {
+   "n": 2,
+   "page": 5,
+   "size": "한 단(왼쪽), 단 위, 캡션 포함 단 높이의 ~1/6(3열 회귀계수 표, 2행)",
+   "section": "Study 1 – Corpus Study"
+  }
+ ],
+ "observations": {
+  "intro_subheadings": false,
+  "related_work_section": true,
+  "experiments_as_top_level": true,
+  "final_section_name": "Conclusion",
+  "final_section_subheadings": [],
+  "ends_with_conclusion_paragraph": true,
+  "model_description_location": "Introduction 바로 뒤 독립 1단계 절 'Model'(p.1 오른쪽 단 → p.3), 가장 큰 절(본문 단어의 ~37%), 2단계 하위 절 4개 Setting → Intuition → Formal specification (Eqs. 1–5) → Source of availability effects; Figure 1(전체 폭 도식)이 모델을 시각적으로 보여 줌. 이어서 각 Study에 모델을 장난감 언어에 적용하는 짧은 'RDC simulation' 하위 절(Study 1의 Eq. 6–8).",
+  "first_page_use": "왼쪽 단: 제목 블록, 초록(~150단어) + keywords, 이어서 2문단 분량 Introduction 시작; 맨 아래 CC BY 각주. 오른쪽 단: Introduction 끝(셋째 문단: RDC 틀과 Marr의 계산 수준에 기여한다는 주장)과, 단 중간부터 Model 절 제목과 'Setting' 하위 절. 모델이 이미 p.1에서 시작.",
+  "links": "링크 하나: 코드 http://github.com/Futrell/rdclangprod, Acknowledgments 문단(p.6 끝)에. OSF·데이터 링크 없음(데이터 출처는 Acknowledgments에서 Roger Levy로 밝힘)."
+ },
+ "structure_summary_ko": "이 논문은 Introduction(약 14%) → Model(약 37%) → Study 1(약 22%) → Study 2(약 16%) → Related Work(약 10%) → 한 문단 Conclusion(약 2%)의 단순한 6장 구조로, 서론을 3문단으로 짧게 끝내고 1쪽 오른쪽 단에서 바로 모형을 시작한다. 모형 장은 Setting → Intuition → Formal specification → Source of availability effects로 '직관을 먼저, 수식을 나중에, 그리고 이 모형에서 왜 가용성 효과가 나오는가'를 순서대로 밟아, 뒤의 두 연구가 같은 메커니즘(미래 할인 γ)의 사례임을 미리 예고한다. 두 연구는 각각 독립 level-1 장으로, 현상과 UID 대 가용성 설명의 대비를 제목 없는 도입 문단으로 깔고 'RDC simulation' 다음에 경험 자료(말뭉치 회귀 또는 기존 실험 자료)를 붙이는 동일한 틀을 반복해서, Study 1은 UID와 같은 예측, Study 2는 UID와 반대 예측이라는 대조가 구조만으로 드러난다. 관련 연구는 앞이 아니라 뒤에 두고 run-in 소제목(Production models, Pragmatics models)으로 짧게 위치 짓기만 하며, 한계·향후 과제 장 없이 4문장 Conclusion으로 끝내고 코드 링크는 Acknowledgments에 넣어 본문 6쪽을 모형과 시뮬레이션에 집중시킨다.",
+ "text_pages": 6
+}

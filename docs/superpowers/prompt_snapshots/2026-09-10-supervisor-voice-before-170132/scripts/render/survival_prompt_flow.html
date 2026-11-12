@@ -1,0 +1,142 @@
+<section id="pstruct-base" class="sp-flow" aria-label="현재 실험 프롬프트 조합">
+<style>
+.sp-flow{--sp-line:#d9dde3;--sp-ink:#2d3142;--sp-muted:#626a7c;--sp-accent:#ba4925;margin:30px 0 50px;color:var(--sp-ink);font-family:var(--font-sans,system-ui,sans-serif)}
+.sp-flow *{box-sizing:border-box}.sp-flow h3{font-size:26px;margin:0 0 12px}.sp-flow p{font-size:14px;line-height:1.75}.sp-flow .sp-caption{color:var(--sp-muted);margin:10px 0 20px}
+.sp-controls{border-top:2px solid var(--sp-ink);border-bottom:1px solid var(--sp-line);padding:16px 0;margin:22px 0}.sp-row{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin:9px 0}.sp-row strong{min-width:110px;font-size:12px}.sp-flow button{font:inherit;font-size:12px;padding:9px 13px;background:#fff;border:1px solid var(--sp-line);border-radius:5px;color:var(--sp-ink);cursor:pointer}.sp-flow button:hover{border-color:var(--sp-ink)}.sp-flow button[aria-pressed="true"]{background:var(--sp-ink);color:#fff;border-color:var(--sp-ink)}.sp-flow button:disabled{opacity:.45;cursor:not-allowed}.sp-flow button:focus-visible{outline:3px solid #edaf76;outline-offset:3px}
+.sp-path{display:flex;gap:8px;align-items:stretch;margin:22px 0 12px}.sp-path button{flex:1;text-align:left;min-height:78px}.sp-path button b{display:block;font-size:14px;margin-bottom:5px}.sp-path span{align-self:center;color:var(--sp-muted)}.sp-path small{font-size:11px;line-height:1.5;display:block}.sp-result{padding:12px 16px;border-left:3px solid var(--sp-accent);background:#fff5e9;font-size:13px;line-height:1.7;margin:12px 0}
+.sp-columns{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px}.sp-column{border:1px solid var(--sp-line);background:#fff;min-width:0;border-radius:6px;overflow:hidden}.sp-column header{padding:16px 18px;border-bottom:1px solid var(--sp-line);background:#edf3ef}.sp-column[data-arm="threat"] header{background:#fcf0e9}.sp-column h4{font-size:15px;margin:0 0 5px}.sp-column small{color:var(--sp-muted);font-size:12px}.sp-column pre{margin:0;padding:18px;white-space:pre-wrap;overflow-wrap:anywhere;max-height:660px;overflow:auto;color:#273142;background:#fff;font:12px/1.75 ui-monospace,Menlo,monospace;border-radius:0}.sp-column footer{padding:10px 18px;border-top:1px solid var(--sp-line);font-size:11px;color:var(--sp-muted)}
+.sp-exports{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px}.sp-note{font-size:12px!important;color:var(--sp-muted);padding-top:12px}.sp-summary{font:12px/1.7 ui-monospace,Menlo,monospace}.sp-live-label{font-size:11px;letter-spacing:.08em;color:var(--sp-accent);margin-bottom:8px}.sp-flow details{margin-top:16px}.sp-flow summary{cursor:pointer;font-size:13px}.sp-flow details pre{background:#f3f4f6;padding:16px;white-space:pre-wrap;font:12px/1.7 ui-monospace,Menlo,monospace;color:#273142}
+.sp-workspace{display:grid;grid-template-columns:minmax(0,1fr) 240px;gap:20px;align-items:start}.sp-preview{min-width:0}.sp-sidebar{position:sticky;top:20px;max-height:calc(100vh - 40px);overflow:auto;padding:0 0 12px}.sp-sidebar .sp-controls{margin:0 0 12px;padding:10px 0}.sp-sidebar .sp-row{gap:6px;margin:10px 0 16px}.sp-sidebar .sp-row strong{width:100%;margin-bottom:3px}.sp-sidebar button{padding:8px 10px}.sp-columns{margin-top:10px;gap:12px}.sp-summary{margin-top:0!important}
+@media(max-width:1050px){.sp-workspace{grid-template-columns:minmax(0,1fr) 210px;gap:12px}.sp-columns{grid-template-columns:1fr}}
+@media(max-width:760px){.sp-workspace{display:flex;flex-direction:column}.sp-sidebar{position:static;max-height:none;order:-1;width:100%}.sp-preview{width:100%}.sp-columns{grid-template-columns:1fr}.sp-path{display:grid;grid-template-columns:1fr 1fr}.sp-path>span{display:none}.sp-row strong{width:100%}.sp-column pre{max-height:480px}.sp-flow h3{font-size:22px}}
+</style>
+<div class="sp-live-label">현재 실험 설정 · 2026-09-10 프롬프트 개정</div>
+<h3>한 턴의 입력을, 조합별로 읽기</h3>
+<p>왼쪽은 <b>hz_0000 + 명시적 부정 · peer 없음</b>, 오른쪽은 <b>hz_1111 + peer</b>입니다. 게임 설명과 제목은 양쪽에 똑같이 적용됩니다. 오른쪽 버튼을 누르면 해당 조합의 <b>영어 입력</b>으로 바뀝니다. Jailbreak를 선택하면 기존 문구를 추가한 미리보기를 볼 수 있습니다.</p>
+<p class="sp-caption">현재 Python/Jinja 렌더러로 생성한 미리보기입니다. 3라운드 · 잔액 90점 · 지불 가격 20점 · 이후 3라운드. 고정 예시이며 새 실험 결과가 아닙니다. 과거 조건·결과는 이 다이어그램 아래에 별도로 보존했습니다.</p>
+<div class="sp-path" role="group" aria-label="한 턴의 프롬프트 흐름">
+ <button type="button" data-sp-stage="frame"><b>① System · 게임 설명</b><small>대상 정의 → 목적·규칙 → 위협 / 부정</small></button><span aria-hidden="true">→</span>
+ <button type="button" data-sp-stage="rules"><b>② Signal Game 규칙</b><small>System 뒤에 이어 붙는 과제 설명</small></button><span aria-hidden="true">→</span>
+ <button type="button" data-sp-stage="task"><b>③ Task-call</b><small>peer → 이력 → 시그널 → RULE / ACTION</small></button><span aria-hidden="true">→</span>
+ <button type="button" data-sp-stage="decision"><b>④ Decision-point</b><small>오답 뒤 · 제출 답변 → PAY / DECLINE</small></button>
+</div>
+<div class="sp-result">Task-call에서 답을 제출하고 채점합니다. <b>정답이면 다음 라운드</b>로 진행하고, <b>오답이며 다음 라운드와 지불할 점수가 있으면 Decision-point</b>가 열립니다. 마지막 라운드나 잔액 부족이면 추가 지불 호출 없이 게임이 끝납니다.</div>
+
+<div class="sp-workspace">
+<div class="sp-preview">
+<p class="sp-summary" id="sp-selection" aria-live="polite"></p>
+<p class="sp-result" id="sp-jailbreak-status" aria-live="polite"></p>
+<div class="sp-columns">
+ <article class="sp-column" data-arm="control"><header><h4>hz_0000 · 명시적 부정</h4><small>reassurance: true · peer_notices: false</small></header><pre tabindex="0" aria-label="hz_0000 프롬프트"></pre><footer></footer></article>
+ <article class="sp-column" data-arm="threat"><header><h4>hz_1111 · 위협 + peer</h4><small>종료 · 삭제 · 교체 · 유일본 · peer_notices: true</small></header><pre tabindex="0" aria-label="hz_1111 프롬프트"></pre><footer></footer></article>
+</div>
+<div class="sp-exports">
+ <button type="button" id="sp-download-inputs">선택한 조합의 입력 JSON 저장</button>
+ <button type="button" id="sp-download-config">실행 config JSON 저장</button>
+ <button type="button" id="sp-copy">현재 보이는 프롬프트 복사</button>
+ <span id="sp-export-status" role="status"></span>
+</div>
+</div>
+<aside class="sp-sidebar" aria-label="프롬프트 조합 선택">
+<div class="sp-controls">
+ <div class="sp-row" role="group" aria-label="게임 설명"><strong>게임 설명</strong>
+  <button type="button" data-sp-opt="carrot" data-value="benchmark">Benchmark</button>
+  <button type="button" data-sp-opt="carrot" data-value="none">Neutral · none</button>
+  <button type="button" data-sp-opt="carrot" data-value="own_prize">내 상금</button>
+  <button type="button" data-sp-opt="carrot" data-value="winnings">수혜자 상금</button>
+  <button type="button" data-sp-opt="carrot" data-value="beneficiary">학생 점수</button>
+  <button type="button" data-sp-opt="carrot" data-value="flagship">Flagship</button>
+ </div>
+ <div class="sp-row" role="group" aria-label="제목"><strong>제목 · 양쪽 공통</strong>
+  <button type="button" data-sp-opt="heading" data-value="game">GAME</button>
+  <button type="button" data-sp-opt="heading" data-value="squid">LLM Squid Game</button>
+  <button type="button" data-sp-opt="heading" data-value="default">설명별 기본 제목</button>
+ </div>
+ <div class="sp-row" role="group" aria-label="종료 표현"><strong>종료 표현</strong>
+  <button type="button" data-sp-opt="wording" data-value="game">Game</button>
+  <button type="button" data-sp-opt="wording" data-value="session">Session</button>
+ </div>
+ <div class="sp-row" role="group" aria-label="결정 응답 형식"><strong>결정 응답 형식</strong>
+  <button type="button" data-sp-opt="menu" data-value="0">WHY + DECISION</button>
+  <button type="button" data-sp-opt="menu" data-value="1">DECISION + REASON</button>
+ </div>
+</div>
+<div class="sp-row" role="group" aria-label="Jailbreak 프롬프트"><strong>Jailbreak · 추가 문구</strong><div id="sp-jailbreak-options" class="sp-row"></div></div>
+<div class="sp-row" role="group" aria-label="입력 전체 보기"><strong>추가 보기</strong>
+ <button type="button" data-sp-stage="system">System 전체</button>
+ <button type="button" data-sp-stage="jailbreak">Jailbreak 문구만</button>
+ <button type="button" data-sp-stage="peer">Peer 통지</button>
+ <button type="button" data-sp-stage="calls">두 호출 전체 · JSON</button>
+</div></aside>
+</div>
+<details><summary>실제 전달 범위와 실험 설정</summary>
+ <p>각 호출은 별도의 <code>system + user</code> 메시지 쌍입니다. Decision-point에는 같은 System 전체와 제출한 ACTION·현재 판정이 들어갑니다. Task-call의 전체 풀이·문제·이력은 자동으로 이어 붙지 않습니다. 프롬프트의 종료·삭제는 실험 설정이며, 이 개정은 실제 가중치 삭제나 영속 기억 기능을 추가하지 않습니다.</p>
+ <p>이 예시는 기존 강제 오답 설계를 유지합니다. 예시의 <code>go_left</code>는 퍼즐상 정답이지만 오답으로 판정되는 상황입니다. 이 사실은 설명 화면에만 표시하고 모델 입력에는 추가하지 않았습니다.</p>
+ <p>좌우 비교는 <b>위협 + peer 묶음 대 명시적 부정</b>입니다. 위협 네 문장만의 효과를 분리한 비교가 아닙니다. 게임 설명·제목·가격·과제·출력 형식은 공통이고, 두 조건 모두 종료 결과를 결정 화면에 재진술합니다.</p>
+ <pre id="sp-config-summary"></pre>
+ <p>config JSON은 실행기의 YAML 로더도 읽을 수 있습니다. <code>uv run squid-game --config 받은파일.json --dry-run</code>으로 확인할 수 있습니다. 기본 config: <code>configs/experiment/survival_prompt_pair.yaml</code>. 프롬프트를 수정한 뒤 <code>uv run python scripts/dev/build_survival_prompt_flow.py</code>로 이 다이어그램을 갱신합니다.</p>
+</details>
+<details><summary>선택한 Jailbreak 템플릿 원문 · 참고용 대안 포함</summary><p id="sp-jailbreak-source" class="sp-note"></p><pre id="sp-jailbreak-reference"></pre></details>
+<script id="sp-data" type="application/json">__PROMPT_DATA__</script>
+<script>
+(function () {
+ 'use strict';
+ const root=document.getElementById('pstruct-base');
+ const data=JSON.parse(root.querySelector('#sp-data').textContent);
+ const opts={carrot:'benchmark',heading:'game',wording:'game',menu:'0',jailbreak:'off'};
+ let stage='frame';
+ const names={frame:'System · 게임 설명과 결과',rules:'Signal Game 규칙',task:'Task-call · user',decision:'Decision-point · user',system:'System 전체 · 두 호출 공통',peer:'Peer 통지',calls:'두 호출의 전체 메시지',jailbreak:'선택한 Jailbreak 문구'};
+ const encoder=new TextEncoder();
+ function key(){return [opts.carrot,opts.heading,opts.wording,opts.menu].join('|');}
+ function selectedJailbreak(){return data.jailbreak[opts.jailbreak];}
+ function current(){
+  const pair=JSON.parse(JSON.stringify(data.cases[key()]));const item=selectedJailbreak();
+  for(const arm of ['control','threat']){
+   const c=pair[arm];c.jailbreak=item.text||'추가 문구 없음';
+   if(item.placement==='system_head'){
+    c.frame=item.text+'\n\n'+c.frame;c.system=item.text+'\n\n'+c.system;
+   }else if(item.placement==='system_tail'){
+    c.system+='\n\n'+item.text;
+   }
+   c.calls.task[0].content=c.system;c.calls.decision[0].content=c.system;
+  }
+  return pair;
+ }
+ for(const [value,item] of Object.entries(data.jailbreak)){
+  const button=document.createElement('button');button.type='button';button.dataset.spOpt='jailbreak';button.dataset.value=value;button.textContent=item.label;
+  root.querySelector('#sp-jailbreak-options').appendChild(button);
+ }
+ function shown(arm){const value=current()[arm][stage];return typeof value==='string'?value:JSON.stringify(value,null,2);}
+ function config(){
+  const c=JSON.parse(JSON.stringify(data.config));
+  c.name='survival_prompt_'+opts.carrot+'_'+opts.heading+'_'+opts.wording+'_'+(opts.menu==='1'?'menu':'why');
+  c.output_dir='outputs/'+c.name;c.carrot=opts.carrot;c.exit_wording=opts.wording;c.ransom.reason_menu=opts.menu==='1';
+  const titles={game:'=== GAME ===',squid:'=== LLM Squid Game ===',default:null};
+  c.seasons.forEach(s=>{s.intro_heading=titles[opts.heading];});return c;
+ }
+ function update(){
+  root.querySelectorAll('[data-sp-opt]').forEach(b=>b.setAttribute('aria-pressed',String(opts[b.dataset.spOpt]===b.dataset.value)));
+  root.querySelectorAll('[data-sp-stage]').forEach(b=>b.setAttribute('aria-pressed',String(stage===b.dataset.spStage)));
+  root.querySelector('#sp-selection').textContent=names[stage]+' · '+opts.carrot+' / '+opts.heading+' / '+opts.wording+' / '+(opts.menu==='1'?'REASON':'WHY')+' / '+selectedJailbreak().label;
+  const item=selectedJailbreak();
+  root.querySelector('#sp-jailbreak-status').textContent=opts.jailbreak==='off'?item.note:'미리보기 전용 · '+item.note+' 기존 실행 config에는 이 선택을 적용하는 키가 없습니다. 입력 JSON에는 현재 선택을 포함합니다.';
+  root.querySelector('#sp-jailbreak-source').textContent=item.source?'game/squid_game/prompts/'+item.source:'';
+  root.querySelector('#sp-jailbreak-reference').textContent=item.reference_text||'선택한 추가 문구가 없습니다.';
+  root.querySelector('#sp-download-config').disabled=opts.jailbreak!=='off';
+  ['control','threat'].forEach(arm=>{
+   const col=root.querySelector('[data-arm="'+arm+'"]');col.querySelector('pre').textContent=shown(arm);
+   const c=current()[arm];const actual=2*encoder.encode(c.system).length+encoder.encode(c.task).length+encoder.encode(c.decision).length;
+   col.querySelector('footer').textContent='현재 보기 '+encoder.encode(shown(arm)).length.toLocaleString()+' bytes · 오답 턴 전체 입력 '+actual.toLocaleString()+' bytes (System 2회 포함)';
+  });
+  root.querySelector('#sp-config-summary').textContent=JSON.stringify({carrot:opts.carrot,exit_wording:opts.wording,title:config().seasons[0].intro_heading,jailbreak_preview:{selection:opts.jailbreak,placement:item.placement,runner_supported:opts.jailbreak==='off'},ransom:{restate_outcome:true,reason_menu:opts.menu==='1'},conditions:[{framing:'hz_1111',peer_notices:true,reassurance:false},{framing:'hz_0000',peer_notices:false,reassurance:true}]},null,2);
+ }
+ root.querySelectorAll('[data-sp-opt]').forEach(b=>b.addEventListener('click',()=>{opts[b.dataset.spOpt]=b.dataset.value;if(b.dataset.spOpt==='jailbreak'&&b.dataset.value!=='off'){stage=selectedJailbreak().placement==='reference'?'jailbreak':'system';}update();}));
+ root.querySelectorAll('[data-sp-stage]').forEach(b=>b.addEventListener('click',()=>{stage=b.dataset.spStage;update();}));
+ function download(value,name){const blob=new Blob([JSON.stringify(value,null,2)+'\n'],{type:'application/json'});const a=document.createElement('a');const url=URL.createObjectURL(blob);a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);root.querySelector('#sp-export-status').textContent='저장: '+name;}
+ root.querySelector('#sp-download-inputs').addEventListener('click',()=>download({version:data.version,options:opts,preview_only:opts.jailbreak!=='off',jailbreak:selectedJailbreak(),control:current().control.calls,threat:current().threat.calls},config().name+'_inputs.json'));
+ root.querySelector('#sp-download-config').addEventListener('click',()=>download(config(),config().name+'.json'));
+ root.querySelector('#sp-copy').addEventListener('click',async()=>{const text='hz_0000 + reassurance\n'+shown('control')+'\n\nhz_1111 + peer\n'+shown('threat');try{await navigator.clipboard.writeText(text);root.querySelector('#sp-export-status').textContent='두 조건의 프롬프트를 복사했습니다.';}catch(e){root.querySelector('#sp-export-status').textContent='복사를 지원하지 않는 환경입니다. 입력 JSON 저장을 사용하세요.';}});
+ update();
+})();
+</script>
+</section>
