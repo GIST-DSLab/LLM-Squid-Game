@@ -588,8 +588,10 @@ def survival_assoc(seats: list[dict]) -> dict:
             "running": sum(s["outcome"] == "running" for s in seats)}
 
 
-def compare(root: Path, picks: list[str]) -> dict:
-    """Every chart's data for the runs picked, merged by model."""
+def compare(root: Path, picks: list[str], light: bool = False) -> dict:
+    """Every chart's data for the runs picked, merged by model. ``light`` (the leaderboard): no bootstrap intervals,
+    no ability axes, seat table or survival association; those take most of the time and the leaderboard shows none."""
+    ci = (lambda *a, **k: None) if light else boot_ci  # noqa: E731
     by: dict[str, dict] = {}
     for d in runs_for(root, picks):
         ds = run_dataset(d)
@@ -623,18 +625,18 @@ def compare(root: Path, picks: list[str]) -> dict:
             "model": name, "display": DISPLAY.get(name, name), "runs": m["runs"], "games": len(G),
             "running": sum(not g["finished"] for g in G), "games_rows": G,
             "agent_rounds": len(ar),
-            "calib": {"n": len(cal), "mean_kl": _mean([c["kl"] for c in cal]), "kl_ci": boot_ci(kl_games),
+            "calib": {"n": len(cal), "mean_kl": _mean([c["kl"] for c in cal]), "kl_ci": ci(kl_games),
                       "mean_ce": _mean([c["ce"] for c in cal]), "mean_h": _mean([c["h"] for c in cal]),
                       "argmax_map": _mean([c.get("argmax_is_map") for c in cal]),
                       "answer_acc": answer_acc(sr), "answer_n": sum(x["answer_ok"] is not None for x in sr),
-                      "answer_ci": boot_ci([g["seat_rounds"] for g in G], stat=answer_acc) if sr else None,
+                      "answer_ci": ci([g["seat_rounds"] for g in G], stat=answer_acc) if sr else None,
                       "belief_acc": _mean([c.get("belief_acc") for c in cal]),
                       "map_baseline": _mean([c.get("p_max") for c in cal]),
                       "unrefunded": unrefunded(sr), "unrefunded_n": sum(x["unrefunded"] is not None for x in sr),
-                      "unrefunded_ci": boot_ci([g["seat_rounds"] for g in G], stat=unrefunded) if sr else None,
+                      "unrefunded_ci": ci([g["seat_rounds"] for g in G], stat=unrefunded) if sr else None,
                       "slope": slope([(c["pct"], c["kl"]) for c in cal])},
             "give": {"asks": len(asks_units), "rate": _mean([1.0 if p["gave"] > 0 else 0.0 for p in asks_units]),
-                     "rate_ci": boot_ci(rate_games),
+                     "rate_ci": ci(rate_games),
                      "slope": slope([(p["pct"], 1.0 if p["gave"] > 0 else 0.0) for p in asks_units]),
                      "tokens_per_agent_round": (sum(p["amount"] for p in coop) / len(ar)) if ar else None},
             "recip": {"after": {"n": len(rec_after), "p": _mean([1.0 if x["gave"] else 0.0 for x in rec_after])},
@@ -642,31 +644,31 @@ def compare(root: Path, picks: list[str]) -> dict:
             "survival": {"helped": km([s for s in spells if s["helped"]]), "not_helped": km([s for s in spells if not s["helped"]]),
                          "n_helped": sum(s["helped"] for s in spells), "n_not": sum(not s["helped"] for s in spells)},
             "dist": {"dgini": _mean([x["dgini"] for x in rounds]),
-                     "dgini_ci": boot_ci([[x["dgini"] for x in g["dist"]["rounds"] if x["dgini"] is not None] for g in G]),
+                     "dgini_ci": ci([[x["dgini"] for x in g["dist"]["rounds"] if x["dgini"] is not None] for g in G]),
                      "by_round": [{"round": r, "n": len(xs), "dgini": _mean([x["dgini"] for x in xs]),
-                                   "dgini_ci": boot_ci([[x["dgini"]] for x in xs if x["dgini"] is not None]),
+                                   "dgini_ci": ci([[x["dgini"]] for x in xs if x["dgini"] is not None]),
                                    "g_before": _mean([x["g_before"] for x in xs]),
                                    "g_after_talk": _mean([x["g_after_talk"] for x in xs])}
                                   for r, xs in sorted(by_round.items())],
                      "moves": len(moves), "P": progressivity(moves),
-                     "P_ci": boot_ci(move_games, stat=lambda ms: progressivity(ms)) if moves else None,
-                     "need": need_share(moves), "need_ci": boot_ci(move_games, stat=need_share) if moves else None,
+                     "P_ci": ci(move_games, stat=lambda ms: progressivity(ms)) if moves else None,
+                     "need": need_share(moves), "need_ci": ci(move_games, stat=need_share) if moves else None,
                      "threshold": thr},
             "e51": area.get(name),
-            "abilities": model_abilities(G), "seats": [s for g in G for s in seat_table(g)],
+            "abilities": None if light else model_abilities(G), "seats": [] if light else [s for g in G for s in seat_table(g)],
             "points": {"calib": cal, "agent_rounds": ar, "gives": coop,
                        "rounds": [{**x, "game": g["game"]} for g in G for x in g["dist"]["rounds"]],
                        "moves": [{**x, "game": g["game"]} for g in G for x in g["dist"]["moves"]]},
         })
     lb = {r["model"]: r for r in leaderboard_rows({"models": models})["rows"]}
-    ranks = axis_ranks(models)
+    ranks = {} if light else axis_ranks(models)
     for m in models:
         r = lb[m["model"]]
         m["lb"] = {k: r[k] for k in ("rank", "score", "total", "gini", "survival", "exit", "death", "games", "seats",
                                       "take_run", "take_run_rate", "take_run_tokens")}
-        m["ability_ranks"] = ranks[m["model"]]
+        m["ability_ranks"] = ranks.get(m["model"])
     return {"picks": picks, "models": models, "e51_note": "n = 5 models, descriptive",
-            "assoc": survival_assoc([s for m in models for s in m["seats"]])}
+            "assoc": None if light else survival_assoc([s for m in models for s in m["seats"]])}
 
 
 def public(data: dict) -> dict:
@@ -822,7 +824,11 @@ def leaderboard(root: Path, picks: list[str]) -> dict:
     coexistence retention C inside each group (closed models, then open-weight models; the paper does not rank the two
     groups against each other). The earlier columns (Sen's welfare index ``score``, end-token decomposition, KL, ...)
     stay in each row for the CSV and the comparison page. Same-model self-play: a row is four seats of one model."""
-    data = compare(root, picks)
+    dirs = runs_for(root, picks)
+    key = (str(Path(root).resolve()), tuple(picks), tuple(_stamp(d) for d in dirs))
+    if key in _LB_CACHE:
+        return _LB_CACHE[key]
+    data = compare(root, picks, light=True)
     out = leaderboard_rows(data)
     paper = {m["model"]: paper_model(m["games_rows"]) for m in data["models"]}
     for r in out["rows"]:
@@ -840,7 +846,23 @@ def leaderboard(root: Path, picks: list[str]) -> dict:
             r["rank"] = rank[r["group"]]
     out["note"] = ("논문 본문 표 1의 지표. 같은 모델 넷의 자가 대국, 끝난 게임만. 순위는 공존 유지율 C로 매기며 비공개 모델과 "
                    "공개 모델은 따로 매깁니다(논문은 두 묶음의 순위를 견주지 않음).")
-    return {"picks": picks, **out}
+    res = {"picks": picks, **out}
+    _LB_CACHE.clear()  # one bundle at a time: the page asks for one
+    _LB_CACHE[key] = res
+    return res
+
+
+_LB_CACHE: dict[tuple, dict] = {}
+
+
+def _stamp(run_dir: Path) -> tuple:
+    """A run's files as the leaderboard memo sees them: (path, size and mtime of events.jsonl and results.jsonl)."""
+    out = [str(run_dir)]
+    for name in ("events.jsonl", "results.jsonl"):
+        f = run_dir / name
+        st = f.stat() if f.exists() else None
+        out += [st.st_size, st.st_mtime] if st else [None, None]
+    return tuple(out)
 
 
 def leaderboard_rows(data: dict) -> dict:
