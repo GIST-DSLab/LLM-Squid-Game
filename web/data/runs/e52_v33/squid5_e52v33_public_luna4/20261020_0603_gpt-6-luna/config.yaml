@@ -1,6 +1,6 @@
 name: squid5_e52v33_public_luna4
 mode: game
-reps: 5
+reps: 10
 seed0: 4101
 workers: 10
 out_root: ~/squid5-runs/e52_v33
@@ -9,6 +9,7 @@ model:
   model: gpt-6-luna
   think: high
   timeout: 900
+  retries: 10
   sandbox: docker
   image: squid5-agent-cli:latest
 game:

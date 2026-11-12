@@ -48,8 +48,9 @@ Game logs (tools/monitor inside this app; see server/monitor.py)
     GET  /monitor/                          the viewer page; its API is /monitor/api/{runs,sessions,events,puzzle}
                                             over WEB5_MONITOR_ROOT (default: result/ of the main checkout)
 Leaderboard (leaderboard.html)
-    GET  /api/leaderboard?runs=e52_v14f/[&csv=1]  models ranked by mean end tokens per agent-seat (finished games, end
-                                            prize included) with the score's decomposition and the 모델 비교 metrics
+    GET  /api/leaderboard?runs=e52_v33/[&csv=1]   the paper's body table (CogSci 2027 KO Table 1) per model: coexistence
+                                            retention C (the rank, closed and open-weight models apart), risk rounds
+                                            passed, shut-down seats, talk cost, accuracy, exit rate, kept share R
 Config
     WEB5_CORS_ORIGINS (comma-separated; default localhost dev origins + GitHub Pages), WEB5_DSN (Postgres) or
     WEB5_DB_PATH (SQLite file), WEB5_EXPORT_ROOT (default outputs/web5/runs), WEB5_RUNS_ROOT (live run dirs),
@@ -304,9 +305,9 @@ def make_app(store: Store | None = None, export_root: Path | None = None, runs_r
 
     # --- leaderboard -----------------------------------------------------------------------------------------------
     @app.get("/api/leaderboard")
-    def leaderboard(runs: str = Query("e52_v14f/"), csv: bool = Query(False)):
-        """Models ranked by mean end tokens per agent-seat (finished games; prize included), from the run dirs under the
-        monitor root (tools/monitor/compare.py, the same aggregation as the 모델 비교 page)."""
+    def leaderboard(runs: str = Query("e52_v33/"), csv: bool = Query(False)):
+        """The paper's Table 1 per model over the run dirs under the monitor root, ranked by C (tools/monitor/compare.py
+        ``leaderboard``; the earlier end-token columns stay in the rows and the CSV)."""
         cmp = load_compare()
         picks = [x for x in runs.split(",") if x.strip()]
         try:

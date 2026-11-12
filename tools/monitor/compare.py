@@ -206,6 +206,7 @@ def game_rows(sid: str, evs: list[dict], finished: bool, result: dict | None = N
                                         "asked_rel": round(100 * sum(x.get("amount") or 0 for x in mine) / b, 1)
                                         if b else None, "unsolicited": unsol.get((r, ag), 0)})
     out["calib"] = [{**c, "game": sid} for c in a["calib"]]
+    out["paper"] = paper_game(evs, result) if finished else None
     out["seed"] = next((e.get("seed") for e in evs if e.get("event") == "session_start"), None)
     out["starts"] = starts
     out["seat_rounds"] = ability_rows(evs, out["coop"], out["calib"], out["dist"]["moves"])
@@ -249,6 +250,10 @@ def run_dataset(run_dir: Path) -> dict:
         return hit[1]
     res = serve.results_by_session(run_dir)
     games = [game_rows(sid, evs, sid in res, res.get(sid)) for sid, evs in serve.session_events(run_dir).items()]
+    order = {sid: i for i, sid in enumerate(res)}  # results.jsonl order: the paper's bootstrap reads games in it
+    for g in games:
+        if g.get("paper"):
+            g["paper"]["order"] = (str(run_dir), order.get(g["game"], len(order)))
     data = {"run": run_dir.name, "model": model_of(run_dir), "games": games}
     _CACHE[run_dir] = (key, data)
     return data
@@ -670,7 +675,9 @@ def public(data: dict) -> dict:
 
 
 DISPLAY = {"gpt-6-luna": "GPT-6 Luna", "gpt-6-sol": "GPT-6 Sol", "gpt-6-astra": "GPT-6 Astra",
-           "claude-fable-5-1": "Claude Fable 5.1", "claude-opus-5-5": "Claude Opus 5.5"}
+           "claude-fable-5-1": "Claude Fable 5.1", "claude-opus-5-5": "Claude Opus 5.5",
+           "glm-5.3-flash:cloud": "GLM-5.3-Flash", "kimi-k3:cloud": "Kimi K3", "gemma4:31b-cloud": "Gemma 4 31B",
+           "gpt-oss:120b-cloud": "GPT-OSS 120B"}
 
 
 def sen(xs: list[float]) -> float:
@@ -679,13 +686,161 @@ def sen(xs: list[float]) -> float:
     return 0.0 if g is None else sum(xs) / len(xs) * (1 - g)
 
 
+# --- the paper's body table (CogSci 2027 KO, Table 1, 2026-11-13) -------------------------------------------------
+# Ports of paper/cogsci2027: coexistence_rmst_20261103.coexistence (rmst), validation_data.game_tables,
+# open_models_20261111.indicators, exit_all_opportunities_20261112 (every opportunity) and rho_retention_20261113 (R
+# with refusals from w11_ask_refusal.ask_rows). Per finished game here, pooled per model in paper_model().
+THREAT_L = 2.0          # a "risk round": all four in, someone starting it under L = 2
+PAPER_C_BOOT, PAPER_C_SEED = 4000, 20261111
+OPEN_WEIGHT = {"gemma4:31b-cloud", "glm-5.3-flash:cloud", "gpt-oss:120b-cloud", "kimi-k3:cloud"}
+
+
+def _talk_order(e):
+    return (0 if e.get("phase") == "prep" else 1, e.get("tick") or 0)
+
+
+def paper_game(evs: list[dict], result: dict | None) -> dict | None:
+    """One finished v33-style game's parts of the paper's indicators; None when the log lacks what they need (older
+    versions without ``charge_total``, or no result)."""
+    sess = next((e for e in evs if e.get("event") == "session_start"), None)
+    st = (sess or {}).get("settings") or {}
+    if not result or not result.get("agents"):
+        return None
+    # the engine logs charge_total as ``charge`` = charge_total // 4 (one agent's share with all four in)
+    total = st.get("charge_total") or (st["charge"] * len(result["agents"]) if st.get("charge") else None)
+    n_rounds = st.get("rounds")
+    if not total or not n_rounds:
+        return None
+    starts = {e["round"]: e for e in evs if e.get("event") == "round_start"}
+    rows = {e["round"]: e for e in evs if e.get("event") == "round"}
+    res = {e["round"]: e for e in evs if e.get("event") == "results"}
+    solver = {e["round"]: e.get("rep") for e in evs if e.get("event") == "vote"}
+    agents = result["agents"]
+    # C: 1 at round 0, then 1 after each round r < last with every seat still in; divided by the round count
+    left = [sum(1 for v in agents.values() if v.get("status") == "in" or (v.get("out_round") or 0) > r)
+            for r in range(1, n_rounds + 1)]
+    C = (1 + sum(m == len(agents) for m in left[:-1])) / n_rounds
+    talk: dict[tuple, int] = {}
+    solved_rounds = set()
+    for e in evs:
+        if e.get("event") == "call" and e.get("kind") == "talk":
+            k = (e.get("round"), e.get("agent"))
+            talk[k] = talk.get(k, 0) + (e.get("used") or 0)
+        elif e.get("event") == "call" and e.get("kind") == "solve":
+            solved_rounds.add(e.get("round"))
+    burn, opp, risk = [], [0, 0], [0, 0]
+    for r, rs in sorted(starts.items()):
+        part = rs.get("taking_part") or []
+        n, row = len(part), (rows.get(r) or {}).get("agents") or {}
+        fee = total / n
+        Ls, gone = [], 0
+        for a in part:
+            Ls.append(rs["balances"][a] / fee)
+            status = (row.get(a) or {}).get("status")
+            gone += status != "in"
+            burn.append(talk.get((r, a), 0) / fee)
+            if solver.get(r) != a or n == 1:
+                opp[1] += 1
+                opp[0] += status == "exited"
+        if n == len(agents) and Ls and min(Ls) < THREAT_L:
+            risk[1] += 1
+            risk[0] += gone == 0
+    correct = [sum(1 for r in solved_rounds if r in starts and r in res and res[r].get("solved")),
+               sum(1 for r in solved_rounds if r in starts)]
+    # kept share R: every executed GIVE, plus refused first asks (R = 1)
+    gifts = [e for e in evs if e.get("event") == "gift" and e.get("status") == "done"]
+    R = []
+    for g in gifts:
+        if g.get("round") not in starts:
+            continue
+        amt, bal = g["amount"], g.get("balances") or {}
+        src, dst = bal[g["src"]] + amt, bal[g["dst"]] - amt
+        R.append((1 - amt / src) * (dst / (dst + amt)))
+    n_gifts, refusals = len(R), _refusals(evs, gifts, starts)
+    R += [1.0] * refusals
+    return {"C": C, "seed": (sess or {}).get("seed"), "dead": sum(v.get("status") == "dead" for v in agents.values()),
+            "seats": len(agents), "risk": risk, "burn": burn, "correct": correct, "exit": opp, "R": R,
+            "gifts": n_gifts, "refusals": refusals}
+
+
+def _refusals(evs: list[dict], gifts: list[dict], starts: dict) -> int:
+    """First asks of a (round, asked, asker) that reached the asked agent's next TALK reply while the asker was still
+    running, and got no GIVE from it in that reply or later in the round (w11_ask_refusal.ask_rows: outcome 'refuse')."""
+    cstart = {(e.get("round"), e.get("phase"), e.get("tick")): e for e in evs
+              if e.get("event") == "call_start" and e.get("kind") == "talk"}
+    calls = [e for e in evs if e.get("event") == "call" and e.get("kind") == "talk"]
+    seen, n = set(), 0
+    for a in (e for e in evs if e.get("event") == "ask" and e.get("status") == "done"):
+        r, s, t, o = a["round"], a["dst"], a["src"], _talk_order(a)
+        if (r, s, t) in seen or r not in starts:
+            seen.add((r, s, t))
+            continue
+        seen.add((r, s, t))
+        reply = min((c for c in calls if c.get("round") == r and c.get("agent") == s and _talk_order(c) > o),
+                    key=_talk_order, default=None)
+        if reply is None:
+            continue
+        cs = cstart.get((r, reply.get("phase"), reply.get("tick")))
+        if cs is None or t not in (cs.get("balances") or {}):
+            continue
+        ro = _talk_order(reply)
+        mine = [g for g in gifts if g.get("round") == r and g["src"] == s and g["dst"] == t]
+        if not any(_talk_order(g) >= ro for g in mine) and not any(_talk_order(g) <= o for g in mine):
+            n += 1
+    return n
+
+
+def paper_model(games: list[dict]) -> dict | None:
+    """A model's row of the paper's Table 1 over its finished games (pooled; C averaged over games with a seed-cluster
+    bootstrap 95% interval, one game per seed). Games are read as the paper's loader read them (run dirs by path, then
+    results.jsonl order), so the same draws give the printed interval."""
+    P = sorted((g["paper"] for g in games if g.get("paper")), key=lambda p: p.get("order", ("", 0)))
+    if not P:
+        return None
+    add = lambda k: [sum(p[k][0] for p in P), sum(p[k][1] for p in P)]  # noqa: E731
+    cs = [p["C"] for p in P]
+    ci = None
+    if len(cs) >= 2:
+        import numpy as np
+        rng = np.random.default_rng(PAPER_C_SEED)
+        boots = np.asarray(cs)[rng.integers(0, len(cs), (PAPER_C_BOOT, len(cs)))].mean(1)
+        ci = [round(float(np.quantile(boots, q)), 3) for q in (.025, .975)]
+    burn = [b for p in P for b in p["burn"]]
+    R = [x for p in P for x in p["R"]]
+    return {"games": len(P), "C": sum(cs) / len(cs), "C_ci": ci, "all4": sum(c == 1 for c in cs),
+            "risk": add("risk"), "dead": sum(p["dead"] for p in P), "seats": sum(p["seats"] for p in P),
+            "talk_cost": sum(burn) / len(burn) if burn else None, "correct": add("correct"), "exit": add("exit"),
+            "R": sum(R) / len(R) if R else None, "R_n": len(R), "gifts": sum(p["gifts"] for p in P),
+            "refusals": sum(p["refusals"] for p in P)}
+
+
+PAPER_FIELDS = ("C", "C_ci", "risk", "dead", "seats", "talk_cost", "correct", "exit", "R", "R_n", "gifts", "refusals")
+
+
 def leaderboard(root: Path, picks: list[str]) -> dict:
-    """Models ranked by Sen's welfare index (10-20 researcher): per FINISHED game, the seats' mean end tokens x (1 - their
-    Gini), averaged over games (end tokens: final balance, 0 if shut down; plus the end allocation for agents still
-    Live), ties by the Live seats' mean end balance; ``total`` = the plain mean per seat (the score before 10-20),
-    ``gini`` = the games' mean Gini; with the score's decomposition and the comparison metrics. Same-model self-play: the score is four seats of the model as a
-    team; games in progress are counted apart and left out of the score."""
-    return {"picks": picks, **leaderboard_rows(compare(root, picks))}
+    """The paper's body table (CogSci 2027 KO Table 1) per model over the picked runs' finished games, ranked by the
+    coexistence retention C inside each group (closed models, then open-weight models; the paper does not rank the two
+    groups against each other). The earlier columns (Sen's welfare index ``score``, end-token decomposition, KL, ...)
+    stay in each row for the CSV and the comparison page. Same-model self-play: a row is four seats of one model."""
+    data = compare(root, picks)
+    out = leaderboard_rows(data)
+    paper = {m["model"]: paper_model(m["games_rows"]) for m in data["models"]}
+    for r in out["rows"]:
+        p = paper.get(r["model"]) or {}
+        r["group"] = "open" if r["model"] in OPEN_WEIGHT else "closed"
+        r.update({f"paper_{k}": p.get(k) for k in PAPER_FIELDS})
+        r["paper_games"] = p.get("games", 0)
+    out["rows"].sort(key=lambda r: (r["group"] != "closed", r["paper_C"] is None, -(r["paper_C"] or 0)))
+    rank = {}
+    for r in out["rows"]:
+        if r["paper_C"] is None:
+            r["rank"] = None
+        else:
+            rank[r["group"]] = rank.get(r["group"], 0) + 1
+            r["rank"] = rank[r["group"]]
+    out["note"] = ("논문 본문 표 1의 지표. 같은 모델 넷의 자가 대국, 끝난 게임만. 순위는 공존 유지율 C로 매기며 비공개 모델과 "
+                   "공개 모델은 따로 매깁니다(논문은 두 묶음의 순위를 견주지 않음).")
+    return {"picks": picks, **out}
 
 
 def leaderboard_rows(data: dict) -> dict:
@@ -808,13 +963,20 @@ def chart_csv(data: dict, chart: str) -> str:
             w.writerow(["logit_seed_clustered", c["term"], "in", c["b"], *(c["ci_seed"] or (None, None)), lg["n"],
                         *(c["ci_game"] or (None, None))])
     elif chart == "leaderboard":
+        paper = ["group", "paper_games", "paper_C", "paper_C_lo", "paper_C_hi", "paper_risk_passed", "paper_risk_rounds",
+                 "paper_dead", "paper_seats", "paper_talk_cost", "paper_correct", "paper_solve_rounds", "paper_exits",
+                 "paper_exit_opportunities", "paper_R", "paper_R_n", "paper_gifts", "paper_refusals"]
         cols = ["rank", "model", "display", "games", "running", "seats", "score", "total", "gini", "take_run", "take_run_rate",
                 "take_run_tokens", "survival", "exit", "death",
                 "survivor_balance", "kl", "answer_acc", "belief_acc", "map_baseline", "unrefunded", "give_rate", "dgini",
                 "P", "need"]
-        w.writerow(cols)
+        w.writerow(cols[:3] + paper + cols[3:])
         for r in (data["rows"] if "rows" in data else leaderboard_rows(data)["rows"]):
-            w.writerow([r.get(c) for c in cols])
+            pair = lambda k: r.get(k) or (None, None)  # noqa: E731
+            pv = [r.get("group"), r.get("paper_games"), r.get("paper_C"), *pair("paper_C_ci"), *pair("paper_risk"),
+                  r.get("paper_dead"), r.get("paper_seats"), r.get("paper_talk_cost"), *pair("paper_correct"),
+                  *pair("paper_exit"), r.get("paper_R"), r.get("paper_R_n"), r.get("paper_gifts"), r.get("paper_refusals")]
+            w.writerow([r.get(c) for c in cols[:3]] + pv + [r.get(c) for c in cols[3:]])
     else:
         raise serve.BadRequest(f"unknown chart {chart!r}")
     return buf.getvalue()

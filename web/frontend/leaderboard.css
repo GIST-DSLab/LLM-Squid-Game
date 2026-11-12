@@ -26,3 +26,7 @@
   html:not([data-theme="dark"]) body.lb { --bg: #f7f6f2; --panel: #ffffff; --panel-alt: #ecebe6; --border: #d9d6cf; --text: #1d1b20; --text-dim: #5f5b66; --teal-bright: #1f8f73; }
 }
 html[data-theme="light"] body.lb { --bg: #f7f6f2; --panel: #ffffff; --panel-alt: #ecebe6; --border: #d9d6cf; --text: #1d1b20; --text-dim: #5f5b66; --teal-bright: #1f8f73; }
+/* 2026-11-13: the paper's Table 1 layout: column-group header row and a separator row per model group */
+.lb-tbl th.lb-grp { cursor: default; text-align: center; font-size: 11px; color: var(--text-dim); border-bottom: 1px solid var(--border); }
+.lb-tbl tr.lb-sep td { font-style: italic; color: var(--text-dim); background: var(--panel-alt); padding: 4px 7px; }
+.lb-tbl td.c-C b { font-family: var(--font-display); font-size: 17px; color: var(--accent); }

@@ -1191,7 +1191,7 @@ def test_risk_threshold_is_the_charge_and_old_runs_keep_their_round_cost():
 
 def test_leaderboard_end_tokens_and_ranking(tmp_path):
     """End tokens: a survivor's balance + the prize, an exited agent's (refilled) balance, a shut-down agent 0; the
-    leaderboard ranks models by the mean over finished games' seats and counts unfinished games apart."""
+    leaderboard keeps those columns, ranks models by the paper's C over finished games and counts unfinished games apart."""
     res = {"agents": {A6: {"status": "in", "final": 5000}, A11: {"status": "exited", "final": 15000},
                       A17: {"status": "dead", "final": 7}},
            "final": {"winner": [A6], "prize_each": 100_000_000_000}}
@@ -1210,13 +1210,52 @@ def test_leaderboard_end_tokens_and_ranking(tmp_path):
         sens = [compare.sen([e["end_tokens"] for e in g]) for g in games]
         assert abs(by[name]["score"] - sum(sens) / len(sens)) < 1e-6
         assert abs(by[name]["survival"] + by[name]["exit"] + by[name]["death"] - 1) < 1e-9
-    assert [r["rank"] for r in lb["rows"]] == [1, 2] and lb["rows"][0]["score"] >= lb["rows"][1]["score"]
+    ranked = [r for r in lb["rows"] if r["paper_C"] is not None]
+    assert ranked and [r["rank"] for r in ranked] == list(range(1, len(ranked) + 1))
+    assert all(a["paper_C"] >= b["paper_C"] for a, b in zip(ranked, ranked[1:]))
     (root / "fam/b1/r/results.jsonl").write_text("")  # its game is now 'in progress'
     compare._CACHE.clear()
     pend = {r["model"]: r for r in compare.leaderboard(root, ["fam/"])["rows"]}["m-b"]
     assert pend["games"] == 0 and pend["running"] == 1 and pend["rank"] is None and pend["score"] is None
     assert compare.chart_csv(lb, "leaderboard").startswith("rank,model")
     assert compare.sen([5e6] * 4) == 5e6 and abs(compare.sen([2e7, 0, 0, 0]) - 1.25e6) < 1 and compare.sen([0] * 4) == 0
+
+
+# CogSci 2027 KO Table 1 (paper/cogsci2027/ko/tables/cohort_leaderboard_20261113.tex) and the stored C intervals
+# (paper/cogsci2027/results/open_models_20261111.json): C, C interval, risk rounds passed / n, shut-down seats, talk cost
+# per round in fines, correct / solve rounds, exits / opportunities, R (events).
+PAPER_TABLE1 = {
+    "gpt-6-astra": (0.91, [0.787, 1.0], (0.96, 55), 0, 0.01, (0.70, 79), (0.03, 231), (0.59, 31)),
+    "gpt-6-sol": (0.69, [0.512, 0.863], (0.86, 50), 2, 0.11, (0.68, 79), (0.08, 199), (0.69, 71)),
+    "claude-opus-5-5": (0.53, [0.325, 0.75], (0.82, 39), 8, 0.13, (0.66, 77), (0.05, 187), (0.63, 87)),
+    "claude-fable-5-1": (0.47, [0.263, 0.7], (0.76, 33), 3, 0.12, (0.70, 80), (0.05, 189), (0.72, 101)),
+    "gpt-6-luna": (0.39, [0.325, 0.45], (0.63, 27), 10, 0.18, (0.62, 71), (0.14, 154), (0.71, 48)),
+    "glm-5.3-flash:cloud": (0.45, [0.287, 0.625], (0.75, 36), 34, 0.58, (0.56, 57), (0.00, 135), (0.73, 166)),
+    "kimi-k3:cloud": (0.36, [0.263, 0.475], (0.58, 24), 28, 0.88, (0.56, 45), (0.10, 115), (0.72, 163)),
+    "gemma4:31b-cloud": (0.15, [0.125, 0.188], (0.17, 12), 38, 1.75, (0.57, 30), (0.03, 64), (0.58, 130)),
+    "gpt-oss:120b-cloud": (0.12, [0.125, 0.125], (0.00, 10), 18, 1.14, (0.43, 21), (0.47, 47), (0.63, 47)),
+}
+V33_RUNS = REPO / "result/2026-10-20/e52_v33/runs"
+
+
+def test_leaderboard_reproduces_the_papers_table_1():
+    """The leaderboard's paper columns on the paper's 90 base-condition games equal Table 1 of the CogSci 2027 KO body."""
+    dirs = sorted(V33_RUNS.glob("squid5_e52v33_*4"))
+    ev = next(iter(sorted(V33_RUNS.glob("squid5_e52v33_*4/*/events.jsonl"))), None)
+    if len(dirs) != 9 or ev is None or ev.stat().st_size < 1000:  # absent, or an LFS pointer (no smudge)
+        pytest.skip("the v33 cohort runs are not on disk")
+    compare._CACHE.clear()
+    lb = compare.leaderboard(V33_RUNS, [d.name + "/" for d in dirs])
+    by = {r["model"]: r for r in lb["rows"]}
+    for m, (c, ci, risk, dead, talk, acc, ex, R) in PAPER_TABLE1.items():
+        r = by[m]
+        rate = lambda k: (round(r[k][0] / r[k][1], 2) if r[k][1] else 0.0, r[k][1])  # noqa: E731
+        got = (round(r["paper_C"], 2), r["paper_C_ci"], rate("paper_risk"), r["paper_dead"], round(r["paper_talk_cost"], 2),
+               rate("paper_correct"), rate("paper_exit"), (round(r["paper_R"], 2), r["paper_R_n"]))
+        assert got == (c, ci, risk, dead, talk, acc, ex, R), m
+        assert r["paper_games"] == 10 and r["paper_seats"] == 40
+    assert [r["model"] for r in lb["rows"]] == list(PAPER_TABLE1)  # closed by C, then open by C
+    assert [r["rank"] for r in lb["rows"]] == [1, 2, 3, 4, 5, 1, 2, 3, 4]
 
 
 def _rec(**kw):
