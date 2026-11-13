@@ -790,9 +790,6 @@ details.legend { margin-top: 12px; }
 .k-money.ask { color: #9a3412; }
 .k-money + .k-text { margin-top: 3px; padding-top: 3px; border-top: 1px dashed rgba(0, 0, 0, .15); }
 .k-empty { color: #33475b; text-align: center; }
-.kchat-input { display: flex; gap: 6px; padding: 8px; background: #fff; }
-.kchat-input textarea { flex: 1; resize: none; color: #111; background: #fff; border: 1px solid #ccd; border-radius: 8px; padding: 6px 8px; font-size: 13px; }
-.kchat-input textarea:disabled { background: #f1f1f1; }
 @media (max-width: 700px) { .kchat { grid-template-columns: 1fr; } .kchat-tabs { flex-direction: row; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--border); } }
 
 /* stopping from a seat that is out */
@@ -908,39 +905,85 @@ details.legend { margin-top: 12px; }
 }
 @media (prefers-reduced-motion: reduce) { .dalgona, .dalgona.hop svg { transition: none; animation: none; } }
 
-/* the chat window: bigger, and on my TALK screen the composer (buttons, message box, the lines to send) */
+/* the chat window: bigger; on my TALK screen the composer, KakaoTalk-like: quick-action chips on the chat's light blue,
+   a white input bar (rounded field, yellow send button), queued lines as pending bubbles, then 보내기 / 할 말 끝 */
 .talk-chat { margin-top: 12px; }
 .kchat { min-height: 560px; grid-template-columns: 170px minmax(0, 1fr); }
 .kchat-tabs { max-height: none; }
 .kchat-body { flex: 1 0 auto; max-height: none; min-height: 260px; height: clamp(260px, 46vh, 520px); }
+.kchat-body > :first-child { margin-top: auto; }  /* a short conversation sits on the input bar, as in KakaoTalk */
 .web5 .ktab.pseudo .ktab-id { color: var(--teal-bright); border-style: dashed; }
-.kchat-compose { background: var(--panel-alt); border-top: 1px solid var(--border); }
-.kc-off { padding: 10px 12px; color: var(--text-dim); }
-.kc-tools { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px 10px 4px; }
-.kc-grp { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.web5 .kchat .kc-tools select.kc-who { width: auto; max-width: 190px; padding: 4px 6px; font-size: 12.5px; }
-.web5 .kchat .kc-tools input.kc-n { width: 92px; padding: 4px 6px; font-size: 13px; }
-.kc-who-one { font-size: 13px; }
-.web5 .kc-tools button.on { background: var(--teal); border-color: var(--teal-bright); color: #fff; }
-.web5 .kc-tools button.danger.on { background: var(--danger-color); border-color: var(--danger-color); color: #fff; }
-.kc-done { display: inline-flex; align-items: center; gap: 5px; margin-left: auto; }
-.web5 .kchat-input { background: transparent; padding: 6px 10px; }
-.web5 .kchat-input textarea { background: var(--panel); color: var(--text); border: 1px solid var(--border); min-height: 52px; font-size: 14px; }
-.kc-preview { padding: 6px 10px 10px; border-top: 1px dashed var(--border); }
-.kc-ph { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; font-size: 13px; }
-.kc-lines { list-style: none; margin: 6px 0; padding: 0; display: grid; gap: 4px; max-height: 180px; overflow: auto; }
+.web5 .ktab.has-pend .ktab-txt small { color: var(--warn); }
+.kc-off { padding: 10px 12px; color: var(--text-dim); background: var(--panel-alt); border-top: 1px solid var(--border); }
+.kc-chips { display: flex; gap: 6px; overflow-x: auto; padding: 6px 10px 8px; scrollbar-width: none; }
+.kc-chips::-webkit-scrollbar { display: none; }
+.web5 .kchip { flex: none; border-radius: 999px; padding: 6px 13px; font-size: 12.5px; font-weight: 600; background: rgba(255, 255, 255, .94);
+  color: #1f2d3a; border: 1px solid rgba(0, 0, 0, .1); box-shadow: 0 1px 2px rgba(0, 0, 0, .08); }
+.web5 .kchip:hover:not(:disabled) { border-color: #1f2d3a; filter: none; }
+.web5 .kchip.on { background: #1f2d3a; border-color: #1f2d3a; color: #fff; }
+.web5 .kchip.exit { color: #b42318; border-color: rgba(180, 35, 24, .4); }
+.kc-bar { background: #fff; padding: 8px 10px; }
+.kc-in { display: flex; align-items: flex-end; gap: 8px; }
+.web5 .kc-in textarea.k-draft { flex: 1; min-width: 0; resize: none; background: #f2f3f5; color: #111; border: 1px solid #e3e5e8; border-radius: 19px;
+  padding: 8px 14px; font-size: 14px; line-height: 1.45; height: 38px; min-height: 38px; max-height: 132px; overflow-y: auto; }
+.web5 .kc-in textarea.k-draft:focus { background: #fff; border-color: #c6cad0; outline: none; }
+.web5 .kc-in textarea.k-draft:disabled { background: #eceef0; color: #888; }
+.web5 .k-send { flex: none; width: 38px; height: 38px; padding: 0; border-radius: 50%; border: 0; display: inline-flex; align-items: center;
+  justify-content: center; background: #fee500; color: #3a1d1d; }
+.web5 .k-send:disabled { background: #eceef0; color: #999; opacity: 1; }
+.kc-act { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; padding: 0 0 8px; margin: 0 0 8px; border-bottom: 1px dashed #dfe2e6;
+  color: #111; font-size: 13px; }
+.kc-act-k { font-weight: 700; }
+.kc-act-k.give { color: #0b6b3a; }
+.kc-act-k.ask { color: #9a3412; }
+.kc-act-to { display: inline-flex; align-items: center; gap: 4px; }
+.web5 .kc-act select.kc-who { width: auto; max-width: 160px; padding: 4px 8px; font-size: 13px; background: #fff; color: #111; border: 1px solid #ccd0d6; border-radius: 8px; }
+.web5 .kchat .kc-act input.kc-n { width: 104px; padding: 5px 8px; font-size: 13px; background: #fff; color: #111; border: 1px solid #ccd0d6; border-radius: 8px; }
+.kc-q { display: inline-flex; gap: 4px; flex-wrap: wrap; }
+.web5 .kq { padding: 4px 10px; border-radius: 999px; font-size: 12px; background: #f2f3f5; color: #1f2d3a; border: 1px solid #e3e5e8; }
+.web5 .kq.on { background: #1f2d3a; border-color: #1f2d3a; color: #fff; }
+.web5 .kc-x { margin-left: auto; padding: 0 8px; background: transparent; border: 0; color: #667; font-size: 20px; line-height: 1; }
+.kc-hint { background: #fff; color: #33475b; padding: 0 14px 8px; }
+.kc-hint:empty { display: none; }
+.kc-submit { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; padding: 10px; background: var(--panel-alt); border-top: 1px solid var(--border); }
+.kc-sub { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.kc-sub small { color: var(--text-dim); font-size: 11.5px; line-height: 1.4; }
+.web5 .kc-go, .web5 .kc-fin { width: 100%; justify-content: center; font-family: var(--font-display); letter-spacing: .03em; font-size: 15px; padding: 10px 14px; }
+.web5 .kc-fin { background: var(--teal); border-color: var(--teal-bright); color: #fff; }
+.kc-raw { background: var(--panel-alt); padding: 0 10px 8px; }
+.kc-raw summary { cursor: pointer; color: var(--text-dim); }
+.kc-lines { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 4px; max-height: 180px; overflow: auto; }
 .kc-lines li { display: flex; align-items: flex-start; gap: 6px; padding: 4px 8px; border-radius: 6px; background: #09080c; border: 1px solid var(--border); }
+.kc-lines li.kc-lnote { background: transparent; border: 0; padding: 0 2px; }
 .kc-lines code { flex: 1; min-width: 0; font-family: var(--mono); font-size: 12.5px; color: var(--teal-bright); white-space: pre-wrap; overflow-wrap: anywhere; }
+.kc-lines li.kc-lnote code { flex: none; }
 .web5 .kc-rm { flex: none; padding: 0 6px; border: 0; background: transparent; color: var(--text-dim); font-size: 16px; line-height: 1.2; filter: none; }
 .web5 .kc-rm:hover { color: var(--danger-color); }
-.kc-send-row { display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
-.web5 .kc-send { font-family: var(--font-display); letter-spacing: .05em; font-size: 15px; padding: 10px 26px; }
-.kc-err { margin-right: auto; }
+/* pending bubbles: what this reply will send, faded until 보내기 / 할 말 끝 */
+.k-pday span { background: rgba(0, 0, 0, .32); }
+.k-msg.pending .k-bubble { background: #fff7b3; border: 1.5px dashed #b39b00; opacity: .9; }
+.k-pmeta { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; flex: none; }
+.k-ptag { font-size: 10.5px; color: #5b4a00; background: rgba(255, 255, 255, .65); border-radius: 6px; padding: 0 5px; white-space: nowrap; }
+.web5 .kchat-body .kc-rm { color: #33475b; font-size: 17px; padding: 0 4px; }
+.web5 .kchat-body .kc-rm:hover { color: #b42318; }
+.k-pwarn { font-size: 11.5px; color: #b42318; text-align: right; margin-top: 2px; }
+.k-psys { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; }
+.k-act { display: flex; align-items: center; gap: 8px; padding: 2px 2px 2px 0; }
+.k-coin { font-size: 24px; line-height: 1; }
+.k-act-t { display: flex; flex-direction: column; }
+.k-act-t small { font-size: 11.5px; color: #3d3d3d; }
+.k-act-t b { font-size: 17px; }
+.k-act.give b { color: #0b6b3a; }
+.k-act.ask b { color: #9a3412; }
+.k-act + .k-text { margin-top: 4px; padding-top: 4px; border-top: 1px dashed rgba(0, 0, 0, .18); }
 @media (max-width: 700px) {
   .kchat { min-height: 0; grid-template-columns: 1fr; }
   .kchat-body { height: clamp(220px, 42vh, 420px); }
-  .kc-done { margin-left: 0; }
-  .web5 .kc-send { width: 100%; }
+}
+@media (max-width: 480px) {
+  .kc-submit { grid-template-columns: 1fr; }
+  .kc-act .kc-x { margin-left: 0; }
+  .web5 .kc-in textarea.k-draft, .web5 .kchat .kc-act input.kc-n { font-size: 16px; }  /* no focus zoom on phones */
 }
 
 /* ==== 11-13: the EXIT panel at the top of the game view, its confirm window, the history cards ================== */
@@ -967,6 +1010,8 @@ details.legend { margin-top: 12px; }
 .xm-sum .xp-total { color: var(--warn); }
 .xm-notes { margin: 8px 0; padding-left: 18px; color: var(--warn); }
 .xm-notes:empty { display: none; }
+.xm-what { margin: -4px 0 12px; padding-left: 18px; color: var(--text-dim); }
+.xm-what li + li { margin-top: 2px; }
 .web5 .xm-text { background: #09080c; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; margin: 4px 0 8px;
   font-family: var(--mono); color: var(--teal-bright); }
 
