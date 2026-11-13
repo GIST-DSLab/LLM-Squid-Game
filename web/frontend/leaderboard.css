@@ -101,17 +101,17 @@ body.lb-noscroll { overflow: hidden; }
 .lb-lg-group { display: grid; grid-template-columns: 128px minmax(0, 1fr); align-items: start; gap: 2px 8px; }
 .lb-lg-items { display: flex; flex-wrap: wrap; gap: 2px 4px; }
 .lb-rmst button { min-height: 0; height: auto; line-height: 1.35; margin: 0; box-shadow: none; text-transform: none; letter-spacing: normal; font: inherit; cursor: pointer; color: var(--text); background: transparent; border: 1px solid transparent; transition: background .15s ease, opacity .2s ease, border-color .15s ease; }
-.lb-lg-head { flex: 0 0 auto; min-width: 116px; text-align: left; padding: 3px 8px; border-radius: 999px; font-size: 11.5px !important; font-weight: 600 !important; color: var(--text-dim) !important; }
-.lb-lg-head:hover { background: var(--panel-alt); color: var(--text) !important; }
-.lb-lg-item { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 999px; font-size: 12px !important; }
-.lb-lg-item:hover { background: var(--panel-alt); }
+.lb-rmst .lb-lg-head { flex: 0 0 auto; min-width: 116px; text-align: left; padding: 3px 8px; border-radius: 999px; font-size: 11.5px !important; font-weight: 600 !important; color: var(--text-dim) !important; }
+.lb-rmst .lb-lg-head:hover { background: var(--panel-alt); color: var(--text) !important; }
+.lb-rmst .lb-lg-item { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 999px; font-size: 12px !important; }
+.lb-rmst .lb-lg-item:hover { background: var(--panel-alt); }
 .lb-rmst button[aria-pressed="true"]:not(.lb-lg-all) { border-color: var(--text-dim); background: var(--panel-alt); }
 .lb-rmst button.dim { opacity: .38; }
 .lb-lg-sw { width: 22px; height: 8px; }
 .lb-lg-sw line { stroke-width: 2.6; }
 .lb-lg-c { font: 11px var(--mono, monospace); color: var(--text-dim); }
-.lb-lg-all { flex: none; padding: 4px 12px; border-radius: 999px; font-size: 12px !important; border-color: var(--border) !important; }
-.lb-lg-all[aria-pressed="true"] { background: #e8336d !important; border-color: #e8336d !important; color: #fff !important; }
+.lb-rmst .lb-lg-all { flex: none; padding: 4px 12px; border-radius: 999px; font-size: 12px !important; border-color: var(--border) !important; }
+.lb-rmst .lb-lg-all[aria-pressed="true"] { background: #e8336d !important; border-color: #e8336d !important; color: #fff !important; }
 .lb-rmst button:focus-visible { outline: 2px solid #e8336d; outline-offset: 1px; }
 .lb-rmst-foot { margin: 10px 0 0; font-size: 11.5px; color: var(--text-dim); }
 @media (prefers-reduced-motion: reduce) { .lb-rmst-line, .lb-rmst button { transition: none; } }
