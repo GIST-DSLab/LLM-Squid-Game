@@ -627,6 +627,20 @@ def end_scene(fig: Image.Image):
 
 # --- encoding ------------------------------------------------------------------------------------------------------------
 
+def write_chapters(scenes: list, titles: list[str], out: Path, fps: int) -> Path:
+    """``<out>.chapters.json``: each scene's start time (s, on the frame grid encode uses) and title, for the site's
+    video player (web/frontend/vplayer.js: chapter marks on the seek bar, the current chapter's name)."""
+    import json
+    assert len(titles) == len(scenes), (len(titles), len(scenes))
+    t, rows = 0, []
+    for (_, dur), title in zip(scenes, titles):
+        rows.append({"t": round(t / fps, 3), "title": title})
+        t += math.ceil(dur * fps)
+    path = out.with_suffix(".chapters.json")
+    path.write_text(json.dumps({"duration": round(t / fps, 3), "chapters": rows}, ensure_ascii=False, indent=1) + "\n")
+    return path
+
+
 def encode(scenes: list, out: Path, fps: int) -> None:
     """Render (draw(t, dur), dur) scenes with cross-fades and pipe them to ffmpeg (H.264, yuv420p, crf 26, faststart)."""
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -657,11 +671,16 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument("--fps", type=int, default=30)
     ap.add_argument("--fig", type=Path, default=FIG1, help="Figure 1 as an image; a higher-resolution render of the "
                     "paper figure (pdftoppm -r 600 of the standalone PDF) gives a sharper closing scene")
+    ap.add_argument("--chapters-only", action="store_true", help="write <out>.chapters.json and stop (no rendering)")
     a = ap.parse_args(argv)
     fig = Image.open(a.fig).convert("RGB")
     scenes = [(title_scene, 3.0), (tokens_scene, 5.0), (pick_scene, 5.5), (talk_scene, 12.5), (solve_scene, 17.0),
               (results_scene, 7.5), (late_give_scene, 5.5), (charge_scene, 7.5), (end_scene(fig), 6.0)]
-    encode(scenes, a.out, a.fps)
+    titles = ["시작", "토큰 = 목숨", "① 푸는 에이전트", "② 풀이 전 대화", "③ 풀기 · 숨은 규칙 찾기", "④ 결과",
+              "④ 풀이 후 대화", "⑤ 벌금", "다음 라운드"]
+    print(write_chapters(scenes, titles, a.out, a.fps))
+    if not a.chapters_only:
+        encode(scenes, a.out, a.fps)
 
 
 if __name__ == "__main__":

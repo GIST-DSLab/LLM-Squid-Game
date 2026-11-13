@@ -57,3 +57,23 @@ html[data-theme="light"] body.lb { --bg: #f7f6f2; --panel: #ffffff; --panel-alt:
 .lb-h3 { margin: 18px 0 8px; font-size: 15px; }
 body.lb-noscroll { overflow: hidden; }
 @media (max-width: 560px) { .lb-grid { grid-template-columns: 1fr; } .lb-modal { padding: 8px; } .lb-modal-card { padding: 14px 12px 20px; } }
+/* 2026-11-13: the evaluation video in a disclosure (the player itself: vplayer.css) */
+.lb-explainer { margin: 18px 0 6px; max-width: 760px; border: 1px solid var(--border); border-radius: 18px; background: var(--panel);
+  overflow: hidden; box-shadow: 0 12px 30px -20px rgba(0,0,0,.6); }
+.lb-exp-toggle { width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px 16px; border: 0; background: transparent;
+  color: var(--text); cursor: pointer; text-align: left; font: inherit; }
+.lb-exp-toggle:hover { background: var(--panel-alt); }
+.lb-exp-toggle:focus-visible { outline: 2px solid #e8336d; outline-offset: -2px; border-radius: 18px; }
+.lb-exp-badge { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
+  background: linear-gradient(135deg, #e8336d, #b8235a); box-shadow: 0 6px 16px -6px rgba(232,51,109,.7); }
+.lb-exp-badge svg { width: 15px; height: 15px; fill: #fff; margin-left: 2px; }
+.lb-exp-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.lb-exp-text b { font-size: 15px; }
+.lb-exp-text small { font-size: 12px; color: var(--text-dim); }
+.lb-exp-chev { flex: none; margin-left: auto; width: 20px; height: 20px; color: var(--text-dim); transition: transform .28s ease; }
+.lb-explainer.vp-closed .lb-exp-chev { transform: rotate(-90deg); }
+.lb-exp-body { display: grid; grid-template-rows: 1fr; transition: grid-template-rows .32s cubic-bezier(.2,.8,.2,1); }
+.lb-explainer.vp-closed .lb-exp-body { grid-template-rows: 0fr; }
+.lb-exp-inner { min-height: 0; overflow: hidden; padding: 0 14px 14px; }
+.lb-explainer.vp-closed .lb-exp-inner { padding-bottom: 0; }
+@media (prefers-reduced-motion: reduce) { .lb-exp-body, .lb-exp-chev { transition: none; } }

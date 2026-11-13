@@ -1,0 +1,81 @@
+/* VPlayer (vplayer.js): the explainer videos' own player. Dark glass controls over the picture, a seek bar split into
+   the clip's chapters, a centre pulse on play / pause. Stays dark on light pages (the clips are dark). */
+.vp {
+  --vp-accent: #e8336d; --vp-ink: #f4f4f7; --vp-glass: rgba(14, 14, 18, .58); --vp-line: rgba(255, 255, 255, .16);
+  position: relative; display: flex; flex-direction: column; width: 100%; overflow: hidden; isolation: isolate;
+  border-radius: 16px; background: #0b0b0f; color: var(--vp-ink); outline: none;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .06) inset, 0 18px 40px -18px rgba(0, 0, 0, .7), 0 0 0 1px rgba(255, 255, 255, .07);
+  font-family: var(--font-body, "Sora", system-ui, sans-serif); -webkit-tap-highlight-color: transparent; user-select: none;
+}
+.vp:focus-visible { box-shadow: 0 0 0 2px #0b0b0f, 0 0 0 4px var(--vp-accent), 0 18px 40px -18px rgba(0, 0, 0, .7); }
+.vp button { all: unset; box-sizing: border-box; cursor: pointer; }  /* the site's own button styles stay outside */
+.vp-stage { position: relative; aspect-ratio: 16 / 9; width: 100%; cursor: pointer; overflow: hidden; }
+.vp-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; background: #0b0b0f; }
+.vp[hidden] { display: none; }
+
+
+/* the big centre button while paused */
+.vp .vp-big { position: absolute; left: 50%; top: 50%; width: 76px; height: 76px; margin: -38px 0 0 -38px; padding: 0; border-radius: 50%;
+  display: grid; place-items: center; cursor: pointer; color: #fff; border: 1px solid var(--vp-line); background: var(--vp-glass);
+  -webkit-backdrop-filter: blur(10px) saturate(140%); backdrop-filter: blur(10px) saturate(140%);
+  box-shadow: 0 10px 30px -8px rgba(0, 0, 0, .6); opacity: 0; transform: scale(.86); pointer-events: none;
+  transition: opacity .22s ease, transform .22s cubic-bezier(.2, .9, .3, 1.3), background .2s ease, box-shadow .2s ease; }
+.vp-big svg { width: 30px; height: 30px; fill: currentColor; margin-left: 3px; }
+.vp.is-ended .vp-big svg { margin-left: 0; }
+.vp.is-ready.is-paused:not(.is-scrubbing) .vp-big, .vp.is-ready.is-paused:not(.is-scrubbing) .vp-big:hover { opacity: 1; transform: scale(1); pointer-events: auto; }
+.vp.is-ready.is-paused .vp-big:hover { background: rgba(232, 51, 109, .86); box-shadow: 0 10px 34px -6px rgba(232, 51, 109, .55); transform: scale(1.06); }
+
+/* the pulse: what a click just did */
+.vp-pulse { position: absolute; left: 50%; top: 50%; width: 64px; height: 64px; margin: -32px 0 0 -32px; border-radius: 50%;
+  display: grid; place-items: center; color: #fff; background: rgba(10, 10, 14, .5); pointer-events: none; opacity: 0; }
+.vp-pulse svg { width: 26px; height: 26px; fill: currentColor; }
+.vp-pulse.go { animation: vp-pulse .55s cubic-bezier(.2, .7, .3, 1) both; }
+@keyframes vp-pulse { 0% { opacity: .95; transform: scale(.72); } 100% { opacity: 0; transform: scale(1.22); } }
+
+/* buffering ring */
+.vp.is-buffering .vp-stage::after { content: ""; position: absolute; left: 50%; top: 50%; width: 34px; height: 34px; margin: -17px 0 0 -17px;
+  border-radius: 50%; border: 3px solid rgba(255, 255, 255, .22); border-top-color: var(--vp-accent); animation: vp-spin .8s linear infinite; }
+@keyframes vp-spin { to { transform: rotate(360deg); } }
+
+/* controls */
+.vp-ui { position: relative; padding: 2px 12px 8px; cursor: default; background: linear-gradient(#121218, #0e0e13);
+  border-top: 1px solid rgba(255, 255, 255, .06); }
+.vp-bar { position: relative; height: 18px; display: flex; align-items: center; cursor: pointer; touch-action: none; outline: none; }
+.vp-segs { display: flex; gap: 3px; width: 100%; height: 4px; transition: height .15s ease; }
+.vp-bar:hover .vp-segs, .vp.is-scrubbing .vp-segs, .vp-bar:focus-visible .vp-segs { height: 6px; }
+.vp-seg { position: relative; min-width: 2px; border-radius: 3px; overflow: hidden; background: rgba(255, 255, 255, .26); }
+.vp-seg i { position: absolute; inset: 0; background: var(--vp-accent); transform-origin: left center; transform: scaleX(0); }
+.vp-seg.on { background: rgba(255, 255, 255, .38); }
+.vp-bar:focus-visible .vp-segs { outline: 2px solid var(--vp-accent); outline-offset: 4px; border-radius: 3px; }
+.vp-tip { position: absolute; bottom: 22px; left: 0; transform: translateX(-50%); padding: 5px 9px; border-radius: 8px; white-space: nowrap;
+  font-size: 11.5px; line-height: 1.3; background: rgba(12, 12, 16, .92); border: 1px solid var(--vp-line); pointer-events: none;
+  opacity: 0; transition: opacity .12s ease; display: flex; gap: 8px; align-items: baseline; }
+.vp-tip b { font-weight: 600; }
+.vp-tip span { color: rgba(255, 255, 255, .62); font-variant-numeric: tabular-nums; }
+.vp-bar:hover .vp-tip, .vp.is-scrubbing .vp-tip { opacity: 1; }
+.vp-row { display: flex; align-items: center; gap: 8px; margin-top: 4px; font-size: 12.5px; }
+.vp .vp-btn { flex: none; height: 32px; min-width: 32px; padding: 0 6px; border: 0; border-radius: 9px; background: transparent; color: var(--vp-ink);
+  display: grid; place-items: center; cursor: pointer; font: 600 12px var(--mono, ui-monospace, monospace); transition: background .15s ease; }
+.vp .vp-btn svg { width: 18px; height: 18px; fill: currentColor; }
+.vp .vp-btn:hover { background: rgba(255, 255, 255, .1); }
+.vp .vp-btn:focus-visible { outline: 2px solid var(--vp-accent); outline-offset: 1px; }
+.vp .vp-toggle { width: 34px; height: 34px; border-radius: 50%; background: rgba(255, 255, 255, .08); }
+.vp .vp-toggle:hover { background: var(--vp-accent); }
+.vp-time { font-variant-numeric: tabular-nums; color: rgba(255, 255, 255, .9); white-space: nowrap; }
+.vp-sep { margin: 0 4px; color: rgba(255, 255, 255, .45); }
+.vp-chap { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-left: 10px; margin-left: 2px;
+  border-left: 1px solid rgba(255, 255, 255, .22); color: rgba(255, 255, 255, .82); }
+.vp-chap.swap { animation: vp-swap .35s ease both; }
+@keyframes vp-swap { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.vp-gap { flex: 1; }
+.vp.is-full { border-radius: 0; height: 100%; }
+.vp.is-full .vp-stage { flex: 1; aspect-ratio: auto; }
+@media (max-width: 560px) {
+  .vp { border-radius: 12px; }
+  .vp .vp-big { width: 60px; height: 60px; margin: -30px 0 0 -30px; }
+  .vp-chap { display: none; }
+  .vp-ui { padding: 2px 8px 6px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vp *, .vp *::before, .vp *::after { animation: none !important; transition: none !important; }
+}

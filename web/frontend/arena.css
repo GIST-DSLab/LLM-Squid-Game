@@ -803,15 +803,11 @@ details.legend { margin-top: 12px; }
 /* lobby: the core rules beside the (future) rules video, Figure 1 full width under them */
 .lobby-rules-row { display: flex; flex-wrap: wrap; gap: 16px 24px; align-items: center; }
 .lobby-rules-row .core-rules { flex: 1 1 420px; min-width: 0; }
-.rules-video { margin: 0; flex: 0 1 440px; min-width: 0; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); background: #000; }
-.rules-video video { display: block; width: 100%; height: auto; }
-.rules-video figcaption { padding: 4px 10px; font-size: 12px; color: var(--text-dim); background: var(--panel); }
-/* until the file has loaded: laid out (so it loads) but not seen; absent file = never seen */
-.rules-video.vid-wait { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; border: 0; }
+.rules-video { margin: 0; min-width: 0; }
+.rules-video figcaption { margin-top: 7px; font-size: 12px; color: var(--text-dim); letter-spacing: .01em; }
 .rules-video-slot { display: contents; }
-/* the rules video and the evaluation video side by side under the core rules (one clip: one column) */
-.rules-videos { flex: 1 1 100%; min-width: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(260px, 460px)); }
-.rules-videos .rules-video { flex: none; }
+/* the rules video under the core rules (the site's player, vplayer.css) */
+.rules-videos { flex: 1 1 100%; min-width: 0; display: grid; grid-template-columns: minmax(0, 640px); }
 
 /* the create screen: four seat rows */
 .web5 .create-panel { border-color: var(--teal); margin-bottom: 18px; }

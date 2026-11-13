@@ -243,6 +243,28 @@
     if (ev.target.closest("#lb-modal-close") || ev.target.id === "lb-modal") closeModel();
   });
   document.addEventListener("keydown", (ev) => { if (ev.key === "Escape") closeModel(); });
+  // the evaluation video (config.js WEB5_EVAL_VIDEO) in a disclosure: open by default and autoplaying; closing it pauses
+  // the clip, and the choice is remembered in this browser (a convenience only: unavailable storage = open)
+  (function explainer() {
+    const src = window.WEB5_EVAL_VIDEO || "", box = $("lb-explainer");
+    if (!src || !box) return;
+    const KEY = "lb_explainer_open", btn = $("lb-exp-toggle"), inner = $("lb-exp-inner");
+    let open = true;
+    try { open = localStorage.getItem(KEY) !== "0"; } catch { /* storage blocked */ }
+    inner.innerHTML = '<div class="vp" data-autoplay data-title="무엇을 평가하나" data-src="' + esc(src) + '" data-chapters="' + esc(src.replace(/\.mp4$/, ".chapters.json")) +
+      '" data-poster="' + esc(src.replace(/\.mp4$/, "_poster.jpg")) + '"></div>';
+    const set = (on) => {
+      open = on;
+      box.classList.toggle("vp-closed", !on);
+      btn.setAttribute("aria-expanded", String(on));
+      const vp = inner.querySelector(".vp");
+      if (vp && vp.vp) { if (on) setTimeout(() => vp.vp.resume(), 320); else vp.vp.pause(); }
+      try { localStorage.setItem(KEY, on ? "1" : "0"); } catch { /* storage blocked */ }
+    };
+    btn.addEventListener("click", () => set(!open));
+    box.hidden = false;
+    set(open);
+  })();
   async function load() {
     $("lb-status").textContent = "모으는 중… (서버가 막 켜졌다면 1분쯤 걸릴 수 있습니다)";
     try {

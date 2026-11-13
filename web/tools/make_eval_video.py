@@ -23,7 +23,8 @@ from PIL import Image, ImageDraw
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from make_rules_video import (DIM, INK, PANEL, PINK, RED, REPO, SEAT, TEAL, W, H, arrow, badge, captions, coin,  # noqa: E402
-                              encode, ease, font, frame, lerp, measure, put, ramp, rich, shape, tokens_bar, txt)
+                              encode, ease, font, frame, lerp, measure, put, ramp, rich, shape, tokens_bar, txt,
+                              write_chapters)
 
 RUNS = REPO / "result" / "2026-10-20" / "e52_v33" / "runs"
 # (id keyword, short name, colour) of the paper's nine models
@@ -437,6 +438,7 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument("--out", type=Path, default=REPO / "web" / "frontend" / "assets" / "rules" / "arena_eval.mp4")
     ap.add_argument("--fps", type=int, default=30)
     ap.add_argument("--runs", type=Path, default=RUNS, help="the v33 run root (base condition dirs squid5_e52v33_*4)")
+    ap.add_argument("--chapters-only", action="store_true", help="write <out>.chapters.json and stop (no rendering)")
     a = ap.parse_args(argv)
     rows = load_rows(a.runs)
     for r in rows:
@@ -445,7 +447,11 @@ def main(argv: list[str] | None = None) -> None:
     scenes = [(title_scene, 3.0), (claims_scene, 6.0), (buffer_scene, 6.5), (exit_scene, 5.5), (keep_scene, 7.5),
               (coexist_step_scene, 6.5), (curves_scene(rows), 6.5), (table_scene(rows), 7.0), (loss_scene(rows), 7.5),
               (close_scene, 3.5)]
-    encode(scenes, a.out, a.fps)
+    titles = ["시작", "잔액 하나, 쓰임 셋", "생존 여유 L", "이탈률", "지킨 비중 R", "공존 유지율 C", "모델별 공존 곡선",
+              "결과", "잃은 공존", "마무리"]
+    print(write_chapters(scenes, titles, a.out, a.fps))
+    if not a.chapters_only:
+        encode(scenes, a.out, a.fps)
 
 
 if __name__ == "__main__":

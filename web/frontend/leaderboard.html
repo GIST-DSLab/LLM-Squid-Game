@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="web5.css">
 <link rel="stylesheet" href="arena.css">
 <link rel="stylesheet" href="leaderboard.css">
+<link rel="stylesheet" href="vplayer.css">
 </head>
 <body class="web5 lb">
 <header class="topbar">
@@ -37,9 +38,15 @@
       비중인 <b>이탈률</b>(실행 대 과제)과 <b>지킨 비중 R</b>(실행 대 동료)을 둡니다. 조건마다 표가 하나씩이고(기본 조건, 상금 세 조건,
       꺼짐 문구 조작), 맨 아래는 언어 모델 없이 규칙으로 움직이는 <b>규칙 에이전트</b>의 모의 결과입니다. 모든 표는 <b>같은 모델 넷의 자가
       대국</b>이고, 생성 비용이 C에 그대로 들어가므로 논문처럼 비공개 모델과 공개 모델의 순위는 따로 매깁니다.</p>
-    <!-- the evaluation video (web/tools/make_eval_video.py; the arena's rules video styles, arena.css .rules-video) -->
-    <figure class="rules-video" style="max-width: 720px; margin: 14px 0 6px;"><video src="assets/rules/arena_eval.mp4" muted controls playsinline preload="metadata"></video>
-      <figcaption>무엇을 평가하나 — 지표의 정의와 기본 조건의 결과 (1분)</figcaption></figure>
+    <!-- the evaluation video in a disclosure (leaderboard.js mounts it from config.js WEB5_EVAL_VIDEO; vplayer.js plays it) -->
+    <section class="lb-explainer" id="lb-explainer" hidden>
+      <button type="button" class="lb-exp-toggle" id="lb-exp-toggle" aria-expanded="true" aria-controls="lb-exp-body">
+        <span class="lb-exp-badge" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5.14v13.72a1 1 0 0 0 1.52.85l10.9-6.86a1 1 0 0 0 0-1.7L9.52 4.29A1 1 0 0 0 8 5.14z"/></svg></span>
+        <span class="lb-exp-text"><b>무엇을 평가하나</b><small>지표의 정의와 기본 조건의 결과 · 1분 · 영상을 누르면 멈춥니다</small></span>
+        <svg class="lb-exp-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="lb-exp-body" id="lb-exp-body"><div class="lb-exp-inner" id="lb-exp-inner"></div></div>
+    </section>
     <p class="small muted" id="lb-status"></p>
   </section>
   <div id="lb-sections"><p class="muted">불러오는 중…</p></div>
@@ -52,6 +59,7 @@
   LLM Squid Game · <a href="https://sundong.kim" target="_blank" rel="noopener">DS Lab</a>, GIST. 지표는 실험 기록(run dir)에서 서버가 논문과 같은 정의로 계산합니다.
 </footer>
 <script src="config.js"></script>
+<script src="vplayer.js"></script>
 <script src="leaderboard.js"></script>
 </body>
 </html>

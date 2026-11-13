@@ -1084,27 +1084,12 @@
     { id: "signal", src: "assets/paper/signal_game_20261105.png", title: "SOLVE 과제: 시그널 게임",
       cap: "단서 20개(신호 → 정답 행동)로 숨은 if / elif / else 규칙을 추론해 새 신호의 행동을 고릅니다. 단서에 맞는 규칙이 여럿이면 정답은 그 규칙들이 지지하는 행동 분포에서 뽑히고, 제출한 행동(ACTIONS)으로 채점합니다." },
   ];
-  // the short game-rules video (to come): shown only once it loads, Figure 1 as its poster; absent = nothing shown
-  // the rules video (config.js WEB5_RULES_VIDEO; empty until the file exists, so no page asks for a missing file)
-  // 11-13: + the evaluation video (config.js WEB5_EVAL_VIDEO, made by web/tools/make_eval_video.py): longer, so it waits
-  // for the play button (controls, no autoplay); empty = not shown, nothing requested
+  // the game-rules video in the site's own player (vplayer.js; config.js WEB5_RULES_VIDEO, empty = nothing shown or
+  // requested). Autoplays muted and looped while on screen; a click pauses. The evaluation video lives on the leaderboard.
   const RULES_VIDEO = window.WEB5_RULES_VIDEO || "";
-  const EVAL_VIDEO = window.WEB5_EVAL_VIDEO || "";
-  const rulesVideoHTML = () => {
-    const clips = (RULES_VIDEO ? `<figure class="rules-video vid-wait"><video muted loop playsinline autoplay preload="auto" poster="${FIG1}" src="${RULES_VIDEO}"></video>` +
-      `<figcaption>게임 규칙 영상</figcaption></figure>` : "") +
-      (EVAL_VIDEO ? `<figure class="rules-video vid-wait"><video controls muted playsinline preload="metadata" src="${EVAL_VIDEO}"></video>` +
-      `<figcaption>무엇을 평가하나</figcaption></figure>` : "");
-    return clips ? `<div class="rules-videos">${clips}</div>` : "";
-  };
-  const showClip = (ev) => {  // media events do not bubble: caught on the way down
-    const fig = ev.target.closest && ev.target.closest(".rules-video");
-    if (!fig || !fig.classList.contains("vid-wait")) return;
-    fig.classList.remove("vid-wait");
-    if (ev.target.autoplay) ev.target.play().catch(() => { /* autoplay refused: the poster stays, the controls are there */ ev.target.controls = true; });
-  };
-  document.addEventListener("loadeddata", showClip, true);
-  document.addEventListener("loadedmetadata", showClip, true);  // preload="metadata" may stop before the first frame
+  const rulesVideoHTML = () => !RULES_VIDEO ? "" : `<div class="rules-videos"><figure class="rules-video">` +
+    `<div class="vp" data-autoplay data-title="게임 규칙 영상" data-src="${RULES_VIDEO}" data-chapters="${RULES_VIDEO.replace(/\.mp4$/, ".chapters.json")}" ` +
+    `data-poster="${RULES_VIDEO.replace(/\.mp4$/, "_poster.jpg")}"></div><figcaption>게임 규칙 영상 · 한 라운드 70초 · 누르면 멈춤</figcaption></figure></div>`;
   let figOn = "round";
   function figsHTML() {
     const f = FIGS.find((x) => x.id === figOn) || FIGS[0];
