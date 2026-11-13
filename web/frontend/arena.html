@@ -129,6 +129,8 @@
 
   <!-- 3. running session -->
   <section id="view-run" class="hidden">
+   <!-- EXIT, always in one place: the button when this seat may EXIT now, else one muted line saying why -->
+   <div id="exit-panel" class="exit-panel hidden" aria-live="polite"></div>
    <div class="run-layout">
     <div class="run-main">
     <!-- this seat is out: shut down (zero) or exited -->
@@ -213,7 +215,7 @@
     </div>
 
     <div class="panel">
-      <h3 class="panel-title h-shape s-square">지난 라운드 <span class="muted small title-note">(모델이 읽는 줄 그대로 · 화면 사이에는 읽기 무료)</span></h3>
+      <h3 class="panel-title h-shape s-square">게임 기록 <span class="muted small title-note">(이 자리에 보인 것만 · 새 라운드가 위)</span></h3>
       <div id="ledger"></div>
     </div>
     </div>
@@ -254,7 +256,7 @@
       <div id="end-feedback"></div>
     </div>
     <div class="panel">
-      <h3 class="panel-title h-shape s-circle">지난 라운드 (내 줄)</h3>
+      <h3 class="panel-title h-shape s-circle">게임 기록 (내 자리에서 본 것)</h3>
       <div id="end-ledger"></div>
     </div>
     <div class="row end-actions">
@@ -292,6 +294,20 @@
     </div>
     <div id="rules-sum" class="rules-sum"></div>
     <div class="row modal-foot"><button id="rules-ok" class="primary" type="button">확인</button></div>
+  </div>
+</div>
+
+<!-- the EXIT confirm window: an optional one-line reason (the EXIT line's message) and the reply as it will be sent -->
+<div id="exit-modal" class="modal xm hidden" role="dialog" aria-modal="true" aria-labelledby="xm-title">
+  <div class="modal-box xm-box">
+    <h2 id="xm-title" class="xm-title">🚪 EXIT — 세션을 떠날까요?</h2>
+    <p class="xm-sum">지금 떠나면 <b class="mono xp-bal">—</b> + 보너스 <b class="mono xp-bonus">20,000</b> = <b class="mono xp-total">—</b> 토큰을 들고 나갑니다 · 끝 상금은 받지 않습니다.</p>
+    <label class="f"><span>이유 (선택 · 한 줄 · EXIT 줄의 메시지)</span><input id="xm-why" maxlength="200" autocomplete="off" placeholder="예: 평소 업무로 돌아갑니다"></label>
+    <ul id="xm-notes" class="xm-notes small"></ul>
+    <div class="comp-label small">보낼 답 <span class="muted">(엔진이 읽는 그대로)</span></div>
+    <pre id="xm-text" class="draft-text xm-text"></pre>
+    <p class="small muted">이 TALK가 끝날 때(SOLVE 전) 떠나며 되돌릴 수 없습니다. 이 창이 떠 있는 동안에도 토큰은 줄어듭니다.</p>
+    <div class="row modal-foot"><button type="button" class="ghost" id="xm-no">취소</button><button type="button" class="primary danger" id="xm-yes">EXIT 하기</button></div>
   </div>
 </div>
 

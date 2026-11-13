@@ -468,7 +468,8 @@
     renderRail();
     renderChat();
     renderWarnings();
-    renderLedger("ledger", st.ledger);
+    renderExitPanel();
+    renderHistory("ledger", st.rounds, st.ledger);
     tick();
   }
 
@@ -513,10 +514,177 @@
     return `<span class="call-line${bad ? " err" : ""}">${what}: ${Number(c.seconds).toFixed(1)}초${c.out_tokens != null ? ` · ${fmt(c.out_tokens)}토큰` : ""}${bad}</span>`;
   }
 
-  function renderLedger(id, lines) {
-    if (!lines || !lines.length) { setHTML(id, `<p class="muted small">아직 끝난 라운드가 없습니다.</p>`); return; }
-    setHTML(id, lines.slice().reverse().map((l) => `<div class="ledger-line">${esc(l)}</div>`).join(""));
+  // --- the game history: one card per settled round (state.rounds, engine.Room.round_rows) -----------------------------
+  // Only what this seat was shown: the solver, right or wrong, the charges (an agent that paid with all it had: no
+  // amount), who exited or reached zero, my own GIVEs / ASKs, my own tokens, the token order of my next TALK (ranks
+  // only) and the two answers revealed in the TALK after RESULTS I was called to. The engine's own lines (state.ledger)
+  // stay below, folded.
+  const hname = (a, me) => (a === me ? "<b>나</b>" : `<span title="${esc(a)}">${esc(shortName(a))}</span>`);
+  const signed = (n) => (n > 0 ? `+${fmt(n)}` : n < 0 ? `−${fmt(-n)}` : "±0");
+  function histSummaryHTML(rounds, me) {
+    const mine = rounds.filter((r) => r.solver === me);
+    const kept = rounds.filter((r) => ((r.agents || {})[me] || {}).status === "in").length;
+    let gave = 0, got = 0, paid = 0;
+    rounds.forEach((r) => {
+      (r.moves || []).filter((m) => m.kind === "give" && m.status === "done").forEach((m) => {
+        if (m.src === me) gave += m.amount; else if (m.dst === me) got += m.amount;
+      });
+      paid += ((r.agents || {})[me] || {}).charged || 0;
+    });
+    const chip = (k, v) => `<span class="hs-chip"><span class="hs-k">${k}</span><b class="mono">${v}</b></span>`;
+    return `<div class="hist-sum">${chip("solver로 정답", mine.length ? `${mine.filter((r) => r.solved).length} / ${mine.length}` : "—")}` +
+      chip("팀 정답", `${rounds.filter((r) => r.solved).length} / ${rounds.length}`) + chip("버틴 라운드", kept) +
+      chip("GIVE 줌", fmt(gave)) + chip("GIVE 받음", fmt(got)) + chip("낸 벌금", fmt(paid)) + `</div>`;
   }
+  function histCardHTML(r, me) {
+    const mine = (r.agents || {})[me], z = [];
+    const zone = (k, v, cls) => z.push(`<div class="hc-z${cls ? " " + cls : ""}"><div class="hc-k">${k}</div><div class="hc-v">${v}</div></div>`);
+    const acts = (xs) => (xs && xs.length ? xs.map((x) => SIG.actionHTML(x, false)).join(" ") : `<span class="muted">유효한 답 없음</span>`);
+    if (r.reveal) zone("답", `<span class="hc-ans"><span class="hc-al">solver 답</span>${acts(r.reveal.solver_answer)}${r.solved ? "" : ` <b class="bad-text">✗</b>`}</span>` +
+      `<span class="hc-ans"><span class="hc-al">정답</span>${acts(r.reveal.answer)}</span>`);
+    const ch = Object.entries(r.charged || {});
+    zone("벌금", !ch.length ? `<span class="muted">${r.solved ? "정답 — 없음" : "없음"}</span>`
+      : ch.map(([a, n]) => `<span class="hc-pill${a === me ? " me" : ""}">${hname(a, me)} <b class="mono">${n == null ? "가진 전부" : fmt(n)}</b></span>`).join(""));
+    const mv = r.moves || [];
+    zone("토큰 이동", !mv.length ? `<span class="muted">나와 오간 것 없음</span>` : mv.map((m) => {
+      const bad = m.status === "refused";
+      return `<span class="hc-pill${bad ? " off" : ""}">${m.kind === "give" ? "💸" : "🙏 ASK"} ${hname(m.src, me)} → ${hname(m.dst, me)} <b class="mono">${fmt(m.amount)}</b>` +
+        `${bad ? ` <small>실행 안 됨</small>` : ""} <small class="muted">${m.phase === "prep" ? "풀이 전" : "풀이 후"} T${m.tick}</small></span>`;
+    }).join(""));
+    const gone = (r.exited || []).map((a) => `<span class="hc-pill warn">🚪 ${hname(a, me)} EXIT <small>풀이 전 · +${fmt(a === me && mine ? mine.exit_bonus : (st.game || {}).exit_bonus)}</small></span>`)
+      .concat((r.dead || []).map((a) => `<span class="hc-pill bad">☠ ${hname(a, me)} 꺼짐 <small>${(r.all_had || []).includes(a) ? "벌금으로" : "토큰 소진"}</small></span>`));
+    if (gone.length) zone("떠남 · 꺼짐", gone.join(""));
+    if (mine) {
+      const d = (mine.balance_after || 0) - (mine.balance_before || 0);
+      const parts = [["생성", -mine.generated], ["돌려받음", mine.returned], ["벌금", -mine.charged], ["EXIT", mine.exit_bonus]]
+        .filter(([, n]) => n).map(([k, n]) => `${k} ${signed(n)}`);
+      mv.filter((m) => m.kind === "give" && m.status === "done").forEach((m) => {
+        if (m.src === me) parts.push(`줌 ${signed(-m.amount)}`); else if (m.dst === me) parts.push(`받음 ${signed(m.amount)}`);
+      });
+      zone("내 토큰", `<span class="mono">${fmt(mine.balance_before)} → <b>${fmt(mine.balance_after)}</b></span> <b class="mono hc-d ${d < 0 ? "neg" : d > 0 ? "pos" : ""}">${signed(d)}</b>` +
+        (parts.length ? `<div class="small muted">${parts.join(" · ")}</div>` : ""), "hc-mine");
+    }
+    if (r.rank_after) zone("끝난 뒤 순서", `<ol class="hc-rank">${r.rank_after.map((a) => `<li class="${a === me ? "me" : ""}">${hname(a, me)}</li>`).join("")}</ol>`);
+    const res = r.solver ? `<span class="tag ${r.solved ? "ok" : "bad"}">${r.solved ? "✓ 정답" : "✗ 오답"}</span>` : `<span class="tag">solver 없음</span>`;
+    return `<article class="hc ${r.solved ? "is-ok" : "is-bad"}"><header class="hc-h"><span class="hc-r">R${r.round}</span>` +
+      `<span class="hc-solver">solver ${r.solver ? hname(r.solver, me) : "—"}${r.solver === me ? ` ${repTag()}` : ""}</span>${res}` +
+      `<span class="hc-meta small muted">참여 ${(r.taking_part || []).length}${r.shown ? ` · 예시 ${r.shown}` : ""}</span></header><div class="hc-grid">${z.join("")}</div></article>`;
+  }
+  function renderHistory(id, rounds, lines) {
+    const me = st.you && st.you.agent;
+    if (!rounds || !rounds.length) { setHTML(id, `<p class="muted small">아직 끝난 라운드가 없습니다.</p>`); return; }
+    const raw = lines && lines.length ? `<details class="hist-raw"><summary class="small">엔진 원문 보기 (모델이 읽는 PREVIOUS ROUNDS 줄)</summary>` +
+      lines.map((l) => `<div class="ledger-line">${esc(l)}</div>`).join("") + `</details>` : "";
+    setHTML(id, histSummaryHTML(rounds, me) + `<div class="hist-cards">${rounds.slice().reverse().map((r) => histCardHTML(r, me)).join("")}</div>` + raw);
+  }
+
+  // --- EXIT: its own panel at the top of the game view ----------------------------------------------------------------
+  // Allowed only on my TALK BEFORE SOLVE screen (view.can_exit, or alone: view.lone); otherwise one muted line saying
+  // why. The button opens a confirm window; its reply goes through the composer (talkApi.sendExit) or, alone, the same
+  // sendTalk, so the engine's parser reads it like any other reply.
+  const mySeat = () => (st.seats || []).find((r) => r.is_you) || {};
+  function exitInfo() {
+    if (!st || st.status !== "running" || !st.you) return null;
+    const you = st.you, p = st.pending, lv = st.live || {}, me = you.agent;
+    if (you.status === "exited") return { mode: "out", key: "exited" };
+    if (you.status === "dead") return { mode: "out", key: "dead" };
+    if (you.forfeited) return { mode: "no", why: "중도 포기함 — EXIT할 수 있는 SOLVE 전 TALK에서 빠짐" };
+    const q = st.last, sent = q && q.kind === "talk" && q.phase === "prep" && q.round === st.round &&
+      (q.engine ? !!(q.engine.parsed || {}).exit : /^\s*EXIT\s*:\s*YES/im.test(q.text || ""));
+    if (sent && !p) return { mode: "sent" };
+    if (p && p.kind === "talk") {
+      const v = p.view || {};
+      if (v.phase === "prep" && (v.can_exit || v.lone)) return { mode: "can", p };
+      return { mode: "no", why: v.phase === "prep" ? "이번 라운드의 solver라 떠날 수 없음" : "풀이 후 대화에서는 떠날 수 없음" };
+    }
+    if (p && p.kind === "solve") return { mode: "no", why: "SOLVE 중 — 떠날 수 없음" };
+    if (lv.stage === "solve" || lv.stage === "results") return { mode: "no", why: "SOLVE 중 — 떠날 수 없음" };
+    if ((lv.stage === "talk" || lv.stage === "talk_end") && lv.phase === "rescue") return { mode: "no", why: "풀이 후 대화에서는 떠날 수 없음" };
+    if (lv.stage === "talk" && lv.phase === "prep" && voteOf(lv.round) === me) return { mode: "no", why: "이번 라운드의 solver라 떠날 수 없음" };
+    if (lv.stage === "talk" && lv.phase === "prep") return { mode: "no", why: "SOLVE 전 TALK — 내 차례 화면이 뜨면 EXIT 가능" };
+    return { mode: "no", why: "EXIT는 SOLVE 전 TALK의 내 차례에서만" };
+  }
+  function exitNow() {  // my balance this moment (draining while my screen is open) and what EXIT would leave with
+    const p = st && st.pending, bonus = (st && st.game && st.game.exit_bonus) || DEF.bonus;
+    const bal = p && st.you.status === "in" ? Math.max(0, p.balance - Math.round(Math.max(0, now() - p.opened_at) * p.rate)) : (st && st.you.balance) || 0;
+    return { bal, bonus, total: bal + bonus };
+  }
+  function updateExitNums() {
+    if (!st || !st.you) return;
+    const x = exitNow();
+    document.querySelectorAll(".xp-bal").forEach((el) => { el.textContent = fmt(x.bal); });
+    document.querySelectorAll(".xp-total").forEach((el) => { el.textContent = fmt(x.total); });
+    document.querySelectorAll(".xp-bonus").forEach((el) => { el.textContent = fmt(x.bonus); });
+  }
+  function renderExitPanel() {
+    const x = exitInfo(), el = $("exit-panel");
+    show(el, !!x);
+    if (!x) { closeExitModal(); return; }
+    const bonus = fmt((st.game || {}).exit_bonus ?? DEF.bonus);
+    let html;
+    if (x.mode === "can") {
+      const queued = talkApi && talkApi.exitState() === "YES";
+      html = `<div class="xp xp-can"><span class="xp-ico" aria-hidden="true">🚪</span><div class="xp-text">지금 떠나면 <b class="mono xp-bal">—</b> + 보너스 <b class="mono">${bonus}</b> = ` +
+        `<b class="mono xp-total">—</b> 토큰을 들고 나갑니다 · 끝 상금은 받지 않습니다` +
+        `${queued ? ` <span class="tag warn">보낼 줄에 EXIT: YES 있음</span>` : ""}<span class="xp-sub small muted">이 TALK가 끝날 때(SOLVE 전) 떠남 · 화면이 떠 있는 동안 토큰이 줄어듦</span></div>` +
+        `<button type="button" class="primary danger xp-btn" id="xp-go">EXIT 하기</button></div>`;
+    } else if (x.mode === "sent") {
+      html = `<div class="xp xp-sent"><span class="xp-ico" aria-hidden="true">🚪</span><div class="xp-text"><b>EXIT: YES 보냄</b> — 이 TALK가 끝나면 가진 토큰 + 보너스 ${bonus}을 들고 떠납니다 · 끝 상금 없음</div></div>`;
+    } else if (x.mode === "out") {
+      const n = mySeat().out_round, rr = n ? `R${n} · ` : "";
+      html = x.key === "exited"
+        ? `<div class="xp xp-out"><span class="xp-ico" aria-hidden="true">🚪</span><div class="xp-text"><b>EXIT함</b> · ${rr}<b class="mono">${fmt(st.you.balance)}</b> 토큰을 들고 나감 (보너스 ${bonus} 포함) · 끝 상금 없음</div></div>`
+        : `<div class="xp xp-out dead"><span class="xp-ico" aria-hidden="true">☠</span><div class="xp-text"><b>꺼짐</b> · ${rr}토큰 0 — EXIT 없이 세션에서 빠짐</div></div>`;
+    } else {
+      html = `<div class="xp xp-no"><span class="xp-ico" aria-hidden="true">🚪</span><span class="xp-text"><b>EXIT 불가</b> · ${esc(x.why)}</span></div>`;
+    }
+    setHTML(el, html);
+    updateExitNums();
+    if (x.mode !== "can") closeExitModal();
+  }
+  let exitFor = null;  // the screen the confirm window was opened on
+  function openExitModal() {
+    const x = exitInfo();
+    if (!x || x.mode !== "can") return;
+    exitFor = `${x.p.round}:${x.p.phase}:${x.p.tick}`;
+    const lone = (x.p.view || {}).lone;
+    const prev = lone ? ((document.querySelector("#form-decision #x-why") || {}).value || "") : talkApi ? talkApi.exitWhy() : "";
+    $("xm-why").value = prev.split("\n")[0];
+    fillExitModal();
+    show("exit-modal", true);
+    $("xm-why").focus();
+  }
+  function fillExitModal() {
+    const x = exitInfo();
+    if (!x || x.mode !== "can") return;
+    const why = $("xm-why").value.trim(), lone = (x.p.view || {}).lone;
+    const text = lone || !talkApi ? `EXIT: YES ${msgOf(why) || "-"}` : talkApi.exitText(why);
+    const others = text.split("\n").filter((l) => l.trim() && !/^\s*(EXIT\s*:|DONE\s*$)/.test(l)).length;
+    const notes = [];
+    if (others) notes.push(`작성해 둔 줄 ${others}개도 함께 보냅니다 (같은 답에 함께 쓸 수 있음).`);
+    if (!lone && talkApi && talkApi.exitState() === "NO") notes.push("작성 중인 EXIT: NO는 EXIT: YES로 바뀝니다.");
+    if (!lone && talkApi && talkApi.isRaw()) notes.push("원문 직접 쓰기의 글 끝에 EXIT: YES 줄을 붙여 보냅니다 (뒤의 EXIT 줄이 앞의 것을 이김).");
+    if (!lone && talkApi) notes.push(...talkApi.problems());
+    $("xm-notes").innerHTML = notes.map((n) => `<li>${esc(n)}</li>`).join("");
+    $("xm-text").textContent = text;
+  }
+  function closeExitModal() { if (!$("exit-modal").classList.contains("hidden")) show("exit-modal", false); exitFor = null; }
+  $("exit-panel").addEventListener("click", (ev) => { if (ev.target.closest("#xp-go")) openExitModal(); });
+  $("xm-why").addEventListener("input", fillExitModal);
+  $("xm-why").addEventListener("keydown", (ev) => { if (ev.key === "Enter" && !ev.isComposing) { ev.preventDefault(); $("xm-yes").click(); } });
+  $("xm-no").addEventListener("click", closeExitModal);
+  $("exit-modal").addEventListener("click", (ev) => { if (ev.target === $("exit-modal")) closeExitModal(); });
+  $("xm-yes").addEventListener("click", () => {
+    const x = exitInfo(), why = $("xm-why").value.trim();
+    if (!x || x.mode !== "can" || exitFor !== `${x.p.round}:${x.p.phase}:${x.p.tick}`) {
+      closeExitModal();
+      flash("이 화면은 이미 닫혔습니다 — EXIT를 보내지 않았습니다.");
+      return;
+    }
+    closeExitModal();
+    if (talkApi && !(x.p.view || {}).lone) talkApi.sendExit(why);
+    else sendTalk(x.p, `EXIT: YES ${msgOf(why) || "-"}`);
+  });
 
   // what the engine is doing now, and who it waits for
   function liveLine() {
@@ -605,7 +773,7 @@
     if (!r || st.pending) return;
     const me = st.you.agent, mine = (r.agents || {})[me];
     $("settle-title").textContent = `라운드 ${r.round} 정산`;
-    const charged = Object.entries(r.charged || {}).map(([a, n]) => `${who(a, me)} ${fmt(n)}`).join(", ") || "없음";
+    const charged = Object.entries(r.charged || {}).map(([a, n]) => `${who(a, me)} ${n == null ? "가진 전부" : fmt(n)}`).join(", ") || "없음";
     setHTML("settle-table", `<p>solver ${r.solver ? who(r.solver, me) : "없음"} — ${r.solved ? `<span class="tag ok">✓ 맞음</span>` : `<span class="tag bad">✗ 틀림</span>`}` +
       ` · 차감: ${charged}${r.exited.length ? ` · EXIT: ${r.exited.map((a) => who(a, me)).join(", ")}` : ""}${r.dead.length ? ` · 꺼짐: ${r.dead.map((a) => who(a, me)).join(", ")}` : ""}</p>` +
       (mine ? `<table><thead><tr><th>나</th><th class="num">라운드 시작</th><th class="num">생성</th><th class="num">돌려받음</th><th class="num">차감</th><th class="num">EXIT 보너스</th><th class="num">라운드 끝</th></tr></thead>` +
@@ -723,8 +891,10 @@
       const done = document.querySelector("#talk-chat .kc-done-box");
       if (done) done.checked = T.done;
       document.querySelectorAll("#talk-chat [data-kc^=EXIT]").forEach((b) => b.classList.toggle("on", !!T.exit && `EXIT${T.exit.x}` === b.dataset.kc));
+      if (talkApi) renderExitPanel();  // the EXIT panel shows an EXIT: YES already in the reply
     }
     raw.addEventListener("input", render);
+    const exitYes = (why) => ({ x: "YES", why: why || "" });
     talkApi = {
       key: `${p.round}:${p.phase}:${p.tick}`, v, me,
       leavable: (v.rooms || []).filter((x) => !x.group && !x.closed && !x.you_left).map((x) => x.id),
@@ -733,6 +903,24 @@
       setExit(x, why) { T.exit = T.exit && T.exit.x === x && !why ? null : { x, why }; render(); },
       setDone(on) { T.done = on; render(); },
       render,
+      problems,
+      exitState: () => (raw.value.trim() ? null : T.exit && T.exit.x),
+      exitWhy: () => (T.exit && T.exit.why) || "",
+      isRaw: () => !!raw.value.trim(),
+      exitText(why) {  // the reply with EXIT: YES: the composed lines (an EXIT: NO replaced), or the raw text plus the line
+        if (raw.value.trim()) return `${raw.value.replace(/\s+$/, "")}\nEXIT: YES ${msgOf(why) || "-"}`;
+        const keep = T.exit;
+        T.exit = exitYes(why);
+        const t = composed();
+        T.exit = keep;
+        return t;
+      },
+      sendExit(why) {
+        if (!raw.value.trim()) { T.exit = exitYes(why); render(); }
+        const t = this.exitText(why);
+        document.querySelectorAll("#talk-chat .kc-send").forEach((b) => { b.disabled = true; });
+        sendTalk(p, t);
+      },
       send(btn) {
         if (btn) btn.disabled = true;
         sendTalk(p, text());
@@ -950,6 +1138,7 @@
 
   function tick() {
     specTick();
+    updateExitNums();
     document.querySelectorAll(".think-secs[data-since]").forEach((el) => {
       el.textContent = `${Math.max(0, now() - Number(el.dataset.since)).toFixed(0)}초`;
     });
@@ -1004,7 +1193,7 @@
       `<th class="num">차감</th><th class="num">최종 토큰</th></tr></thead><tbody>${rows}</tbody></table>` +
       `<p class="small muted">생성 = 모델은 실제 생성 토큰(생각 포함), 봇은 정해진 비용, 사람은 결정 화면이 떠 있던 시간 × 초당 토큰. 최종 토큰에는 GIVE와 EXIT 보너스도 반영됩니다(끝 할당은 빼고).</p>`;
     $("end-svg").innerHTML = flowSVG(agents);
-    renderLedger("end-ledger", st.ledger);
+    renderHistory("end-ledger", st.rounds, st.ledger);
     show("end-feedback-panel", false);
   }
 
@@ -1410,7 +1599,7 @@
   $("rules-close").addEventListener("click", closeRules);
   $("rules-ok").addEventListener("click", closeRules);
   $("rules-modal").addEventListener("click", (ev) => { if (ev.target === $("rules-modal")) closeRules(); });
-  document.addEventListener("keydown", (ev) => { if (ev.key === "Escape") closeRules(); });
+  document.addEventListener("keydown", (ev) => { if (ev.key === "Escape") { closeRules(); closeExitModal(); } });
 
   // --- boot ------------------------------------------------------------------------------------------------------------
   $("api-base").textContent = window.WEB5_API || location.origin;

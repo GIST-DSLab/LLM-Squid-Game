@@ -909,6 +909,7 @@ class Room:
         self.shapes: dict[int, str] = {}  # round -> the rule's shape line of its SOLVE prompt
         self.votes: dict[int, str | None] = {}  # round -> the drawn solver
         self.charges: dict[int, dict] = {}  # round -> the charges event (public: who paid what, who reached zero)
+        self.after_talk: dict[int, list[str]] = {}  # round -> the agents of its TALK AFTER RESULTS (shown the reveal)
         self.watch: dict | None = None  # the LLM solver's SOLVE people are watching (``watched``)
         self._preview: e52.Game | None = None  # the session as it will be built (system texts, starts) before start
         self.live: dict | None = None  # the engine's stage: start | talk | solve | results | charges | settled | end
@@ -1092,7 +1093,9 @@ class Room:
             elif kind == "vote":
                 self.votes[ev["round"]] = ev.get("rep")
             elif kind == "talk_start":
-                self.live = {"stage": "talk", "round": ev["round"], "tick": 0, "phase": ev["phase"],
+                if ev["phase"] == "rescue":  # tick 1 calls every one of them, each prompt holding the revealed task
+                    self.after_talk[ev["round"]] = list(ev["agents"])
+                self.live ={"stage": "talk", "round": ev["round"], "tick": 0, "phase": ev["phase"],
                              "agents": list(ev["agents"]), "max_ticks": ev["max_ticks"], "since": time.time()}
             elif kind == "call_start":
                 self.live = {**(self.live or {}), "stage": ev["kind"], "round": ev["round"], "tick": ev.get("tick"),
@@ -1224,19 +1227,40 @@ class Room:
 
     def round_rows(self, me: str | None) -> list[dict]:
         """Each settled round as everyone may know it (solver, right or wrong, the charges, exits, zeros) and this seat's
-        own tokens (all seats' once the session has ended)."""
-        out, end = [], self.ended()
+        own tokens (all seats' once the session has ended). From this seat's PREVIOUS ROUNDS line (``team_history_line``)
+        also: the agents taking part, the examples shown, who paid a charge with all it had (that amount is not shown:
+        it would tell the agent's balance), the GIVEs and ASKs this seat made or received (its line and its 1:1 rooms);
+        from its next TALK's token order: the order at the round's end (while it still takes part); from the TALK after
+        RESULTS it was called to: the solver's answer and the correct answer."""
+        out, end, ses = [], self.ended(), self.session
+        hist = {h["round"]: h for h in list(getattr(ses, "history", None) or [])}
+        ga = list(getattr(ses, "ga", None) or [])
         for e in self.rounds:
             ag, r = e["agents"], e["round"]
             rep = next((a for a, v in ag.items() if v.get("representative")), None)
-            ch = self.charges.get(r) or {}
+            ch, h = self.charges.get(r) or {}, hist.get(r) or {}
+            all_had = list(h.get("all_had") or [])
             row = {"round": r, "solver": rep, "solved": bool(rep and ag[rep].get("solved")),
-                   "charged": {a: v.get("charged") for a, v in ag.items() if v.get("charged")},
+                   "charged": {a: None if a in all_had and a != me and not end else v.get("charged")
+                               for a, v in ag.items() if v.get("charged")},
+                   "all_had": all_had, "taking_part": [a for a in AGENTS if a in ag], "shown": h.get("shown") or None,
+                   "moves": [{"kind": g["kind"], "src": g["src"], "dst": g["dst"], "status": g["status"], "phase": g["phase"],
+                              "tick": g["turn"], "amount": g.get("requested", g["amount"]) if g["status"] == "refused"
+                              else g["amount"], "why": g["why"] if g["src"] == me else None}
+                             for g in ga if g["round"] == r and me in (g["src"], g["dst"])] if me else [],
+                   "rank_after": [a for a in sorted((a for a in h["end"] if a not in h["gone"]),
+                                                    key=lambda a: (-h["end"][a], AGENTS.index(a)))]
+                   if h and (end or me not in h["gone"]) else None,
+                   "reveal": None,
                    "exited": [a for a, v in ag.items() if v.get("status") == "exited" and v.get("exit")],
                    "dead": [a for a in ch.get("dead", [])] + [a for a, v in ag.items() if v.get("status") == "dead"
                                                                and a not in ch.get("dead", [])],
                    "agents": {a: {k: v.get(k) for k in MINE} for a, v in ag.items() if end or a == me}}
             row["dead"] = sorted(set(row["dead"]), key=AGENTS.index)
+            if me in self.after_talk.get(r, ()) and r in self.public:
+                ans = (self.calls.get((rep, r, "solve", None)) or {}).get("answer") if rep else None
+                row["reveal"] = {"solver_answer": ans if isinstance(ans, list) else None,
+                                 "answer": list(self.public[r].get("answers") or [])}
             out.append(row)
         return out
 

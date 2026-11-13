@@ -942,3 +942,64 @@ details.legend { margin-top: 12px; }
   .kc-done { margin-left: 0; }
   .web5 .kc-send { width: 100%; }
 }
+
+/* ==== 11-13: the EXIT panel at the top of the game view, its confirm window, the history cards ================== */
+.exit-panel { margin: 0 0 12px; }
+.xp { display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; border-radius: 10px; border: 1px solid var(--border);
+  background: var(--panel); padding: 8px 12px; font-size: 13.5px; }
+.xp-ico { font-size: 18px; line-height: 1; flex: none; }
+.xp-text { flex: 1 1 260px; min-width: 0; overflow-wrap: anywhere; }
+.xp-sub { display: block; margin-top: 2px; }
+.xp-no, .xp-out { padding: 5px 12px; font-size: 12.5px; color: var(--text-dim); background: transparent; border-style: dashed; }
+.xp-no .xp-ico, .xp-out .xp-ico { font-size: 14px; opacity: .7; }
+.xp-no b, .xp-out b { color: var(--text); font-weight: 600; }
+.xp-out.dead b { color: var(--danger-color); }
+.xp-can { border: 1px solid var(--danger-color); background: color-mix(in srgb, var(--danger-color) 9%, var(--panel));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--danger-color) 25%, transparent) inset; }
+.xp-can .xp-total { color: var(--warn); font-size: 15px; }
+.xp-sent { border-color: rgba(227, 178, 60, .6); background: rgba(227, 178, 60, .08); }
+.web5 .xp-btn { flex: none; font-family: var(--font-display); letter-spacing: .05em; padding: 8px 18px; }
+@media (max-width: 560px) { .web5 .xp-btn { width: 100%; justify-content: center; } }
+
+.xm .xm-box { max-width: 520px; margin-top: 8vh; }
+.xm-title { margin: 0 0 8px; font-size: 18px; }
+.xm-sum { margin: 0 0 12px; }
+.xm-sum .xp-total { color: var(--warn); }
+.xm-notes { margin: 8px 0; padding-left: 18px; color: var(--warn); }
+.xm-notes:empty { display: none; }
+.web5 .xm-text { background: #09080c; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; margin: 4px 0 8px;
+  font-family: var(--mono); color: var(--teal-bright); }
+
+.hist-sum { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
+.hs-chip { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 10px; border-radius: 999px; background: var(--panel-alt);
+  border: 1px solid var(--border); font-size: 12.5px; }
+.hs-k { color: var(--text-dim); }
+.hist-cards { display: grid; gap: 10px; }
+.hc { border: 1px solid var(--border); border-left: 3px solid var(--text-dim); border-radius: 10px; background: var(--panel-alt); padding: 10px 12px; min-width: 0; }
+.hc.is-ok { border-left-color: var(--ok); }
+.hc.is-bad { border-left-color: var(--danger-color); }
+.hc-h { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; margin-bottom: 8px; }
+.hc-r { font-family: var(--font-display); font-weight: 700; font-size: 17px; letter-spacing: .04em; }
+.hc-solver { font-size: 13.5px; }
+.hc-meta { margin-left: auto; }
+.hc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.hc-z { min-width: 0; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 6px 9px; }
+.hc-k { font-size: 11px; color: var(--text-dim); letter-spacing: .04em; margin-bottom: 3px; }
+.hc-v { font-size: 13px; display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: baseline; overflow-wrap: anywhere; }
+.hc-v > .small { flex-basis: 100%; }
+.hc-mine { border-color: color-mix(in srgb, var(--teal-bright) 45%, var(--border)); }
+.hc-d.neg { color: var(--danger-color); }
+.hc-d.pos { color: var(--ok); }
+.hc-pill { display: inline-flex; align-items: baseline; gap: 4px; flex-wrap: wrap; padding: 1px 7px; border-radius: 6px; background: var(--panel-alt); }
+.hc-pill.me { box-shadow: 0 0 0 1px var(--teal-bright) inset; }
+.hc-pill.off { opacity: .6; text-decoration: line-through; }
+.hc-pill.warn { color: var(--warn); }
+.hc-pill.bad { color: var(--danger-color); }
+.hc-ans { display: flex; align-items: center; gap: 6px; flex-basis: 100%; }
+.hc-al { min-width: 4.2em; font-size: 11.5px; color: var(--text-dim); }
+.hc-rank { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 4px; counter-reset: rk; }
+.hc-rank li { counter-increment: rk; padding: 1px 7px; border-radius: 6px; background: var(--panel-alt); }
+.hc-rank li::before { content: counter(rk) "위 "; color: var(--text-dim); font-size: 11px; }
+.hc-rank li.me { box-shadow: 0 0 0 1px var(--teal-bright) inset; }
+.hist-raw { margin-top: 12px; }
+.hist-raw summary { cursor: pointer; color: var(--text-dim); }
