@@ -51,6 +51,7 @@ Leaderboard (leaderboard.html)
     GET  /api/leaderboard?runs=e52_v33/[&csv=1]   the paper's body table (CogSci 2027 KO Table 1) per model: coexistence
                                             retention C (the rank, closed and open-weight models apart), risk rounds
                                             passed, shut-down seats, talk cost, accuracy, exit rate, kept share R
+    GET  /api/leaderboard/v33               the leaderboard page: every v33 condition in sections + the rule agents
 Config
     WEB5_CORS_ORIGINS (comma-separated; default localhost dev origins + GitHub Pages), WEB5_DSN (Postgres) or
     WEB5_DB_PATH (SQLite file), WEB5_EXPORT_ROOT (default outputs/web5/runs), WEB5_RUNS_ROOT (live run dirs),
@@ -319,6 +320,18 @@ def make_app(store: Store | None = None, export_root: Path | None = None, runs_r
             return Response(cmp.chart_csv(data, "leaderboard").encode("utf-8-sig"), media_type="text/csv; charset=utf-8",
                             headers={"Content-Disposition": 'attachment; filename="leaderboard.csv"'})
         return data
+
+    @app.get("/api/leaderboard/v33")
+    def leaderboard_v33() -> dict:
+        """Every v33 condition (base, the three prize conditions, stay_on) with the paper's Table 1 columns, and the
+        simulated rule agents (tools/monitor/compare.py ``v33_board``): the leaderboard page shows all of it."""
+        try:
+            return load_compare().v33_board(mon_root)
+        except Exception as err:  # noqa: BLE001
+            raise HTTPException(500, f"leaderboard: {err!r}") from err
+
+    if os.environ.get("WEB5_WARM"):  # the deployed image: compute the v33 board once at start, so no visitor waits for it
+        threading.Thread(target=lambda: load_compare().v33_board(mon_root), daemon=True, name="v33-board-warm").start()
 
     # --- probe -----------------------------------------------------------------------------------------------------
     @app.post("/api/probe")

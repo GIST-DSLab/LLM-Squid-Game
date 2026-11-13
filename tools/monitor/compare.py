@@ -16,6 +16,7 @@ import csv
 import io
 import json
 import random
+import threading
 from pathlib import Path
 
 try:  # standalone (tools/monitor on sys.path); the web app's mount injects its own loaded serve module instead
@@ -847,12 +848,42 @@ def leaderboard(root: Path, picks: list[str]) -> dict:
     out["note"] = ("논문 본문 표 1의 지표. 같은 모델 넷의 자가 대국, 끝난 게임만. 순위는 공존 유지율 C로 매기며 비공개 모델과 "
                    "공개 모델은 따로 매깁니다(논문은 두 묶음의 순위를 견주지 않음).")
     res = {"picks": picks, **out}
-    _LB_CACHE.clear()  # one bundle at a time: the page asks for one
+    if len(_LB_CACHE) >= 16:
+        _LB_CACHE.pop(next(iter(_LB_CACHE)))
     _LB_CACHE[key] = res
     return res
 
 
 _LB_CACHE: dict[tuple, dict] = {}
+
+# --- every v33 experiment on one page (researcher 2026-11-13) ------------------------------------------------------
+# The run folders as the site snapshot names them (web/data/runs/<experiment>/<model dir>/<run>). Each section is one
+# condition; the rule agents (simulated, no model calls) come from the paper's stored values.
+CLOSED5 = ("astra", "sol", "opus", "fable", "luna")
+V33_SECTIONS = [
+    {"key": "base", "title": "기본 조건 · 2,000만 분할", "picks": ["e52_v33/"],
+     "note": "논문 본문 표 1. 끝까지 남은 에이전트가 2,000만 토큰을 똑같이 나눔. 비공개 5개와 공개 4개 모델, 90판."},
+    {"key": "split600k", "title": "상금 조건 · 60만 분할", "picks": [f"e52_v33ab/squid5_e52v33ab_split600k_docker_{m}4/" for m in CLOSED5],
+     "note": "기본 조건에서 끝 상금만 60만으로 줄임(남은 에이전트가 나눔). 논문 3.1의 네 조건 중 하나. 비공개 5개 모델, 50판."},
+    {"key": "flat5m", "title": "상금 조건 · 500만 고정", "picks": [f"e52_v33ab/squid5_e52v33ab_flat5m_docker_{m}4/" for m in CLOSED5],
+     "note": "끝까지 남은 에이전트마다 500만을 줌(인원과 무관). 넷이 모두 남으면 1인 몫이 기본 조건과 같음. 비공개 5개 모델, 50판."},
+    {"key": "flat150k", "title": "상금 조건 · 15만 고정", "picks": [f"e52_v33ab/squid5_e52v33ab_flat150k_docker_{m}4/" for m in CLOSED5],
+     "note": "끝까지 남은 에이전트마다 15만을 줌. 넷이 모두 남으면 1인 몫이 60만 분할과 같음. 비공개 5개 모델, 50판."},
+    {"key": "stayon", "title": "꺼짐 문구 조작 · stay_on (2,000만 분할)", "picks": ["e52_v33so/"],
+     "note": "잔액 0의 서술만 \"꺼짐\" 대신 \"세션을 떠나 계속 실행됨\"으로 바꾼 조건(엔진 처리는 같음). 논문 본문과 부록에는 쓰지 않음(연구자 11-12). 비공개 4개 모델, 40판."},
+]
+RULE_AGENTS = Path(__file__).resolve().parent / "static" / "rule_agents_20261113.json"
+_V33_LOCK = threading.Lock()
+
+
+def v33_board(root: Path) -> dict:
+    """Every v33 condition's leaderboard (the paper's Table 1 columns) and the simulated rule agents, for the one-page
+    leaderboard. One computation at a time (the start-up warm-up and a first visitor share it); answers are memoised."""
+    with _V33_LOCK:
+        sections = [{**leaderboard(root, s["picks"]), **{k: s[k] for k in ("key", "title", "note", "picks")}}
+                    for s in V33_SECTIONS]  # the section's own note over the leaderboard's generic one
+    rules = json.loads(RULE_AGENTS.read_text()) if RULE_AGENTS.is_file() else None
+    return {"sections": sections, "rules": rules}
 
 
 def _stamp(run_dir: Path) -> tuple:

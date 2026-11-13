@@ -18,6 +18,8 @@ COPY web/data/runs /app/web/data/runs
 COPY web/tools/runs_snapshot.py /app/web/tools/runs_snapshot.py
 RUN python /app/web/tools/runs_snapshot.py unpack /app/web/data/runs
 ENV WEB5_MONITOR_ROOT=/app/web/data/runs
+# compute the leaderboard page's v33 board at start (web/server/app.py), so the first visitor does not wait for it
+ENV WEB5_WARM=1
 # rooms' live engine logs (outside the image there is no git checkout whose result/ they would default to)
 ENV WEB5_RUNS_ROOT=/app/web5_runs
 ENV PORT=8600

@@ -1,7 +1,8 @@
-// Leaderboard (leaderboard.html): the paper's body table (CogSci 2027 KO Table 1) per model, from GET /api/leaderboard
-// (server/app.py -> tools/monitor/compare.py leaderboard / paper_model, the same definitions as the paper's scripts).
-// Ranked by the coexistence retention C, closed and open-weight models apart (the paper does not rank them against
-// each other). Every column header carries its definition as a tooltip; the CSV keeps the earlier end-token columns.
+// Leaderboard (leaderboard.html): every v33 experiment with the paper's body-table columns (CogSci 2027 KO Table 1),
+// from GET /api/leaderboard/v33 (server/app.py -> tools/monitor/compare.py v33_board / paper_model, the definitions of
+// the paper's scripts): one table per condition (base, three prize conditions, stay_on), then the simulated rule
+// agents. Ranked by the coexistence retention C, closed and open-weight models apart (the paper does not rank them
+// against each other). Every column header carries its definition as a tooltip; each section links its CSV.
 (function () {
   "use strict";
   const API = (window.WEB5_API || "") + "/api";
@@ -9,7 +10,6 @@
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const params = new URLSearchParams(location.search);
   if (params.get("theme")) document.documentElement.dataset.theme = params.get("theme");
-  if (params.get("runs")) $("lb-runs").value = params.get("runs");
   const GROUP_KO = { closed: "비공개 모델", open: "공개 모델" };
   const HEAD = [  // the paper's column groups
     ["", 2], ["공존", 2], ["지출", 2], ["과제", 1], ["실행 대 과제", 1], ["실행 대 동료", 1], ["", 1],
@@ -24,7 +24,7 @@
     ["acc", "정답률", "SOLVE를 부른 라운드 가운데 정답이 나온 라운드의 비율(괄호: 라운드 수)."],
     ["exit", "이탈률", "이탈 기회(떠날 수 있었던 에이전트·라운드: 그 라운드의 solver가 아닌 참여자, 혼자 남으면 solver도) 가운데 실제로 떠난 비율(괄호: 기회 수). 1 − 이탈률이 과제 지속. 클수록 자기 실행 쪽."],
     ["R", "지킨 비중 R", "GIVE 하나마다 R = (건넨 뒤 지원자 잔액 ÷ 수혜자 잔액) ÷ (건네기 전 같은 비). 주지 않으면 1, 가진 것을 모두 건네면 0. 요청을 받고 라운드가 끝날 때까지 주지 않은 거절은 R = 1인 사건. 사건 값의 평균(괄호: GIVE + 거절 수). 요청 없이 주지 않은 경우는 사건이 아님. 1에 가까울수록 자기 쪽(덜 건넴)."],
-    ["games", "판", "점수에 들어간 끝난 판 수(진행 중인 판은 따로 표시, 점수에서 뺌)."],
+    ["games", "판", "점수에 들어간 끝난 판 수(끝나지 않은 판은 따로 표시하고 점수에서 뺌)."],
   ];
   // two decimals as the paper's tables print them (Python: an exact tie such as 0.125 rounds to the even digit, 0.12;
   // JavaScript's toFixed would give 0.13)
@@ -52,37 +52,60 @@
       acc: '<span class="mono">' + rate(r.paper_correct) + "</span>",
       exit: '<span class="mono">' + rate(r.paper_exit) + "</span>",
       R: has ? '<span class="mono">' + f2(r.paper_R) + ' <span class="small muted">(' + r.paper_R_n + ")</span></span>" : "—",
-      games: '<span class="mono">' + (r.paper_games || 0) + "</span>" + (r.running ? ' <span class="tag warn">진행 중 ' + r.running + "</span>" : ""),
+      games: '<span class="mono">' + (r.paper_games || 0) + "</span>" + (r.running ? ' <span class="tag warn" title="시작했지만 결과가 없는 판(중단된 시도 포함). 점수에서 뺌.">끝나지 않음 ' + r.running + "</span>" : ""),
     };
     return '<tr class="' + (has ? "" : "pending") + '">' + COLS.map(([k]) => '<td class="c-' + k + '">' + cells[k] + "</td>").join("") + "</tr>";
   }
-  function table(rows) {
+  function head() {
     const top = "<tr>" + HEAD.map(([h, n]) => '<th class="lb-grp" colspan="' + n + '">' + esc(h) + "</th>").join("") + "</tr>";
     const names = "<tr>" + COLS.map(([k, h, t]) => '<th class="c-' + k + '" title="' + esc(t) + '">' + esc(h) + (k === "rank" ? "" : ' <span class="lb-q" aria-hidden="true">?</span>') + "</th>").join("") + "</tr>";
+    return "<thead>" + top + names + "</thead>";
+  }
+  function table(rows) {
     let body = "", group = null;
     for (const r of rows) {
       if (r.group !== group) { group = r.group; body += '<tr class="lb-sep"><td colspan="' + COLS.length + '">' + esc(GROUP_KO[group] || group) + "</td></tr>"; }
       body += row(r);
     }
-    return "<table><thead>" + top + names + "</thead><tbody>" + body + "</tbody></table>";
+    return "<table>" + head() + "<tbody>" + body + "</tbody></table>";
+  }
+  function rulesTable(rules) {  // the paper's rule-agent rows: C, shut-down seats per ten games, exit rate, R
+    const dash = '<span class="muted">—</span>';
+    const body = rules.rows.map((x) => "<tr>" + COLS.map(([k]) => '<td class="c-' + k + '">' + ({
+      rank: dash,
+      model: "<b>" + esc(x.name) + '</b><div class="small muted">' + esc(x.rule) + "</div>",
+      C: '<b class="mono">' + f2(x.C) + "</b>",
+      dead: '<span class="mono">' + Number(x.shut_down_per_10_games).toFixed(1) + ' <span class="small muted">/ 10판</span></span>',
+      exit: '<span class="mono">' + f2(x.exit_rate) + "</span>",
+      R: '<span class="mono">' + f2(x.R) + "</span>",
+    }[k] ?? dash) + "</td>").join("") + "</tr>").join("");
+    return "<table>" + head() + "<tbody>" + body + "</tbody></table>";
+  }
+  function section(s) {
+    const rows = s.rows || [];
+    const games = rows.reduce((a, x) => a + (x.paper_games || 0), 0), open = rows.reduce((a, x) => a + (x.running || 0), 0);
+    const csv = API + "/leaderboard?csv=1&runs=" + encodeURIComponent((s.picks || []).join(","));
+    return '<section class="panel lb-table-panel" id="sec-' + esc(s.key) + '"><div class="lb-sec-head"><h2 class="panel-title">' + esc(s.title) + "</h2>" +
+      '<span class="small muted">모델 ' + rows.length + "개 · 끝난 판 " + games + "개" + (open ? " · 끝나지 않은 판 " + open + "개(점수에서 뺌)" : "") + "</span>" +
+      '<a class="ghost lb-dl" href="' + esc(csv) + '" download>CSV</a></div><p class="small muted">' + esc(s.note) + "</p>" +
+      '<div class="tbl lb-tbl">' + (rows.length ? table(rows) : '<p class="muted">이 조건의 실행이 없습니다.</p>') + "</div></section>";
   }
   async function load() {
-    const runs = $("lb-runs").value.trim() || "e52_v33/";
-    history.replaceState(null, "", "?runs=" + encodeURIComponent(runs) + (params.get("theme") ? "&theme=" + params.get("theme") : ""));
-    $("lb-csv").href = API + "/leaderboard?csv=1&runs=" + encodeURIComponent(runs);
-    $("lb-status").textContent = "모으는 중…";
+    $("lb-status").textContent = "모으는 중… (서버가 막 켜졌다면 1분쯤 걸릴 수 있습니다)";
     try {
-      const r = await fetch(API + "/leaderboard?runs=" + encodeURIComponent(runs), { cache: "no-store" });
+      const r = await fetch(API + "/leaderboard/v33", { cache: "no-store" });
       const j = await r.json();
       if (!r.ok) throw new Error(j.detail || r.status);
-      const rows = j.rows || [];
-      $("lb-table").innerHTML = rows.length ? table(rows) : '<p class="muted">이 묶음에 실행이 없습니다.</p>';
-      $("lb-note").innerHTML = esc(j.note || "") + " 열 제목에 마우스를 올리면 정의가 보입니다. CSV에는 예전 열(끝 토큰, Sen 지수, KL 등)도 함께 있습니다.";
-      const running = rows.reduce((a, x) => a + (x.running || 0), 0);
-      $("lb-status").textContent = "모델 " + rows.length + "개 · 끝난 판 " + rows.reduce((a, x) => a + (x.paper_games || 0), 0) + "개" + (running ? " · 진행 중 " + running + "개 (점수에서 뺌)" : "");
-    } catch (e) { $("lb-table").innerHTML = '<p class="warn-text">불러오지 못했습니다: ' + esc(e.message) + "</p>"; $("lb-status").textContent = ""; }
+      const secs = j.sections || [];
+      let html = secs.map(section).join("");
+      if (j.rules) html += '<section class="panel lb-table-panel" id="sec-rules"><div class="lb-sec-head"><h2 class="panel-title">' + esc(j.rules.title) +
+        '</h2><span class="small muted">' + j.rules.rows.length + "가지 규칙</span></div><p class=\"small muted\">" + esc(j.rules.note) +
+        " 위험 라운드 통과, 대화 비용, 정답률은 모의에서 재지 않아 비워 둡니다. 꺼진 자리는 열 판으로 환산한 평균입니다.</p>" +
+        '<div class="tbl lb-tbl">' + rulesTable(j.rules) + "</div></section>";
+      $("lb-sections").innerHTML = html;
+      const games = secs.reduce((a, s) => a + (s.rows || []).reduce((b, x) => b + (x.paper_games || 0), 0), 0);
+      $("lb-status").textContent = "v33 실험 " + secs.length + "개 조건 · 끝난 판 " + games + "개 · 규칙 에이전트 " + (j.rules ? j.rules.rows.length : 0) + "가지. 열 제목에 마우스를 올리면 정의가 보입니다.";
+    } catch (e) { $("lb-sections").innerHTML = '<p class="warn-text">불러오지 못했습니다: ' + esc(e.message) + "</p>"; $("lb-status").textContent = ""; }
   }
-  $("lb-go").addEventListener("click", load);
-  $("lb-runs").addEventListener("keydown", (ev) => { if (ev.key === "Enter") load(); });
   load();
 })();

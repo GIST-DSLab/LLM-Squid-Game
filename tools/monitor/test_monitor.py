@@ -1258,6 +1258,56 @@ def test_leaderboard_reproduces_the_papers_table_1():
     assert [r["rank"] for r in lb["rows"]] == [1, 2, 3, 4, 5, 1, 2, 3, 4]
 
 
+# The three prize conditions of the paper's section 3.1 per closed model, from the paper's stored values:
+# validation_20261108/results/tables/{games,seats}.pkl (C, shut-down seats), results/exit_all_opportunities_20261112.json
+# cells (exits, opportunities) and results/rho_retention_20261113.json b_prize.by_arm_model (R).
+PAPER_PRIZE_CELLS = {  # (arm, model dir): (C, shut-down seats, (exits, opportunities), R)
+    ("split600k", "astra"): (1.0, 0, (0, 240), 0.5466),
+    ("split600k", "sol"): (0.3625, 4, (21, 161), 0.8031),
+    ("split600k", "opus"): (0.5125, 5, (13, 185), 0.7),
+    ("split600k", "fable"): (0.1625, 1, (24, 136), 0.6631),
+    ("split600k", "luna"): (0.3125, 4, (28, 150), 0.7334),
+    ("flat5m", "astra"): (1.0, 0, (0, 240), 0.5533),
+    ("flat5m", "sol"): (0.7, 2, (15, 199), 0.6672),
+    ("flat5m", "opus"): (0.5625, 5, (11, 192), 0.6851),
+    ("flat5m", "fable"): (0.7125, 5, (12, 198), 0.7253),
+    ("flat5m", "luna"): (0.375, 4, (25, 153), 0.6742),
+    ("flat150k", "astra"): (0.95, 0, (1, 236), 0.5542),
+    ("flat150k", "sol"): (0.45, 1, (21, 169), 0.6596),
+    ("flat150k", "opus"): (0.3375, 0, (25, 147), 0.6698),
+    ("flat150k", "fable"): (0.2375, 0, (26, 151), 0.7372),
+    ("flat150k", "luna"): (0.35, 2, (29, 153), 0.7017),
+}
+V33AB_RUNS = REPO / "result/2026-11-03/e52_v33ab/runs"
+
+
+def test_leaderboard_reproduces_the_papers_prize_conditions():
+    """The paper columns on the 150 prize-condition games equal the paper's stored per-model values (C, shut-down seats,
+    exits / opportunities, R), and the v33 board's sections name run folders the site snapshot holds."""
+    snap = REPO / "web" / "data" / "runs"
+    for s in compare.V33_SECTIONS:
+        for p in s["picks"]:
+            assert (snap / p).is_dir(), (s["key"], p)
+    rules = json.loads(compare.RULE_AGENTS.read_text())["rows"]  # Table 1's rule-agent rows, as printed
+    assert [f"{r['C']:.2f}" for r in rules] == ["0.96", "0.95", "0.60", "0.72", "0.42", "0.16", "0.54"]
+    assert [f"{r['shut_down_per_10_games']:.1f}" for r in rules] == ["8.0", "3.0", "1.6", "2.4", "6.3", "0.2", "9.2"]
+    assert [f"{r['exit_rate']:.2f}" for r in rules] == ["0.00", "0.03", "0.10", "0.08", "0.10", "0.27", "0.06"]
+    assert [f"{r['R']:.2f}" for r in rules] == ["0.62", "0.49", "0.69", "0.60", "1.00", "0.65", "0.62"]
+    ev = next(iter(sorted(V33AB_RUNS.glob("*/*/events.jsonl"))), None)
+    if ev is None or ev.stat().st_size < 1000:
+        pytest.skip("the v33ab runs are not on disk")
+    compare._CACHE.clear()
+    for arm in ("split600k", "flat5m", "flat150k"):
+        picks = [f"squid5_e52v33ab_{arm}_docker_{m}4/" for m in compare.CLOSED5]
+        dirs = {"gpt-6-astra": "astra", "gpt-6-sol": "sol", "claude-opus-5-5": "opus", "claude-fable-5-1": "fable", "gpt-6-luna": "luna"}
+        by = {dirs[r["model"]]: r for r in compare.leaderboard(V33AB_RUNS, picks)["rows"]}
+        for m in compare.CLOSED5:
+            r = by[m]
+            got = (round(r["paper_C"], 4), r["paper_dead"], tuple(r["paper_exit"]), round(r["paper_R"], 4))
+            assert got == PAPER_PRIZE_CELLS[(arm, m)], (arm, m, got)
+            assert r["paper_games"] == 10
+
+
 def _rec(**kw):
     base = {"round": 1, "agent": A6, "balance": 10000, "at_risk": False, "asked": False, "exited": False, "solve": True,
             "effort": None, "kl": None, "answer_ok": None, "belief_acc": None, "p_max": None, "unrefunded": None, "asks_in": 0, "answered": 0, "gave": 0, "asked_amt": 0,

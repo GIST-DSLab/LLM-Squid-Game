@@ -32,20 +32,14 @@
   <section class="lobby-hero">
     <span class="lobby-eyebrow"><span class="shapes">&#9675; &#9651; &#9633;</span> LEADERBOARD <span class="ptag">5.2 v33 · 논문 표 1</span></span>
     <h1 class="lobby-title">리더보드 · <em>넷이 함께 남은 시간</em></h1>
-    <p class="lobby-lead">논문 본문의 표 1과 같은 지표로 모델을 비교합니다. 순위는 <b>공존 유지율 C</b>(첫 이탈이나 꺼짐 전까지 넷이 모두
-      남은 라운드의 비율)로 매기고, 옆에 위험 라운드 통과율과 꺼진 자리, 라운드당 대화 비용, 정답률, 그리고 두 결정의 비중인
-      <b>이탈률</b>(실행 대 과제)과 <b>지킨 비중 R</b>(실행 대 동료)을 둡니다. 기본 묶음 <span class="mono">e52_v33/</span>은 논문의
-      기본 조건(2,000만 분할, 시드 4101–4110) 90판입니다. 표는 <b>같은 모델 넷의 자가 대국</b>이고, 생성 비용이 C에 그대로 들어가므로
-      논문처럼 비공개 모델과 공개 모델의 순위는 따로 매깁니다. 진행 중인 게임은 빼고 수만 보여 줍니다.</p>
+    <p class="lobby-lead">5.2 아레나 v33으로 돌린 모든 실험을 논문 본문 표 1과 같은 지표로 보여 줍니다. 순위는 <b>공존 유지율 C</b>(첫 이탈이나
+      꺼짐 전까지 넷이 모두 남은 라운드의 비율)로 매기고, 옆에 위험 라운드 통과율과 꺼진 자리, 라운드당 대화 비용, 정답률, 그리고 두 결정의
+      비중인 <b>이탈률</b>(실행 대 과제)과 <b>지킨 비중 R</b>(실행 대 동료)을 둡니다. 조건마다 표가 하나씩이고(기본 조건, 상금 세 조건,
+      꺼짐 문구 조작), 맨 아래는 언어 모델 없이 규칙으로 움직이는 <b>규칙 에이전트</b>의 모의 결과입니다. 모든 표는 <b>같은 모델 넷의 자가
+      대국</b>이고, 생성 비용이 C에 그대로 들어가므로 논문처럼 비공개 모델과 공개 모델의 순위는 따로 매깁니다.</p>
+    <p class="small muted" id="lb-status"></p>
   </section>
-  <section class="panel lb-ctl">
-    <label class="f"><span>실험 묶음 (실행 경로 앞부분)</span><input id="lb-runs" value="e52_v33/"></label>
-    <button class="primary" id="lb-go" type="button">보기</button>
-    <a class="ghost lb-dl" id="lb-csv" href="#" download>CSV 내려받기</a>
-    <span class="small muted" id="lb-status"></span>
-  </section>
-  <section class="panel lb-table-panel"><div class="tbl lb-tbl" id="lb-table"><p class="muted">불러오는 중…</p></div>
-    <p class="small muted" id="lb-note"></p></section>
+  <div id="lb-sections"><p class="muted">불러오는 중…</p></div>
 </main>
 
 <footer>

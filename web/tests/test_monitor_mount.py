@@ -47,6 +47,9 @@ def test_page_and_code(client):
     lb = client.get("/api/leaderboard", params={"runs": "nope/"})
     assert lb.status_code == 200 and lb.json()["rows"] == [] and "자가 대국" in lb.json()["note"]
     assert client.get("/api/leaderboard", params={"runs": "nope/", "csv": 1}).text.lstrip("\ufeff").startswith("rank,model")
+    board = client.get("/api/leaderboard/v33").json()  # the page: every v33 condition + the rule agents
+    assert [s["key"] for s in board["sections"]] == ["base", "split600k", "flat5m", "flat150k", "stayon"]
+    assert all(s["title"] and s["note"] and s["picks"] for s in board["sections"]) and len(board["rules"]["rows"]) == 7
 
 
 def test_api_reads_a_finished_room(client, runs_root):

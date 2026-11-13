@@ -30,3 +30,8 @@ html[data-theme="light"] body.lb { --bg: #f7f6f2; --panel: #ffffff; --panel-alt:
 .lb-tbl th.lb-grp { cursor: default; text-align: center; font-size: 11px; color: var(--text-dim); border-bottom: 1px solid var(--border); }
 .lb-tbl tr.lb-sep td { font-style: italic; color: var(--text-dim); background: var(--panel-alt); padding: 4px 7px; }
 .lb-tbl td.c-C b { font-family: var(--font-display); font-size: 17px; color: var(--accent); }
+/* 2026-11-13: one panel per v33 condition */
+#lb-sections > .lb-table-panel { margin-top: 18px; }
+.lb-sec-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
+.lb-sec-head .panel-title { margin: 0; }
+.lb-sec-head .lb-dl { margin-left: auto; padding: 4px 10px; font-size: 12px; }

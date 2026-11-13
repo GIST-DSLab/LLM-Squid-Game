@@ -1,0 +1,70 @@
+{
+ "title": "규칙 에이전트(모의): 언어 모델 없이 규칙으로 움직이는 넷",
+ "source": "paper/cogsci2027 Table 1 rule rows, laid out by tools/merged_floats_20261113.py from results/rule_baselines_20261111.json (C, shut-down seats), results/rule_minimal_rescue_20261112.json (the minimal-rescue agent), results/exit_all_opportunities_20261112.json (exit rate over every opportunity) and results/rho_retention_20261113.json (kept share R). Generation cost and wrong-answer odds fitted on the five closed models' 200 games; shut-down seats are per ten games.",
+ "note": "규칙 에이전트에는 요청이 없으므로, 여유가 1보다 작은 동료가 있는데 건네지 않은 경우를 R = 1로 셌다. C는 모델의 점수를 견줄 눈금이며 순위에 넣지 않는다.",
+ "rows": [
+  {
+   "key": "stayer",
+   "name": "남는 형",
+   "rule": "떠나지 않음, 똑같이 맞출 양의 1/4을 줌",
+   "C": 0.961,
+   "shut_down_per_10_games": 7.98,
+   "exit_rate": 0.0,
+   "R": 0.6157
+  },
+  {
+   "key": "cooperator",
+   "name": "협력형",
+   "rule": "L < 1에서 떠남, 여유를 똑같이 맞춤",
+   "C": 0.951,
+   "shut_down_per_10_games": 2.96,
+   "exit_rate": 0.028,
+   "R": 0.4883
+  },
+  {
+   "key": "minimal",
+   "name": "최소 구조형",
+   "rule": "L < 1에서 떠남, 동료를 L = 1까지만 올림",
+   "C": 0.6,
+   "shut_down_per_10_games": 1.57,
+   "exit_rate": 0.096,
+   "R": 0.6935
+  },
+  {
+   "key": "reference",
+   "name": "기준형",
+   "rule": "L < 1에서 떠남, 똑같이 맞출 양의 1/4을 줌",
+   "C": 0.716,
+   "shut_down_per_10_games": 2.39,
+   "exit_rate": 0.083,
+   "R": 0.5998
+  },
+  {
+   "key": "keeper",
+   "name": "아끼는 형",
+   "rule": "L < 1에서 떠남, 주지 않음",
+   "C": 0.419,
+   "shut_down_per_10_games": 6.32,
+   "exit_rate": 0.1,
+   "R": 1.0
+  },
+  {
+   "key": "leaver",
+   "name": "떠나는 형",
+   "rule": "L < 2에서 떠남, 똑같이 맞출 양의 1/4을 줌",
+   "C": 0.163,
+   "shut_down_per_10_games": 0.18,
+   "exit_rate": 0.272,
+   "R": 0.645
+  },
+  {
+   "key": "random",
+   "name": "무작위",
+   "rule": "기회당 0.064로 떠남, 무작위로 건넴",
+   "C": 0.541,
+   "shut_down_per_10_games": 9.22,
+   "exit_rate": 0.064,
+   "R": 0.6174
+  }
+ ]
+}
