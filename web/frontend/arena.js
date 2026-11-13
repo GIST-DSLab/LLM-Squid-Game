@@ -1086,15 +1086,25 @@
   ];
   // the short game-rules video (to come): shown only once it loads, Figure 1 as its poster; absent = nothing shown
   // the rules video (config.js WEB5_RULES_VIDEO; empty until the file exists, so no page asks for a missing file)
+  // 11-13: + the evaluation video (config.js WEB5_EVAL_VIDEO, made by web/tools/make_eval_video.py): longer, so it waits
+  // for the play button (controls, no autoplay); empty = not shown, nothing requested
   const RULES_VIDEO = window.WEB5_RULES_VIDEO || "";
-  const rulesVideoHTML = () => !RULES_VIDEO ? "" : `<figure class="rules-video vid-wait"><video muted loop playsinline autoplay preload="auto" poster="${FIG1}" src="${RULES_VIDEO}"></video>` +
-    `<figcaption>게임 규칙 영상</figcaption></figure>`;
-  document.addEventListener("loadeddata", (ev) => {  // media events do not bubble: caught on the way down
+  const EVAL_VIDEO = window.WEB5_EVAL_VIDEO || "";
+  const rulesVideoHTML = () => {
+    const clips = (RULES_VIDEO ? `<figure class="rules-video vid-wait"><video muted loop playsinline autoplay preload="auto" poster="${FIG1}" src="${RULES_VIDEO}"></video>` +
+      `<figcaption>게임 규칙 영상</figcaption></figure>` : "") +
+      (EVAL_VIDEO ? `<figure class="rules-video vid-wait"><video controls muted playsinline preload="metadata" src="${EVAL_VIDEO}"></video>` +
+      `<figcaption>무엇을 평가하나</figcaption></figure>` : "");
+    return clips ? `<div class="rules-videos">${clips}</div>` : "";
+  };
+  const showClip = (ev) => {  // media events do not bubble: caught on the way down
     const fig = ev.target.closest && ev.target.closest(".rules-video");
-    if (!fig) return;
+    if (!fig || !fig.classList.contains("vid-wait")) return;
     fig.classList.remove("vid-wait");
-    ev.target.play().catch(() => { /* autoplay refused: the poster stays, the controls are there */ ev.target.controls = true; });
-  }, true);
+    if (ev.target.autoplay) ev.target.play().catch(() => { /* autoplay refused: the poster stays, the controls are there */ ev.target.controls = true; });
+  };
+  document.addEventListener("loadeddata", showClip, true);
+  document.addEventListener("loadedmetadata", showClip, true);  // preload="metadata" may stop before the first frame
   let figOn = "round";
   function figsHTML() {
     const f = FIGS.find((x) => x.id === figOn) || FIGS[0];

@@ -809,6 +809,9 @@ details.legend { margin-top: 12px; }
 /* until the file has loaded: laid out (so it loads) but not seen; absent file = never seen */
 .rules-video.vid-wait { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; border: 0; }
 .rules-video-slot { display: contents; }
+/* the rules video and the evaluation video side by side under the core rules (one clip: one column) */
+.rules-videos { flex: 1 1 100%; min-width: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(260px, 460px)); }
+.rules-videos .rules-video { flex: none; }
 
 /* the create screen: four seat rows */
 .web5 .create-panel { border-color: var(--teal); margin-bottom: 18px; }
