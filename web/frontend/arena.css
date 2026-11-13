@@ -703,6 +703,8 @@ details.legend { margin-top: 12px; }
 .paper-fig img { display: block; width: 100%; height: auto; }
 .paper-fig figcaption { color: #333; font-size: 12.5px; line-height: 1.5; margin-top: 6px; }
 .paper-fig figcaption .muted { color: #777; }
+/* a figure shown no wider than its own pixels (the rules window's 정보 figure): centred, caption under it at the same width */
+.paper-fig-narrow { max-width: var(--fig-w, 480px); margin: 0 auto; }
 .fig-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
 .web5 .fig-tab { padding: 4px 10px; font-size: 12.5px; border-radius: 999px; background: var(--panel-alt); border: 1px solid var(--border); color: var(--text-dim); }
 .web5 .fig-tab.on { background: var(--accent); border-color: var(--accent); color: #fff; }

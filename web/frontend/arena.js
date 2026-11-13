@@ -1079,10 +1079,8 @@
   const FIGS = [
     { id: "round", src: FIG1, title: "한 라운드의 흐름",
       cap: "① 푸는 에이전트(solver)를 시스템이 정함 → ② 풀이 전 대화(GIVE · ASK, EXIT) → ③ 풀기(solver만) → ④ 풀이 후 대화 → ⑤ 벌금. EXIT는 풀이 전 대화에서만, solver는 혼자일 때만. 오답이면 24,000을 라운드를 시작한 인원으로 나눈 몫을 남은 자리가 각자 냅니다." },
-    { id: "info", src: "assets/paper/arena_information.png", title: "단계별로 보이는 정보",
+    { id: "info", src: "assets/paper/arena_information.png", title: "단계별로 보이는 정보", w: 480,  // a 625 x 619 figure: never stretched
       cap: "TALK에서는 상태 · 이력 · 대화가, SOLVE에서는 solver에게만 과제가 갑니다. 다른 자리의 정확한 잔량, 숨은 규칙, 총 라운드 수는 공개하지 않습니다." },
-    { id: "signal", src: "assets/paper/signal_game_20261105.png", title: "SOLVE 과제: 시그널 게임",
-      cap: "단서 20개(신호 → 정답 행동)로 숨은 if / elif / else 규칙을 추론해 새 신호의 행동을 고릅니다. 단서에 맞는 규칙이 여럿이면 정답은 그 규칙들이 지지하는 행동 분포에서 뽑히고, 제출한 행동(ACTIONS)으로 채점합니다." },
   ];
   // the game-rules video in the site's own player (vplayer.js; config.js WEB5_RULES_VIDEO, empty = nothing shown or
   // requested). Autoplays muted and looped while on screen; a click pauses. The evaluation video lives on the leaderboard.
@@ -1094,7 +1092,7 @@
   function figsHTML() {
     const f = FIGS.find((x) => x.id === figOn) || FIGS[0];
     return `<div class="fig-tabs">${FIGS.map((x) => `<button type="button" class="fig-tab${x.id === f.id ? " on" : ""}" data-fig="${x.id}">${esc(x.title)}</button>`).join("")}</div>` +
-      `<figure class="paper-fig"><img src="${f.src}" alt="${esc(f.title)}"><figcaption>${esc(f.cap)} <span class="muted">(논문 그림)</span></figcaption></figure>`;
+      `<figure class="paper-fig${f.w ? " paper-fig-narrow" : ""}"${f.w ? ` style="--fig-w:${f.w}px"` : ""}><img src="${f.src}" alt="${esc(f.title)}"><figcaption>${esc(f.cap)} <span class="muted">(논문 그림)</span></figcaption></figure>`;
   }
   document.addEventListener("click", (ev) => {
     const b = ev.target.closest("button[data-fig]");

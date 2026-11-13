@@ -180,6 +180,77 @@
     });
     return svg(W, H, s, title);
   }
+  // --- the RMST chart beside the video: each model's and each rule agent's all-four curve; the legend filters ----------
+  const RULE_COL = { stayer: "#8fb7d9", cooperator: "#7fcfb0", minimal: "#c8a2e0", reference: "#d9c27a", keeper: "#e89a6b", leaver: "#e06d6d", random: "#a8adb5" };
+  const RMST_GROUPS = [["closed", "비공개 모델"], ["open", "공개 모델"], ["rules", "규칙 에이전트 (모의)"]];
+  let rmstSel = null, rmstHover = null;  // null = all; {g} = a group; {id} = one line
+  function rmstSeries(base, rules) {
+    const out = (base.rows || []).filter((r) => r.paper_fig3 && r.paper_fig3.curve).map((r) => ({
+      id: r.model, group: r.group, name: shortName(r), full: r.display, C: r.paper_C, curve: r.paper_fig3.curve, col: colOf(r.model), dash: false }));
+    for (const x of (rules && rules.rows) || []) if (x.curve) out.push({ id: "rule:" + x.key, group: "rules", name: x.name, full: x.name + " (" + x.rule + ")", C: x.C, curve: x.curve, col: RULE_COL[x.key] || "#999", dash: true });
+    return out;
+  }
+  function rmstSVG(series) {
+    const W = 560, H = 300, L = 40, R = 14, T = 14, B = 34, n = Math.max(...series.map((s) => s.curve.length)) - 1;
+    const x = (i) => L + (i / n) * (W - L - R), y = (v) => T + (1 - v) * (H - T - B);
+    let s = '<svg class="lb-rmst-svg" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="라운드 뒤 넷이 모두 남은 판의 비율">';
+    for (const v of [0, 0.25, 0.5, 0.75, 1]) s += '<line class="g" x1="' + L + '" x2="' + (W - R) + '" y1="' + y(v) + '" y2="' + y(v) + '"/><text class="ax" x="' + (L - 6) + '" y="' + (y(v) + 3.5) + '" text-anchor="end">' + Math.round(100 * v) + "%</text>";
+    for (let i = 0; i <= n; i++) s += '<text class="ax" x="' + x(i) + '" y="' + (H - B + 15) + '" text-anchor="middle">' + i + "</text>";
+    s += '<text class="ax" x="' + (L + (W - L - R) / 2) + '" y="' + (H - 4) + '" text-anchor="middle">라운드 (그 라운드가 끝난 뒤)</text>';
+    for (const sr of series) {
+      let d = "M" + x(0) + " " + y(sr.curve[0]);
+      for (let i = 1; i < sr.curve.length; i++) d += "H" + x(i).toFixed(1) + "V" + y(sr.curve[i]).toFixed(1);
+      s += '<path class="lb-rmst-line" data-id="' + esc(sr.id) + '" data-group="' + sr.group + '" d="' + d + '" style="stroke:' + sr.col + (sr.dash ? ";stroke-dasharray:6 4" : "") + '">' +
+        "<title>" + esc(sr.full + " · C " + f2(sr.C)) + "</title></path>";
+    }
+    return s + "</svg>";
+  }
+  function rmstApply() {
+    const box = $("lb-rmst"), sel = rmstHover || rmstSel;
+    if (!box) return;
+    const on = (id, g) => !sel || (sel.id ? sel.id === id : sel.g === g);
+    box.querySelectorAll(".lb-rmst-line").forEach((p) => {
+      const hit = on(p.dataset.id, p.dataset.group);
+      p.classList.toggle("dim", !hit); p.classList.toggle("hl", !!sel && hit);
+      if (sel && hit) p.parentNode.appendChild(p);  // drawn on top
+    });
+    box.querySelectorAll("[data-pick]").forEach((b) => {
+      const [k, v] = b.dataset.pick.split("=");
+      const active = rmstSel && (k === "id" ? rmstSel.id === v : rmstSel.g === v);
+      b.setAttribute("aria-pressed", String(!!active));
+      b.classList.toggle("dim", !!sel && !(k === "id" ? on(v, b.dataset.g) : (sel.g === v || (sel.id && b.dataset.has && b.dataset.has.split(" ").includes(sel.id)))));
+    });
+    const all = box.querySelector('[data-pick="all"]');
+    if (all) all.setAttribute("aria-pressed", String(!rmstSel));
+  }
+  function rmstCard(base, rules) {
+    const series = rmstSeries(base, rules);
+    if (!series.length) return '<p class="muted small">곡선을 그릴 판이 없습니다.</p>';
+    const groups = RMST_GROUPS.map(([g, label]) => {
+      const items = series.filter((s) => s.group === g);
+      if (!items.length) return "";
+      return '<div class="lb-lg-group"><button type="button" class="lb-lg-head" data-pick="g=' + g + '" data-has="' + esc(items.map((s) => s.id).join(" ")) + '" aria-pressed="false">' + esc(label) + "</button>" +
+        '<div class="lb-lg-items">' + items.map((s) => '<button type="button" class="lb-lg-item" data-pick="id=' + esc(s.id) + '" data-g="' + g + '" aria-pressed="false" title="' + esc(s.full) + '">' +
+          '<svg class="lb-lg-sw" viewBox="0 0 22 8" aria-hidden="true"><line x1="1" x2="21" y1="4" y2="4" style="stroke:' + s.col + (s.dash ? ";stroke-dasharray:5 3" : "") + '"/></svg>' +
+          '<span class="lb-lg-name">' + esc(s.name) + '</span><span class="lb-lg-c">' + f2(s.C) + "</span></button>").join("") + "</div></div>";
+    }).join("");
+    return '<div class="lb-rmst-head"><div><h2>공존 곡선 <span class="muted">RMST</span></h2><p>라운드가 끝난 뒤 넷이 모두 남아 있던 판의 비율 · 곡선 아래 면적 ÷ 8 = 공존 유지율 C</p></div>' +
+      '<button type="button" class="lb-lg-all" data-pick="all" aria-pressed="true">전체</button></div>' + rmstSVG(series) + '<div class="lb-lg">' + groups + "</div>" +
+      '<p class="lb-rmst-foot">기본 조건 · 모델마다 10판 · 규칙 에이전트는 비공개 다섯 모델에 맞춘 모의(점선). 범례를 누르면 그 모델이나 묶음만 강조합니다.</p>';
+  }
+  document.addEventListener("click", (ev) => {
+    const b = ev.target.closest("#lb-rmst [data-pick]");
+    if (!b) return;
+    const [k, v] = b.dataset.pick.split("=");
+    const next = k === "all" ? null : k === "id" ? { id: v } : { g: v };
+    rmstSel = !next || (rmstSel && (rmstSel.id || rmstSel.g) === (next.id || next.g)) ? null : next;
+    rmstApply();
+  });
+  document.addEventListener("pointerover", (ev) => {
+    const b = ev.target.closest && ev.target.closest("#lb-rmst [data-pick]");
+    const next = b && b.dataset.pick !== "all" ? (b.dataset.pick.startsWith("id=") ? { id: b.dataset.pick.slice(3) } : { g: b.dataset.pick.slice(2) }) : null;
+    if (JSON.stringify(next) !== JSON.stringify(rmstHover)) { rmstHover = next; rmstApply(); }
+  });
   let BOARD = null;
   function openModel(model) {
     if (!BOARD) return;
@@ -243,6 +314,7 @@
       const secs = base ? [base] : [];
       const html = base ? section({ ...base, note: "같은 모델 넷이 시드 4101–4110의 열 판을 둔 결과(모델마다 10판, 90판). 끝까지 남은 에이전트가 2,000만 토큰을 똑같이 나눕니다." }, j.rules) : '<p class="muted">기본 조건의 실행이 없습니다.</p>';
       $("lb-sections").innerHTML = html;
+      if ($("lb-rmst")) { $("lb-rmst").innerHTML = base ? rmstCard(base, j.rules) : ""; rmstApply(); }
       const games = secs.reduce((a, s) => a + (s.rows || []).reduce((b, x) => b + (x.paper_games || 0), 0), 0);
       $("lb-status").textContent = "기본 조건 · 끝난 판 " + games + "개 · 모델 " + ((base && base.rows.length) || 0) + "개 · 규칙 에이전트 " + (j.rules ? j.rules.rows.length : 0) + "가지. 열 제목에 마우스를 올리면 정의가 보입니다.";
     } catch (e) { $("lb-sections").innerHTML = '<p class="warn-text">불러오지 못했습니다: ' + esc(e.message) + "</p>"; $("lb-status").textContent = ""; }
