@@ -35,3 +35,25 @@ html[data-theme="light"] body.lb { --bg: #f7f6f2; --panel: #ffffff; --panel-alt:
 .lb-sec-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
 .lb-sec-head .panel-title { margin: 0; }
 .lb-sec-head .lb-dl { margin-left: auto; padding: 4px 10px; font-size: 12px; }
+/* 2026-11-13: per-metric charts, the prize panel and the model window */
+.lb-model { background: none; border: 0; padding: 0; color: var(--teal-bright, #4fd1b0); cursor: pointer; font: inherit; text-align: left; text-decoration: underline; text-underline-offset: 3px; }
+.lb-ext { font-size: 12px; text-decoration: none; opacity: .7; }
+.lb-charts { margin-top: 12px; }
+.lb-charts summary { cursor: pointer; font-weight: 600; margin-bottom: 8px; }
+.lb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px 14px; }
+.lb-svg { width: 100%; height: auto; max-width: 340px; background: var(--panel-alt, #1c1c22); border-radius: 8px; }
+.lb-svg .g { stroke: rgba(255,255,255,.08); }
+.lb-svg .ax { fill: var(--text-dim, #a0a3ad); font: 9.5px var(--mono, monospace); }
+.lb-svg .t { fill: var(--text, #eee); font: 600 11.5px var(--font-body, sans-serif); }
+.lb-svg .ci { stroke: var(--text, #eee); stroke-width: 1.4; }
+.lb-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 8px; font-size: 12px; }
+.lb-legend i, .lb-modal-head h2 i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: 0; }
+.lb-modal { position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,.6); display: flex; justify-content: center; align-items: flex-start; padding: 32px 16px; overflow-y: auto; }
+.lb-modal[hidden] { display: none; }
+.lb-modal-card { position: relative; width: min(1120px, 100%); padding: 20px 22px 26px; background: #16161b; border: 1px solid var(--border, #333); border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,.6); }
+.lb-modal-x { position: absolute; top: 14px; right: 14px; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--panel); color: var(--text); cursor: pointer; }
+.lb-modal-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; padding-right: 80px; }
+.lb-modal-head h2 { margin: 0; font-size: 22px; }
+.lb-h3 { margin: 18px 0 8px; font-size: 15px; }
+body.lb-noscroll { overflow: hidden; }
+@media (max-width: 560px) { .lb-grid { grid-template-columns: 1fr; } .lb-modal { padding: 8px; } .lb-modal-card { padding: 14px 12px 20px; } }

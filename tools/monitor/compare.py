@@ -927,6 +927,7 @@ def leaderboard(root: Path, picks: list[str], all_runs: list[str] | None = None)
         r["group"] = "open" if r["model"] in OPEN_WEIGHT else "closed"
         r.update({f"paper_{k}": p.get(k) for k in PAPER_FIELDS})
         r["paper_games"] = p.get("games", 0)
+        r["paper_fig3"] = p.get("fig3")  # the model's Figure 3 panels, for the leaderboard's model window
     out["rows"].sort(key=lambda r: (r["group"] != "closed", r["paper_C"] is None, -(r["paper_C"] or 0)))
     rank = {}
     for r in out["rows"]:
