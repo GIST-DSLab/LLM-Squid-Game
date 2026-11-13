@@ -1145,7 +1145,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self._file(COMPARE_PAGE)
             if route in ("/api/compare", "/api/compare.csv"):
                 import compare
-                data = compare.compare(self.root, [x for x in q.get("runs", "").split(",") if x.strip()])
+                light = not route.endswith(".csv") or q.get("chart", "summary") not in compare.FULL_CHARTS
+                data = compare.compare(self.root, [x for x in q.get("runs", "").split(",") if x.strip()], light=light)
                 if route.endswith(".csv"):
                     body = compare.chart_csv(data, q.get("chart", "summary")).encode("utf-8-sig")
                     self.send_response(200)

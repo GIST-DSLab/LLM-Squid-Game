@@ -160,9 +160,10 @@ def monitor_router(root: Path) -> APIRouter:
             cmp = load_compare()
             picks = [x for x in q.get("runs", "").split(",") if x.strip()]
             if route == "compare":
-                return answer(lambda: cmp.public(cmp.compare(root, picks)))
+                return answer(lambda: cmp.public(cmp.compare(root, picks, light=True)))  # the page draws no bootstrap
             try:
-                text = cmp.chart_csv(cmp.compare(root, picks), q.get("chart", "summary"))
+                chart = q.get("chart", "summary")
+                text = cmp.chart_csv(cmp.compare(root, picks, light=chart not in cmp.FULL_CHARTS), chart)
             except sv.BadRequest as err:
                 return JSONResponse({"error": str(err)}, 400)
             return Response(text.encode("utf-8-sig"), media_type="text/csv; charset=utf-8", headers={

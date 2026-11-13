@@ -1125,7 +1125,7 @@ def test_compare_routes_serve_the_page_data_and_csv(tmp_path):
         assert len(text.strip().splitlines()) == 3
         page_ids = set(re.findall(r'[A-Za-z]+\("([a-z0-9_]+)", "\d', (HERE / "static" / "compare.js").read_text()))
         ids = page_ids | set(compare.CHARTS) | {"recip", "survival", "map", "e51", "summary", "leaderboard"}
-        assert {"calib", "gives", "gini", "moves", "map", "e51"} <= page_ids
+        assert {"table1", "fig3"} <= page_ids  # the paper's Table 1 and Figure 3 (2026-11-13)
         headers = {}
         for chart in sorted(ids):
             c.request("GET", f"/api/compare.csv?runs=fam/&chart={chart}")
