@@ -801,13 +801,15 @@ details.legend { margin-top: 12px; }
    the rail, the solver's dalgona, the chat window as the TALK composer ============================================== */
 
 /* lobby: the core rules beside the (future) rules video, Figure 1 full width under them */
-.lobby-rules-row { display: flex; flex-wrap: wrap; gap: 16px 24px; align-items: center; }
-.lobby-rules-row .core-rules { flex: 1 1 420px; min-width: 0; }
+.lobby-rules-row { display: flex; flex-wrap: wrap; gap: 18px 28px; align-items: center; }
+.lobby-rules-row .core-rules { flex: 1 1 340px; min-width: 0; }
 .rules-video { margin: 0; min-width: 0; }
 .rules-video figcaption { margin-top: 7px; font-size: 12px; color: var(--text-dim); letter-spacing: .01em; }
 .rules-video-slot { display: contents; }
 /* the rules video under the core rules (the site's player, vplayer.css) */
-.rules-videos { flex: 1 1 100%; min-width: 0; display: grid; grid-template-columns: minmax(0, 640px); }
+/* the video on the left, the core rules on the right (one row); on a narrow screen the video comes first, on top */
+.rules-videos { flex: 1 1 460px; max-width: 620px; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); }
+.rules-top { align-items: center; }
 
 /* the create screen: four seat rows */
 .web5 .create-panel { border-color: var(--teal); margin-bottom: 18px; }

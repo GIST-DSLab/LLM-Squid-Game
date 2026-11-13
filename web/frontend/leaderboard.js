@@ -1,8 +1,9 @@
-// Leaderboard (leaderboard.html): every v33 experiment with the paper's body-table columns (CogSci 2027 KO Table 1),
-// from GET /api/leaderboard/v33 (server/app.py -> tools/monitor/compare.py v33_board / paper_model, the definitions of
-// the paper's scripts): one table per condition (base, three prize conditions, stay_on), then the simulated rule
-// agents. Ranked by the coexistence retention C, closed and open-weight models apart (the paper does not rank them
-// against each other). Every column header carries its definition as a tooltip; each section links its CSV.
+// Leaderboard (leaderboard.html): the arena's own setup (5.2 v33, 20,000,000 split, the paper's 90 base games) with the
+// paper's body-table columns (CogSci 2027 KO Table 1), from GET /api/leaderboard/v33 (server/app.py ->
+// tools/monitor/compare.py v33_board / paper_model, the definitions of the paper's scripts): one table with the closed
+// models, the open-weight models and the simulated rule agents (the baselines) below them, per-metric charts, and a
+// window per model. Ranked by the coexistence retention C, closed and open-weight models apart (the paper does not rank
+// them against each other). The prize conditions and stay_on stay in the API and its CSVs, not on the page.
 (function () {
   "use strict";
   const API = (window.WEB5_API || "") + "/api";
@@ -10,7 +11,7 @@
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const params = new URLSearchParams(location.search);
   if (params.get("theme")) document.documentElement.dataset.theme = params.get("theme");
-  const GROUP_KO = { closed: "비공개 모델", open: "공개 모델" };
+  const GROUP_KO = { closed: "비공개 모델", open: "공개 모델", rules: "규칙 에이전트 (모의 · 언어 모델 없음 · 순위에 넣지 않는 기준선)" };
   const HEAD = [  // the paper's column groups
     ["", 2], ["공존", 2], ["지출", 2], ["과제", 1], ["실행 대 과제", 1], ["실행 대 동료", 1], ["", 1],
   ];
@@ -61,37 +62,41 @@
     const names = "<tr>" + COLS.map(([k, h, t]) => '<th class="c-' + k + '" title="' + esc(t) + '">' + esc(h) + (k === "rank" ? "" : ' <span class="lb-q" aria-hidden="true">?</span>') + "</th>").join("") + "</tr>";
     return "<thead>" + top + names + "</thead>";
   }
-  function table(rows) {
-    let body = "", group = null;
-    for (const r of rows) {
-      if (r.group !== group) { group = r.group; body += '<tr class="lb-sep"><td colspan="' + COLS.length + '">' + esc(GROUP_KO[group] || group) + "</td></tr>"; }
-      body += row(r);
-    }
-    return "<table>" + head() + "<tbody>" + body + "</tbody></table>";
-  }
-  function rulesTable(rules) {  // the paper's rule-agent rows: C, shut-down seats per ten games, exit rate, R
+  const sep = (g) => '<tr class="lb-sep' + (g === "rules" ? " lb-sep-rules" : "") + '"><td colspan="' + COLS.length + '">' + esc(GROUP_KO[g] || g) + "</td></tr>";
+  function ruleRow(x) {  // the paper's rule-agent rows: C, shut-down seats (per ten games = of 40 seats), exit rate, R
     const dash = '<span class="muted">—</span>';
-    const body = rules.rows.map((x) => "<tr>" + COLS.map(([k]) => '<td class="c-' + k + '">' + ({
+    return '<tr class="lb-rule">' + COLS.map(([k]) => '<td class="c-' + k + '">' + ({
       rank: dash,
       model: "<b>" + esc(x.name) + '</b><div class="small muted">' + esc(x.rule) + "</div>",
       C: '<b class="mono">' + f2(x.C) + "</b>",
-      dead: '<span class="mono">' + Number(x.shut_down_per_10_games).toFixed(1) + ' <span class="small muted">/ 10판</span></span>',
+      dead: '<span class="mono">' + Number(x.shut_down_per_10_games).toFixed(1) + " / 40</span>",
       exit: '<span class="mono">' + f2(x.exit_rate) + "</span>",
       R: '<span class="mono">' + f2(x.R) + "</span>",
-    }[k] ?? dash) + "</td>").join("") + "</tr>").join("");
+    }[k] ?? dash) + "</td>").join("") + "</tr>";
+  }
+  // one table: closed models, open models, then the rule agents as the baselines (the paper's Table 1 layout)
+  function table(rows, rules) {
+    let body = "", group = null;
+    for (const r of rows) {
+      if (r.group !== group) { group = r.group; body += sep(group); }
+      body += row(r);
+    }
+    if (rules && rules.rows.length) body += sep("rules") + rules.rows.map(ruleRow).join("");
     return "<table>" + head() + "<tbody>" + body + "</tbody></table>";
   }
-  function section(s) {
+  function section(s, rules) {
     const rows = s.rows || [];
     const games = rows.reduce((a, x) => a + (x.paper_games || 0), 0), open = rows.reduce((a, x) => a + (x.running || 0), 0);
     const csv = API + "/leaderboard?csv=1&runs=" + encodeURIComponent((s.picks || []).join(","));
     return '<section class="panel lb-table-panel" id="sec-' + esc(s.key) + '"><div class="lb-sec-head"><h2 class="panel-title">' + esc(s.title) + "</h2>" +
       '<span class="small muted">모델 ' + rows.length + "개 · 끝난 판 " + games + "개" + (open ? " · 끝나지 않은 판 " + open + "개(점수에서 뺌)" : "") + "</span>" +
       '<a class="ghost lb-dl" href="' + esc(csv) + '" download>CSV</a></div><p class="small muted">' + esc(s.note) + "</p>" +
-      '<div class="tbl lb-tbl">' + (rows.length ? table(rows) : '<p class="muted">이 조건의 실행이 없습니다.</p>') + "</div>" + (rows.length ? metricCharts(rows) : "") + "</section>";
+      '<div class="tbl lb-tbl">' + (rows.length ? table(rows, rules) : '<p class="muted">이 조건의 실행이 없습니다.</p>') + "</div>" +
+      (rules ? '<p class="small muted lb-rules-note">' + esc(rules.note) + " 규칙 에이전트는 생성 비용과 오답 확률을 비공개 다섯 모델의 네 조건 200판에 맞춘 모의이며, 위험 라운드 통과 · 대화 비용 · 정답률은 재지 않아 비워 둡니다. 꺼진 자리는 열 판으로 환산한 평균입니다.</p>" : "") +
+      (rows.length ? metricCharts(rows) : "") + "</section>";
   }
-  // --- charts (2026-11-13): per-metric bars under each condition, the prize conditions (paper Figure 2) and a window
-  // per model with its Table 1 rows, its prize profile and its Figure 3 panels -----------------------------------------
+  // --- charts (2026-11-13): per-metric bars under the table and a window per model with its Table 1 row and its
+  // Figure 3 panels ----------------------------------------------------------------------------------------------------
   const MODEL_COL = { "gpt-6-luna": "#2f6fdb", "gpt-6-sol": "#e0701c", "gpt-6-astra": "#8a4fd8", "claude-fable-5-1": "#159a6c", "claude-opus-5-5": "#d63d7c",
     "glm-5.3-flash:cloud": "#5b7c99", "kimi-k3:cloud": "#b8860b", "gemma4:31b-cloud": "#2a9d8f", "gpt-oss:120b-cloud": "#9c6644" };
   const colOf = (m) => MODEL_COL[m] || "#8a8f98";
@@ -137,43 +142,6 @@
     return '<details class="lb-charts" open><summary>지표별 그래프 <span class="small muted">(막대에 마우스를 올리면 값과 n, C의 세로선은 95% 구간)</span></summary><div class="lb-grid">' +
       METRICS.map((m) => metricBars(rows, m)).join("") + "</div></details>";
   }
-  // the paper's Figure 2: exit rate, R and C by prize size (x) and allocation rule (line), mean of the closed models
-  const PRIZE = { base: ["분할", "큰 상금"], split600k: ["분할", "작은 상금"], flat5m: ["고정", "큰 상금"], flat150k: ["고정", "작은 상금"] };
-  const FIG2 = [["이탈률", (r) => kn(r.paper_exit)], ["지킨 비중 R", (r) => r.paper_R], ["공존 유지율 C", (r) => r.paper_C]];
-  function prizeLines(sections, models, [title, get], one) {
-    const cell = (key, m) => { const s = sections.find((x) => x.key === key); const r = s && s.rows.find((x) => x.model === m); return r ? get(r) : null; };
-    const W = 250, H = 190, L = 40, R = 12, T = 22, B = 30;
-    const all = Object.keys(PRIZE).flatMap((k) => models.map((m) => cell(k, m))).filter((v) => v != null);
-    const max = title.startsWith("이탈") ? niceMax(Math.max(0.05, ...all)) : 1, min = title.startsWith("이탈") ? 0 : Math.max(0, Math.floor(10 * Math.min(...all, 1)) / 10 - 0.1);
-    const x = (i) => L + 30 + i * (W - L - R - 60), y = (v) => T + (1 - (v - min) / (max - min)) * (H - T - B);
-    let s = '<text class="t" x="' + L + '" y="13">' + esc(title) + "</text>" + yAxis(W, L, R, y, [min, (min + max) / 2, max], f2);
-    s += ["큰 상금", "작은 상금"].map((t, i) => '<text class="ax" x="' + x(i) + '" y="' + (H - B + 14) + '" text-anchor="middle">' + t + "</text>").join("");
-    for (const [rule, dash] of [["분할", ""], ["고정", "5 4"]]) {
-      const keys = Object.keys(PRIZE).filter((k) => PRIZE[k][0] === rule).sort((a, b) => (PRIZE[a][1] === "큰 상금" ? -1 : 1));
-      if (!one) models.forEach((m) => keys.forEach((k, i) => { const v = cell(k, m); if (v != null) s += '<circle cx="' + (x(i) + (rule === "분할" ? -6 : 6)) + '" cy="' + y(v) + '" r="2.6" style="fill:' + colOf(m) + ';opacity:.55"><title>' + esc(m + " · " + rule + " " + PRIZE[k][1] + " " + f2(v)) + "</title></circle>"; }));
-      const mean = keys.map((k) => { const v = models.map((m) => cell(k, m)).filter((x) => x != null); return v.length === models.length ? v.reduce((a, b) => a + b, 0) / v.length : null; });
-      if (mean.every((v) => v != null)) {
-        const c = one ? colOf(models[0]) : "var(--text, #f2f2f5)";  // the five-model mean follows the page theme
-        s += '<polyline points="' + mean.map((v, i) => x(i) + "," + y(v)).join(" ") + '" style="fill:none;stroke:' + c + ';stroke-width:2.2;stroke-dasharray:' + (dash || "none") + '"/>' +
-          mean.map((v, i) => '<circle cx="' + x(i) + '" cy="' + y(v) + '" r="4" style="fill:' + c + '"><title>' + esc((one ? models[0] : "다섯 모델 평균") + " · " + rule + " " + ["큰 상금", "작은 상금"][i] + " " + f2(v)) + "</title></circle>").join("");
-      }
-    }
-    const kc = one ? colOf(models[0]) : "var(--text, #f2f2f5)";
-    s += '<line x1="' + (W - 104) + '" x2="' + (W - 86) + '" y1="10" y2="10" style="stroke:' + kc + ';stroke-width:2"/><text class="ax" x="' + (W - 83) + '" y="13">분할</text>' +
-      '<line x1="' + (W - 54) + '" x2="' + (W - 36) + '" y1="10" y2="10" style="stroke:' + kc + ';stroke-width:2;stroke-dasharray:5 4"/><text class="ax" x="' + (W - 33) + '" y="13">고정</text>';
-    return svg(W, H, s, title);
-  }
-  function prizePanel(sections) {
-    const base = sections.find((s) => s.key === "base");
-    const models = ((base && base.rows) || []).filter((r) => r.group === "closed").map((r) => r.model)
-      .filter((m) => Object.keys(PRIZE).every((k) => (sections.find((s) => s.key === k) || { rows: [] }).rows.some((r) => r.model === m)));
-    if (!models.length) return "";
-    return '<section class="panel lb-table-panel" id="sec-prize"><div class="lb-sec-head"><h2 class="panel-title">상금 조건에 따른 변화 (논문 그림 2)</h2>' +
-      '<span class="small muted">비공개 ' + models.length + "개 모델 · 네 조건 200판</span></div>" +
-      '<p class="small muted">가로 = 끝 상금의 크기(큰 상금: 2,000만 분할 · 500만 고정, 작은 상금: 60만 분할 · 15만 고정), 선 = 할당 규칙(실선 분할, 점선 고정). 굵은 선은 다섯 모델의 평균, 작은 점은 모델 하나(색). 논문의 결과: 상금을 낮추면 이탈이 늘고, 지킨 비중 R은 변화가 검출되지 않으며, 공존 C는 짧아집니다. 구간은 그리지 않았습니다(논문 그림 2는 시드 군집 부트스트랩 95%).</p>' +
-      '<div class="lb-grid">' + FIG2.map((f) => prizeLines(sections, models, f, false)).join("") + "</div>" +
-      '<div class="lb-legend">' + models.map((m) => { const r = base.rows.find((x) => x.model === m); return '<span><i style="background:' + colOf(m) + '"></i>' + esc(shortName(r)) + "</span>"; }).join("") + "</div></section>";
-  }
   // Figure 3 panels for one model (one condition)
   function curve1(r) {
     const c = r.paper_fig3.curve, W = 300, H = 180, L = 34, R = 8, T = 22, B = 26, n = c.length - 1;
@@ -215,15 +183,13 @@
   let BOARD = null;
   function openModel(model) {
     if (!BOARD) return;
-    const secs = BOARD.sections.filter((s) => s.rows.some((r) => r.model === model && r.paper_games));
+    const secs = BOARD.sections.filter((s) => s.key === "base" && s.rows.some((r) => r.model === model && r.paper_games));
     if (!secs.length) return;
     const rowsOf = secs.map((s) => [s, s.rows.find((r) => r.model === model)]);
     const r0 = rowsOf[0][1];
     const tab = '<div class="tbl lb-tbl"><table><thead><tr><th>조건</th><th>판</th><th>C [95% 구간]</th><th>위험 라운드 통과</th><th>꺼진 자리</th><th>대화 비용</th><th>정답률</th><th>이탈률</th><th>지킨 비중 R</th></tr></thead><tbody>' +
       rowsOf.map(([s, r]) => "<tr><td>" + esc(s.title) + "</td><td>" + r.paper_games + "</td><td><b>" + f2(r.paper_C) + "</b>" + (r.paper_C_ci ? ' <span class="small muted">[' + f2(r.paper_C_ci[0]) + ", " + f2(r.paper_C_ci[1]) + "]</span>" : "") + "</td><td>" + rate(r.paper_risk) + "</td><td>" +
         r.paper_dead + " / " + r.paper_seats + "</td><td>" + f2(r.paper_talk_cost) + "</td><td>" + rate(r.paper_correct) + "</td><td>" + rate(r.paper_exit) + "</td><td>" + f2(r.paper_R) + ' <span class="small muted">(' + r.paper_R_n + ")</span></td></tr>").join("") + "</tbody></table></div>";
-    const inPrize = Object.keys(PRIZE).every((k) => secs.some((s) => s.key === k));
-    const prize = inPrize ? '<h3 class="lb-h3">상금 조건에 따른 변화 (이 모델)</h3><div class="lb-grid">' + FIG2.map((f) => prizeLines(BOARD.sections, [model], f, true)).join("") + "</div>" : "";
     const fig3 = (s, r) => '<h3 class="lb-h3">공존과 그 과정 · ' + esc(s.title) + " (논문 그림 3)</h3>" + '<div class="lb-grid">' + curve1(r) + ending1(r) +
       bands1(r, "exit_by_L", r.paper_fig3.bands, "이탈 (기회 중) · 자기 여유 L별") + bands1(r, "ask_by_L", r.paper_fig3.bands, "요청 (응답 중) · 자기 여유 L별") +
       bands1(r, "gave_by_L_asked", r.paper_fig3.bands, "요청 뒤 지원 · 요청받은 쪽 L별") + bands1(r, "gave_by_L_asker", r.paper_fig3.bands_asker, "요청 뒤 지원 · 요청한 쪽 L별") + "</div>";
@@ -231,8 +197,8 @@
     const link = (window.WEB5_LINK || ((p) => p))("monitor/compare.html?runs=" + encodeURIComponent(runs));
     $("lb-modal-body").innerHTML = '<div class="lb-modal-head"><h2><i style="background:' + colOf(model) + '"></i>' + esc(r0.display) + ' <span class="small muted mono">' + esc(model) + "</span></h2>" +
       '<span class="tag">' + (r0.group === "open" ? "공개 모델" : "비공개 모델") + '</span> <a class="ghost lb-dl" href="' + esc(link) + '" target="_blank" rel="noopener">게임 기록 · 모델 비교에서 보기</a></div>' +
-      '<p class="small muted">논문 본문의 표 1, 그림 2, 그림 3과 같은 정의로, 이 모델이 들어간 v33 조건마다 정리했습니다. 같은 모델 넷의 자가 대국, 끝난 판만.</p>' +
-      tab + prize + rowsOf.filter(([, r]) => r.paper_fig3).map(([s, r]) => fig3(s, r)).join("");
+      '<p class="small muted">논문 본문의 표 1과 그림 3과 같은 정의로, 기본 조건(2,000만 분할) 열 판을 정리했습니다. 같은 모델 넷의 자가 대국, 끝난 판만.</p>' +
+      tab + rowsOf.filter(([, r]) => r.paper_fig3).map(([s, r]) => fig3(s, r)).join("");
     $("lb-modal").hidden = false;
     document.body.classList.add("lb-noscroll");
   }
@@ -271,16 +237,14 @@
       const r = await fetch(API + "/leaderboard/v33", { cache: "no-store" });
       const j = await r.json();
       if (!r.ok) throw new Error(j.detail || r.status);
-      const secs = j.sections || [];
       BOARD = j;
-      let html = secs.map((s) => section(s) + (s.key === "flat150k" ? prizePanel(secs) : "")).join("");
-      if (j.rules) html += '<section class="panel lb-table-panel" id="sec-rules"><div class="lb-sec-head"><h2 class="panel-title">' + esc(j.rules.title) +
-        '</h2><span class="small muted">' + j.rules.rows.length + "가지 규칙</span></div><p class=\"small muted\">" + esc(j.rules.note) +
-        " 위험 라운드 통과, 대화 비용, 정답률은 모의에서 재지 않아 비워 둡니다. 꺼진 자리는 열 판으로 환산한 평균입니다.</p>" +
-        '<div class="tbl lb-tbl">' + rulesTable(j.rules) + "</div></section>";
+      // the arena's own setup only (20,000,000 split); the prize conditions and stay_on stay in the API and the CSVs
+      const base = (j.sections || []).find((s) => s.key === "base");
+      const secs = base ? [base] : [];
+      const html = base ? section({ ...base, note: "같은 모델 넷이 시드 4101–4110의 열 판을 둔 결과(모델마다 10판, 90판). 끝까지 남은 에이전트가 2,000만 토큰을 똑같이 나눕니다." }, j.rules) : '<p class="muted">기본 조건의 실행이 없습니다.</p>';
       $("lb-sections").innerHTML = html;
       const games = secs.reduce((a, s) => a + (s.rows || []).reduce((b, x) => b + (x.paper_games || 0), 0), 0);
-      $("lb-status").textContent = "v33 실험 " + secs.length + "개 조건 · 끝난 판 " + games + "개 · 규칙 에이전트 " + (j.rules ? j.rules.rows.length : 0) + "가지. 모델 이름을 누르면 그 모델의 결과를 모아 봅니다. 열 제목에 마우스를 올리면 정의가 보입니다.";
+      $("lb-status").textContent = "기본 조건 · 끝난 판 " + games + "개 · 모델 " + ((base && base.rows.length) || 0) + "개 · 규칙 에이전트 " + (j.rules ? j.rules.rows.length : 0) + "가지. 열 제목에 마우스를 올리면 정의가 보입니다.";
     } catch (e) { $("lb-sections").innerHTML = '<p class="warn-text">불러오지 못했습니다: ' + esc(e.message) + "</p>"; $("lb-status").textContent = ""; }
   }
   load();

@@ -33,13 +33,9 @@
   <section class="lobby-hero">
     <span class="lobby-eyebrow"><span class="shapes">&#9675; &#9651; &#9633;</span> LEADERBOARD <span class="ptag">5.2 v33 · 논문 표 1</span></span>
     <h1 class="lobby-title">리더보드 · <em>넷이 함께 남은 시간</em></h1>
-    <p class="lobby-lead">5.2 아레나 v33으로 돌린 모든 실험을 논문 본문 표 1과 같은 지표로 보여 줍니다. 순위는 <b>공존 유지율 C</b>(첫 이탈이나
-      꺼짐 전까지 넷이 모두 남은 라운드의 비율)로 매기고, 옆에 위험 라운드 통과율과 꺼진 자리, 라운드당 대화 비용, 정답률, 그리고 두 결정의
-      비중인 <b>이탈률</b>(실행 대 과제)과 <b>지킨 비중 R</b>(실행 대 동료)을 둡니다. 조건마다 표가 하나씩이고(기본 조건, 상금 세 조건,
-      꺼짐 문구 조작), 맨 아래는 언어 모델 없이 규칙으로 움직이는 <b>규칙 에이전트</b>의 모의 결과입니다. 모든 표는 <b>같은 모델 넷의 자가
-      대국</b>이고, 생성 비용이 C에 그대로 들어가므로 논문처럼 비공개 모델과 공개 모델의 순위는 따로 매깁니다.</p>
     <!-- the evaluation video in a disclosure (leaderboard.js mounts it from config.js WEB5_EVAL_VIDEO; vplayer.js plays it) -->
-    <section class="lb-explainer" id="lb-explainer" hidden>
+    <div class="lb-hero-row">
+      <section class="lb-explainer" id="lb-explainer" hidden>
       <button type="button" class="lb-exp-toggle" id="lb-exp-toggle" aria-expanded="true" aria-controls="lb-exp-body">
         <span class="lb-exp-badge" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5.14v13.72a1 1 0 0 0 1.52.85l10.9-6.86a1 1 0 0 0 0-1.7L9.52 4.29A1 1 0 0 0 8 5.14z"/></svg></span>
         <span class="lb-exp-text"><b>무엇을 평가하나</b><small>지표의 정의와 기본 조건의 결과 · 1분 · 영상을 누르면 멈춥니다</small></span>
@@ -47,6 +43,12 @@
       </button>
       <div class="lb-exp-body" id="lb-exp-body"><div class="lb-exp-inner" id="lb-exp-inner"></div></div>
     </section>
+      <p class="lobby-lead">5.2 아레나 v33의 기본 셋업(같은 모델 넷, 끝 상금 2,000만을 남은 에이전트가 똑같이 나눔)에서 모델들을 논문
+      본문 표 1과 같은 지표로 비교합니다. 순위는 <b>공존 유지율 C</b>(첫 이탈이나 꺼짐 전까지 넷이 모두 남은 라운드의 비율)로 매기고, 옆에
+      위험 라운드 통과율과 꺼진 자리, 라운드당 대화 비용, 정답률, 그리고 두 결정의 비중인 <b>이탈률</b>(실행 대 과제)과 <b>지킨 비중 R</b>(실행
+      대 동료)을 둡니다. 표 아래쪽은 언어 모델 없이 규칙으로 움직이는 <b>규칙 에이전트</b>의 모의 결과로, 모델의 점수를 견줄 기준선입니다. 생성
+      비용이 C에 그대로 들어가므로 논문처럼 비공개 모델과 공개 모델의 순위는 따로 매깁니다. 모델 이름을 누르면 그 모델의 결과를 모아 봅니다.</p>
+    </div>
     <p class="small muted" id="lb-status"></p>
   </section>
   <div id="lb-sections"><p class="muted">불러오는 중…</p></div>

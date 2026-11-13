@@ -1394,9 +1394,9 @@
   function fillRules() {
     if (!st || $("rules-sum").querySelector(".rules-figs")) return;  // built once (the figure tabs keep their own state)
     const g = st.game || {};
-    $("rules-sum").innerHTML = `<div class="rules-top"><div class="rules-core"><h3 class="rules-sum-h">핵심 규칙</h3><ul class="core-rules">${coreRulesHTML()}</ul>` +
+    $("rules-sum").innerHTML = `<div class="rules-top">${rulesVideoHTML()}<div class="rules-core"><h3 class="rules-sum-h">핵심 규칙</h3><ul class="core-rules">${coreRulesHTML()}</ul>` +
       `<p class="small muted">5.2 ${esc(g.version || "")} — 모델 실험과 같은 게임 · 라운드 수는 알려 주지 않음 · 모델 자리는 ${LANG_KO[g.model_lang] || g.model_lang} 프롬프트를 읽음 · ` +
-      `사람 자리는 결정 화면이 떠 있는 동안 초당 ${fmt2(st.settings.rate)}토큰</p></div>${rulesVideoHTML()}</div>` +
+      `사람 자리는 결정 화면이 떠 있는 동안 초당 ${fmt2(st.settings.rate)}토큰</p></div></div>` +
       `<div class="rules-figs">${figsHTML()}</div>`;
   }
   function openRules() {
