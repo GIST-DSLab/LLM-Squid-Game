@@ -211,3 +211,65 @@ def test_a_seat_that_is_out_can_stop_the_room_and_sees_its_chats(client):
     s = play(ps, lambda p, pend: None, until_status=("stopped", "finished", "error"))
     assert s["status"] == "stopped" and not s["error"] and len(s["rounds"]) < 8
     assert client.post(f"/api/rooms/{ps[0].code}/stop", params={"token": ps[0].token}).status_code == 409
+
+
+def test_the_server_draws_the_seed_and_keeps_its_own_clock(store, tmp_path):
+    """Outside tests the lobby cannot set the seed, a person's tokens per second or the TALK / SOLVE time limits."""
+    from fastapi.testclient import TestClient
+
+    from web.server.app import make_app
+    from web.server.engine import GAME
+
+    app = make_app(store, export_root=tmp_path / "x", runs_root=tmp_path / "live")
+    with TestClient(app) as c:
+        asked = {"seed": 11, "rate": 1e-9, "talk_timeout_s": 5, "timeout_s": 5, "rounds": 3, "fill": "bots"}
+        codes = [c.post("/api/rooms", json={"settings": asked}).json()["code"] for _ in range(3)]
+        rooms = [app.state.rooms[k].settings for k in codes]
+    d = RoomSettings()
+    assert all((s.rate, s.talk_timeout_s, s.timeout_s, s.rounds) == (int(GAME["balance_pct"]) / 1200, d.talk_timeout_s,
+                                                                    d.timeout_s, 3) for s in rooms)
+    assert not all(s.seed == 11 for s in rooms)  # drawn by the server (1 in 10^18 to be 11 three times)
+
+
+def test_a_seat_plan_puts_each_person_in_the_seat_picked(client):
+    plan = [{"who": "bot"}, {"who": "empty"}, {"who": "me"}, {"who": "human"}]
+    r = client.post("/api/rooms", json={"host_name": "ann", "lang": "en", "settings": {"plan": plan, "rounds": 1, "seed": SEED,
+                                                                                   "rate": 1e-9, "watch_hold_s": 0}})
+    assert r.status_code == 200, r.text
+    d = r.json()
+    assert d["agent"] == A17  # the maker sits where "me" is, not in the first seat
+    j = client.post(f"/api/rooms/{d['code']}/join", json={"name": "bob"}).json()
+    assert j["agent"] == A23
+    assert client.post(f"/api/rooms/{d['code']}/join", json={"name": "cy"}).status_code == 409
+    from conftest import SEEDS, Player
+
+    SEEDS[d["code"]] = SEED
+    ps = [Player(client, d["code"], d["token"], d["agent"], "ann"), Player(client, d["code"], j["token"], j["agent"], "bob")]
+    lobby = ps[0].state()
+    assert lobby["settings"]["plan"][2] == {"who": "me"} and lobby["settings"]["humans"] == 2
+    start(client, ps)
+    s = play(ps, basic, max_s=60)
+    assert s["status"] == "finished", s["error"]
+    assert [(r["agent"], r["kind"]) for r in s["seats"]] == [(A6, "bot"), (A11, "empty"), (A17, "human"), (A23, "human")]
+    assert s["you"]["agent"] == A17 and s["result"]["agents"][A11]["status"] == "dead"
+
+
+def test_a_seat_plan_fills_models_per_seat_and_an_untaken_human_seat_with_a_bot(client):
+    s = RoomSettings(seed=1, plan=[{"who": "model", "kind": "ollama", "model": "gpt-oss:120b", "think": "high"}, {"who": "me"},
+                                   {"who": "human"}, {"who": "model", "kind": "openai", "model": "gpt-x"}])
+    assert (s.humans, s.fill, s.human_slots()) == (2, "models", [1, 2])
+    assert [s.seat_fill(i) for i in range(4)] == ["models", "bots", "bots", "models"]
+    cfgs = s.provider_configs(2)
+    assert [(c.kind, c.model, c.think) for c in cfgs] == [("ollama", "gpt-oss:120b", "high"), ("openai", "gpt-x", "medium")]
+    assert RoomSettings.from_stored(__import__("dataclasses").asdict(s)).plan == s.plan
+    for bad in ([{"who": "bot"}] * 4, [{"who": "me"}] * 2 + [{"who": "bot"}] * 2, [{"who": "me"}] * 1 + [{"who": "bot"}] * 2,
+                [{"who": "me"}, {"who": "ghost"}, {"who": "bot"}, {"who": "bot"}],
+                [{"who": "me"}, {"who": "model", "model": "a b"}, {"who": "bot"}, {"who": "bot"}],
+                [{"who": "me"}, {"who": "model", "model": "gpt-oss:20b", "think": "max"}, {"who": "bot"}, {"who": "bot"}]):
+        assert client.post("/api/rooms", json={"settings": {"plan": bad}}).status_code == 400, bad
+    ps = make_room(client, 1, seed=SEED, rounds=1, plan=[{"who": "human"}, {"who": "bot"}, {"who": "me"}, {"who": "empty"}])
+    assert ps[0].agent == A17
+    start(client, ps)
+    s = play(ps, basic, max_s=60)
+    assert s["status"] == "finished", s["error"]
+    assert [r["kind"] for r in s["seats"]] == ["bot", "bot", "human", "empty"]  # nobody took the first seat: a bot

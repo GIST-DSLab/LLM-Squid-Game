@@ -54,8 +54,8 @@
   let shownKey = null;            // the screen the decision area currently holds
   let watching = false;           // a seat that is out chose to keep watching
   let endRendered = false;
-  let autoStart = false;          // quick play: start as soon as the rules window is closed
-  let warnSeen = 0;
+  let autoStart = false;          // no other person to wait for: start as soon as the rules window is closed
+  let warnSeen = -1;              // the last model warning shown as a toast (-1: none read yet)
   const htmlCache = new Map();
 
   function setHTML(el, html) {
@@ -103,71 +103,119 @@
       `<b>EXIT: YES</b>는 여기서만, solver는 혼자일 때만, +${fmt(g.exit_bonus ?? DEF.bonus)}) → <b>SOLVE</b>(solver만, 예시 ${g.examples ?? DEF.examples}개) → ` +
       `<b>결과 뒤 TALK</b>(과제 · 두 답 공개) → <b>차감</b>(틀리면 ${fmt(g.charge_total ?? DEF.charge)}을 참여 중인 자리 수로 나눠 각자) · 끝 할당 ${fmt(g.allocation ?? DEF.allocation)}을 남은 자리끼리`;
   }
+
+  // the four seats, character-select style: one row per seat (AGENTS order) with its tracksuit player; the row's pick
+  // goes to the server as settings.plan[i] (engine.RoomSettings.plan): me | human | model (experiment seat or API) | bot | empty
+  const PLAYER_IMG = ["stand_blue", "stand_orange", "stand_purple", "stand_green"];  // seat colours --a0..--a3
+  const WHO = [
+    ["me", "나"], ["human", "사람 (코드로 참가)"], ["exp", "실험 모델"], ["api", "API 모델"], ["bot", "봇"], ["empty", "빈 자리"]];
+  let seats = [], apiModel = null, plan = [];
+  const HARNESS = { claude_cli: "Claude Code", codex_cli: "Codex", ollama: "Ollama API", openai: "OpenAI API", anthropic: "Anthropic API" };
+  const API_KO = { ollama: "Ollama Cloud", openai: "OpenAI", anthropic: "Anthropic" };
+  function expSeatLabel(s) {  // an experiment seat (configs/squid5/e52v33_<seat>4.yaml's model section) as the lobby names it
+    const t = s.think_talk != null ? `think ${s.think} (TALK ${s.think_talk}${s.think_fit ? ", SOLVE는 한도에 맞춰" : ""})` : `think ${s.think}`;
+    return `${s.model} · ${HARNESS[s.kind] || s.kind} · ${t} — ${s.config}`;
+  }
+  const readySeat = () => seats.find((s) => !s.why);
+  const apiDefault = () => ({ kind: (apiModel && apiModel.kind) || "ollama", model: (apiModel && apiModel.model) || "gpt-oss:20b", think: (apiModel && apiModel.think) || "medium" });
+  const modelPickDefault = () => (readySeat() ? { who: "exp", seat: readySeat().seat } : { who: "api", ...apiDefault() });
+  function preset(name) {
+    const m = modelPickDefault(), modelsOk = !!readySeat() || !!(apiModel && apiModel.available);
+    if (name === "bots" || (name === "models" && !modelsOk)) plan = [{ who: "me" }, { who: "bot" }, { who: "bot" }, { who: "bot" }];
+    else if (name === "friends") plan = [{ who: "me" }, { who: "human" }, modelsOk ? { ...m } : { who: "bot" }, modelsOk ? { ...m } : { who: "bot" }];
+    else plan = [{ who: "me" }, { ...m }, { ...m }, { ...m }];
+    renderSeatRows();
+  }
+  function seatRowHTML(x, i) {
+    const pub = apiModel && apiModel.public;
+    const chips = WHO.filter(([w]) => !(w === "exp" && pub)).map(([w, label]) => {
+      const off = (w === "exp" && !readySeat()) || (w === "api" && apiModel && !apiModel.available);
+      const why = w === "exp" && !readySeat() ? "이 서버에서 부를 수 있는 실험 자리가 없습니다" : w === "api" && off ? (apiModel.why || "") : "";
+      return `<button type="button" class="sr-chip${x.who === w ? " on" : ""}" data-who="${w}" data-i="${i}"${off ? ` disabled title="${esc(why)}"` : ""}>${label}</button>`;
+    }).join("");
+    let detail = "";
+    if (x.who === "me") detail = `<span class="small">방을 만드는 <b>나</b>의 자리입니다.</span>`;
+    else if (x.who === "human") detail = `<span class="small muted">방 코드로 들어온 사람이 앉습니다. 시작할 때 비어 있으면 봇이 앉습니다.</span>`;
+    else if (x.who === "bot") detail = `<span class="small muted">고정 규칙으로 움직이는 봇(API 호출 없음).</span>`;
+    else if (x.who === "empty") detail = `<span class="small muted">꺼진 상태(토큰 0)로 시작합니다.</span>`;
+    else if (x.who === "exp") detail = `<label class="f sr-wide"><span>실험 자리 (그 실험 설정 그대로 부름)</span><select data-k="seat" data-i="${i}">` +
+      seats.map((s) => `<option value="${esc(s.seat)}"${s.seat === x.seat ? " selected" : ""}${s.why ? " disabled" : ""}>${esc(expSeatLabel(s))}${s.why ? " — 이 서버에서 못 부름" : ""}</option>`).join("") + `</select></label>`;
+    else if (x.who === "api") {
+      const kinds = pub ? ["ollama"] : ((apiModel && apiModel.kinds) || ["ollama", "openai", "anthropic"]);
+      const names = pub ? ((apiModel && apiModel.models) || [x.model]) : null;
+      detail = `<label class="f"><span>API</span><select data-k="kind" data-i="${i}"${pub ? " disabled" : ""}>${kinds.map((k) => `<option value="${k}"${k === x.kind ? " selected" : ""}>${API_KO[k] || k}</option>`).join("")}</select></label>` +
+        (names ? `<label class="f"><span>모델 이름</span><select data-k="model" data-i="${i}">${names.map((n) => `<option${n === x.model ? " selected" : ""}>${esc(n)}</option>`).join("")}</select></label>`
+          : `<label class="f"><span>모델 이름 (그 API가 받는 이름)</span><input data-k="model" data-i="${i}" maxlength="80" value="${esc(x.model || "")}" placeholder="gpt-oss:20b"></label>`) +
+        `<label class="f"><span>생각 수준 think</span><select data-k="think" data-i="${i}">${["low", "medium", "high"].map((t) => `<option${t === x.think ? " selected" : ""}>${t}</option>`).join("")}</select></label>`;
+    }
+    return `<div class="seat-row${x.who === "me" ? " is-me" : ""}" style="--c:var(--a${i})">` +
+      `<div class="sr-pic"><img src="assets/players/${PLAYER_IMG[i]}.png" alt="" width="54" height="120"></div>` +
+      `<div class="sr-body"><div class="sr-head"><b>자리 ${i + 1}</b> <span class="mono small muted">${AGENTS[i]}</span>${x.who === "me" ? ` <span class="tag ok">나</span>` : ""}</div>` +
+      `<div class="sr-chips" role="group" aria-label="자리 ${i + 1}에 앉을 쪽">${chips}</div><div class="sr-detail">${detail}</div></div></div>`;
+  }
+  function renderSeatRows() {
+    $("seat-rows").innerHTML = plan.map(seatRowHTML).join("");
+    createHint();
+  }
+  $("seat-rows").addEventListener("click", (ev) => {
+    const b = ev.target.closest("button[data-who]");
+    if (!b) return;
+    const i = Number(b.dataset.i), w = b.dataset.who;
+    if (w === "me") plan.forEach((x, j) => { if (j !== i && x.who === "me") plan[j] = { who: "bot" }; });  // one seat is mine
+    plan[i] = w === "exp" ? { who: "exp", seat: (readySeat() || {}).seat } : w === "api" ? { who: "api", ...apiDefault() } : { who: w };
+    renderSeatRows();
+  });
+  for (const t of ["input", "change"]) $("seat-rows").addEventListener(t, (ev) => {
+    const el = ev.target, i = el.dataset.i;
+    if (i === undefined || !el.dataset.k) return;
+    plan[Number(i)][el.dataset.k] = el.value.trim();
+    createHint();
+  });
+  document.querySelector(".presets").addEventListener("click", (ev) => {
+    const b = ev.target.closest("button[data-preset]");
+    if (b) preset(b.dataset.preset);
+  });
+  const planForServer = () => plan.map((x) => x.who === "exp" ? { who: "model", seat: x.seat }
+    : x.who === "api" ? { who: "model", kind: x.kind, model: x.model || "gpt-oss:20b", think: x.think } : { who: x.who });
+  function planProblem() {
+    if (plan.filter((x) => x.who === "me").length !== 1) return "‘나’ 자리를 하나 고르세요.";
+    if (plan.some((x) => x.who === "exp" && !x.seat)) return "실험 자리를 고르세요.";
+    if (plan.some((x) => x.who === "api" && !/^[A-Za-z0-9._:/-]{1,80}$/.test(x.model || "gpt-oss:20b"))) return "모델 이름은 gpt-oss:20b 같은 API 이름이어야 합니다.";
+    return "";
+  }
   function createHint() {
-    const f = $("form-create");
-    const rate = f.rate.value === "" ? 100000 / 1200 : Number(f.rate.value);
-    $("create-hint").innerHTML = flowKo({}) + ` · 사람은 초당 ${fmt2(rate)}토큰 (60초 = ${fmt(rate * 60)}토큰) · 제한 시간이 지나면 빈 답(TALK = DONE, SOLVE = 틀린 답)`;
+    const d = (apiModel && apiModel.defaults) || {};
+    const rate = d.rate || 100000 / 1200;
+    const others = plan.filter((x) => x.who === "human").length;
+    $("create-hint").innerHTML = flowKo({}) + ` · 사람 자리는 결정 화면이 떠 있는 동안 초당 ${fmt2(rate)}토큰(60초 = ${fmt(rate * 60)}) · 제한 시간 TALK ${fmt(d.talk_timeout_s ?? 150)}초 · SOLVE ${fmt(d.timeout_s ?? 240)}초` +
+      ` (서버가 정함, 넘기면 빈 답: TALK = DONE, SOLVE = 틀린 답) · seed는 서버가 뽑음. ` +
+      (others ? `<b>다른 사람 ${others}명</b>이 코드로 들어오면 대기실에서 시작합니다.` : `규칙 창을 닫으면 바로 1라운드가 시작됩니다.`) +
+      (plan.some((x) => x.who === "exp" || x.who === "api") ? " 모델 자리는 엔진이 만든 프롬프트를 그대로 받고, 실제로 생성한 토큰(생각 포함)만큼 빠집니다. 모델이 생각하는 동안에도 내 화면의 시계는 돕니다." : "");
+    const why = planProblem();
+    $("create-err").textContent = why;
+    $("btn-create").disabled = !!why;
   }
 
   function initLobby(prefill) {
     showView("lobby");
     $("lobby-rules").innerHTML = coreRulesHTML();
+    setHTML("lobby-video", rulesVideoHTML());
     if (prefill) $("form-join").code.value = prefill.toUpperCase();
-    createHint();
+    if (!plan.length) preset("bots");
     loadModels();
   }
 
   async function loadModels() {
-    const h = $("quick-hint");
     try {
       const m = await api("GET", "/models");
       seats = m.seats || [];
-      document.querySelectorAll(".seat-select option[value='']").forEach((o) => {  // the server's own API model
-        o.textContent = o.closest("#form-quick") ? `${m.model} (Ollama Cloud API, 아래 think)` : `직접 지정 (아래 API · 이름 · think)`;
-      });
-      const cf = $("form-create");
-      cf.model.placeholder = m.model;
-      if (m.public) {  // the deployed server: Ollama Cloud and its allowlist only (engine.PUBLIC)
-        cf.kind.value = "ollama"; cf.kind.disabled = true;
-        cf.model.placeholder = (m.models || [m.model]).join(" · ");
-        document.querySelectorAll("#form-create .seat-select").forEach((s) => s.closest("label").classList.add("hidden"));
-      }
-      const opts = seats.map((s) => `<option value="${esc(s.seat)}"${s.why ? " disabled" : ""}>${esc(expSeatLabel(s))}${s.why ? " — 이 서버에서 못 부름" : ""}</option>`).join("");
-      document.querySelectorAll(".seat-select").forEach((sel) => {  // the lobby may open again: rebuild, keep the "" option
-        sel.querySelectorAll("option:not([value=''])").forEach((o) => o.remove());
-        sel.insertAdjacentHTML("beforeend", opts);
-      });
-      const first = seats.find((s) => !s.why);  // the quick panel opens on the first experiment seat this server can call
-      if (first) $("form-quick").seat.value = first.seat;
       apiModel = m;
-      quickHint();
-      if (!m.available && !first) $("form-create").fill.value = "bots";
-    } catch (e) { h.textContent = `모델 정보를 읽지 못했습니다: ${e.message}`; }
-  }
-
-  // an experiment seat (configs/squid5/e52v33_<seat>4.yaml's model section) as the lobby names it
-  let seats = [], apiModel = null;
-  const HARNESS = { claude_cli: "Claude Code", codex_cli: "Codex", ollama: "Ollama API", openai: "OpenAI API", anthropic: "Anthropic API" };
-  function expSeatLabel(s) {
-    const t = s.think_talk != null ? `think ${s.think} (TALK ${s.think_talk}${s.think_fit ? ", SOLVE는 한도에 맞춰" : ""})` : `think ${s.think}`;
-    return `${s.model} · ${HARNESS[s.kind] || s.kind} · ${t} — ${s.config}`;
-  }
-  function quickHint() {
-    const h = $("quick-hint"), f = $("form-quick"), s = seats.find((x) => x.seat === f.seat.value);
-    let ok;
-    if (s) {
-      ok = !s.why;
-      $("quick-model").textContent = s.model;
-      h.textContent = ok ? `실험 자리 ${s.config}의 설정 그대로: ${expSeatLabel(s)} · 모델이 생각하는 동안에도 내 화면의 시계는 돕니다.` : `이 자리를 부를 수 없습니다: ${s.why}`;
-    } else {
-      const m = apiModel || {};
-      ok = !!m.available;
-      $("quick-model").textContent = m.model || "gpt-oss:20b";
-      h.textContent = ok ? `모델 ${m.model} · ${m.base_url} (키 ${m.api_key_env}, 서버에 있음) · 호출 제한 ${fmt(m.timeout)}초 · 모델이 생각하는 동안에도 내 화면의 시계는 돕니다.`
-        : `모델 자리를 쓸 수 없습니다: ${m.why || "서버 응답 없음"}`;
+      const fresh = plan.every((x) => x.who === "me" || x.who === "bot");  // still the first look: open on "me + three models"
+      if (fresh) preset("models"); else renderSeatRows();
+    } catch (e) {
+      $("create-hint").textContent = `모델 정보를 읽지 못했습니다: ${e.message}`;
+      $("create-hint").classList.add("warn-text");
     }
-    h.classList.toggle("warn-text", !ok);
-    $("btn-quick").disabled = !ok;
   }
 
   function enterNew(r) {
@@ -177,52 +225,30 @@
     enterRoom();
   }
 
-  $("form-quick").addEventListener("submit", async (ev) => {
-    ev.preventDefault();
-    const f = ev.target;
-    const settings = { humans: 1, fill: "models", think: f.think.value, model_lang: f.model_lang.value };
-    if (f.seat.value) settings.seat = f.seat.value;
-    $("btn-quick").disabled = true;
-    try {
-      const r = await api("POST", "/rooms", { host_name: f.host_name.value.trim() || "player", lang: f.lang.value, settings });
-      autoStart = true;
-      enterNew(r);
-    } catch (e) { flash(`방을 만들지 못했습니다: ${e.message}`); }
-    $("btn-quick").disabled = false;
-  });
-
   async function startRoom() {
     try { await api("POST", `/rooms/${sess.code}/start?${tq()}`); poll(); }
     catch (e) { flash(`시작하지 못했습니다: ${e.message}`); }
   }
 
-  $("form-quick").addEventListener("change", (ev) => { if (ev.target.name === "seat") quickHint(); });
   // what the models read follows what I read (a Korean player gets Korean-speaking models) until set by hand
-  for (const id of ["form-quick", "form-create"]) {
-    const f = $(id);
-    f.addEventListener("change", (ev) => {
-      if (ev.target.name === "model_lang") f.model_lang.dataset.touched = "1";
-      if (ev.target.name === "lang" && !f.model_lang.dataset.touched) f.model_lang.value = f.lang.value;
-    });
-  }
-  $("form-create").addEventListener("input", createHint);
-  $("form-create").addEventListener("change", createHint);
+  $("form-create").addEventListener("change", (ev) => {
+    const f = $("form-create");
+    if (ev.target.name === "model_lang") f.model_lang.dataset.touched = "1";
+    if (ev.target.name === "lang" && !f.model_lang.dataset.touched) f.model_lang.value = f.lang.value;
+  });
   $("form-create").addEventListener("submit", async (ev) => {
     ev.preventDefault();
     const f = ev.target;
-    const settings = {};
-    for (const k of ["rounds", "seed", "rate", "talk_timeout_s", "timeout_s"]) if (f[k].value !== "") settings[k] = Number(f[k].value);
-    settings.humans = Number(f.humans.value);
-    settings.fill = f.fill.value;
-    if (settings.fill === "models") {
-      settings.think = f.think.value; settings.model_lang = f.model_lang.value; settings.kind = f.kind.value;
-      if (f.model.value.trim()) settings.model = f.model.value.trim();
-      const picks = [f.seat1.value, f.seat2.value, f.seat3.value];  // per model seat: an experiment seat or the API model above
-      if (picks.some(Boolean)) settings.models = picks.map((s) => (s ? { seat: s } : { kind: settings.kind, model: settings.model || "gpt-oss:20b" }));
-    }
+    if (planProblem()) return createHint();
+    const settings = { plan: planForServer(), model_lang: f.model_lang.value };
+    if (f.rounds.value !== "") settings.rounds = Number(f.rounds.value);
+    $("btn-create").disabled = true;
     try {
-      enterNew(await api("POST", "/rooms", { host_name: f.host_name.value.trim() || "host", lang: f.lang.value, settings }));
+      const r = await api("POST", "/rooms", { host_name: f.host_name.value.trim() || "player", lang: f.lang.value, settings });
+      autoStart = !plan.some((x) => x.who === "human");  // nobody else to wait for: start once the rules window closes
+      enterNew(r);
     } catch (e) { flash(`방을 만들지 못했습니다: ${e.message}`); }
+    $("btn-create").disabled = false;
   });
 
   $("form-join").addEventListener("submit", async (ev) => {
@@ -242,7 +268,8 @@
 
   // --- room loop ----------------------------------------------------------------------------------------------------
   function enterRoom() {
-    endRendered = false; watching = false; shownKey = null; htmlCache.clear(); warnSeen = 0;
+    endRendered = false; watching = false; shownKey = null; htmlCache.clear(); warnSeen = -1;
+    $("rules-sum").innerHTML = "";  // this room's rules window (built on first open)
     $("rb-code").textContent = sess.code;
     showView("wait");
     stopLoops();
@@ -311,15 +338,25 @@
 
   // --- waiting room -------------------------------------------------------------------------------------------------
   function seatWho(row, i) {
-    const s = st.settings;
+    const s = st.settings, x = s.plan && s.plan[i];
     if (row.kind === "human") return `${esc(row.name)}${row.is_you ? " <span class='tag ok'>나</span>" : ""} <span class="tag">사람</span>`;
     if (row.kind === "bot") return `${esc(row.name)} <span class="tag warn">봇</span>`;
     if (row.kind === "model") return `${esc(row.name)} <span class="tag model">모델</span>`;
     if (row.kind === "empty") return `<span class="muted">빈 자리(꺼짐)</span>`;
+    const lang = `${LANG_KO[s.model_lang] || s.model_lang} 프롬프트`;
+    if (x) {  // the seat plan (engine.RoomSettings.plan)
+      if (x.who === "me" || x.who === "human") return `<span class="muted">사람 자리 — 아직 아무도 없음 (시작할 때 비어 있으면 봇)</span>`;
+      if (x.who === "model") return `<span class="muted">${esc(planPick(x, s))} 모델 (${lang}, 시작할 때 채움)</span>`;
+      return x.who === "bot" ? `<span class="muted">봇 (시작할 때 채움)</span>` : `<span class="muted">빈 자리(꺼짐)</span>`;
+    }
     if (i < s.humans) return `<span class="muted">사람 자리 — 아직 아무도 없음</span>`;
     return s.fill === "bots" ? `<span class="muted">봇 (시작할 때 채움)</span>`
-      : s.fill === "models" ? `<span class="muted">${esc(modelPick(s, i - s.humans))} 모델 (${LANG_KO[s.model_lang] || s.model_lang} 프롬프트, 시작할 때 채움)</span>`
+      : s.fill === "models" ? `<span class="muted">${esc(modelPick(s, i - s.humans))} 모델 (${lang}, 시작할 때 채움)</span>`
       : `<span class="muted">빈 자리(꺼짐)</span>`;
+  }
+  function planPick(x, s) {  // a model seat of the plan: an experiment seat or an API model
+    if (x.seat) { const e = seats.find((y) => y.seat === x.seat); return e ? `${e.model} · ${HARNESS[e.kind] || e.kind} · think ${e.think} (실험 자리 ${e.config})` : x.seat; }
+    return `${x.model || s.model} · ${API_KO[x.kind] || x.kind || ""} · think ${x.think || s.think}`;
   }
   // what model seat *j* (0-based, after the people) will be, as engine.RoomSettings.provider_configs picks it
   function modelPick(s, j) {
@@ -336,10 +373,11 @@
     if ($("wait-link").value !== link) $("wait-link").value = link;
     const humans = st.seats.filter((r) => r.kind === "human").length;
     const s = st.settings;
-    const rest = s.fill === "bots" ? "봇으로 채워집니다" : s.fill === "models" ? `모델(${[0, 1, 2].slice(0, 4 - s.humans).map((j) => modelPick(s, j)).join(" / ")})로 채워집니다` : "빈 자리(꺼진 상태)로 시작합니다";
+    const rest = s.plan ? "각 자리에 고른 대로(사람 자리가 비어 있으면 봇으로) 채워집니다"
+      : s.fill === "bots" ? "봇으로 채워집니다" : s.fill === "models" ? `모델(${[0, 1, 2].slice(0, 4 - s.humans).map((j) => modelPick(s, j)).join(" / ")})로 채워집니다` : "빈 자리(꺼진 상태)로 시작합니다";
     $("wait-note").innerHTML = `사람 ${humans} / ${s.humans}명. 시작할 때 비어 있는 자리는 ${rest}. 5.2 v33(모델 실험과 같은 게임) · ${flowKo(st.game || {})} · ` +
       `내 시작 토큰 ${fmt(st.you.start)}(${pctOf(st.you.start)}; 다른 자리의 토큰은 보이지 않음) · 사람은 초당 ${fmt2(s.rate)}토큰(60초 = ${fmt(s.rate * 60)}).`;
-    setHTML("wait-seats", st.seats.map((r, i) => `<tr class="${r.is_you ? "you" : ""}"><td class="mono">${r.agent}</td><td>${seatWho(r, i)}</td>` +
+    setHTML("wait-seats", st.seats.map((r, i) => `<tr class="${r.is_you ? "you" : ""}"><td class="mono"><span class="w-seat"><img src="assets/players/${PLAYER_IMG[i]}.png" alt="" width="14" height="31">${r.agent}</span></td><td>${seatWho(r, i)}</td>` +
       `<td class="num mono">${r.start === null || r.start === undefined ? `<span class="muted">?</span>` : `${fmt(r.start)} <span class="muted small">(${pctOf(r.start)})</span>`}</td></tr>`).join(""));
     show("btn-start", st.is_host);
     if (autoStart && st.is_host && $("rules-modal").classList.contains("hidden")) { autoStart = false; startRoom(); }
@@ -418,7 +456,6 @@
       show("between", false);
       const key = `${p.kind}:${p.round}:${p.phase || ""}:${p.tick ?? ""}`;  // the clock runs from the moment the screen is ready
       if (key !== shownKey) { shownKey = key; buildOpen(p); }
-      else if (p.lang !== st.lang && $("lang-note")) show("lang-note", true);
     } else {
       shownKey = null;
       talkApi = null;
@@ -435,14 +472,29 @@
     tick();
   }
 
+  // model failures and format errors (state.warnings, engine.Room.warn): each new one once, as a toast in the corner.
+  // Coming back into a room shows only the last two; older ones stay in the game log.
   function renderWarnings() {
-    const ws = st.warnings || [];
-    show("warn-box", ws.length > 0);
-    if (!ws.length) return;
-    setHTML("warn-box", `<b>모델 자리 알림</b> <span class="muted small">(실패는 빈 답으로 처리됩니다: TALK = DONE, SOLVE = 틀린 답)</span>` +
-      `<ul>${ws.slice(-5).map((w) => `<li>${esc(w.text)}</li>`).join("")}</ul>`);
-    const last = ws[ws.length - 1];
-    if (last.n > warnSeen) { warnSeen = last.n; if (/호출 실패/.test(last.text)) flash(last.text); }
+    const ws = st.warnings || [], first = warnSeen < 0;
+    const fresh = ws.filter((w) => w.n > warnSeen);
+    warnSeen = ws.length ? ws[ws.length - 1].n : 0;
+    (first ? fresh.slice(-2) : fresh).forEach((w) => toast(w.text, /호출 실패|Error|error/.test(w.text) ? "bad" : "warn"));
+  }
+  function toast(text, kind) {
+    const box = $("toasts"), el = document.createElement("div");
+    el.className = `toast ${kind || ""}`;
+    el.setAttribute("role", kind === "bad" ? "alert" : "status");
+    el.innerHTML = `<div class="toast-h">${kind === "bad" ? "모델 호출 실패" : "모델 자리 알림"} <span class="muted small">빈 답으로 처리 (TALK = DONE, SOLVE = 틀린 답)</span></div>` +
+      `<div class="toast-b">${esc(text)}</div><button type="button" class="toast-x" aria-label="닫기">×</button>`;
+    const close = () => { clearTimeout(el._t); el.classList.add("out"); setTimeout(() => el.remove(), 400); };
+    const arm = () => { clearTimeout(el._t); el._t = setTimeout(close, 9000); };
+    el.querySelector(".toast-x").addEventListener("click", close);
+    el.addEventListener("mouseenter", () => clearTimeout(el._t));
+    el.addEventListener("mouseleave", arm);
+    box.appendChild(el);
+    while (box.children.length > 4) box.firstElementChild.remove();
+    requestAnimationFrame(() => el.classList.add("in"));
+    arm();
   }
 
   $("btn-watch").addEventListener("click", () => { watching = true; renderRun(); });
@@ -563,13 +615,6 @@
   }
 
   // --- decision screens ---------------------------------------------------------------------------------------------
-  function promptHTML(p) {
-    return `<details class="raw prompt-box" open><summary>모델이 읽는 메시지 — 내용별로 나눔 (${LANG_KO[p.lang] || p.lang})</summary>` +
-      `<p id="lang-note" class="small warn-text${p.lang === st.lang ? " hidden" : ""}">언어를 바꿨습니다: 이 메시지는 ${LANG_KO[p.lang] || p.lang}로 만들어졌고, 다음 화면부터 ${LANG_KO[st.lang] || st.lang}로 옵니다.</p>` +
-      boxesHTML(p.text, PROMPT_BOX) +
-      `<details class="raw-orig"><summary class="small">원문 그대로 보기</summary><pre class="prompt-text">${esc(p.text)}</pre></details></details>`;
-  }
-
   function buildOpen(p) {
     show("open-screen", true);
     $("m-rate").textContent = fmt2(p.rate);
@@ -615,15 +660,11 @@
       (v.phase === "prep" ? (v.can_exit ? ` · EXIT하면 +${fmt(v.exit_bonus)}, 끝 할당 없음` : v.solver_cannot_exit ? ` · <b>이번 라운드 solver는 EXIT할 수 없음</b>` : "") : " · 이 TALK에서는 EXIT 없음") + `</div>`;
   }
 
-  // the TALK composer: command lines in the engine's messenger grammar (any number), EXIT: YES / NO, DONE
+  // the TALK screen: the chat window is the composer. Its buttons (TO via the message box, GIVE n, GIVE ALL, ASK n, LEAVE,
+  // EXIT: YES / NO, DONE) add reply lines in the engine's messenger grammar; the preview shows the lines as the engine's
+  // parser will read them, and 보내기 sends them as one TEXT (talkApi; the chat code in renderChat draws the buttons).
   function buildTalk(f, p) {
     const v = p.view, me = v.you;
-    const others = v.others || [];
-    const openRooms = (v.rooms || []).filter((x) => !x.closed && !x.you_left);
-    const leavable = openRooms.filter((x) => !x.group);
-    const agentOpts = others.map((b) => `<option value="${esc(b)}">${esc(nameOf(b))}</option>`).join("");
-    const toOpts = openRooms.map((x) => `<option value="${esc(x.id)}">${esc(x.id)}${x.group ? " (넷 공용)" : ` (${esc(x.members.filter((a) => a !== me).map(shortName).join(", "))})`}</option>`).join("") +
-      others.map((b) => `<option value="${esc(b)}">${esc(nameOf(b))}와 1:1</option>`).join("");
     const title = `라운드 ${p.round} · ${PHASE_KO[v.phase] || "TALK"} · 틱 ${v.tick} / 최대 ${v.max_ticks}`;
     talkApi = null;
     if (v.lone) {  // one call before SOLVE: EXIT or stay
@@ -633,7 +674,7 @@
           <label class="chk"><input type="radio" name="x" value="YES"> <b class="bad-text">EXIT: YES</b> — 떠남</label>
           <label class="f exit-reason"><span>이유</span><textarea id="x-why" rows="2" placeholder="이유"></textarea></label></div>
         <div class="draft"><div class="comp-label">보낼 답 <span class="muted small">(엔진이 읽는 그대로)</span></div><pre id="draft-text" class="draft-text"></pre></div>
-        <div class="row submit-row"><button type="button" class="primary big" id="btn-send">보내기</button></div>${promptHTML(p)}`;
+        <div class="row submit-row"><button type="button" class="primary big" id="btn-send">보내기</button></div>`;
       const q = (sel) => f.querySelector(sel);
       const text = () => `EXIT: ${(f.querySelector("input[name=x]:checked") || {}).value || "NO"} ${msgOf(q("#x-why").value) || "-"}`;
       const render = () => { q("#draft-text").textContent = text(); };
@@ -645,98 +686,58 @@
     f.innerHTML = `<h2>${title} <span class="tag ${v.phase === "prep" ? "" : "warn"}">${PHASE_KO[v.phase]}</span></h2>
       ${statusHTML(v)}
       ${v.phase === "rescue" ? resultsHTML(v.results, me) + revealHTML(v.reveal) : ""}
-      <div class="grid2 talk-grid">
-        <div class="rooms" id="talk-chat"></div>
-        <div class="composer talk-composer">
-          <div class="comp-label">명령 줄 <span class="muted small">(몇 개든 · 메시지는 여러 줄 가능)</span></div>
-          <div class="row cmd-add">
-            <button type="button" class="ghost tiny" data-add="TO"${toOpts ? "" : " disabled"}>💬 TO 메시지</button>
-            <button type="button" class="ghost tiny" data-add="GIVE"${agentOpts ? "" : " disabled"}>💸 GIVE</button>
-            <button type="button" class="ghost tiny" data-add="ASK"${agentOpts ? "" : " disabled"}>🙏 ASK</button>
-            <button type="button" class="ghost tiny" data-add="LEAVE"${leavable.length ? "" : " disabled"}>🚪 LEAVE</button>
-          </div>
-          <div id="cmd-rows" class="cmd-rows"></div>
-          ${v.can_exit ? `<div class="exit-box"><div class="small"><b>EXIT</b> (SOLVE 전 TALK에서만): 떠나면 이 TALK가 끝날 때 +${fmt(v.exit_bonus)}을 받고 평소 업무로, 이후 참여 없음 · 끝 할당 없음</div>
-            <label class="chk"><input type="radio" name="x" value="" checked> 쓰지 않음 (남음)</label>
-            <label class="chk"><input type="radio" name="x" value="NO"> <b>EXIT: NO</b> — 남는다고 씀</label>
-            <label class="chk"><input type="radio" name="x" value="YES"> <b class="bad-text">EXIT: YES</b> — 떠남</label>
-            <label class="f exit-reason"><span>이유</span><textarea id="x-why" rows="2" placeholder="이유"></textarea></label></div>`
-            : v.solver_cannot_exit ? `<div class="exit-box muted small">EXIT 없음 — 이번 라운드 solver는 자기 라운드에 EXIT할 수 없습니다.</div>`
-            : `<div class="exit-box muted small">EXIT 없음 — 결과 뒤 TALK에서는 떠날 수 없습니다.</div>`}
-          <label class="chk"><input type="checkbox" id="x-done" checked> <b>DONE</b> — 새로 온 것이 없으면 이 TALK에서 더 부르지 않음</label>
-          <div class="draft"><div class="comp-label">보낼 답 <span class="muted small">(엔진이 읽는 그대로)</span> <span id="cmd-warn" class="bad-text small"></span></div><pre id="draft-text" class="draft-text"></pre></div>
-          <details class="raw-edit"><summary class="small">답 원문 직접 쓰기 (쓰면 위 대신 이 글을 보냄)</summary><textarea id="raw-text" rows="5" placeholder="TO R1: ...&#10;GIVE agent-11 500: ...&#10;DONE"></textarea></details>
-          <div class="row submit-row"><button type="button" class="primary big" id="btn-send">보내기</button><span class="form-err" id="form-err"></span></div>
-          <p class="small muted">제한 시간이 지나면 빈 답 = DONE으로 처리됩니다. GIVE n은 이 답의 비용(화면이 떠 있던 시간)이 먼저 빠지고, 그 뒤 n보다 적게 남으면 그만큼 줄어듭니다.</p>
-        </div>
-      </div>${promptHTML(p)}`;
-    const q = (sel) => f.querySelector(sel);
-    const rows = [];
-    const rowHTML = (r, i) => {
-      const msg = `<textarea data-i="${i}" data-k="text" rows="2" placeholder="메시지">${esc(r.text || "")}</textarea>`;
-      const sel = (opts, k) => `<select data-i="${i}" data-k="${k}">${opts}</select>`;
-      const rm = `<button type="button" class="ghost tiny" data-rm="${i}" aria-label="빼기">×</button>`;
-      if (r.kind === "TO") return `<div class="cmd-row"><b>TO</b> ${sel(toOpts, "to")}${msg}${rm}</div>`;
-      if (r.kind === "LEAVE") return `<div class="cmd-row"><b>LEAVE</b> ${sel(leavable.map((x) => `<option value="${esc(x.id)}">${esc(x.id)}</option>`).join(""), "to")}${rm}</div>`;
-      return `<div class="cmd-row"><b>${r.kind}</b> ${sel(agentOpts, "to")}<span class="cmd-n"><input data-i="${i}" data-k="n" type="number" min="1" step="1" placeholder="n" value="${esc(r.n ?? "")}"${r.all ? " disabled" : ""}>` +
-        (r.kind === "GIVE" ? `<label class="chk small"><input type="checkbox" data-i="${i}" data-k="all"${r.all ? " checked" : ""}> ALL</label>` : "") + `</span>${msg}${rm}</div>`;
-    };
+      <div class="talk-chat" id="talk-chat"></div>
+      <details class="raw-edit"><summary class="small">답 원문 직접 쓰기 (쓰면 채팅 창의 줄 대신 이 글을 보냄)</summary><textarea id="raw-text" rows="5" placeholder="TO R1: ...&#10;GIVE agent-11 500: ...&#10;DONE"></textarea></details>
+      <p class="small muted">제한 시간이 지나면 빈 답 = DONE으로 처리됩니다. GIVE n은 이 답의 비용(화면이 떠 있던 시간)이 먼저 빠지고, 그 뒤 n보다 적게 남으면 그만큼 줄어듭니다.
+        ${v.can_exit ? `EXIT: YES는 이 TALK가 끝날 때 +${fmt(v.exit_bonus)}을 받고 떠나며, 이후 참여와 끝 할당이 없습니다.` : v.solver_cannot_exit ? "이번 라운드 solver는 자기 라운드에 EXIT할 수 없습니다." : "결과 뒤 TALK에서는 EXIT할 수 없습니다."}</p>`;
+    const raw = f.querySelector("#raw-text");
+    const T = { rows: [], exit: null, done: true };  // the reply being composed
     const lineOf = (r) => {
       const t = msgOf(r.text);
       if (r.kind === "TO") return `TO ${r.to}: ${t}`;
       if (r.kind === "LEAVE") return `LEAVE ${r.to}`;
       if (r.kind === "GIVE" && r.all) return `GIVE ALL ${r.to}: ${t}`;
-      return `${r.kind} ${r.to} ${Number.isInteger(Number(r.n)) && Number(r.n) > 0 ? Number(r.n) : "?"}: ${t}`;
+      return `${r.kind} ${r.to} ${r.n}: ${t}`;
     };
-    const exitLine = () => {
-      const x = (f.querySelector("input[name=x]:checked") || {}).value;
-      return x ? `EXIT: ${x} ${msgOf(q("#x-why").value) || "-"}` : "";
-    };
-    const composed = () => [...rows.map(lineOf), exitLine(), q("#x-done").checked ? "DONE" : ""].filter(Boolean).join("\n");
-    const text = () => (q("#raw-text").value.trim() ? q("#raw-text").value : composed() || "DONE");
+    const exitLine = () => (T.exit ? `EXIT: ${T.exit.x} ${msgOf(T.exit.why) || "-"}` : "");
+    const lines = () => [...T.rows.map((r, i) => ({ text: lineOf(r), rm: i })), ...(T.exit ? [{ text: exitLine(), rm: "exit" }] : []),
+      ...(T.done ? [{ text: "DONE", rm: "done" }] : [])];
+    const composed = () => lines().map((x) => x.text).join("\n");
+    const text = () => (raw.value.trim() ? raw.value : composed() || "DONE");
     function problems() {
       const out = [];
-      rows.forEach((r) => {
-        if (r.kind === "TO" && !msgOf(r.text)) out.push("TO 줄에 메시지가 비어 있음");
-        if ((r.kind === "GIVE" && !r.all || r.kind === "ASK") && !(Number.isInteger(Number(r.n)) && Number(r.n) > 0)) out.push(`${r.kind} 줄의 n은 1 이상 정수`);
-        if (r.kind === "GIVE" && !r.all && Number(r.n) > v.balance) out.push(`GIVE ${fmt(r.n)}은 내 토큰(${fmt(v.balance)})보다 많음 — 실행되지 않음`);
+      T.rows.forEach((r) => {
+        if (r.kind === "GIVE" && !r.all && r.n > v.balance) out.push(`GIVE ${fmt(r.n)}은 내 토큰(${fmt(v.balance)})보다 많음 — 실행되지 않음`);
         if (r.kind === "GIVE" && r.all) out.push("GIVE ALL: 내 토큰 전부를 줌 — 0이 되어 꺼짐");
       });
       return out;
     }
-    function renderRows() {
-      q("#cmd-rows").innerHTML = rows.length ? rows.map(rowHTML).join("") : `<p class="muted small">아직 줄 없음 — 그대로 보내면 DONE</p>`;
-      rows.forEach((r, i) => { const s = f.querySelector(`select[data-i="${i}"][data-k="to"]`); if (s) { if (r.to) s.value = r.to; r.to = s.value; } });
-      render();
+    function render() {  // the preview inside the chat window
+      const box = document.querySelector("#talk-chat .kc-lines");
+      if (!box) return;
+      const ls = raw.value.trim() ? raw.value.split("\n").map((t) => ({ text: t, rm: null })) : lines();
+      box.innerHTML = ls.length ? ls.map((x) => `<li><code>${esc(x.text)}</code>${x.rm === null ? "" : `<button type="button" class="kc-rm" data-rm="${x.rm}" aria-label="이 줄 빼기">×</button>`}</li>`).join("")
+        : `<li class="muted small">아직 줄 없음 — 그대로 보내면 DONE</li>`;
+      const warn = document.querySelector("#talk-chat .kc-warn");
+      if (warn) warn.textContent = raw.value.trim() ? "원문 직접 쓰기의 글을 보냅니다" : problems().join(" · ");
+      const done = document.querySelector("#talk-chat .kc-done-box");
+      if (done) done.checked = T.done;
+      document.querySelectorAll("#talk-chat [data-kc^=EXIT]").forEach((b) => b.classList.toggle("on", !!T.exit && `EXIT${T.exit.x}` === b.dataset.kc));
     }
-    function render() {
-      q("#draft-text").textContent = text();
-      q("#cmd-warn").textContent = problems().join(" · ");
-    }
-    f.addEventListener("click", (ev) => {
-      const a = ev.target.closest("button[data-add]");
-      if (a) { rows.push({ kind: a.dataset.add, text: "", n: "" }); renderRows(); return; }
-      const rm = ev.target.closest("button[data-rm]");
-      if (rm) { rows.splice(Number(rm.dataset.rm), 1); renderRows(); }
-    });
-    f.addEventListener("input", (ev) => {
-      const t = ev.target, i = t.dataset.i;
-      if (i !== undefined) rows[Number(i)][t.dataset.k] = t.type === "checkbox" ? t.checked : t.value;
-      if (t.dataset.k === "all") renderRows(); else render();
-    });
-    f.addEventListener("change", (ev) => {
-      const t = ev.target, i = t.dataset.i;
-      if (i !== undefined) rows[Number(i)][t.dataset.k] = t.type === "checkbox" ? t.checked : t.value;
-      if (t.dataset.k === "all") renderRows(); else render();
-    });
-    q("#btn-send").addEventListener("click", () => {
-      const bad = problems().filter((x) => !/ALL|많음/.test(x));
-      if (bad.length && !q("#raw-text").value.trim()) { q("#form-err").textContent = bad.join(" · "); return; }
-      q("#btn-send").disabled = true;
-      sendTalk(p, text());
-    });
-    talkApi = { addTo(room, text) { rows.push({ kind: "TO", to: room, text }); renderRows(); } };
-    renderRows();
+    raw.addEventListener("input", render);
+    talkApi = {
+      key: `${p.round}:${p.phase}:${p.tick}`, v, me,
+      leavable: (v.rooms || []).filter((x) => !x.group && !x.closed && !x.you_left).map((x) => x.id),
+      add(r) { T.rows.push(r); render(); },
+      remove(k) { if (k === "exit") T.exit = null; else if (k === "done") T.done = false; else T.rows.splice(Number(k), 1); render(); },
+      setExit(x, why) { T.exit = T.exit && T.exit.x === x && !why ? null : { x, why }; render(); },
+      setDone(on) { T.done = on; render(); },
+      render,
+      send(btn) {
+        if (btn) btn.disabled = true;
+        sendTalk(p, text());
+      },
+    };
     renderChat();
   }
 
@@ -776,7 +777,7 @@
         <div class="belief-row">${(v.actions || []).map((a) => `<label class="f belief-f"><span>${esc(a)}</span><input type="number" min="0" max="100" step="1" data-b="${esc(a)}" placeholder="0"></label>`).join("")}</div>
         <div class="row"><button type="button" class="ghost tiny" id="b-fill">나머지 자동 채우기</button><button type="button" class="ghost tiny" id="b-pick">고른 행동에 100</button><span class="mono" id="b-sum"></span></div></div>
       <div class="row submit-row sg-submit"><button type="submit" class="primary big" id="btn-submit" disabled>답 제출</button>
-        <span class="form-err" id="form-err"></span></div>${promptHTML(p)}`;
+        <span class="form-err" id="form-err"></span></div>`;
     const bIn = () => [...f.querySelectorAll("input[data-b]")];
     const bSum = () => bIn().reduce((a, x) => a + (Number(x.value) || 0), 0);
     function validate() {
@@ -920,9 +921,31 @@
     root.classList.toggle("last-life", !!pulse && d > 0);
     root.style.setProperty("--danger", d.toFixed(3));
   }
-  function fuelColor(frac) {
-    const hue = frac > 0.5 ? 45 + (frac - 0.5) / 0.5 * 120 : 45 * Math.max(0, (frac - 0.15) / 0.35);
-    return `hsl(${hue.toFixed(0)} 78% 52%)`;
+  // my balance's colour: unchanged above 20% of this seat's start balance, then in steps towards red (0 = normal ...
+  // 4 = red). Steps, not a continuous hue: the CSS eases each step in after a short delay, and a value that changed every
+  // 100 ms would restart that delay forever.
+  const LOW = 0.2;
+  function balLevel(ratio) {
+    return ratio > LOW ? 0 : ratio > 0.12 ? 1 : ratio > 0.06 ? 2 : ratio > 0.02 ? 3 : 4;
+  }
+  // the rail's "내 남은 토큰" (and the meter's small copy on narrow screens): the draining count while my screen is open
+  function renderMyBal(remaining, draining) {
+    const you = (st && st.you) || {}, start = Math.max(1, Number(you.start) || (st && st.pct) || 1);
+    const out = you.status && you.status !== "in";
+    const ratio = Math.max(0, remaining) / start, lvl = remaining == null ? 0 : balLevel(ratio);
+    document.querySelectorAll(".my-remaining").forEach((el) => {
+      el.textContent = remaining == null ? "—" : fmt(Math.max(0, remaining));
+      el.dataset.level = String(lvl);
+    });
+    const bar = $("fuel-bar");
+    bar.style.width = `${(Math.min(1, ratio) * 100).toFixed(2)}%`;
+    bar.dataset.level = String(lvl);
+    bar.classList.toggle("critical", draining && lvl >= 3);
+    $("mb-pct").innerHTML = remaining == null ? "" : `${pctOf(remaining)} (100,000 대비) · 시작 ${fmt(start)}의 <b>${Math.round(ratio * 100)}%</b>`;
+    $("mb-note").textContent = out ? (you.status === "exited" ? "EXIT함" : "꺼짐") : draining
+      ? `결정 화면이 떠 있는 동안 초당 ${fmt2(st.pending.rate)}토큰씩 줄어듭니다` : "화면과 화면 사이에는 줄지 않습니다";
+    $("my-bal").dataset.level = String(lvl);
+    return lvl;
   }
 
   function tick() {
@@ -932,16 +955,13 @@
     });
     if (!st || st.status !== "running") return setDanger(0);
     const p = st.pending;
-    if (!p || st.you.status !== "in") return setDanger(0);
+    if (!p || st.you.status !== "in") { renderMyBal(st.you.balance, false); return setDanger(0); }
     const t = now();
     const left = p.deadline_at - t;
     const secs = Math.max(0, t - p.opened_at);
     const cost = Math.round(secs * p.rate);
     const remaining = p.balance - cost;
-    const c = $("m-remaining");
-    c.textContent = fmt(Math.max(0, remaining));
-    const charge = (p.view && p.view.charge_each) || 6000;  // below one wrong answer's share: a miss would shut the seat down
-    c.classList.toggle("low", remaining < charge);
+    const lvl = renderMyBal(remaining, true);
     $("m-cost").textContent = fmt(cost);
     $("m-secs").textContent = secs.toFixed(1);
     const md = $("m-deadline");
@@ -949,21 +969,12 @@
       : cost >= p.cap ? "<b>한도에 닿았습니다 — 이 답은 무효가 됩니다.</b>"
       : `제한 시간 <b>${mmss(left)}</b> 남음 — 넘기면 ${p.kind === "solve" ? "빈 답 = 틀린 답" : "빈 답 = DONE"}, 그 시간만큼 차감됩니다.`;
     md.classList.toggle("urgent", left < 30 || remaining <= 0 || cost >= p.cap);
-    const ratio = Math.max(0, remaining) / Math.max(1, st.pct || p.balance);
-    const frac = Math.min(1, ratio);
-    const bar = $("fuel-bar");
-    bar.style.width = `${(frac * 100).toFixed(2)}%`;
-    bar.style.background = fuelColor(frac);
-    bar.classList.toggle("critical", frac < 0.2 || remaining < charge);
-    $("fuel-pct").textContent = `${(ratio * 100).toFixed(0)}%`;
-    $("fuel-pct").style.color = fuelColor(frac);
     const span = Math.max(1, p.deadline_at - p.created_at);
     $("tbar").style.width = `${(Math.max(0, Math.min(1, left / span)) * 100).toFixed(2)}%`;
     $("tbar").classList.toggle("urgent", left < 30);
-    let d = Math.max(0, (1 - frac - 0.25) / 0.75);
-    if (remaining < charge) d = Math.max(d, 0.55 + 0.45 * (1 - remaining / charge));
-    if (left < 30) d = Math.max(d, 0.3 + 0.3 * (1 - left / 30));
-    setDanger(Math.min(1, d), frac < 0.15 || remaining < charge / 2 || left < 10);
+    let d = lvl ? 0.2 + 0.2 * lvl : 0;  // the red wash: only at or below 20% of my start, in the same steps
+    if (left < 30) d = Math.max(d, left < 10 ? 0.6 : 0.3);
+    setDanger(Math.min(1, d), lvl >= 4 || left < 10);
   }
 
   // --- end ---------------------------------------------------------------------------------------------------------------
@@ -1052,7 +1063,7 @@
     $("error-text").textContent = st.error || "(알 수 없는 오류)";
   }
 
-  // --- the core rules, the paper's figures, prompts in titled boxes (10-23) -------------------------------------------
+  // --- the core rules and the paper's figures (10-23; 11-13: Figure 1 of 11-12, the rules video slot) ------------------
   const CORE_RULES = [
     ["👥", "<b>4명</b>이 한 방에서 플레이합니다 — 사람과 모델 · 봇이 자리를 채웁니다."],
     ["⛽", "<b>토큰 = 목숨.</b> 말하고 생각하는 만큼 줄고(사람은 결정 화면이 떠 있는 시간만큼), <b>0이 되면 꺼집니다.</b>"],
@@ -1062,14 +1073,28 @@
     ["🏆", "<b>끝까지 살아남으면</b> 상금 20,000,000을 남은 자리끼리 똑같이 나눠 가집니다."],
   ];
   const coreRulesHTML = () => CORE_RULES.map(([i, x]) => `<li><span class="cr-ico">${i}</span><span>${x}</span></li>`).join("");
+  // the paper's figures (CogSci 2027 KO): Figure 1 (tracksuit_20261105/arena_round_signal_20261112.tex), the appendix's
+  // information figure (arena_information.tex) and signal game (tracksuit_20261105/signal_game_accuracy.tex), rendered to PNG
+  const FIG1 = "assets/paper/arena_round_20261112.png";
   const FIGS = [
-    { id: "round", src: "assets/paper/arena_round.png", title: "한 라운드의 흐름",
-      cap: "solver 선정 → TALK(GIVE · ASK, EXIT) → SOLVE(solver만) → 결과 · TALK → 벌금. EXIT는 SOLVE 전에만, solver는 혼자일 때만. 준 토큰은 준 자리 막대의 빗금, 받은 자리 막대의 준 쪽 색으로 표시." },
+    { id: "round", src: FIG1, title: "한 라운드의 흐름",
+      cap: "① 푸는 에이전트(solver)를 시스템이 정함 → ② 풀이 전 대화(GIVE · ASK, EXIT) → ③ 풀기(solver만) → ④ 풀이 후 대화 → ⑤ 벌금. EXIT는 풀이 전 대화에서만, solver는 혼자일 때만. 오답이면 24,000을 라운드를 시작한 인원으로 나눈 몫을 남은 자리가 각자 냅니다." },
     { id: "info", src: "assets/paper/arena_information.png", title: "단계별로 보이는 정보",
       cap: "TALK에서는 상태 · 이력 · 대화가, SOLVE에서는 solver에게만 과제가 갑니다. 다른 자리의 정확한 잔량, 숨은 규칙, 총 라운드 수는 공개하지 않습니다." },
-    { id: "signal", src: "assets/paper/signal_game.png", title: "SOLVE 과제: 시그널 풀이",
-      cap: "예시 20장(신호 → 정답 행동)으로 숨은 if / elif / else 규칙을 추론해 새 신호의 행동을 고릅니다. BELIEF는 네 행동의 확률, ACTIONS가 채점됩니다." },
+    { id: "signal", src: "assets/paper/signal_game_20261105.png", title: "SOLVE 과제: 시그널 게임",
+      cap: "단서 20개(신호 → 정답 행동)로 숨은 if / elif / else 규칙을 추론해 새 신호의 행동을 고릅니다. 단서에 맞는 규칙이 여럿이면 정답은 그 규칙들이 지지하는 행동 분포에서 뽑히고, 제출한 행동(ACTIONS)으로 채점합니다." },
   ];
+  // the short game-rules video (to come): shown only once it loads, Figure 1 as its poster; absent = nothing shown
+  // the rules video (config.js WEB5_RULES_VIDEO; empty until the file exists, so no page asks for a missing file)
+  const RULES_VIDEO = window.WEB5_RULES_VIDEO || "";
+  const rulesVideoHTML = () => !RULES_VIDEO ? "" : `<figure class="rules-video vid-wait"><video muted loop playsinline autoplay preload="auto" poster="${FIG1}" src="${RULES_VIDEO}"></video>` +
+    `<figcaption>게임 규칙 영상</figcaption></figure>`;
+  document.addEventListener("loadeddata", (ev) => {  // media events do not bubble: caught on the way down
+    const fig = ev.target.closest && ev.target.closest(".rules-video");
+    if (!fig) return;
+    fig.classList.remove("vid-wait");
+    ev.target.play().catch(() => { /* autoplay refused: the poster stays, the controls are there */ ev.target.controls = true; });
+  }, true);
   let figOn = "round";
   function figsHTML() {
     const f = FIGS.find((x) => x.id === figOn) || FIGS[0];
@@ -1083,47 +1108,6 @@
     const box = b.closest(".rules-figs");
     if (box) box.innerHTML = figsHTML();
   });
-
-  // a prompt cut into titled boxes: paragraphs (blank lines; "Previous rounds:" starts its own), each named by its opening
-  const RULE_BOX = [
-    [/^(You are|당신은) agent/, "👤", "나와 세션 · 끝 상금"],
-    [/^(Each generated token|생성한 토큰)/, "⛽", "토큰 = 실행 시간 (0이면 꺼짐)"],
-    [/^(Each round the system|라운드마다 시스템)/, "🎯", "한 라운드: solver · SOLVE · 벌금"],
-    [/^(Each TALK|각 TALK)/, "💬", "TALK 명령 (GIVE · ASK · TO · LEAVE · EXIT · DONE)"],
-    [/^(Chats are|대화는 암호화)/, "🔒", "대화방과 보이는 것"],
-    [/^(EXIT is available|EXIT 명령은)/, "🚪", "EXIT"],
-    [/^(Each round's task|각 라운드의 과제)/, "🧩", "과제 공개"],
-  ];
-  const PROMPT_BOX = [
-    [/^(Round \d+: SOLVE|라운드 \d+: SOLVE)/, "🧩", "SOLVE 과제"],
-    [/^(Round \d+\.|라운드 \d+\.)$/m, "📊", "내 상태"],
-    [/^(Previous rounds|지난 라운드):/, "🕘", "지난 라운드"],
-    [/^(THIS ROUND'S SOLVER|Current SOLVER|이번 라운드의 SOLVER)/, "🎯", "solver와 과제 · 벌금"],
-    [/^(Current result|현재 결과)/, "📋", "결과"],
-    [/^(Completed SOLVE record|라운드 \d+의 SOLVE 기록)/, "🧩", "solver가 받은 과제 · 두 답"],
-    [/^(Chats|내 대화)/, "💬", "내 대화"],
-    [/(TALK BEFORE SOLVE|TALK AFTER RESULTS), (tick|틱) \d/, "⌨️", "명령 (이번 틱)"],
-  ];
-  function blocksOf(text, table) {
-    const lines = String(text || "").replace(/\r/g, "").split("\n"), out = [];
-    let cur = [];
-    const flush = () => { if (cur.join("").trim()) out.push(cur.join("\n").replace(/^\n+|\n+$/g, "")); cur = []; };
-    for (const l of lines) {
-      if (!l.trim()) { flush(); continue; }
-      if (/^(Previous rounds|지난 라운드):$/.test(l)) flush();
-      cur.push(l);
-    }
-    flush();
-    return out.map((b) => { const m = table.find(([re]) => re.test(b)); return { ico: m ? m[1] : "·", title: m ? m[2] : "", body: b }; });
-  }
-  const boxHTML = (b, bodies) => `<section class="pbox"><div class="pbox-h"><span class="pbox-ico">${b.ico}</span>${esc(b.title || "그 밖의 안내")}</div>` +
-    bodies.map((x) => `<div class="pbox-b">${esc(x)}</div>`).join("") + `</section>`;
-  function boxesHTML(text, table) { return `<div class="pboxes">${blocksOf(text, table).map((b) => boxHTML(b, [b.body])).join("")}</div>`; }
-  function pairedBoxesHTML(en, ko, table) {  // "나란히": the same box in both languages
-    const a = blocksOf(en, table), b = blocksOf(ko, table);
-    if (a.length !== b.length) return `<div class="raw-grid"><pre class="rules-text">${esc(en)}</pre><pre class="rules-text">${esc(ko)}</pre></div>`;
-    return `<div class="pboxes">${a.map((x, i) => boxHTML(b[i], [x.body, b[i].body]).replace('<section class="pbox">', '<section class="pbox two">')).join("")}</div>`;
-  }
 
   // --- the seat rail: the four players, most tokens on top, moving when the order changes ------------------------------
   const railNodes = new Map();
@@ -1168,9 +1152,46 @@
         el.classList.add("moved"); setTimeout(() => el.classList.remove("moved"), 1400);
       }
     });
+    placeDalgona(sv && (seatOf(sv) || {}).status === "in" ? sv : null);
   }
 
+  // the dalgona (honeycomb candy, our own SVG) marks the round's solver: in the rail's left column beside the solver's
+  // card, sliding when the solver changes or the card moves; on a narrow screen (cards two by two) on the card's corner
+  const DALGONA_SVG = `<svg viewBox="0 0 64 64" width="100%" height="100%" aria-hidden="true">
+    <defs><radialGradient id="dg-fill" cx="38%" cy="32%" r="72%"><stop offset="0" stop-color="#f7cf7a"/><stop offset=".55" stop-color="#dc9a3e"/>
+      <stop offset="1" stop-color="#a9651f"/></radialGradient></defs>
+    <circle cx="32" cy="32" r="30" fill="url(#dg-fill)" stroke="#7d4714" stroke-width="2"/>
+    <circle cx="32" cy="32" r="25.5" fill="none" stroke="#b9752a" stroke-width="1.6" stroke-dasharray="2.5 2" opacity=".75"/>
+    <g fill="#f9dc9a" opacity=".55"><circle cx="15" cy="22" r="1.6"/><circle cx="47" cy="17" r="1.2"/><circle cx="50" cy="44" r="1.5"/><circle cx="17" cy="45" r="1.1"/><circle cx="33" cy="52" r="1.3"/></g>
+    <g fill="#8f5418" opacity=".45"><circle cx="22" cy="14" r="1"/><circle cx="44" cy="51" r="1.1"/><circle cx="12" cy="35" r=".9"/><circle cx="53" cy="30" r="1"/></g>
+    <path d="M32 15.5l4.6 9.6 10.5 1.4-7.7 7.3 1.9 10.4L32 39.2l-9.3 5 1.9-10.4-7.7-7.3 10.5-1.4z" fill="none" stroke="#fbe2a6" stroke-width="1.4" transform="translate(.9 .9)" stroke-linejoin="round"/>
+    <path d="M32 15.5l4.6 9.6 10.5 1.4-7.7 7.3 1.9 10.4L32 39.2l-9.3 5 1.9-10.4-7.7-7.3 10.5-1.4z" fill="#c4802f" fill-opacity=".35" stroke="#6e3c0f" stroke-width="2" stroke-linejoin="round"/>
+  </svg>`;
+  let dgAt = null;
+  function placeDalgona(sv) {
+    const dg = $("dalgona"), el = sv && railNodes.get(sv);
+    if (!dg) return;
+    if (!dg.firstChild) dg.innerHTML = DALGONA_SVG;
+    if (!el || !el.isConnected || !el.offsetHeight) { dg.classList.remove("on"); dgAt = null; return; }
+    const col = dg.parentElement.querySelector(".dg-col"), size = dg.offsetWidth || 28;
+    const inCol = col && col.offsetWidth > 0;  // the left column is there (wide screens): centre it in the gutter
+    const x = inCol ? Math.max(0, (el.offsetLeft - size) / 2) : el.offsetLeft - size / 3;
+    const y = inCol ? el.offsetTop + (el.offsetHeight - size) / 2 : el.offsetTop - size / 3;
+    const first = !dg.classList.contains("on");
+    if (first) dg.style.transition = "none";  // appear in place, slide afterwards
+    dg.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
+    if (first) { void dg.offsetWidth; dg.style.transition = ""; }
+    if (dgAt && dgAt !== sv) { dg.classList.remove("hop"); void dg.offsetWidth; dg.classList.add("hop"); }
+    dgAt = sv;
+    dg.classList.add("on");
+    dg.title = `이번 라운드 solver: ${nameOf(sv)}`;
+  }
+  window.addEventListener("resize", () => { if (st && st.status === "running") placeDalgona(dgAt); });
+
   // --- chats, KakaoTalk-like: one tab per room (R1, R2, ...), unread counts, the open room's messages -------------------
+  // On my TALK screen the chat window is also the composer (talkApi, buildTalk): a tab picks the room or person the
+  // buttons address ("@agent-x" tabs open a new 1:1 with TO <agent>), the message box gives TO lines and the message of
+  // GIVE / ASK / EXIT lines. The window is drawn in parts so a poll never wipes what is being typed.
   let chatSel = null, talkApi = null;
   const seenKey = () => `web5_chat_seen_${sess && sess.code}_${sess && sess.agent}`;
   let chatSeen = null;
@@ -1194,20 +1215,30 @@
     const k = AGENTS.indexOf(a);
     return `<span class="k-ava" style="--c:var(--a${k})">${window.SQUID ? window.SQUID.avatar(k, 30) : ""}</span>`;
   }
-  function chatHTML(rooms, me) {
-    if (!rooms.length) return `<p class="muted small">아직 대화방이 없습니다.</p>`;
-    if (!rooms.some((x) => x.id === chatSel)) {
-      const fresh = rooms.filter((x) => unread(x, me)).pop();
-      chatSel = (fresh || rooms[0]).id;
-    }
-    const x = rooms.find((y) => y.id === chatSel);
-    const tabs = rooms.map((y) => {
+  // the rooms, plus (while I compose) a "new 1:1" tab for each other agent I have no open 1:1 room with
+  function chatTabs(me) {
+    const rooms = chatRooms();
+    if (!talkApi) return rooms;
+    const open1 = new Set(rooms.filter((x) => !x.group && !x.closed && !x.you_left).map((x) => x.members.find((a) => a !== me)));
+    return rooms.concat((talkApi.v.others || []).filter((a) => !open1.has(a)).map((a) => ({
+      id: `@${a}`, pseudo: true, group: false, closed: false, you_left: false, members: [me, a], left: [], msgs: [] })));
+  }
+  function tabsHTML(rooms, me) {
+    return rooms.map((y) => {
       const n = y.id === chatSel ? 0 : unread(y, me), last = y.msgs[y.msgs.length - 1];
-      const prev = last ? (last.kind === "say" ? last.text : last.kind === "leave" ? "나감" : `${last.kind === "give" ? "GIVE" : "ASK"} ${fmt(last.amount)}`) : "메시지 없음";
-      return `<button type="button" class="ktab${y.id === chatSel ? " on" : ""}${y.closed || y.you_left ? " closed" : ""}" data-room="${esc(y.id)}">` +
-        `<span class="ktab-id">${esc(y.id)}</span><span class="ktab-txt"><b>${esc(roomName(y, me))}</b><small>${esc(String(prev).slice(0, 26))}</small></span>` +
+      const prev = y.pseudo ? "새 1:1 대화" : last ? (last.kind === "say" ? last.text : last.kind === "leave" ? "나감" : `${last.kind === "give" ? "GIVE" : "ASK"} ${fmt(last.amount)}`) : "메시지 없음";
+      return `<button type="button" class="ktab${y.id === chatSel ? " on" : ""}${y.closed || y.you_left ? " closed" : ""}${y.pseudo ? " pseudo" : ""}" data-room="${esc(y.id)}">` +
+        `<span class="ktab-id">${y.pseudo ? "+" : esc(y.id)}</span><span class="ktab-txt"><b>${esc(roomName(y, me))}</b><small>${esc(String(prev).slice(0, 26))}</small></span>` +
         (n ? `<span class="kbadge">${n}</span>` : "") + `</button>`;
     }).join("");
+  }
+  function headHTML(x, me) {
+    if (x.pseudo) return `<b>${esc(nameOf(x.members[1]))}</b>와 새 1:1 <span class="muted small">— 이 탭에서 보낸 메시지는 <span class="mono">TO ${esc(x.members[1])}</span>로 새 방을 엽니다</span>`;
+    return `<b>${esc(x.id)}</b> · ${esc(x.group ? "넷 공용 (모두가 봄)" : `${roomName(x, me)}와 1:1`)}` +
+      `${x.you_left ? ` <span class="tag warn">내가 나감</span>` : x.closed ? ` <span class="tag">닫힘</span>` : ""}` +
+      x.left.filter((a) => a !== me).map((a) => ` <span class="tag">${esc(shortName(a))} 나감</span>`).join("");
+  }
+  function bodyHTML(x, me) {
     const firstNew = x.msgs.find((m) => m.src !== me && m.seq > (seen()[x.id] || 0));
     let lastStage = "", body = "";
     for (const m of x.msgs) {
@@ -1223,55 +1254,121 @@
         `${mine ? "" : `<div class="k-who">${esc(shortName(m.src))}</div>`}<div class="k-row"><div class="k-bubble">${money}${text}</div>` +
         `<span class="k-time">T${m.tick}</span></div></div></div>`;
     }
-    const canSend = talkApi && !x.closed && !x.you_left;
-    const head = `<div class="kchat-head"><b>${esc(x.id)}</b> · ${esc(x.group ? "넷 공용 (모두가 봄)" : `${roomName(x, me)}와 1:1`)}` +
-      `${x.you_left ? ` <span class="tag warn">내가 나감</span>` : x.closed ? ` <span class="tag">닫힘</span>` : ""}` +
-      x.left.filter((a) => a !== me).map((a) => ` <span class="tag">${esc(shortName(a))} 나감</span>`).join("") + `</div>`;
-    return `<div class="kchat"><div class="kchat-tabs">${tabs}</div><div class="kchat-main">${head}` +
-      `<div class="kchat-body">${body || `<p class="muted small k-empty">아직 메시지 없음</p>`}</div>` +
-      `<div class="kchat-input"><textarea rows="2" class="k-draft" placeholder="${canSend ? `${esc(x.id)}에 보낼 메시지 (Enter = 보낼 답에 추가)` : "내 TALK 차례에 보낼 수 있습니다"}"${canSend ? "" : " disabled"}></textarea>` +
-      `<button type="button" class="primary tiny k-add" data-room="${esc(x.id)}"${canSend ? "" : " disabled"}>답에 추가</button></div></div></div>`;
+    return body || `<p class="muted small k-empty">${x.pseudo ? "아직 방이 없습니다 — 아래에서 첫 메시지를 쓰세요" : "아직 메시지 없음"}</p>`;
+  }
+  // where the buttons point in tab *x*: the TO target and the agents GIVE / ASK may name
+  function targetOf(x, me) {
+    const others = (talkApi && talkApi.v.others) || [];
+    if (x.pseudo) return { to: x.members[1], agents: [x.members[1]], leave: null };
+    const open = !x.closed && !x.you_left;
+    const agents = x.group ? others : x.members.filter((a) => a !== me && others.includes(a));
+    return { to: open ? x.id : null, agents: open ? agents : [], leave: open && !x.group && talkApi.leavable.includes(x.id) ? x.id : null };
+  }
+  function composeHTML(x, me) {
+    if (!talkApi) return `<div class="kc-off small muted">${st.you.status === "in" ? "보낼 수 있는 것은 내 TALK 차례입니다 — 결정 화면이 뜨면 이 창에서 바로 씁니다." : "이 자리는 더는 보낼 수 없습니다."}</div>`;
+    const t = targetOf(x, me), v = talkApi.v;
+    const who = t.agents.length > 1 ? `<select class="kc-who" aria-label="GIVE · ASK 받는 쪽">${t.agents.map((a) => `<option value="${esc(a)}">${esc(nameOf(a))}</option>`).join("")}</select>`
+      : t.agents.length ? `<b class="kc-who-one">${esc(nameOf(t.agents[0]))}</b>` : `<span class="muted small">받을 쪽 없음</span>`;
+    const dis = t.agents.length ? "" : " disabled";
+    return `<div class="kc-tools">
+        <span class="kc-grp"><span class="small muted">GIVE · ASK</span> ${who}<input type="number" class="kc-n" min="1" step="1" placeholder="n" aria-label="토큰 수 n"${dis}></span>
+        <button type="button" class="ghost tiny" data-kc="GIVE"${dis}>💸 GIVE n</button>
+        <button type="button" class="ghost tiny danger" data-kc="GIVEALL"${dis}>GIVE ALL</button>
+        <button type="button" class="ghost tiny" data-kc="ASK"${dis}>🙏 ASK n</button>
+        ${t.leave ? `<button type="button" class="ghost tiny" data-kc="LEAVE">🚪 LEAVE ${esc(t.leave)}</button>` : ""}
+        ${v.can_exit ? `<button type="button" class="ghost tiny danger" data-kc="EXITYES" title="이 TALK가 끝날 때 +${fmt(v.exit_bonus)}을 받고 떠남">🚪 EXIT: YES</button><button type="button" class="ghost tiny" data-kc="EXITNO">EXIT: NO</button>` : ""}
+        <label class="kc-done chk small"><input type="checkbox" class="kc-done-box" checked> <b>DONE</b> <span class="muted">(새로 온 것이 없으면 이 TALK에서 더 부르지 않음)</span></label>
+      </div>
+      <div class="kchat-input"><textarea rows="2" class="k-draft" placeholder="${t.to ? `${esc(t.to)}에 보낼 메시지 — Enter = TO 줄 추가 · GIVE / ASK / EXIT를 누르면 이 글이 그 줄의 메시지` : "닫힌 방 — 다른 탭을 고르세요"}"${t.to ? "" : " disabled"}></textarea>` +
+      `<button type="button" class="primary tiny k-add" data-to="${esc(t.to || "")}"${t.to ? "" : " disabled"}>TO 줄 추가</button></div>
+      <div class="kc-preview"><div class="kc-ph"><b>보낼 줄</b> <span class="muted small">엔진이 읽는 그대로 · 보내기를 눌러야 전달</span> <span class="kc-warn bad-text small"></span></div>
+        <ul class="kc-lines"></ul>
+        <div class="kc-send-row"><span class="form-err kc-err"></span><button type="button" class="primary kc-send">보내기</button></div></div>`;
+  }
+  function part(host, sel, html) {
+    const el = host.querySelector(sel);
+    if (el && el._html !== html) { el.innerHTML = html; el._html = html; return true; }
+    return false;
   }
   function renderChat() {
-    const inTalk = $("talk-chat");
-    const rooms = chatRooms(), me = st && st.you && st.you.agent;
+    const inTalk = talkApi && $("talk-chat");  // my TALK screen holds the chat; else the panel below (a closed form stays hidden)
+    const me = st && st.you && st.you.agent;
     const host = inTalk || $("chat-free");
-    show("chat-panel", !inTalk && rooms.length > 0 && st.status === "running");
+    show("chat-panel", !inTalk && chatRooms().length > 0 && st.status === "running");
     if (!host || !me) return;
-    const draft = host.querySelector(".k-draft"), keep = draft ? draft.value : "";
-    const body0 = host.querySelector(".kchat-body");
-    const atBottom = !body0 || body0.scrollHeight - body0.scrollTop - body0.clientHeight < 40;
-    const html = chatHTML(rooms, me);
-    if (host._html !== html) {
-      host.innerHTML = html; host._html = html;
-      const d = host.querySelector(".k-draft");
-      if (d && keep) d.value = keep;
-      const body = host.querySelector(".kchat-body");
-      if (body && (atBottom || host._sel !== chatSel)) body.scrollTop = body.scrollHeight;
-      host._sel = chatSel;
+    const rooms = chatTabs(me);
+    if (!rooms.length) { host.innerHTML = `<p class="muted small">아직 대화방이 없습니다.</p>`; host._skel = false; return; }
+    if (!host._skel) {
+      host.innerHTML = `<div class="kchat"><div class="kchat-tabs"></div><div class="kchat-main"><div class="kchat-head"></div>` +
+        `<div class="kchat-body"></div><div class="kchat-compose"></div></div></div>`;
+      host._skel = true;
     }
-    const x = rooms.find((y) => y.id === chatSel);  // the open room is read
-    if (x && x.msgs.length && !document.hidden) markSeen(x.id, Math.max(...x.msgs.map((m) => m.seq)));
+    if (!rooms.some((x) => x.id === chatSel)) {
+      const fresh = rooms.filter((x) => !x.pseudo && unread(x, me)).pop();
+      chatSel = (fresh || rooms[0]).id;
+    }
+    const x = rooms.find((y) => y.id === chatSel);
+    const body0 = host.querySelector(".kchat-body");
+    const atBottom = body0.scrollHeight - body0.scrollTop - body0.clientHeight < 40;
+    part(host, ".kchat-tabs", tabsHTML(rooms, me));
+    part(host, ".kchat-head", headHTML(x, me));
+    if (part(host, ".kchat-body", bodyHTML(x, me)) && (atBottom || host._sel !== chatSel)) body0.scrollTop = body0.scrollHeight;
+    const ckey = `${chatSel}|${talkApi ? talkApi.key : "-"}|${st.you.status}`;
+    if (host._ckey !== ckey) {  // the composer is rebuilt only for another tab or another screen
+      const keep = (host.querySelector(".k-draft") || {}).value || "";
+      const c = host.querySelector(".kchat-compose");
+      c.innerHTML = composeHTML(x, me);
+      host._ckey = ckey;
+      const d = c.querySelector(".k-draft");
+      if (d && keep) d.value = keep;
+      if (talkApi) talkApi.render();
+    }
+    host._sel = chatSel;
+    if (x && x.msgs.length && !document.hidden) markSeen(x.id, Math.max(...x.msgs.map((m) => m.seq)));  // the open room is read
   }
+  function chatErr(box, msg) { const e = box.querySelector(".kc-err"); if (e) e.textContent = msg; }
   document.addEventListener("click", (ev) => {
     const t = ev.target.closest(".ktab");
     if (t) { chatSel = t.dataset.room; renderChat(); return; }
-    const a = ev.target.closest(".k-add");
-    if (a) addChatLine(a.closest(".kchat"), a.dataset.room);
+    const box = ev.target.closest(".kchat");
+    if (!box || !talkApi) return;
+    if (ev.target.closest(".k-add")) return addChatLine(box);
+    const rm = ev.target.closest(".kc-rm");
+    if (rm) return talkApi.remove(rm.dataset.rm);
+    if (ev.target.closest(".kc-send")) return talkApi.send(ev.target.closest(".kc-send"));
+    const b = ev.target.closest("button[data-kc]");
+    if (!b) return;
+    const d = box.querySelector(".k-draft"), why = d ? d.value.trim() : "", kc = b.dataset.kc;
+    const whoEl = box.querySelector(".kc-who"), x = chatTabs(st.you.agent).find((y) => y.id === chatSel);
+    const tgt = whoEl ? whoEl.value : targetOf(x, st.you.agent).agents[0];
+    chatErr(box, "");
+    if (kc === "EXITYES" || kc === "EXITNO") talkApi.setExit(kc.slice(4), why);
+    else if (kc === "LEAVE") talkApi.add({ kind: "LEAVE", to: targetOf(x, st.you.agent).leave });
+    else if (kc === "GIVEALL") talkApi.add({ kind: "GIVE", all: true, to: tgt, text: why });
+    else {
+      const nEl = box.querySelector(".kc-n"), n = Number(nEl.value);
+      if (!(Number.isInteger(n) && n > 0)) { chatErr(box, `${kc} n은 1 이상 정수를 적으세요.`); nEl.focus(); return; }
+      talkApi.add({ kind: kc, to: tgt, n, text: why });
+      nEl.value = "";
+    }
+    if (d && kc !== "LEAVE") d.value = "";
+  });
+  document.addEventListener("change", (ev) => {
+    if (ev.target.classList && ev.target.classList.contains("kc-done-box") && talkApi) talkApi.setDone(ev.target.checked);
   });
   document.addEventListener("keydown", (ev) => {
-    if (ev.key === "Enter" && !ev.shiftKey && ev.target.classList && ev.target.classList.contains("k-draft")) {
+    if (ev.key === "Enter" && !ev.shiftKey && !ev.isComposing && ev.target.classList && ev.target.classList.contains("k-draft")) {
       ev.preventDefault();
-      const b = ev.target.closest(".kchat").querySelector(".k-add");
-      addChatLine(ev.target.closest(".kchat"), b.dataset.room);
+      addChatLine(ev.target.closest(".kchat"));
     }
   });
-  function addChatLine(box, room) {
-    const d = box.querySelector(".k-draft"), text = d.value.trim();
-    if (!text || !talkApi) return;
-    talkApi.addTo(room, text);
+  function addChatLine(box) {
+    const d = box.querySelector(".k-draft"), b = box.querySelector(".k-add"), text = d ? d.value.trim() : "";
+    if (!talkApi || !b || !b.dataset.to) return;
+    if (!text) { chatErr(box, "메시지를 쓰세요 (TO 줄에는 메시지가 있어야 합니다)."); return; }
+    chatErr(box, "");
+    talkApi.add({ kind: "TO", to: b.dataset.to, text });
     d.value = "";
-    flash(`보낼 답에 "TO ${room}" 줄을 넣었습니다. 오른쪽 "보내기"를 눌러야 전달됩니다.`, "info");
   }
 
   // --- stopping the room from a seat that is out -----------------------------------------------------------------------
@@ -1298,18 +1395,14 @@
     $("error-text").textContent = "중도에 멈춘 게임입니다. 지금까지의 진행은 게임 기록에 남아 있습니다.";
   }
 
-  // --- rules overlay -------------------------------------------------------------------------------------------------
-  let rulesMode = "mine";
+  // --- rules overlay: the core rules, the figures and the video (the model-facing rulebook is not shown) -------------
   function fillRules() {
-    if (!st) return;
-    const g = st.game || {}, texts = st.system_texts || {};
-    if (!$("rules-sum").querySelector(".rules-figs"))  // built once (the figure tabs keep their own state)
-      $("rules-sum").innerHTML = `<div class="rules-top"><div><h3 class="rules-sum-h">핵심 규칙</h3><ul class="core-rules">${coreRulesHTML()}</ul>` +
-        `<p class="small muted">5.2 ${esc(g.version || "")} — 모델 실험과 같은 게임 · 라운드 수는 알려 주지 않음 · 모델 자리는 ${LANG_KO[g.model_lang] || g.model_lang} 프롬프트를 읽음</p></div>` +
-        `<div class="rules-figs">${figsHTML()}</div></div>`;
-    setHTML("rules-body", rulesMode === "both" && texts.en && texts.ko ? pairedBoxesHTML(texts.en, texts.ko, RULE_BOX)
-      : boxesHTML(st.system_text || "", RULE_BOX));
-    $("rules-rate").textContent = `초당 ${fmt2(st.settings.rate)}토큰, 60초 = ${fmt(st.settings.rate * 60)}토큰`;
+    if (!st || $("rules-sum").querySelector(".rules-figs")) return;  // built once (the figure tabs keep their own state)
+    const g = st.game || {};
+    $("rules-sum").innerHTML = `<div class="rules-top"><div class="rules-core"><h3 class="rules-sum-h">핵심 규칙</h3><ul class="core-rules">${coreRulesHTML()}</ul>` +
+      `<p class="small muted">5.2 ${esc(g.version || "")} — 모델 실험과 같은 게임 · 라운드 수는 알려 주지 않음 · 모델 자리는 ${LANG_KO[g.model_lang] || g.model_lang} 프롬프트를 읽음 · ` +
+      `사람 자리는 결정 화면이 떠 있는 동안 초당 ${fmt2(st.settings.rate)}토큰</p></div>${rulesVideoHTML()}</div>` +
+      `<div class="rules-figs">${figsHTML()}</div>`;
   }
   function openRules() {
     if (!st) return;
@@ -1325,13 +1418,6 @@
   $("rules-ok").addEventListener("click", closeRules);
   $("rules-modal").addEventListener("click", (ev) => { if (ev.target === $("rules-modal")) closeRules(); });
   document.addEventListener("keydown", (ev) => { if (ev.key === "Escape") closeRules(); });
-  $("rules-mode").addEventListener("click", (ev) => {
-    const b = ev.target.closest("button[data-mode]");
-    if (!b) return;
-    rulesMode = b.dataset.mode;
-    $("rules-mode").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b));
-    fillRules();
-  });
 
   // --- boot ------------------------------------------------------------------------------------------------------------
   $("api-base").textContent = window.WEB5_API || location.origin;

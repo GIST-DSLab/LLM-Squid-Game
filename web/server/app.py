@@ -2,6 +2,9 @@
 
 Rooms (part 2)
     POST /api/rooms                         {host_name, lang, settings{...}}      -> {code, token, agent}
+                                            settings.plan = 4 x {who: me | human | model | bot | empty, ...}: who sits
+                                            where (the maker in the "me" seat); seed, rate and the TALK / SOLVE time
+                                            limits are the server's own (SERVER_SETTINGS: a client's values are ignored)
     POST /api/rooms/{code}/join             {name, lang}                          -> {token, agent}
     POST /api/rooms/{code}/start?token=     host only
     POST /api/rooms/{code}/lang?token=      {lang: en | ko}: what this person reads (the rulebook at once, the messages
@@ -83,8 +86,12 @@ DEFAULT_CORS = ["http://localhost:5600", "http://127.0.0.1:5600", "http://localh
 FRONTEND = Path(__file__).resolve().parents[1] / "frontend"
 
 
+SERVER_SETTINGS = ("seed", "rate", "talk_timeout_s", "timeout_s")  # the server's own: a client's values are ignored
+
+
 def make_app(store: Store | None = None, export_root: Path | None = None, runs_root: Path | None = None,
-             monitor_root: Path | None = None) -> FastAPI:
+             monitor_root: Path | None = None, client_settings: bool = False) -> FastAPI:
+    """``client_settings`` (tests only): take SERVER_SETTINGS from the client too (a fixed seed, a fast clock)."""
     app = FastAPI(title="squid5 web5", version="0.1")
     origins = [o.strip() for o in os.environ.get("WEB5_CORS_ORIGINS", "").split(",") if o.strip()] or DEFAULT_CORS
     app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=["*"], allow_headers=["*"])
@@ -146,8 +153,11 @@ def make_app(store: Store | None = None, export_root: Path | None = None, runs_r
 
     @app.post("/api/rooms")
     def create_room(request: Request, body: dict = Body(default={})) -> dict:
+        asked = dict(body.get("settings") or {})
+        if not client_settings:  # the seed is always drawn here; a person's clock and time limits are the server's
+            asked = {k: v for k, v in asked.items() if k not in SERVER_SETTINGS}
         try:
-            settings = RoomSettings(**(body.get("settings") or {}))
+            settings = RoomSettings(**asked)
         except (TypeError, ValueError) as err:
             raise HTTPException(400, f"bad settings: {err}") from err
         try:

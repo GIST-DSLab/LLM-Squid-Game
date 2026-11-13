@@ -10,3 +10,6 @@ window.WEB5_LINK = (path) => (window.WEB5_API ? window.WEB5_API + "/" : "") + pa
 document.addEventListener("DOMContentLoaded", () => {
   if (window.WEB5_API) document.querySelectorAll("a[data-api-href]").forEach((a) => { a.href = window.WEB5_LINK(a.dataset.apiHref); });
 });
+// The arena's game-rules video (arena.js rulesVideoHTML). Empty until assets/rules/arena_rules.mp4 is added; then set
+// it to that path so the rules window and the lobby show it.
+window.WEB5_RULES_VIDEO = "";

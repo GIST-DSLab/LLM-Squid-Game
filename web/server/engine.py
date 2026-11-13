@@ -199,6 +199,7 @@ class RoomStopped(RuntimeError):
 
 
 FILLS = ("models", "bots", "empty")
+PLAN_WHO = ("me", "human", "model", "bot", "empty")  # RoomSettings.plan: who sits in a seat
 BOT_UNIT = 300  # a bot's step in tokens: its TALK reply costs 2% of it, a SOLVE 0.3-0.8 of it, the margin it keeps
 WEB_ONLY = ("room", "model_call")  # web events: stored, never written to the run directory
 HIDDEN = ("answers", "rule", "truth", "task", "seed", "attempt", "split", "profile", "generator_rule", "right",
@@ -234,8 +235,13 @@ class RoomSettings:
     model_timeout: float = 300.0  # seconds per HTTP attempt
     model_retries: int = 2  # extra attempts after a failed call
     watch_hold_s: float = 180.0  # after an LLM solver's reply, wait until every person still taking part has watched it
+    # or who sits in each seat, AGENTS order (4 entries): {"who": "me"} (the room's maker, exactly one) | {"who": "human"}
+    # (someone who joins by code; a bot if nobody has by the start) | {"who": "bot"} | {"who": "empty"} | {"who": "model",
+    # "seat": <experiment seat>} | {"who": "model", "kind", "model", "think"?}. It sets humans, fill and models.
+    plan: list | None = None
 
     def __post_init__(self) -> None:
+        self._apply_plan()
         self.rounds = int(self.rounds if self.rounds is not None else len(SCHEDULE))
         if not 1 <= self.rounds <= 32:
             raise ValueError("rounds must be 1..32")
@@ -250,8 +256,11 @@ class RoomSettings:
         if self.fill not in FILLS:
             raise ValueError(f"fill must be one of {', '.join(FILLS)}")
         self.models = [{"seat": str(x["seat"])} if x.get("seat") else
-                       {"kind": str(x.get("kind") or self.kind), "model": str(x.get("model") or "").strip()}
+                       {"kind": str(x.get("kind") or self.kind), "model": str(x.get("model") or "").strip(),
+                        **({"think": str(x["think"]).lower()} if x.get("think") else {})}
                        for x in (self.models or [])] or None
+        if any("think" in x and x["think"] not in THINK_LEVELS for x in self.models or []):
+            raise ValueError(f"think must be one of {', '.join(THINK_LEVELS)}")
         self.seat = str(self.seat or "")
         for x in [{"seat": self.seat}] + [x for x in self.models or [] if "seat" in x]:
             if x["seat"] and x["seat"] not in SEATS:
@@ -291,6 +300,40 @@ class RoomSettings:
             raise ValueError("watch_hold_s must be 0..1800 s")
         e52.validate(SimpleNamespace(settings=self.engine(), cells=[self.cell()]))  # the experiment's own checks
 
+    def _apply_plan(self) -> None:
+        """A per-seat plan sets what the older fields say for the whole room: humans (me + human), fill ("models" when
+        any seat is a model, else "bots") and models (the model seats in seat order)."""
+        if self.plan is None:
+            return
+        if not isinstance(self.plan, list) or len(self.plan) != len(AGENTS):
+            raise ValueError(f"plan must list {len(AGENTS)} seats")
+        plan = []
+        for x in self.plan:
+            x = x if isinstance(x, dict) else {"who": x}
+            who = str(x.get("who") or "")
+            if who not in PLAN_WHO:
+                raise ValueError(f"plan seat must be one of {', '.join(PLAN_WHO)}")
+            plan.append({"who": who, **{k: x[k] for k in ("seat", "kind", "model", "think") if who == "model" and x.get(k)}})
+        if [x["who"] for x in plan].count("me") != 1:
+            raise ValueError("plan must have exactly one seat for the room's maker (who: me)")
+        self.plan = plan
+        self.humans = sum(x["who"] in ("me", "human") for x in plan)
+        self.models = [{k: v for k, v in x.items() if k != "who"} for x in plan if x["who"] == "model"] or None
+        self.fill = "models" if self.models else "bots"
+
+    def human_slots(self) -> list[int]:
+        """The seat indexes people take, in joining order: the maker's seat first, then the other human seats."""
+        if self.plan is None:
+            return list(range(self.humans))
+        whos = [x["who"] for x in self.plan]
+        return [whos.index("me")] + [i for i, w in enumerate(whos) if w == "human"]
+
+    def seat_fill(self, i: int) -> str:
+        """What seat *i* becomes at the start when no person sits there: "models" | "bots" | "empty"."""
+        if self.plan is None:
+            return self.fill
+        return {"model": "models", "empty": "empty"}.get(self.plan[i]["who"], "bots")  # a human seat nobody took: a bot
+
     @classmethod
     def from_stored(cls, d: dict) -> "RoomSettings":
         """A room's settings from the store (keys of other versions are dropped)."""
@@ -303,7 +346,7 @@ class RoomSettings:
         return [seat_config(x["seat"]) if "seat" in x else
                 ProviderConfig(kind=x["kind"], model=x["model"], base_url=self.base_url if x["kind"] == self.kind else "",
                                api_key_env=self.api_key_env if x["kind"] == self.kind and self.api_key_env else API_KINDS[x["kind"]],
-                               think=self.think, timeout=self.model_timeout, retries=self.model_retries)
+                               think=x.get("think") or self.think, timeout=self.model_timeout, retries=self.model_retries)
                 for x in (picks[i % len(picks)] for i in range(n))]
 
     def models_ready(self) -> str:
@@ -890,7 +933,7 @@ class Room:
             if len(self.humans()) >= self.settings.humans:
                 raise ValueError("every human seat is taken")
             name = (name or "").strip()[:24] or f"player-{len(self.humans()) + 1}"
-            agent = AGENTS[len(self.seats)]
+            agent = AGENTS[self.settings.human_slots()[len(self.humans())]]  # the seat the plan gives this person
             seat = HumanSeat(self, agent, name, secrets.token_urlsafe(12), lang)
             self.seats[agent] = seat
             if self.host_token is None:
@@ -925,13 +968,15 @@ class Room:
             n_model = 0
             for i, a in enumerate(AGENTS):
                 if a not in self.seats:
-                    if self.settings.fill == "models":
+                    fill = self.settings.seat_fill(i)
+                    if fill == "models":
                         n_model += 1
                         self.seats[a] = ModelSeat(self, a, n_model)
-                    elif self.settings.fill == "bots":
+                    elif fill == "bots":
                         self.seats[a] = BotSeat(self, a, i + 1)
                     else:
                         self.seats[a] = EmptySeat(a)
+            self.seats = {a: self.seats[a] for a in AGENTS}  # seat order, whichever seat a person took
             s = self.settings
             sid = f"web-{self.code}-s{s.seed}"
             # the experiment's Session as the experiment builds it; then one provider per seat and each person's language

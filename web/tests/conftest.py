@@ -32,7 +32,7 @@ def runs_root(tmp_path):
 
 @pytest.fixture
 def client(store, tmp_path, runs_root):
-    app = make_app(store, export_root=tmp_path / "runs", runs_root=runs_root)
+    app = make_app(store, export_root=tmp_path / "runs", runs_root=runs_root, client_settings=True)  # fixed seeds, fast clocks
     with TestClient(app) as c:
         c.app_state = app.state
         yield c
