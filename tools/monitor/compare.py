@@ -969,22 +969,38 @@ _V33_LOCK = threading.Lock()
 
 def v33_board(root: Path) -> dict:
     """Every v33 condition's leaderboard (the paper's Table 1 columns) and the simulated rule agents, for the one-page
-    leaderboard. One computation at a time (the start-up warm-up and a first visitor share it); answers are memoised."""
+    leaderboard. Answers are memoised: a memo older than ``V33_TTL`` is still returned at once and refreshed in the
+    background (a visitor never waits for a recomputation, about 20 s on the deployed VM); only the very first call
+    (normally the start-up warm-up) computes while the caller waits. One computation at a time."""
     import time
+    hit = _V33_MEMO.get(str(root))
+    if hit:
+        if time.time() - hit[0] >= V33_TTL and _V33_LOCK.acquire(blocking=False):
+            def refresh():
+                try:
+                    _v33_compute(root)
+                finally:
+                    _V33_LOCK.release()
+            threading.Thread(target=refresh, daemon=True, name="v33-board-refresh").start()
+        return hit[1]
     with _V33_LOCK:
-        hit = _V33_MEMO.get(str(root))
-        if hit and time.time() - hit[0] < V33_TTL:
-            return hit[1]
-        all_runs = [r["run"] for r in serve.list_runs(root)]  # once for the five sections
-        sections = [{**leaderboard(root, s["picks"], all_runs), **{k: s[k] for k in ("key", "title", "note", "picks")}}
-                    for s in V33_SECTIONS]  # the section's own note over the leaderboard's generic one
-        rules = json.loads(RULE_AGENTS.read_text()) if RULE_AGENTS.is_file() else None
-        board = {"sections": sections, "rules": rules}
-        _V33_MEMO[str(root)] = (time.time(), board)
-        return board
+        hit = _V33_MEMO.get(str(root))  # the warm-up may have finished while this call waited
+        return hit[1] if hit else _v33_compute(root)
 
 
-V33_TTL = 600  # s: the board's runs are finished; a run still being written shows up within ten minutes
+def _v33_compute(root: Path) -> dict:
+    """The board itself (callers hold ``_V33_LOCK``); stored in ``_V33_MEMO``."""
+    import time
+    all_runs = [r["run"] for r in serve.list_runs(root)]  # once for the five sections
+    sections = [{**leaderboard(root, s["picks"], all_runs), **{k: s[k] for k in ("key", "title", "note", "picks")}}
+                for s in V33_SECTIONS]  # the section's own note over the leaderboard's generic one
+    rules = json.loads(RULE_AGENTS.read_text()) if RULE_AGENTS.is_file() else None
+    board = {"sections": sections, "rules": rules}
+    _V33_MEMO[str(root)] = (time.time(), board)
+    return board
+
+
+V33_TTL = 600  # s: after this a visitor still gets the memo at once and a background refresh picks up new runs
 _V33_MEMO: dict[str, tuple[float, dict]] = {}
 
 
