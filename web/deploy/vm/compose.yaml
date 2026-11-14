@@ -1,0 +1,28 @@
+# The arena API on one VM: the app (web/deploy/Dockerfile image) behind Caddy (HTTPS with an automatic certificate).
+# Data lives on the VM's persistent disk under /opt/arena/data (SQLite events + live run dirs) and every finished run
+# dir is also copied to the bucket (WEB5_GCS_BUCKET). Started by up.sh; see README.md.
+services:
+  app:
+    image: ${IMAGE}
+    restart: unless-stopped
+    env_file: .env            # written by up.sh: OLLAMA_API_KEY from Secret Manager, never stored in git
+    environment:
+      WEB5_DB_PATH: /data/arena.db
+      WEB5_RUNS_ROOT: /data/runs
+      WEB5_EXPORT_ROOT: /data/export
+      WEB5_GCS_BUCKET: ${BUCKET}
+      WEB5_CORS_ORIGINS: ${CORS}
+      WEB5_PUBLIC: "1"
+      WEB5_MODELS: gpt-oss:120b
+      WEB5_MAX_MODEL_ROOMS: "2"
+      WEB5_ROOMS_PER_IP_HOUR: "4"
+      WEB5_DAILY_TOKENS: "3000000"
+    volumes: ["/opt/arena/data:/data"]
+    expose: ["8600"]
+  caddy:
+    image: caddy:2.8
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment: {SITE_HOST: "${SITE_HOST}"}
+    volumes: ["./Caddyfile:/etc/caddy/Caddyfile:ro", "/opt/arena/caddy:/data"]
+    depends_on: [app]

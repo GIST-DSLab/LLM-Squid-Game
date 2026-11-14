@@ -1,0 +1,6 @@
+# HTTPS for the arena API (certificate from Let's Encrypt or ZeroSSL, renewed by Caddy). SITE_HOST is the VM's
+# name: <static ip with dashes>.sslip.io until the lab has its own domain.
+{$SITE_HOST} {
+	encode gzip zstd
+	reverse_proxy app:8600
+}
