@@ -1241,10 +1241,41 @@
   // the game-rules video in the site's own player (vplayer.js; config.js WEB5_RULES_VIDEO, empty = nothing shown or
   // requested). Autoplays muted and looped while on screen; a click pauses; it has Korean narration (data-audio: the
   // player's sound button and "소리 켜기" pill). The evaluation video lives on the leaderboard.
+  // Two cuts of the same rules (web/video): the explainer (default) and the drama (WEB5_RULES_DRAMA_VIDEO, empty = no
+  // switch). The switch above the player swaps every rules video on the page (lobby, rules overlay) to the chosen cut.
   const RULES_VIDEO = window.WEB5_RULES_VIDEO || "";
-  const rulesVideoHTML = () => !RULES_VIDEO ? "" : `<div class="rules-videos"><figure class="rules-video">` +
-    `<div class="vp" data-autoplay data-audio data-title="게임 규칙 영상" data-src="${RULES_VIDEO}" data-chapters="${RULES_VIDEO.replace(/\.mp4$/, ".chapters.json")}" ` +
-    `data-poster="${RULES_VIDEO.replace(/\.mp4$/, "_poster.jpg")}"></div><figcaption>게임 규칙 영상 · 한 라운드 3분 · 소리를 켜면 해설 · 누르면 멈춤</figcaption></figure></div>`;
+  const RULES_CUTS = [
+    { id: "explain", label: "설명판", src: RULES_VIDEO, title: "게임 규칙 영상", cap: "게임 규칙 영상 · 한 라운드 3분 · 소리를 켜면 해설 · 누르면 멈춤" },
+    { id: "drama", label: "드라마판", src: RULES_VIDEO && (window.WEB5_RULES_DRAMA_VIDEO || ""), title: "게임 규칙 영상 · 드라마판",
+      cap: "게임 규칙 영상 · 드라마판 3분 · 소리를 켜면 진행자 목소리 · 누르면 멈춤" },
+  ].filter((c) => c.src);
+  let rulesCut = "explain";
+  const rulesCutNow = () => RULES_CUTS.find((c) => c.id === rulesCut) || RULES_CUTS[0];
+  const rulesVpHTML = (c) => `<div class="vp" data-autoplay data-audio data-title="${esc(c.title)}" data-src="${esc(c.src)}" ` +
+    `data-chapters="${esc(c.src.replace(/\.mp4$/, ".chapters.json"))}" data-poster="${esc(c.src.replace(/\.mp4$/, "_poster.jpg"))}"></div>`;
+  const rulesCutsHTML = () => RULES_CUTS.length < 2 ? "" : `<div class="vcut" role="group" aria-label="영상 판">` +
+    RULES_CUTS.map((c) => `<button type="button" class="vcut-btn${c.id === rulesCutNow().id ? " on" : ""}" data-vcut="${c.id}" ` +
+      `aria-pressed="${c.id === rulesCutNow().id}">${esc(c.label)}</button>`).join("") + `</div>`;
+  const rulesVideoHTML = () => !RULES_CUTS.length ? "" : `<div class="rules-videos"><figure class="rules-video">${rulesCutsHTML()}` +
+    `${rulesVpHTML(rulesCutNow())}<figcaption>${esc(rulesCutNow().cap)}</figcaption></figure></div>`;
+  document.addEventListener("click", (ev) => {
+    const b = ev.target.closest("button[data-vcut]");
+    if (!b || b.dataset.vcut === rulesCut) return;
+    rulesCut = b.dataset.vcut;
+    const c = rulesCutNow();
+    document.querySelectorAll(".rules-video").forEach((fig) => {
+      const old = fig.querySelector(".vp");
+      const v = old && old.querySelector("video");
+      if (v) { v.pause(); v.muted = true; }  // a detached video must not keep playing its sound
+      if (old) old.outerHTML = rulesVpHTML(c);  // vplayer.js mounts the new .vp (its MutationObserver)
+      fig.querySelectorAll("button[data-vcut]").forEach((x) => {
+        x.classList.toggle("on", x.dataset.vcut === c.id);
+        x.setAttribute("aria-pressed", String(x.dataset.vcut === c.id));
+      });
+      const cap = fig.querySelector("figcaption");
+      if (cap) cap.textContent = c.cap;
+    });
+  });
   let figOn = "round";
   function figsHTML() {
     const f = FIGS.find((x) => x.id === figOn) || FIGS[0];

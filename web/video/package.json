@@ -3,10 +3,12 @@
   "private": true,
   "description": "The arena's game-rules explainer (Remotion, React -> MP4) with Korean narration",
   "scripts": {
-    "start": "node scripts/scan.mjs && remotion studio",
+    "start": "node scripts/scan.mjs && node scripts/scan.mjs --drama && remotion studio",
     "tts": "node scripts/tts.mjs && node scripts/scan.mjs",
-    "scan": "node scripts/scan.mjs",
+    "tts:drama": "node scripts/tts.mjs --drama && node scripts/sfx.mjs && node scripts/scan.mjs --drama",
+    "scan": "node scripts/scan.mjs && node scripts/scan.mjs --drama",
     "build": "node scripts/build.mjs",
+    "build:drama": "node scripts/build.mjs --drama",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

@@ -14,6 +14,9 @@ document.addEventListener("DOMContentLoaded", () => {
 // The arena's game-rules video (arena.js rulesVideoHTML) with Korean narration, made locally by the Remotion project
 // web/video (npm run build) from the paper's Figure 1 and sprites. Empty = no video (nothing is requested).
 window.WEB5_RULES_VIDEO = "assets/rules/arena_rules.mp4";
+// The same rules as a drama (a host speaking to the four agents; web/video npm run build:drama). Non-empty = a
+// "설명판 / 드라마판" switch above the rules video (the explainer stays the default). Empty = no switch.
+window.WEB5_RULES_DRAMA_VIDEO = "assets/rules/arena_rules_drama.mp4";
 // The evaluation video (what the arena measures and the main results), made by web/tools/make_eval_video.py; shown on
 // the leaderboard page in a disclosure (leaderboard.js). Empty = not shown (nothing is requested).
 window.WEB5_EVAL_VIDEO = "assets/rules/arena_eval.mp4";

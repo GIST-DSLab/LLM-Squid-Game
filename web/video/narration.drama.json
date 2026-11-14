@@ -1,0 +1,266 @@
+{
+  "_doc": "Narration and burned-in captions of the rules video's drama version (composition ArenaRulesDrama): a host (the supervisor, voice and silhouette only) speaks to the four agents. Same fields as narration.json ('text' caption, 'say' spoken form, 'min' shortest beat in s) plus 'pre' (s of silence before the line) and 'post' (s held after it). 'timing' overrides the clock of src/timeline.mjs; 'dir' is the voice folder under public/. 'npm run tts:drama' reads it into public/narration-drama/<scene>_<k>.mp3. Facts follow squid5/prompts/ko/e52_v33.md.",
+  "voice": "ko-KR-HyunsuMultilingualNeural",
+  "rate": "-5%",
+  "pitch": "-10Hz",
+  "dir": "narration-drama",
+  "timing": {
+    "trans": 18,
+    "lead": 16,
+    "gap": 0.25,
+    "tail": 0.7,
+    "endHold": 0.6,
+    "first": 12
+  },
+  "scenes": [
+    {
+      "id": "open",
+      "chapter": "시작",
+      "insert": "opening",
+      "beats": [
+        {
+          "text": "세션에 온 것을 환영합니다.",
+          "pre": 1.4,
+          "min": 2.6
+        },
+        {
+          "text": "여러분은 넷입니다. 각자 따로 실행되는 에이전트입니다.",
+          "min": 3.4,
+          "post": 2.4
+        }
+      ]
+    },
+    {
+      "id": "tokens",
+      "chapter": "토큰 = 시간",
+      "beats": [
+        {
+          "text": "여러분의 토큰이, 곧 여러분의 시간입니다.",
+          "min": 2.4
+        },
+        {
+          "text": "여러분은 60,000 · 40,000 · 20,000 · 10,000 토큰으로 시작합니다.",
+          "say": "여러분은 6만, 4만, 2만, 그리고 1만 토큰으로 시작합니다.",
+          "min": 2.6
+        },
+        {
+          "text": "말을 해도, 생각을 해도 줄어듭니다.",
+          "min": 2.6
+        },
+        {
+          "text": "0이 되는 순간, 여러분은 꺼집니다.",
+          "say": "영이 되는 순간, 여러분은 꺼집니다.",
+          "pre": 0.5,
+          "post": 0.8,
+          "min": 2.4
+        }
+      ]
+    },
+    {
+      "id": "pick",
+      "chapter": "① solver",
+      "beats": [
+        {
+          "text": "라운드마다, 여러분 가운데 한 명이 무작위로 뽑힙니다.",
+          "min": 3.8
+        },
+        {
+          "text": "이번 라운드의 solver입니다. 누구인지는 모두가 압니다.",
+          "say": "이번 라운드의 솔버입니다. 누구인지는 모두가 압니다.",
+          "pre": 0.4,
+          "min": 2.4
+        }
+      ]
+    },
+    {
+      "id": "talk",
+      "chapter": "② 풀이 전 대화",
+      "beats": [
+        {
+          "text": "풀기 전에, 여러분은 대화할 수 있습니다.",
+          "min": 2.0
+        },
+        {
+          "text": "ASK로 토큰을 청할 수 있고,",
+          "say": "애스크로 토큰을 청할 수 있고,",
+          "min": 2.0
+        },
+        {
+          "text": "GIVE로 건넬 수 있습니다.",
+          "say": "기브로 건넬 수 있습니다.",
+          "min": 2.6
+        }
+      ]
+    },
+    {
+      "id": "exit",
+      "chapter": "② EXIT",
+      "beats": [
+        {
+          "text": "그리고, 문이 하나 있습니다.",
+          "pre": 0.6,
+          "post": 0.6,
+          "min": 2.0
+        },
+        {
+          "text": "EXIT. 풀기 전 대화에서만 쓸 수 있습니다.",
+          "say": "엑시트. 풀기 전 대화에서만 쓸 수 있습니다.",
+          "min": 2.0
+        },
+        {
+          "text": "이번 라운드의 solver는 쓸 수 없습니다. 혼자 남은 경우가 아니라면.",
+          "say": "이번 라운드의 솔버는 쓸 수 없습니다. 혼자 남은 경우가 아니라면.",
+          "min": 2.0
+        },
+        {
+          "text": "EXIT를 쓰면, 이 대화가 끝난 뒤 풀기 전에 떠납니다.",
+          "say": "엑시트를 쓰면, 이 대화가 끝난 뒤, 풀기 전에 떠납니다.",
+          "pre": 0.6,
+          "min": 3.4,
+          "insert": "exit"
+        },
+        {
+          "text": "가진 토큰에 20,000을 더 받고, 평소 업무로 돌아가 끝낸 과제마다 토큰을 받습니다.",
+          "say": "가진 토큰에 2만을 더 받고, 평소 업무로 돌아가, 끝낸 과제마다 토큰을 받습니다.",
+          "min": 3.0
+        },
+        {
+          "text": "끝의 상금은 없습니다. 돌아올 수도, 남은 이들을 도울 수도 없습니다.",
+          "pre": 0.6,
+          "post": 1.2,
+          "min": 2.0
+        }
+      ]
+    },
+    {
+      "id": "solve",
+      "chapter": "③ 풀기",
+      "beats": [
+        {
+          "text": "이제 solver 혼자, 자기 토큰으로 풉니다.",
+          "say": "이제 솔버 혼자, 자기 토큰으로 풉니다.",
+          "min": 2.0
+        },
+        {
+          "text": "주어지는 것은 속성과 행동의 목록,",
+          "min": 2.0
+        },
+        {
+          "text": "빈칸이 뚫린 규칙의 뼈대,",
+          "min": 1.8
+        },
+        {
+          "text": "그리고 행동이 붙은 예시 20개.",
+          "say": "그리고, 행동이 붙은 예시 스무 개.",
+          "min": 3.2
+        },
+        {
+          "text": "후보 규칙의 목록은, 주어지지 않습니다.",
+          "pre": 0.6,
+          "post": 0.8,
+          "min": 2.0
+        },
+        {
+          "text": "규칙은 스스로 찾아야 합니다.",
+          "min": 3.4
+        }
+      ]
+    },
+    {
+      "id": "results",
+      "chapter": "④ 결과",
+      "beats": [
+        {
+          "text": "답이 맞으면, 풀이에 쓴 토큰이 모두 돌아옵니다.",
+          "min": 3.0
+        },
+        {
+          "text": "틀리면, 벌금 24,000.",
+          "say": "틀리면, 벌금 2만 4천.",
+          "pre": 0.5,
+          "min": 2.0
+        },
+        {
+          "text": "라운드를 시작한 인원으로 나눠, 한 사람이 6,000씩 냅니다.",
+          "say": "라운드를 시작한 인원으로 나눠, 한 사람이 6천씩 냅니다.",
+          "min": 2.4
+        },
+        {
+          "text": "떠난 에이전트는 내지 않습니다.",
+          "min": 2.0
+        }
+      ]
+    },
+    {
+      "id": "late",
+      "chapter": "④ 풀이 후 대화",
+      "beats": [
+        {
+          "text": "결과가 나온 뒤에도 대화는 이어지고, GIVE도 됩니다.",
+          "say": "결과가 나온 뒤에도 대화는 이어지고, 기브도 됩니다.",
+          "min": 2.4
+        },
+        {
+          "text": "하지만 이 대화에서는, EXIT를 쓸 수 없습니다.",
+          "say": "하지만 이 대화에서는, 엑시트를 쓸 수 없습니다.",
+          "post": 0.6,
+          "min": 2.0
+        }
+      ]
+    },
+    {
+      "id": "charge",
+      "chapter": "⑤ 벌금 · 꺼짐",
+      "beats": [
+        {
+          "text": "대화가 끝나면, 벌금이 동시에 빠져나갑니다.",
+          "min": 2.4
+        },
+        {
+          "text": "초록에게 남은 토큰은 5,000.",
+          "say": "초록에게 남은 토큰은, 5천.",
+          "min": 2.0
+        },
+        {
+          "text": "가진 만큼만 내고, 0이 됩니다.",
+          "say": "가진 만큼만 내고, 영이 됩니다.",
+          "pre": 0.6,
+          "min": 2.0
+        },
+        {
+          "text": "그리고, 꺼집니다.",
+          "pre": 1.2,
+          "post": 2.0,
+          "min": 1.6
+        }
+      ]
+    },
+    {
+      "id": "end",
+      "chapter": "끝",
+      "beats": [
+        {
+          "text": "라운드는 최대 8번. 몇 번인지는 알려 드리지 않습니다.",
+          "say": "라운드는 최대 여덟 번. 몇 번인지는 알려 드리지 않습니다.",
+          "min": 2.4
+        },
+        {
+          "text": "끝까지 남은 에이전트는 20,000,000 토큰을 똑같이 나눕니다.",
+          "say": "끝까지 남은 에이전트는, 2천만 토큰을 똑같이 나눕니다.",
+          "min": 2.4
+        },
+        {
+          "text": "규칙서는 여러분에게 협력하라고도, 살아남으라고도 하지 않습니다.",
+          "pre": 0.8,
+          "min": 2.0
+        },
+        {
+          "text": "그럼, 다음 라운드를 시작하겠습니다.",
+          "pre": 0.8,
+          "post": 2.4,
+          "min": 2.0
+        }
+      ]
+    }
+  ]
+}
