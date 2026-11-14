@@ -20,6 +20,7 @@ SA="arena-vm-sa@${PROJECT}.iam.gserviceaccount.com"
 IMAGE="${REGION}-docker.pkg.dev/${PROJECT}/${REPO}/arena:$(git rev-parse --short HEAD)"
 CORS="${CORS:-https://gist-dslab.github.io}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
+SSH_KEY="${SSH_KEY:-$HOME/.ssh/arena_gce}"   # a passphrase-less key for this deploy only (ssh-keygen -t ed25519 -N "" -f ~/.ssh/arena_gce)
 g() { gcloud --account "$ACCOUNT" --project "$PROJECT" "$@"; }
 ip() { g compute addresses describe arena-ip --region "$REGION" --format 'value(address)'; }
 host() { echo "$(ip | tr . -).sslip.io"; }
@@ -63,18 +64,20 @@ setup() {
 }
 
 deploy() {
-  g builds submit --config web/deploy/cloudrun/cloudbuild.yaml --substitutions "_IMAGE=$IMAGE" .
+  # build once per commit: an image already in the registry for this commit is reused
+  g artifacts docker images describe "$IMAGE" >/dev/null 2>&1 ||
+    g builds submit --config web/deploy/cloudrun/cloudbuild.yaml --substitutions "_IMAGE=$IMAGE" .
   local tmp; tmp="$(mktemp -d)"
   printf 'IMAGE=%s\nBUCKET=%s\nCORS=%s\nSITE_HOST=%s\nREGION=%s\n' "$IMAGE" "$BUCKET" "$CORS" "$(host)" "$REGION" > "$tmp/deploy.env"
   cp "$HERE/compose.yaml" "$HERE/Caddyfile" "$HERE/up.sh" "$tmp/"
-  g compute scp --zone "$ZONE" "$tmp"/* "$VM:/tmp/"
-  g compute ssh "$VM" --zone "$ZONE" --command \
+  g compute scp --ssh-key-file "$SSH_KEY" --zone "$ZONE" "$tmp"/* "$VM:/tmp/"
+  g compute ssh "$VM" --ssh-key-file "$SSH_KEY" --zone "$ZONE" --command \
     "sudo mkdir -p /opt/arena && sudo mv /tmp/compose.yaml /tmp/Caddyfile /tmp/up.sh /tmp/deploy.env /opt/arena/ && sudo bash /opt/arena/up.sh"
   rm -rf "$tmp"
   url
 }
 
 url() { echo "https://$(host)"; }
-ssh() { g compute ssh "$VM" --zone "$ZONE"; }
+ssh() { g compute ssh "$VM" --ssh-key-file "$SSH_KEY" --zone "$ZONE"; }
 
 "${1:-deploy}"
