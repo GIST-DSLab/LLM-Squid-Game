@@ -53,8 +53,21 @@ class Store:
         return self._conn
 
     def _exec(self, sql: str, params: tuple = ()):
-        cur = self.conn.cursor()
-        cur.execute(self.q(sql), params)
+        try:
+            cur = self.conn.cursor()
+            cur.execute(self.q(sql), params)
+        except Exception as err:  # noqa: BLE001
+            # a long-lived server's Postgres connection can be dropped (idle timeout, database restart or
+            # maintenance): open a new one and run the statement once more; anything else is raised as before
+            if not self.dsn or type(err).__name__ not in ("OperationalError", "InterfaceError"):
+                raise
+            try:
+                self._conn.close()
+            except Exception:  # noqa: BLE001
+                pass
+            self._conn = None
+            cur = self.conn.cursor()
+            cur.execute(self.q(sql), params)
         if not self.dsn:
             self.conn.commit()
         return cur

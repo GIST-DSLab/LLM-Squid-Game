@@ -1,0 +1,6 @@
+# Cloud Build: the web5 API image from the repo root (web/deploy/Dockerfile), pushed to Artifact Registry.
+# Used by web/deploy/cloudrun/deploy.sh:  gcloud builds submit --config web/deploy/cloudrun/cloudbuild.yaml --substitutions _IMAGE=...
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args: ["build", "-f", "web/deploy/Dockerfile", "-t", "${_IMAGE}", "."]
+images: ["${_IMAGE}"]

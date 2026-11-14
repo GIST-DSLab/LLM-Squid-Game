@@ -1,7 +1,7 @@
 # squid5 web5 API. Build from the repo root:  docker build -f web/deploy/Dockerfile -t squid5-web5 .
 FROM python:3.12-slim
 WORKDIR /app
-RUN pip install --no-cache-dir fastapi "uvicorn[standard]" httpx pyyaml numpy matplotlib psycopg[binary]
+RUN pip install --no-cache-dir fastapi "uvicorn[standard]" httpx pyyaml numpy matplotlib "psycopg[binary]" google-cloud-storage
 # the arena runs the experiment engine itself (web/server/engine.py imports squid5 from the repo root = /app)
 COPY squid5 /app/squid5
 # web/server/signal.py reads the experiment configs (configs/squid5/e52v14*.yaml) at import time; without them the app

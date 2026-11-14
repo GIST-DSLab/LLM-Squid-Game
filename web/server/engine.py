@@ -1149,6 +1149,9 @@ class Room:
         finally:
             if self.writer is not None:
                 self.writer.close()
+                from .archive import upload_run_async  # the run dir to the bucket, if WEB5_GCS_BUCKET is set
+
+                upload_run_async(self.writer.dir)
 
     def stop(self, seat: HumanSeat) -> None:
         """A person whose seat is out (shut down, EXITed, or given up) ends the room instead of watching the models play

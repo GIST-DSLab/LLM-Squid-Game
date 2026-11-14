@@ -1,0 +1,18 @@
+# The web5 API image (web/deploy/Dockerfile) copies only code and web/data/runs; keep the records out of the build context.
+.git
+.claude
+result
+results
+outputs
+docs
+paper
+weekly-report
+assets
+qwen-persona-arena
+**/__pycache__
+# .gcloudignore: what `gcloud builds submit` (web/deploy/cloudrun/deploy.sh) leaves out of the upload; the same list as
+# .dockerignore plus local-only folders. Without this file gcloud would upload the whole checkout (result/, paper/ ...).
+.gcloudignore
+.venv
+node_modules
+web/video
