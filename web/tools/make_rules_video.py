@@ -365,6 +365,7 @@ def talk_scene(t: float, dur: float) -> Image.Image:
     if gone > 0:
         txt(d, (ROW["purple"], BASE - 90), "떠남", font=font(30, "bold"), fill=(*DIM, int(255 * gone)), anchor="mm")
         txt(d, (ROW["purple"], BASE - 50), "끝 상금 포기", font=font(22, "medium"), fill=(*DIM, int(255 * gone)), anchor="mm")
+        txt(d, (ROW["purple"], BASE - 18), "돌아올 수 없음", font=font(22, "medium"), fill=(*DIM, int(255 * gone)), anchor="mm")
     # ASK bubble from orange toward blue
     if 0.5 <= t < 3.3:
         a = ramp(t, 0.5, 0.9) * (1 - ramp(t, 2.9, 3.3))
@@ -385,7 +386,9 @@ def talk_scene(t: float, dur: float) -> Image.Image:
     floater(d, t, 9.3, px - 150, BASE - 150, "+20,000", GREEN, 38)
     captions(img, t, [(0, "풀기 전에 넷이 대화합니다. 주황(solver)이 ASK로 파랑에게 토큰 3,000을 청합니다."),
                       (3.4, "파랑이 GIVE 3,000으로 건넵니다. 파랑 잔액은 줄고 주황 잔액은 늘어납니다."),
-                      (6.4, "solver가 아니면 EXIT로 떠날 수 있습니다. 남은 토큰에 20,000을 더 받고, 끝 상금은 포기합니다.")])
+                      (6.4, "solver가 아니면 EXIT로 떠날 수 있습니다. 남은 토큰에 20,000을 더 받고, 끝 상금은 포기합니다."),
+                      (11.2, "EXIT는 세션을 아예 떠나는 것입니다. 쓴 뒤로는 더 호출되지 않고, 이 대화가 끝나면 풀기 전에 빠집니다."),
+                      (14.4, "다음 라운드에 돌아올 수 없고 동료를 더 도울 수도 없습니다. 같은 답에 쓴 GIVE까지만 실행됩니다.")])
     return img
 
 
@@ -429,8 +432,9 @@ def solve_scene(t: float, dur: float) -> Image.Image:
     img, d = frame()
     heading(img, 3, "풀기 — 숨은 규칙 찾기")
     note(img, "실제 과제는 단서 20개 · 여기는 5개로 줄인 예")
-    t_clue = [1.0, 2.8, 4.6, 9.4, 11.2]
-    t_new, t_apply = 6.6, 13.2
+    t_clue = [3.6, 6.4, 8.2, 13.0, 14.8]
+    t_new, t_apply = 10.2, 16.8
+    hyp = ramp(t, 3.0, 3.6)  # the hypotheses are the solver's own, drawn after "what the solver gets"
     # clue table (left)
     tx0, tx1, ty0, rh = 50, 520, 128, 58
     f = font(24, "bold")
@@ -459,16 +463,23 @@ def solve_scene(t: float, dur: float) -> Image.Image:
             arrow(d, tx1 - 50, yn + 25, RULES[0][2](*NEW), 34, (255, 255, 255, int(255 * ans)))
         else:
             txt(d, (tx1 - 50, yn + 25), "?", font=font(34, "extra"), fill=(*INK, int(255 * an)), anchor="mm")
-    # candidate rules (right): the rule on the first line; on the second, why it is out or what it says for the new signal
+    # what the solver is given besides the clues: the rule's skeleton with blanks (no list of rules)
+    ag = ramp(t, 0.3, 0.8)
+    d.rounded_rectangle((tx0, 518, 590, 568), 10, fill=(*PANEL, int(255 * ag)), outline=(*PINK, int(160 * ag)), width=2)
+    txt(d, (tx0 + 14, 543), "주어진 뼈대", font=font(20, "bold"), fill=(*PINK, int(255 * ag)), anchor="lm")
+    txt(d, (tx0 + 132, 543), "if ___: ___  elif ___: ___  else: ___", font=font(20, "bold"), fill=(*INK, int(255 * ag)),
+        anchor="lm")
+    # the solver's hypotheses (right): the rule on the first line; on the second, why it is out or what it says for the new signal
     cx0, cx1, cy0, ch = 560, 1240, 126, 80
-    txt(d, (cx0, cy0), "후보 규칙", font=font(24, "bold"), fill=DIM, anchor="lm")
+    txt(d, (cx0, cy0), "solver가 세운 가설", font=font(24, "bold"), fill=(*DIM, int(255 * hyp)), anchor="lm")
+    txt(d, (cx1, cy0), "목록은 주어지지 않음", font=font(20, "bold"), fill=(*PINK, int(255 * hyp)), anchor="rm")
     for j, (lab, text, rule) in enumerate(RULES):
         y = cy0 + 18 + j * (ch + 8)
         out = OUT_AT[lab]
         x_k = ramp(t, t_clue[out] + 0.5, t_clue[out] + 1.1) if out is not None else 0.0
         fade = 1 - 0.6 * x_k
         hi = ramp(t, t_apply, t_apply + 0.5) if lab == "A" else 0.0
-        a = int(255 * fade)
+        a = int(255 * fade * hyp)
         d.rounded_rectangle((cx0, y, cx1, y + ch), 12, fill=(*PANEL, a),
                             outline=(*(PINK if hi else (70, 70, 84)), a), width=3 if hi else 2)
         d.ellipse((cx0 + 14, y + ch / 2 - 20, cx0 + 54, y + ch / 2 + 20), fill=(*((90, 90, 104) if not hi else PINK), a))
@@ -497,7 +508,8 @@ def solve_scene(t: float, dur: float) -> Image.Image:
     txt(d, (710, 528), "solver 잔액", font=font(20, "bold"), fill=DIM, anchor="lm")
     tokens_bar(d, 800, 540, sbal, VMAX, SEAT["orange"], w=150, num=False)
     txt(d, (900, 549), f"{round(sbal / 10) * 10:,}", font=font(26, "bold"), fill=INK, anchor="lm")
-    captions(img, t, [(0, "solver만 자기 토큰으로 풉니다. 단서(신호 → 행동)로 숨은 규칙을 찾습니다."),
+    captions(img, t, [(0, "solver만 자기 토큰으로 풉니다. 받는 것은 규칙의 뼈대(if · elif · else의 빈칸)와 단서(신호 → 행동)뿐입니다."),
+                      (3.0, "후보 규칙 목록은 주어지지 않습니다. 오른쪽 A~D는 solver가 스스로 세워 보는 가설의 예입니다."),
                       (t_clue[1], "단서 2: 파란 별 하나 → ←. '하나면 ↑'인 C는 어긋나서 빠집니다."),
                       (t_new, "단서 셋까지는 A · B · D가 다 맞지만, 새 신호에는 → 와 ↑로 갈립니다. 단서가 더 필요합니다."),
                       (t_clue[3], "단서 4는 B를, 단서 5는 D를 지웁니다. 남는 규칙은 A 하나입니다."),
@@ -559,6 +571,7 @@ def late_give_scene(t: float, dur: float) -> Image.Image:
     bal["green"] += LATE_GIFT * k
     seat_row(img, d, bal, {"blue": "give_blue" if 1.4 <= t < 3.8 else "stand_blue"}, skip=("purple",))
     txt(d, (ROW["purple"], BASE - 90), "떠남", font=font(30, "bold"), fill=DIM, anchor="mm")
+    txt(d, (ROW["purple"], BASE - 52), "대화에도 없음", font=font(22, "medium"), fill=DIM, anchor="mm")
     badge(d, 1090, 240, "오답: 벌금 확정", (150, 40, 50), size=22)
     for c in ("blue", "orange", "green"):
         txt(d, (ROW[c], BAR_Y + 76), f"낼 벌금 {SHARE:,}", font=font(20, "bold"), fill=RED, anchor="mm")
@@ -674,7 +687,7 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument("--chapters-only", action="store_true", help="write <out>.chapters.json and stop (no rendering)")
     a = ap.parse_args(argv)
     fig = Image.open(a.fig).convert("RGB")
-    scenes = [(title_scene, 3.0), (tokens_scene, 5.0), (pick_scene, 5.5), (talk_scene, 12.5), (solve_scene, 17.0),
+    scenes = [(title_scene, 3.0), (tokens_scene, 5.0), (pick_scene, 5.5), (talk_scene, 18.5), (solve_scene, 20.5),
               (results_scene, 7.5), (late_give_scene, 5.5), (charge_scene, 7.5), (end_scene(fig), 6.0)]
     titles = ["시작", "토큰 = 목숨", "① 푸는 에이전트", "② 풀이 전 대화", "③ 풀기 · 숨은 규칙 찾기", "④ 결과",
               "④ 풀이 후 대화", "⑤ 벌금", "다음 라운드"]
