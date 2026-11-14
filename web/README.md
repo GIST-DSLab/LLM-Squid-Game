@@ -155,7 +155,7 @@ POST /api/probe                       GET /api/probe/summary
 
 | 값 | 어디에 | 무엇 |
 |---|---|---|
-| 프런트 → 백엔드 URL | `web/frontend/config.js` → `window.WEB5_API` | Render 서비스 URL, 예 `https://squid5-web5-api.onrender.com` |
+| 프런트 → 백엔드 URL | `web/frontend/config.js` → `window.WEB5_API` | Google Cloud VM `https://34-22-73-222.sslip.io` (2026-11-14부터, `web/deploy/vm/README.md`; 그 전은 Render) |
 | 백엔드 → 허용 origin | Render 환경변수 `WEB5_CORS_ORIGINS` | Pages origin, 예 `https://gist-dslab.github.io` (경로 없이, 끝 슬래시 없이) |
 
 1. **Render**: `web/deploy/Dockerfile`(빌드 컨텍스트 = 저장소 루트)과 `web/deploy/render.yaml`을 쓴다. 대시보드 → New →

@@ -1,8 +1,9 @@
 // squid5 web5 frontend config. The one knob for the backend URL.
-// GitHub Pages (static only) -> the Render API; the backend's WEB5_CORS_ORIGINS must list the Pages origin.
+// GitHub Pages (static only) -> the arena API on the lab's Google Cloud VM (web/deploy/vm, since 2026-11-14; was Render);
+// the backend's WEB5_CORS_ORIGINS must list the Pages origin.
 // Local dev: the backend at 8600 serves this folder itself, so a same-origin "" works; a separate static server
 // (python -m http.server 5600) needs the explicit backend URL.
-window.WEB5_API = location.hostname.endsWith("github.io") ? "https://squid5-web5-api.onrender.com"
+window.WEB5_API = location.hostname.endsWith("github.io") ? "https://34-22-73-222.sslip.io"
   : location.port === "5600" ? "http://localhost:8600" : "";
 // The game-log viewer (/monitor/) needs the backend itself: links marked data-api-href go to the API origin when the
 // pages are served elsewhere (GitHub Pages, the 5600 static server); same-origin keeps the relative href.
