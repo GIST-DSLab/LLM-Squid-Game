@@ -1,4 +1,9 @@
-"""The arena's game-rules video (web/frontend/assets/rules/arena_rules.mp4), made locally from the paper's figures.
+"""The previous (Pillow) generator of the arena's game-rules video, kept as a fallback.
+
+Since 2026-11-14 the site's video web/frontend/assets/rules/arena_rules.mp4 is made by the Remotion project web/video
+(`npm run build` there: the same scenes with Korean narration, chapters and poster). This script still renders the
+silent 79 s version; point --out elsewhere unless you mean to replace the narrated one. web/tools/make_eval_video.py
+still reuses the helpers here.
 
 No generative model and no network: every frame is drawn with Pillow from the paper's Figure 1
 (web/frontend/assets/paper/arena_round_20261112.png, rendered from paper/cogsci2027/ko/figures/tracksuit_20261105/

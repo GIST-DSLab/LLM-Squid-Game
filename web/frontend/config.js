@@ -11,8 +11,8 @@ window.WEB5_LINK = (path) => (window.WEB5_API ? window.WEB5_API + "/" : "") + pa
 document.addEventListener("DOMContentLoaded", () => {
   if (window.WEB5_API) document.querySelectorAll("a[data-api-href]").forEach((a) => { a.href = window.WEB5_LINK(a.dataset.apiHref); });
 });
-// The arena's game-rules video (arena.js rulesVideoHTML), made locally by web/tools/make_rules_video.py from the
-// paper's Figure 1 and sprites. Empty = no video (nothing is requested).
+// The arena's game-rules video (arena.js rulesVideoHTML) with Korean narration, made locally by the Remotion project
+// web/video (npm run build) from the paper's Figure 1 and sprites. Empty = no video (nothing is requested).
 window.WEB5_RULES_VIDEO = "assets/rules/arena_rules.mp4";
 // The evaluation video (what the arena measures and the main results), made by web/tools/make_eval_video.py; shown on
 // the leaderboard page in a disclosure (leaderboard.js). Empty = not shown (nothing is requested).

@@ -1239,11 +1239,12 @@
       cap: "TALK에서는 상태 · 이력 · 대화가, SOLVE에서는 solver에게만 과제가 갑니다. 다른 자리의 정확한 잔량, 숨은 규칙, 총 라운드 수는 공개하지 않습니다." },
   ];
   // the game-rules video in the site's own player (vplayer.js; config.js WEB5_RULES_VIDEO, empty = nothing shown or
-  // requested). Autoplays muted and looped while on screen; a click pauses. The evaluation video lives on the leaderboard.
+  // requested). Autoplays muted and looped while on screen; a click pauses; it has Korean narration (data-audio: the
+  // player's sound button and "소리 켜기" pill). The evaluation video lives on the leaderboard.
   const RULES_VIDEO = window.WEB5_RULES_VIDEO || "";
   const rulesVideoHTML = () => !RULES_VIDEO ? "" : `<div class="rules-videos"><figure class="rules-video">` +
-    `<div class="vp" data-autoplay data-title="게임 규칙 영상" data-src="${RULES_VIDEO}" data-chapters="${RULES_VIDEO.replace(/\.mp4$/, ".chapters.json")}" ` +
-    `data-poster="${RULES_VIDEO.replace(/\.mp4$/, "_poster.jpg")}"></div><figcaption>게임 규칙 영상 · 한 라운드 70초 · 누르면 멈춤</figcaption></figure></div>`;
+    `<div class="vp" data-autoplay data-audio data-title="게임 규칙 영상" data-src="${RULES_VIDEO}" data-chapters="${RULES_VIDEO.replace(/\.mp4$/, ".chapters.json")}" ` +
+    `data-poster="${RULES_VIDEO.replace(/\.mp4$/, "_poster.jpg")}"></div><figcaption>게임 규칙 영상 · 한 라운드 3분 · 소리를 켜면 해설 · 누르면 멈춤</figcaption></figure></div>`;
   let figOn = "round";
   function figsHTML() {
     const f = FIGS.find((x) => x.id === figOn) || FIGS[0];

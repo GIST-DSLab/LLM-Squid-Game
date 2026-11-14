@@ -171,3 +171,9 @@ result/2026-09-09/score_equiv_probe/analysis/score_equiv_pilot/**/judge_cache/
 # Paper-agent loop review copy (2026-11-03): 4,648 files, 1.09 GB of PDFs. Kept on disk only (2026-11-13 researcher);
 # it was committed once (1c97242b, never pushed) and taken back out.
 /docs/history/paper-agent-loop-juhyeon-20261103/review/
+
+# The rules video's Remotion project (web/video): dependencies live in node_modules.nosync (iCloud skips *.nosync)
+# behind the node_modules symlink; out/ is render scratch.
+/web/video/node_modules
+/web/video/node_modules.nosync/
+/web/video/out/
