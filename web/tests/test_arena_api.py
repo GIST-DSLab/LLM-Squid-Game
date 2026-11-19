@@ -206,11 +206,31 @@ def test_a_seat_that_is_out_can_stop_the_room_and_sees_its_chats(client):
     pend = st["pending"]
     ps[0].submit({"kind": "talk", "round": pend["round"], "tick": pend["tick"], "phase": pend["phase"], "text": "TO R1: hello all\nDONE"})
     st = play(ps, lambda p, pend: None, until=lambda st: any(m["text"] == "hello all" for x in st["chats"] or [] for m in x["msgs"]))
+    assert not st["you"]["watching_all"]
     assert client.post(f"/api/rooms/{ps[0].code}/forfeit", params={"token": ps[0].token}).status_code == 200
+    assert ps[0].state()["you"]["watching_all"]  # out: it watches every chat
     assert client.post(f"/api/rooms/{ps[0].code}/stop", params={"token": ps[0].token}).json()["ok"]
     s = play(ps, lambda p, pend: None, until_status=("stopped", "finished", "error"))
     assert s["status"] == "stopped" and not s["error"] and len(s["rounds"]) < 8
     assert client.post(f"/api/rooms/{ps[0].code}/stop", params={"token": ps[0].token}).status_code == 409
+
+
+def test_a_seat_that_is_out_watches_every_room_in_full():
+    from types import SimpleNamespace
+    from web.server.engine import rooms_of
+
+    def msg(seq, src, text):
+        return {"seq": seq, "round": 1, "phase": "prep", "tick": seq, "src": src, "kind": "say", "text": text, "amount": 0,
+                "status": "done", "why": None}
+    a6, a11, a17 = TEAM_AGENTS[:3]
+    ses = SimpleNamespace(rooms=[
+        {"id": "R1", "members": list(TEAM_AGENTS), "left": {}, "closed": False, "group": True, "msgs": [msg(1, a11, "hi all")]},
+        {"id": "R2", "members": [a6, a11], "left": {a6: 2}, "closed": True, "msgs": [msg(2, a6, "bye"), msg(3, a11, "after")]},
+        {"id": "R3", "members": [a11, a17], "left": {}, "closed": False, "msgs": [msg(4, a17, "secret deal")]}])
+    mine = {x["id"]: [m["text"] for m in x["msgs"]] for x in rooms_of(ses, a6, 0)}
+    assert mine == {"R1": ["hi all"], "R2": ["bye"]}  # taking part: its own rooms, up to its leave
+    every = {x["id"]: [m["text"] for m in x["msgs"]] for x in rooms_of(ses, a6, 0, everyone=True)}
+    assert every == {"R1": ["hi all"], "R2": ["bye", "after"], "R3": ["secret deal"]}
 
 
 def test_the_server_draws_the_seed_and_keeps_its_own_clock(store, tmp_path):

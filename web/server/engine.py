@@ -398,16 +398,17 @@ def order_of(ses, me: str | None) -> list[str]:
     return sorted(ses.live(), key=lambda b: (-ses.w.balances[b], AGENTS.index(b)))
 
 
-def rooms_of(ses, me: str, since: int) -> list[dict]:
+def rooms_of(ses, me: str, since: int, everyone: bool = False) -> list[dict]:
     """*me*'s chats as ``e52.rooms_view`` shows them: members, who left, each message up to *me*'s leave, NEW since its
-    last call. Messages of one tick in agent order."""
+    last call. Messages of one tick in agent order. ``everyone`` (a person whose seat is out, watching): every room of
+    the session with all its messages."""
     out = []
-    for x in (x for x in ses.rooms if me in x["members"]):
-        upto = x["left"].get(me)
+    for x in (x for x in ses.rooms if everyone or me in x["members"]):
+        upto = None if everyone else x["left"].get(me)
         ms = sorted((m for m in x["msgs"] if upto is None or m["seq"] <= upto), key=lambda m: (
             m["round"], m["phase"] == "rescue", m["tick"], AGENTS.index(m["src"]), m["seq"]))
         out.append({"id": x["id"], "members": list(x["members"]), "left": sorted(x["left"], key=AGENTS.index),
-                    "closed": bool(x["closed"]), "you_left": upto is not None, "group": bool(x.get("group")),
+                    "closed": bool(x["closed"]), "you_left": me in x["left"], "group": bool(x.get("group")),
                     "msgs": [{"seq": m["seq"], "round": m["round"], "phase": m["phase"], "tick": m["tick"], "src": m["src"],
                               "kind": m["kind"], "text": m["text"], "amount": m["amount"], "status": m["status"],
                               "why": m["why"], "new": m["seq"] > since and m["src"] != me,
@@ -1317,9 +1318,11 @@ class Room:
             if me:
                 out["you"].update(balance=ses.w.balances[me], status=ses.stopped.get(me, "in"), record=ses.record[me])
                 out["ledger"] = ledger_of(ses, me)
+                watching = out["you"]["status"] != "in" or seat.forfeited  # out: it watches every chat (11-19 researcher)
+                out["you"]["watching_all"] = watching
                 try:  # my chats as my next call will show them (the page keeps its own unread counts); the session
                     # thread may be adding a message right now -- then the next poll has it
-                    out["chats"] = rooms_of(ses, me, 10**9)
+                    out["chats"] = rooms_of(ses, me, 10**9, everyone=watching)
                 except RuntimeError:
                     out["chats"] = None
                 p = seat.pending

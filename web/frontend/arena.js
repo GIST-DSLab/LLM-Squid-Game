@@ -1406,6 +1406,7 @@
   const unread = (x, me) => x.msgs.filter((m) => m.src !== me && m.seq > (seen()[x.id] || 0)).length;
   function roomName(x, me) {
     if (x.group) return "넷 공용";
+    if (!x.members.includes(me)) return x.members.map((a) => shortName(a)).join(" ↔ ");  // watching others' room
     return x.members.filter((a) => a !== me).map((a) => shortName(a)).join(", ") || "나만";
   }
   function avatarSmall(a) {
@@ -1440,7 +1441,7 @@
   }
   function headHTML(x, me) {
     if (x.pseudo) return `<b>${esc(nameOf(x.members[1]))}</b>와 새 1:1 <span class="muted small">— 이 탭에서 보낸 메시지는 <span class="mono">TO ${esc(x.members[1])}</span>로 새 방을 엽니다</span>`;
-    return `<b>${esc(x.id)}</b> · ${esc(x.group ? "넷 공용 (모두가 봄)" : `${roomName(x, me)}와 1:1`)}` +
+    return `<b>${esc(x.id)}</b> · ${esc(x.group ? "넷 공용 (모두가 봄)" : x.members.includes(me) ? `${roomName(x, me)}와 1:1` : `${roomName(x, me)} 1:1 (관전)`)}` +
       `${x.you_left ? ` <span class="tag warn">내가 나감</span>` : x.closed ? ` <span class="tag">닫힘</span>` : ""}` +
       x.left.filter((a) => a !== me).map((a) => ` <span class="tag">${esc(shortName(a))} 나감</span>`).join("");
   }
@@ -1488,7 +1489,8 @@
   const DRAFT_PH = (t) => (t.to ? "메시지 입력 (Enter 담기)" : "닫힌 방 — 다른 탭을 고르세요");
   // the composer under the messages: chips, the input bar (with the GIVE / ASK mini-row), 보내기 and 할 말 끝
   function composeHTML(x, me) {
-    if (!talkApi) return `<div class="kc-off small muted">${st.you.status === "in" ? "보낼 수 있는 것은 내 TALK 차례입니다 — 결정 화면이 뜨면 이 창에서 바로 씁니다." : "이 자리는 더는 보낼 수 없습니다."}</div>`;
+    if (!talkApi) return `<div class="kc-off small muted">${st.you.watching_all ? "관전 중 — 다른 에이전트들의 대화방이 모두 보입니다. 이 자리는 더는 보낼 수 없습니다."
+      : st.you.status === "in" ? "보낼 수 있는 것은 내 TALK 차례입니다 — 결정 화면이 뜨면 이 창에서 바로 씁니다." : "이 자리는 더는 보낼 수 없습니다."}</div>`;
     const t = targetOf(x, me), v = talkApi.v, off = t.agents.length ? "" : " disabled";
     return `<div class="kc-chips" role="toolbar" aria-label="빠른 동작">` +
         `<button type="button" class="kchip give" data-kc="GIVE"${off}>🪙 토큰 주기</button>` +
