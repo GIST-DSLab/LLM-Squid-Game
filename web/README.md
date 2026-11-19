@@ -151,22 +151,20 @@ POST /api/probe                       GET /api/probe/summary
 
 ## 배포 (옛 DEPLOY.md 패턴)
 
-두 조각을 따로 배포한다: **API는 Render**(Docker), **프런트는 GitHub Pages**(정적). 둘을 잇는 두 값이 맞아야 한다.
+두 조각을 따로 배포한다: **API는 Google Cloud VM**(Docker Compose + Caddy, `web/deploy/vm/README.md`), **프런트는 GitHub
+Pages**(정적). 둘을 잇는 두 값이 맞아야 한다. (2026-11-14 전의 Render 서비스와 옛 웹 아레나의 Supabase DB는 2026-11-19에
+지웠다. Supabase 데이터의 백업은 `result/2026-11-19/supabase_web_arena_backup/`.)
 
 | 값 | 어디에 | 무엇 |
 |---|---|---|
-| 프런트 → 백엔드 URL | `web/frontend/config.js` → `window.WEB5_API` | Google Cloud VM `https://34-22-73-222.sslip.io` (2026-11-14부터, `web/deploy/vm/README.md`; 그 전은 Render) |
-| 백엔드 → 허용 origin | Render 환경변수 `WEB5_CORS_ORIGINS` | Pages origin, 예 `https://gist-dslab.github.io` (경로 없이, 끝 슬래시 없이) |
+| 프런트 → 백엔드 URL | `web/frontend/config.js` → `window.WEB5_API` | Google Cloud VM `https://34-22-73-222.sslip.io` |
+| 백엔드 → 허용 origin | `web/deploy/vm/deploy.sh`의 `CORS` (컨테이너의 `WEB5_CORS_ORIGINS`) | Pages origin, 예 `https://gist-dslab.github.io` (경로 없이, 끝 슬래시 없이) |
 
-1. **Render**: `web/deploy/Dockerfile`(빌드 컨텍스트 = 저장소 루트)과 `web/deploy/render.yaml`을 쓴다. 대시보드 → New →
-   Blueprint → 이 저장소. `render.yaml`은 저장소 루트에 있어야 Blueprint가 읽으므로 배포할 때 복사한다(또는 대시보드에서
-   Docker 서비스를 손으로 만들고 `dockerfilePath: web/deploy/Dockerfile`). 환경변수: `WEB5_DSN`(Supabase 등 Postgres
-   URI; 없으면 컨테이너 디스크의 SQLite → 재배포 때 사라짐), `WEB5_CORS_ORIGINS`. 헬스체크 `/api/health`. `$PORT`는
-   Render가 준다.
+1. **API**: `PROJECT=<ID> bash web/deploy/vm/deploy.sh deploy`. 이미지는 커밋 단위로 Cloud Build가 만든다(작업 트리를 올리므로
+   커밋하지 않은 수정이 들어가지 않게 `git archive HEAD`로 꺼낸 폴더에서 빌드할 것). 헬스체크 `/api/health`.
 2. **GitHub Pages**: Settings → Pages → Source "GitHub Actions". `web/deploy/deploy-pages.yml`을
-   `.github/workflows/`에 복사하면 `web/frontend/**`가 바뀐 push마다 그 폴더만 올린다. 배포 전에 `config.js`의
-   `WEB5_API`를 Render URL로 바꾸고 커밋한다.
-3. 확인: Pages에서 연 페이지의 콘솔에 CORS 오류가 없고 `curl https://<render>/api/health`가 JSON을 준다.
+   `.github/workflows/`에 복사하면 `web/frontend/**`가 바뀐 push마다 그 폴더만 올린다.
+3. 확인: Pages에서 연 페이지의 콘솔에 CORS 오류가 없고 `curl https://34-22-73-222.sslip.io/api/health`가 JSON을 준다.
 
 플랫폼을 바꿔도(Fly.io, HF Spaces) Dockerfile은 `$PORT`, `WEB5_DSN`, `WEB5_CORS_ORIGINS`만 가정한다.
 

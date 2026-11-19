@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # The web5 arena API on one always-on Compute Engine VM (no cold start): Docker Compose with the app image and Caddy
 # (HTTPS), data on the VM's persistent disk (daily snapshots) and finished run dirs copied to a Cloud Storage bucket.
-# Replaces Render (web/deploy/render.yaml). See README.md here.
+# See README.md here.
 #
 #   PROJECT=<id> bash web/deploy/vm/deploy.sh setup    # once: APIs, image repo, bucket, key secret, account, IP, VM
 #   PROJECT=<id> bash web/deploy/vm/deploy.sh deploy   # build the image, copy the compose files, (re)start on the VM

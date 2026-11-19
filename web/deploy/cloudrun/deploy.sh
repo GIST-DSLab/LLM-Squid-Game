@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # The web5 arena API on Google Cloud: Cloud Run (one always-on instance), Cloud SQL Postgres (events), Cloud Storage
-# (finished run dirs), Secret Manager (keys). Replaces Render (web/deploy/render.yaml). See README.md here.
+# (finished run dirs), Secret Manager (keys). See README.md here.
 #
 #   PROJECT=<gcp project id> bash web/deploy/cloudrun/deploy.sh setup    # once: APIs, bucket, database, secrets, account
 #   PROJECT=<gcp project id> bash web/deploy/cloudrun/deploy.sh deploy   # build the image and (re)deploy the service
