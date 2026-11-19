@@ -8,7 +8,7 @@ services:
     env_file: .env            # written by up.sh: OLLAMA_API_KEY from Secret Manager, never stored in git
     environment:
       WEB5_DB_PATH: /data/arena.db
-      WEB5_RUNS_ROOT: /data/runs
+      WEB5_RUNS_ROOT: /app/monitor/web   # = /data/runs (the mount below): the game-log viewer lists them as web/...
       WEB5_EXPORT_ROOT: /data/export
       WEB5_GCS_BUCKET: ${BUCKET}
       WEB5_CORS_ORIGINS: ${CORS}
@@ -21,7 +21,7 @@ services:
       # in with SQUID5_CLAUDE_OAUTH_TOKEN (.env), codex with its own device login kept on the disk (deploy.sh codex-login)
       WEB5_SEATS: public_opus,public_astra,public_sol,public_luna
       CODEX_HOME: /data/codex
-    volumes: ["/opt/arena/data:/data"]
+    volumes: ["/opt/arena/data:/data", "/opt/arena/data/runs:/app/monitor/web"]
     expose: ["8600"]
   caddy:
     image: caddy:2.8

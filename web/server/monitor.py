@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import importlib.util
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -78,10 +79,41 @@ def run_rel(root: Path, run_dir: Path | None) -> str | None:
         return None
 
 
-def monitor_router(root: Path) -> APIRouter:
+CONDITIONS = {"split600k": "상금 60만 분할", "flat5m": "상금 500만 고정", "flat150k": "상금 15만 고정", "stayon": "stay_on"}
+
+
+def monitor_router(root: Path, rooms: str | None = None, simple: bool = False) -> APIRouter:
+    """``rooms``: the web rooms' run dirs relative to the root; a room shows only once it has finished, so nobody reads a
+    game's chats while it is played (the deployed server). ``simple``: the page shows a short run list (11-19)."""
     sv = load_serve()
     root = Path(root).expanduser().resolve()
     r = APIRouter(prefix="/monitor")
+    rooms = rooms.rstrip("/") + "/" if rooms else None
+
+    def shown(rel: str, run_dir: Path) -> bool:
+        return not rooms or not rel.startswith(rooms) or bool(sv.read_results(run_dir))
+
+    def run_dir_of(rel: str) -> Path:
+        d = sv.run_dir_of(root, rel)
+        if not shown(d.relative_to(root).as_posix(), d):
+            raise sv.NotFound("that game is still being played")
+        return d
+
+    def runs() -> list[dict]:
+        out = [x for x in sv.list_runs(root) if shown(x["run"], root / x["run"])]
+        return [{**x, **short_label(x)} for x in out] if simple else out
+
+    def short_label(x: dict) -> dict:
+        """A run as the short list names it: web play or the experiment (its condition: base, a prize condition, stay_on)."""
+        rel, model = x["run"], x.get("model") or ""
+        d = re.search(r"/(20\d\d)(\d\d)(\d\d)_", "/" + rel)  # the run folder's date (a snapshot's file times are its unpack's)
+        date = "-".join(d.groups()) if d else x["date"]
+        if rooms and rel.startswith(rooms):
+            return {"kind": "웹 플레이", "date": date, "label": " · ".join(y for y in ("웹 플레이", date, model) if y)}
+        part = rel.split("/")[1] if "/" in rel else rel
+        cond = re.search(r"_(flat\d+[km]|split\d+[km]|stayon)_", part)  # the leaderboard's condition names
+        cond = CONDITIONS.get(cond.group(1), cond.group(1)) if cond else "기본 조건"
+        return {"kind": "실험", "date": date, "label": " · ".join(y for y in ("실험", model, cond, date) if y)}
 
     def answer(fn):
         """``fn()`` as JSON; errors as ``{"error": ...}`` with serve.py's status codes (the page shows ``error``)."""
@@ -112,13 +144,13 @@ def monitor_router(root: Path) -> APIRouter:
             offset = int(q.get("offset", "0"))
         except ValueError:
             raise sv.BadRequest("offset must be an integer") from None
-        return sv.read_events(sv.run_dir_of(root, q.get("run", "")), sid, offset)
+        return sv.read_events(run_dir_of(q.get("run", "")), sid, offset)
 
     def puzzle(q: dict) -> dict:
         sid, rnd = need(q, "session"), q.get("round")
         if rnd is None:
             raise sv.BadRequest("round is required")
-        run_dir = sv.run_dir_of(root, q.get("run", ""))
+        run_dir = run_dir_of(q.get("run", ""))
         try:
             return sv.round_puzzle(run_dir, sid, rnd)
         except (sv.BadRequest, sv.NotFound):
@@ -151,9 +183,9 @@ def monitor_router(root: Path) -> APIRouter:
     def api(route: str, request: Request):
         q = dict(request.query_params)
         if route == "runs":
-            return answer(lambda: {"root": str(root), "runs": sv.list_runs(root)})
+            return answer(lambda: {"root": str(root), "runs": runs(), "simple": simple})
         if route == "sessions":
-            return answer(lambda: {"run": q.get("run", ""), **sv.list_sessions(sv.run_dir_of(root, q.get("run", "")))})
+            return answer(lambda: {"run": q.get("run", ""), **sv.list_sessions(run_dir_of(q.get("run", "")))})
         if route == "events":
             return answer(lambda: events(q))
         if route in ("compare", "compare.csv"):  # 모델 비교: several runs, merged by model
@@ -169,11 +201,11 @@ def monitor_router(root: Path) -> APIRouter:
             return Response(text.encode("utf-8-sig"), media_type="text/csv; charset=utf-8", headers={
                 **NO_STORE, "Content-Disposition": f'attachment; filename="compare-{q.get("chart", "summary")}.csv"'})
         if route == "analysis":  # EXIT timing, calibration (BELIEF vs ideal), cooperation under pressure
-            return answer(lambda: sv.run_analysis(sv.run_dir_of(root, q.get("run", "")), q.get("session") or None))
+            return answer(lambda: sv.run_analysis(run_dir_of(q.get("run", "")), q.get("session") or None))
         if route == "giving":  # the "나눔 그래프": a run's (or a session's) giving decisions
-            return answer(lambda: sv.run_giving(sv.run_dir_of(root, q.get("run", "")), q.get("session") or None))
+            return answer(lambda: sv.run_giving(run_dir_of(q.get("run", "")), q.get("session") or None))
         if route == "system":  # 10-19: each agent's SYSTEM prompt (rebuilt from config.yaml) and its Korean copy
-            return answer(lambda: sv.run_system(sv.run_dir_of(root, q.get("run", ""))))
+            return answer(lambda: sv.run_system(run_dir_of(q.get("run", ""))))
         if route == "puzzle":
             try:
                 return answer(lambda: puzzle(q))

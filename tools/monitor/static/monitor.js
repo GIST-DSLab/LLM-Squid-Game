@@ -3037,9 +3037,16 @@
   /* 10-17: run filters (date, model, setting version, seed); kept in the URL (?date=&model=&ver=&seed=). The run list
      shows the runs that match; the session list keeps the chosen seed. 10-19: harness (claude code / codex / api;
      ?harness=). A run has several seeds and may have several harnesses (mixed seats); it matches if one is chosen. */
-  const FKEYS = [["date", "#fDate", "날짜"], ["model", "#fModel", "모델"], ["ver", "#fVer", "버전"], ["harness", "#fHarness", "하네스"], ["seed", "#fSeed", "시드"]];
+  const FKEYS = [["kind", "#fKind", "종류"], ["date", "#fDate", "날짜"], ["model", "#fModel", "모델"], ["ver", "#fVer", "버전"], ["harness", "#fHarness", "하네스"], ["seed", "#fSeed", "시드"]];
   const runVals = (r, k) => (k === "seed" ? (r.seeds || []).map(String) : k === "harness" ? r.harness || [] :
-    [String((k === "date" ? r.date : k === "model" ? r.model : k === "ver" ? r.version : null) || "")]);
+    [String((k === "kind" ? r.kind : k === "date" ? r.date : k === "model" ? r.model : k === "ver" ? r.version : null) || "")]);
+  /* 11-19: the deployed site (api/runs says simple): the v33 experiment and finished web games only, named by a short
+     label (실험 · model · condition · date / 웹 플레이 · date); the filters are 종류 · 날짜 · 모델, no version / harness / seed */
+  function applySimple() {
+    for (const [k, id] of FKEYS) $(id).closest("label").hidden = S.simple ? ["ver", "harness", "seed"].includes(k) : k === "kind";
+    const sub = document.querySelector(".brand .sub");
+    if (sub) sub.hidden = S.simple;
+  }
   function runMatch(r, skip) {
     return FKEYS.every(([k]) => k === skip || !S.filt[k] || runVals(r, k).includes(S.filt[k]));
   }
@@ -3063,7 +3070,8 @@
   function fillRunSel() {
     const shown = S.runs.filter((r) => runMatch(r));
     const sel = $("#runSel");
-    const opts = shown.map((r) => '<option value="' + esc(r.run) + '">' + (r.live ? "● " : r.done ? "✓ " : "○ ") + esc(r.run) + (r.model ? " · " + esc(r.model) : "") + ((r.harness || []).length ? " · " + esc(r.harness.join(" + ")) : "") + (r.think ? " · " + esc(r.think) : "") + "</option>");
+    const opts = shown.map((r) => '<option value="' + esc(r.run) + '">' + (S.simple && r.label ? esc(r.label) :
+      (r.live ? "● " : r.done ? "✓ " : "○ ") + esc(r.run) + (r.model ? " · " + esc(r.model) : "") + ((r.harness || []).length ? " · " + esc(r.harness.join(" + ")) : "") + (r.think ? " · " + esc(r.think) : "")) + "</option>");
     if (!shown.length) opts.push("<option value=''>조건에 맞는 실행 없음</option>");
     sel.innerHTML = opts.join("");
     $("#fCount").textContent = "실행 " + shown.length + " / " + S.runs.length;
@@ -3079,6 +3087,8 @@
       const j = await getJSON("api/runs");
       const before = S.run;
       S.runs = j.runs || [];
+      S.simple = !!j.simple;
+      applySimple();
       fillFilters();
       fillRunSel();
       if (S.run !== before && before) { S.session = ""; resetSession(); await loadSessions(); render(true); poll(); }
@@ -3103,7 +3113,9 @@
       S.info = { model: j.model };
       const sel = $("#sessSel");
       const list = S.filt.seed ? S.sessions.filter((s) => String(s.seed) === S.filt.seed) : S.sessions;
-      sel.innerHTML = list.map((s) => '<option value="' + esc(s.id) + '">' + "seed " + esc(s.seed) + " · " + esc(s.cell) + " · R" + s.round + "/" + (s.rounds || "?") + " · " + (s.crashed ? "오류" : s.finished ? "완료" : "진행 중") + " · " + esc(s.id) + "</option>").join("") || "<option value=''>세션 없음</option>";
+      const end = (s) => (s.crashed ? "오류" : s.finished ? "완료" : "진행 중");
+      sel.innerHTML = list.map((s, k) => '<option value="' + esc(s.id) + '">' + (S.simple ? "게임 " + (k + 1) + " · " + s.round + "/" + (s.rounds || "?") + "라운드 · " + end(s) :
+        "seed " + esc(s.seed) + " · " + esc(s.cell) + " · R" + s.round + "/" + (s.rounds || "?") + " · " + end(s) + " · " + esc(s.id)) + "</option>").join("") || "<option value=''>세션 없음</option>";
       if (!S.session || !list.some((s) => s.id === S.session)) S.session = (list.find((s) => !s.finished && !s.crashed) || list[0] || {}).id || "";
       sel.value = S.session;
       S.err = "";

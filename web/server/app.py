@@ -369,7 +369,8 @@ def make_app(store: Store | None = None, export_root: Path | None = None, runs_r
         mean = lambda key: [sum(r[key][i] for r in rows) / n / 100 for i in range(5)] if n else None  # noqa: E731
         return {"n": n, "x": [50, 40, 30, 20, 10], "self": mean("self"), "other": mean("other")}
 
-    app.include_router(monitor_router(mon_root))
+    # the deployed server: the web rooms' logs only once a game has ended, and a short run list
+    app.include_router(monitor_router(mon_root, rooms=run_rel(mon_root, runs) if _eng.PUBLIC else None, simple=_eng.PUBLIC))
 
     if FRONTEND.is_dir():  # the same origin can serve the static pages; a separate static server also works
         app.mount("/", StaticFiles(directory=str(FRONTEND), html=True), name="frontend")

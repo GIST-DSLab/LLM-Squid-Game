@@ -21,15 +21,19 @@ COPY web/__init__.py /app/web/__init__.py
 # the game-log viewer and model comparison / leaderboard (mounted at /monitor/, /api/leaderboard) and a snapshot of
 # finished runs for them to read (the container has no checkout, so no result/)
 COPY tools/monitor /app/tools/monitor
-COPY web/data/runs /app/web/data/runs
+# 11-19 researcher: only the fixed v33 experiment (base, prize conditions, stay_on: the leaderboard's runs) and the games
+# played here (web/, the rooms' run dirs on the VM disk, mounted by compose.yaml); no earlier version's runs
+COPY web/data/runs/e52_v33 /app/monitor/e52_v33
+COPY web/data/runs/e52_v33ab /app/monitor/e52_v33ab
+COPY web/data/runs/e52_v33so /app/monitor/e52_v33so
 # newer runs keep events.jsonl as events.jsonl.xz in git (web/tools/runs_snapshot.py); the viewer seeks in the plain file
 COPY web/tools/runs_snapshot.py /app/web/tools/runs_snapshot.py
-RUN python /app/web/tools/runs_snapshot.py unpack /app/web/data/runs
-ENV WEB5_MONITOR_ROOT=/app/web/data/runs
+RUN python /app/web/tools/runs_snapshot.py unpack /app/monitor
+ENV WEB5_MONITOR_ROOT=/app/monitor
 # compute the leaderboard page's v33 board at start (web/server/app.py), so the first visitor does not wait for it
 ENV WEB5_WARM=1
 # rooms' live engine logs (outside the image there is no git checkout whose result/ they would default to)
-ENV WEB5_RUNS_ROOT=/app/web5_runs
+ENV WEB5_RUNS_ROOT=/app/monitor/web
 ENV PORT=8600
 # the deployed server is public: model seats only from WEB5_MODELS, no client-chosen provider / address / key name
 # (web/server/engine.py PUBLIC); the key itself (OLLAMA_API_KEY) comes from the platform's secret store

@@ -81,9 +81,41 @@ def test_paths_outside_the_root_are_refused(tmp_path):
     (tmp_path / "secret" / "events.jsonl").write_text("")
     with TestClient(make_app(Store(tmp_path / "a.db"), export_root=tmp_path / "x", runs_root=tmp_path / "live",
                              monitor_root=root)) as c:
-        assert c.get("/monitor/api/runs").json() == {"root": str(root.resolve()), "runs": []}
+        assert c.get("/monitor/api/runs").json() == {"root": str(root.resolve()), "runs": [], "simple": False}
         for bad in ("../secret", "a/../../secret", "/../secret", "%2e%2e/secret"):
             r = c.get("/monitor/api/sessions", params={"run": bad})
             assert r.status_code == 400 and "error" in r.json(), bad
         assert c.get("/monitor/api/sessions", params={"run": "a"}).status_code == 400  # no events.jsonl there
         assert c.get("/monitor/static/..%2F..%2Fserve.py").status_code in (400, 404)
+
+
+def test_the_deployed_viewer_lists_short_labels_and_a_web_game_only_once_it_ends(tmp_path, monkeypatch):
+    """WEB5_PUBLIC=1: runs named by a short label (실험 · model · condition · date / 웹 플레이 · date), and a web room's
+    log is listed and served only once its game has finished (nobody reads a game's chats while it is played)."""
+    import json
+
+    from web.server import engine
+
+    monkeypatch.setattr(engine, "PUBLIC", True)
+    root = tmp_path / "monitor"
+    exp = root / "e52_v33ab" / "squid5_e52v33ab_flat5m_docker_opus4" / "20261105_robustness_claude-opus-5-5"
+    exp.mkdir(parents=True)
+    (exp / "events.jsonl").write_text("")
+    (exp / "meta.json").write_text(json.dumps({"model": "claude-opus-5-5"}))
+    app = make_app(Store(tmp_path / "a.db"), export_root=tmp_path / "x", runs_root=root / "web", monitor_root=root,
+                   client_settings=True)
+    with TestClient(app) as c:
+        ps = make_room(c, 1, rounds=1, seed=5)
+        start(c, ps)
+        st = play(ps, lambda p, pend: None, until=lambda st: st["pending"] is not None)
+        runs = c.get("/monitor/api/runs").json()
+        assert runs["simple"] and [r["label"] for r in runs["runs"]] == ["실험 · claude-opus-5-5 · 상금 500만 고정 · 2026-11-05"]
+        live = next(f"web/{d.name}" for d in (root / "web").iterdir())
+        assert c.get("/monitor/api/sessions", params={"run": live}).status_code == 404  # still being played
+        s = play(ps, lambda p, pend: {"actions": answers_for(5, pend["round"])} if pend["kind"] == "solve" else {"text": "DONE"})
+        assert s["status"] == "finished", s["error"]
+        web = [r for r in c.get("/monitor/api/runs").json()["runs"] if r["kind"] == "웹 플레이"]
+        assert [r["run"] for r in web] == [live] and web[0]["label"].startswith("웹 플레이 · 20")
+        assert c.get("/monitor/api/sessions", params={"run": live}).status_code == 200
+        for room in app.state.rooms.values():
+            room.close()
