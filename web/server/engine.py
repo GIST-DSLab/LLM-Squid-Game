@@ -217,6 +217,7 @@ class RoomStopped(RuntimeError):
 
 FILLS = ("models", "bots", "empty")
 PLAN_WHO = ("me", "human", "model", "bot", "empty")  # RoomSettings.plan: who sits in a seat
+HUMAN_RATE = 40.0  # a person's tokens per second on an open decision screen (11-19 researcher: was balance_pct / 1200 = 83.3)
 BOT_UNIT = 300  # a bot's step in tokens: its TALK reply costs 2% of it, a SOLVE 0.3-0.8 of it, the margin it keeps
 WEB_ONLY = ("room", "model_call")  # web events: stored, never written to the run directory
 HIDDEN = ("answers", "rule", "truth", "task", "seed", "attempt", "split", "profile", "generator_rule", "right",
@@ -236,7 +237,7 @@ def default_runs_root() -> Path:
 class RoomSettings:
     rounds: int | None = None  # hidden from the players (as in the engine); None: the config's schedule (8)
     seed: int | None = None
-    rate: float | None = None  # a person's tokens per second on a decision screen; default balance_pct / 1200
+    rate: float | None = None  # a person's tokens per second on a decision screen; default HUMAN_RATE
     talk_timeout_s: float = 150.0  # one TALK screen
     timeout_s: float = 240.0  # one SOLVE screen
     humans: int = 1  # 1..4
@@ -263,7 +264,7 @@ class RoomSettings:
         if not 1 <= self.rounds <= 32:
             raise ValueError("rounds must be 1..32")
         self.seed = int(self.seed) if self.seed is not None else random.randrange(1, 10**6)
-        self.rate = float(self.rate) if self.rate is not None else int(GAME["balance_pct"]) / 1200
+        self.rate = float(self.rate) if self.rate is not None else HUMAN_RATE
         self.talk_timeout_s, self.timeout_s = float(self.talk_timeout_s), float(self.timeout_s)
         if self.rate <= 0 or self.talk_timeout_s <= 0 or self.timeout_s <= 0:
             raise ValueError("rate and timeouts must be > 0")

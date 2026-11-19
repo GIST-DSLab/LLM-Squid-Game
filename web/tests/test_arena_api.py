@@ -226,7 +226,7 @@ def test_the_server_draws_the_seed_and_keeps_its_own_clock(store, tmp_path):
         codes = [c.post("/api/rooms", json={"settings": asked}).json()["code"] for _ in range(3)]
         rooms = [app.state.rooms[k].settings for k in codes]
     d = RoomSettings()
-    assert all((s.rate, s.talk_timeout_s, s.timeout_s, s.rounds) == (int(GAME["balance_pct"]) / 1200, d.talk_timeout_s,
+    assert all((s.rate, s.talk_timeout_s, s.timeout_s, s.rounds) == (40.0, d.talk_timeout_s,
                                                                     d.timeout_s, 3) for s in rooms)
     assert not all(s.seed == 11 for s in rooms)  # drawn by the server (1 in 10^18 to be 11 three times)
 

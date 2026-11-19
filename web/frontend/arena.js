@@ -185,7 +185,7 @@
   }
   function createHint() {
     const d = (apiModel && apiModel.defaults) || {};
-    const rate = d.rate || 100000 / 1200;
+    const rate = d.rate || 40;
     const others = plan.filter((x) => x.who === "human").length;
     $("create-hint").innerHTML = flowKo({}) + ` · 사람 자리는 결정 화면이 떠 있는 동안 초당 ${fmt2(rate)}토큰(60초 = ${fmt(rate * 60)}) · 제한 시간 TALK ${fmt(d.talk_timeout_s ?? 150)}초 · SOLVE ${fmt(d.timeout_s ?? 240)}초` +
       ` (서버가 정함, 넘기면 빈 답: TALK = DONE, SOLVE = 틀린 답) · seed는 서버가 뽑음. ` +
