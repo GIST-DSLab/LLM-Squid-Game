@@ -123,14 +123,16 @@ def make_app(store: Store | None = None, export_root: Path | None = None, runs_r
         return {"ok": True, "rooms": len(rooms), "time": time.time()}
 
     @app.get("/api/models")
-    def models() -> dict:
-        """What the lobby offers for model seats; ``available`` says whether the server holds the key (never its value)."""
+    def models(request: Request) -> dict:
+        """What the lobby offers for model seats; ``available`` says whether the server holds the key (never its value).
+        The deployed server lists its experiment seats only to a request with the seat code (header X-Seat-Code)."""
         d = RoomSettings()
         why = d.models_ready()
+        seats = experiment_seats() if _eng.seat_code_ok(request.headers.get("x-seat-code")) else []
         return {"kind": d.kind, "kinds": list(API_KINDS), "model": d.model, "base_url": d.base_url or "https://ollama.com",
                 "think": d.think, "think_levels": list(THINK_LEVELS), "api_key_env": API_KINDS[d.kind], "available": not why,
-                "why": why, "timeout": d.model_timeout,
-                "langs": list(LANGS), "version": VERSION, "seats": experiment_seats(),
+                "why": why, "timeout": d.model_timeout, "seat_code": bool(_eng.PUBLIC and _eng.SEATS),
+                "langs": list(LANGS), "version": VERSION, "seats": seats,
                 "public": _eng.PUBLIC, "models": _eng.PUBLIC_MODELS if _eng.PUBLIC else None, "defaults": {k: v for k, v in asdict(d).items() if k != "seed"}}
 
     # --- rooms -----------------------------------------------------------------------------------------------------
@@ -160,6 +162,10 @@ def make_app(store: Store | None = None, export_root: Path | None = None, runs_r
             settings = RoomSettings(**asked)
         except (TypeError, ValueError) as err:
             raise HTTPException(400, f"bad settings: {err}") from err
+        uses_seat = settings.fill == "models" and settings.humans < 4 and (
+            settings.seat or any("seat" in x for x in settings.models or []))
+        if uses_seat and not _eng.seat_code_ok(body.get("seat_code")):  # never stored: not part of the settings
+            raise HTTPException(403, "실험 모델 자리는 연구자 코드가 있어야 고를 수 있습니다.")
         try:
             settings.check_models()
         except ValueError as err:

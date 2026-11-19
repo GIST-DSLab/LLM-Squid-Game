@@ -166,6 +166,30 @@ def test_codex_cli_in_docker_runs_codex_on_the_mounted_home(monkeypatch, tmp_pat
     assert r.text == "hi" and cmd[cmd.index("img:1") + 1] == "codex" and "CODEX_HOME" in cmd
     assert seen["kw"]["env"]["CODEX_HOME"] == f"{work}/home"
 
+def test_host_claude_takes_the_servers_own_token_never_a_parent_sessions(monkeypatch, tmp_path):
+    monkeypatch.setenv("CLAUDE_CODE_OAUTH_TOKEN", "parent")
+    seen = capture(monkeypatch, tmp_path, json.dumps({"result": "ok", "usage": {"output_tokens": 1}}))
+    prov = P.make_provider(P.ProviderConfig("claude_cli", "m"))
+    prov.complete([{"role": "user", "content": "U"}], 10)
+    assert "CLAUDE_CODE_OAUTH_TOKEN" not in seen["kw"]["env"]
+    monkeypatch.setenv("SQUID5_CLAUDE_OAUTH_TOKEN", "server")
+    prov.complete([{"role": "user", "content": "U"}], 10)
+    assert seen["kw"]["env"]["CLAUDE_CODE_OAUTH_TOKEN"] == "server" and "server" not in " ".join(seen["cmd"])
+
+def test_codex_puts_a_refreshed_login_back(monkeypatch, tmp_path):
+    (tmp_path / "auth.json").write_text('{"refresh_token": "old"}')
+    monkeypatch.setenv("CODEX_HOME", str(tmp_path))
+    out = "\n".join(json.dumps(e) for e in ({"type": "item.completed", "item": {"type": "agent_message", "text": "hi"}},
+                                            {"type": "turn.completed", "usage": {"output_tokens": 9}}))
+
+    def run(cmd, **kw):
+        open(kw["env"]["CODEX_HOME"] + "/auth.json", "w").write('{"refresh_token": "new"}')
+        return subprocess.CompletedProcess(cmd, 0, stdout=out, stderr="")
+    capture(monkeypatch, tmp_path, out)
+    monkeypatch.setattr(P.subprocess, "run", run)
+    P.make_provider(P.ProviderConfig("codex_cli", "gpt-6-astra", retries=0)).complete([{"role": "user", "content": "U"}], 100)
+    assert json.loads((tmp_path / "auth.json").read_text()) == {"refresh_token": "new"}
+
 def test_host_run_is_unchanged_without_a_sandbox(monkeypatch, tmp_path):
     seen = capture(monkeypatch, tmp_path, json.dumps({"result": "ok", "usage": {"output_tokens": 1}}))
     P.make_provider(P.ProviderConfig("claude_cli", "m")).complete([{"role": "user", "content": "U"}], 10)

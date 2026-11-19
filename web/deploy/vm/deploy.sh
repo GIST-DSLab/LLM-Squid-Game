@@ -7,6 +7,8 @@
 #   PROJECT=<id> bash web/deploy/vm/deploy.sh deploy   # build the image, copy the compose files, (re)start on the VM
 #   PROJECT=<id> bash web/deploy/vm/deploy.sh url      # the API address for web/frontend/config.js
 #   PROJECT=<id> bash web/deploy/vm/deploy.sh ssh      # a shell on the VM
+#   CLAUDE_SETUP_TOKEN=... PROJECT=<id> bash web/deploy/vm/deploy.sh seats   # the researchers' Claude/GPT seats
+#   PROJECT=<id> bash web/deploy/vm/deploy.sh codex-login                    # codex's own login on the VM (once)
 #
 # Run from the repo root. Uses ACCOUNT (default sundonglab@gmail.com) without changing gcloud's active account.
 # The first setup reads OLLAMA_API_KEY from the environment (a key made for this site); nothing is read from .env.
@@ -77,7 +79,27 @@ deploy() {
   url
 }
 
+# The researchers' experiment seats (compose.yaml WEB5_SEATS): a Claude setup token and the researcher code go to Secret
+# Manager (up.sh writes them into the VM's .env at the next deploy); codex logs in on the VM itself, so its refresh
+# token is never shared with a laptop's ~/.codex.
+put_secret() {  # name value: a new version (the secret is made on first use), readable by the VM's account
+  g secrets describe "$1" >/dev/null 2>&1 || g secrets create "$1" --replication-policy automatic
+  printf '%s' "$2" | g secrets versions add "$1" --data-file=- >/dev/null
+  g secrets add-iam-policy-binding "$1" --member "serviceAccount:$SA" --role roles/secretmanager.secretAccessor >/dev/null
+}
+seats() {
+  : "${CLAUDE_SETUP_TOKEN:?export CLAUDE_SETUP_TOKEN (the output of claude setup-token, on the account the seats use)}"
+  local code="${WEB5_SEAT_CODE:-$(openssl rand -base64 18 | tr -d '/+=')}"
+  put_secret claude-oauth-token "$CLAUDE_SETUP_TOKEN"
+  put_secret arena-seat-code "$code"
+  [ -n "${WEB5_SEAT_CODE:-}" ] || echo "researcher code (Secret Manager arena-seat-code): $code"
+  echo "next: deploy, then codex-login"
+}
+codex_login() {
+  g compute ssh "$VM" --ssh-key-file "$SSH_KEY" --zone "$ZONE" --command \
+    "cd /opt/arena && sudo docker compose exec app codex login --device-auth" -- -t
+}
 url() { echo "https://$(host)"; }
 ssh() { g compute ssh "$VM" --ssh-key-file "$SSH_KEY" --zone "$ZONE"; }
 
-"${1:-deploy}"
+cmd="${1:-deploy}"; "${cmd//-/_}"

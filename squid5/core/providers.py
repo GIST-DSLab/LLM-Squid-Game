@@ -173,6 +173,8 @@ class ClaudeCLI(Provider):
                if not k.startswith("CLAUDE_CODE_") and k not in ("CLAUDECODE", "CLAUDE_PID", "ANTHROPIC_API_KEY")}
         inner = {"CLAUDE_CODE_MAX_OUTPUT_TOKENS": str(cap)} | (
             {"ANTHROPIC_BASE_URL": self.cfg.base_url} if self.cfg.base_url else {})
+        if tok := os.environ.get("SQUID5_CLAUDE_OAUTH_TOKEN"):  # a server's own login (`claude setup-token`), never a parent session's
+            inner["CLAUDE_CODE_OAUTH_TOKEN"] = tok
         if self.cfg.sandbox == "docker":
             if not os.environ.get("CLAUDE_CODE_OAUTH_TOKEN"):
                 raise ValueError("sandbox docker: set CLAUDE_CODE_OAUTH_TOKEN (from `claude setup-token`) for the "
@@ -219,6 +221,20 @@ class CodexCLI(Provider):
              "experimental_supported_tools": [], "apply_patch_tool_type": None}
     _catalog: str | None = None
 
+    @staticmethod
+    def _keep_login(src: str, used: str) -> None:
+        """codex may refresh the login inside the per-call copy, and the refresh token rotates: the new auth.json goes back
+        to CODEX_HOME, or a later call would refresh with a spent token (a server with no interactive codex to renew it)."""
+        try:
+            new = Path(used).read_bytes()
+        except OSError:
+            return
+        if new and new != Path(src).read_bytes():
+            tmp = f"{src}.{uuid.uuid4().hex}"
+            Path(tmp).write_bytes(new)
+            os.chmod(tmp, 0o600)
+            os.replace(tmp, src)
+
     def _plain_catalog(self, home: str) -> str:
         """The live model catalog (``codex debug models``) with PLAIN set on every model; fetched once per process, by the
         same binary that runs the calls (11-03: in the container under ``sandbox: docker``, not the host's)."""
@@ -227,6 +243,7 @@ class CodexCLI(Provider):
                 shutil.copyfile(f"{home}/auth.json", f"{h}/auth.json")
                 p = self._exec([os.environ.get("SQUID5_CODEX_BIN") or shutil.which("codex") or "codex", "debug", "models"], "", h,
                                dict(os.environ), {"CODEX_HOME": h})
+                self._keep_login(f"{home}/auth.json", f"{h}/auth.json")
             cat = json.loads(p.stdout)
             for m in cat["models"]:
                 m.update(self.PLAIN)
@@ -257,6 +274,7 @@ class CodexCLI(Provider):
                         f'model_providers.squid5.base_url="{self.cfg.base_url}"', "-c", 'model_providers.squid5.wire_api="responses"']
             env = {k: v for k, v in os.environ.items() if not k.startswith("CODEX_")}
             p = self._exec(cmd + ["-"], prompt, cwd, env, {"CODEX_HOME": f"{cwd}/home"})
+            self._keep_login(f"{home}/auth.json", f"{cwd}/home/auth.json")
         text, thinking, usage, errors = None, [], None, []
         for line in p.stdout.splitlines():
             try:

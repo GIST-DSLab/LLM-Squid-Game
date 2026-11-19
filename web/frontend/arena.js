@@ -66,8 +66,8 @@
   }
   const show = (el, on) => (typeof el === "string" ? $(el) : el).classList.toggle("hidden", !on);
 
-  async function api(method, path, body) {
-    const opt = { method, headers: {} };
+  async function api(method, path, body, headers) {
+    const opt = { method, headers: { ...headers } };
     if (body !== undefined) { opt.headers["Content-Type"] = "application/json"; opt.body = JSON.stringify(body); }
     const r = await fetch(API + path, opt);
     let data = null;
@@ -128,7 +128,7 @@
   }
   function seatRowHTML(x, i) {
     const pub = apiModel && apiModel.public;
-    const chips = WHO.filter(([w]) => !(w === "exp" && pub)).map(([w, label]) => {
+    const chips = WHO.filter(([w]) => !(w === "exp" && pub && !seats.length)).map(([w, label]) => {  // public: only with the researcher code
       const off = (w === "exp" && !readySeat()) || (w === "api" && apiModel && !apiModel.available);
       const why = w === "exp" && !readySeat() ? "이 서버에서 부를 수 있는 실험 자리가 없습니다" : w === "api" && off ? (apiModel.why || "") : "";
       return `<button type="button" class="sr-chip${x.who === w ? " on" : ""}" data-who="${w}" data-i="${i}"${off ? ` disabled title="${esc(why)}"` : ""}>${label}</button>`;
@@ -205,11 +205,20 @@
     loadModels();
   }
 
+  // the deployed server lists its experiment seats (Claude Code / Codex logins on the VM) only with the researcher code;
+  // kept for this tab only
+  const seatCode = () => ($("form-create").seat_code.value || "").trim();
   async function loadModels() {
     try {
-      const m = await api("GET", "/models");
+      const code = seatCode();
+      const m = await api("GET", "/models", undefined, code ? { "X-Seat-Code": code } : undefined);
       seats = m.seats || [];
       apiModel = m;
+      $("seat-code-box").hidden = !m.seat_code;
+      if (code && m.seat_code) {
+        try { sessionStorage.setItem("web5-seat-code", seats.length ? code : ""); } catch { /* storage off */ }
+        if (!seats.length) flash("연구자 코드가 맞지 않습니다.");
+      }
       const fresh = plan.every((x) => x.who === "me" || x.who === "bot");  // still the first look: open on "me + three models"
       if (fresh) preset("models"); else renderSeatRows();
     } catch (e) {
@@ -235,7 +244,12 @@
     const f = $("form-create");
     if (ev.target.name === "model_lang") f.model_lang.dataset.touched = "1";
     if (ev.target.name === "lang" && !f.model_lang.dataset.touched) f.model_lang.value = f.lang.value;
+    if (ev.target.name === "seat_code") loadModels();
   });
+  $("form-create").seat_code.addEventListener("keydown", (ev) => {  // Enter checks the code; it does not make the room
+    if (ev.key === "Enter") { ev.preventDefault(); loadModels(); }
+  });
+  try { $("form-create").seat_code.value = sessionStorage.getItem("web5-seat-code") || ""; } catch { /* storage off */ }
   $("form-create").addEventListener("submit", async (ev) => {
     ev.preventDefault();
     const f = ev.target;
@@ -244,7 +258,8 @@
     if (f.rounds.value !== "") settings.rounds = Number(f.rounds.value);
     $("btn-create").disabled = true;
     try {
-      const r = await api("POST", "/rooms", { host_name: f.host_name.value.trim() || "player", lang: f.lang.value, settings });
+      const r = await api("POST", "/rooms", { host_name: f.host_name.value.trim() || "player", lang: f.lang.value, settings,
+        ...(seatCode() ? { seat_code: seatCode() } : {}) });
       autoStart = !plan.some((x) => x.who === "human");  // nobody else to wait for: start once the rules window closes
       enterNew(r);
     } catch (e) { flash(`방을 만들지 못했습니다: ${e.message}`); }

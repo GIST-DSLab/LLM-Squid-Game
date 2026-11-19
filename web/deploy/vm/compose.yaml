@@ -17,6 +17,10 @@ services:
       WEB5_MAX_MODEL_ROOMS: "2"
       WEB5_ROOMS_PER_IP_HOUR: "4"
       WEB5_DAILY_TOKENS: "3000000"
+      # the researchers' seats (configs/squid5/e52v33_<name>4.yaml), offered only with WEB5_SEAT_CODE (.env); claude logs
+      # in with SQUID5_CLAUDE_OAUTH_TOKEN (.env), codex with its own device login kept on the disk (deploy.sh codex-login)
+      WEB5_SEATS: public_opus,public_astra,public_sol,public_luna
+      CODEX_HOME: /data/codex
     volumes: ["/opt/arena/data:/data"]
     expose: ["8600"]
   caddy:

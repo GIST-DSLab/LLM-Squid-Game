@@ -2,6 +2,14 @@
 FROM python:3.12-slim
 WORKDIR /app
 RUN pip install --no-cache-dir fastapi "uvicorn[standard]" httpx pyyaml numpy matplotlib "psycopg[binary]" google-cloud-storage
+# the researchers' experiment seats (WEB5_SEATS, behind WEB5_SEAT_CODE): Claude Code and Codex at the versions the
+# experiment's CLI image pins (docker/agent-cli.Dockerfile), node from the official image; the relay that drops the
+# Claude CLI's own token note (the claude seats' base_url http://127.0.0.1:18781) runs beside the app
+COPY --from=node:22-slim /usr/local/bin/node /usr/local/bin/node
+COPY --from=node:22-slim /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/npm
+RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
+ && npm install -g @anthropic-ai/claude-code@2.1.303 @openai/codex@0.162.1 && npm cache clean --force
+COPY tools/relay.py /app/tools/relay.py
 # the arena runs the experiment engine itself (web/server/engine.py imports squid5 from the repo root = /app)
 COPY squid5 /app/squid5
 # web/server/signal.py reads the experiment configs (configs/squid5/e52v14*.yaml) at import time; without them the app
@@ -28,4 +36,4 @@ ENV PORT=8600
 ENV WEB5_PUBLIC=1
 ENV WEB5_MODELS=gpt-oss:120b
 # WEB5_DSN / WEB5_CORS_ORIGINS come from the platform; without WEB5_DSN events go to a SQLite file on the container disk.
-CMD ["sh", "-c", "python -m uvicorn web.server.app:app --host 0.0.0.0 --port ${PORT}"]
+CMD ["sh", "-c", "python tools/relay.py 18781 & exec python -m uvicorn web.server.app:app --host 0.0.0.0 --port ${PORT}"]

@@ -87,6 +87,8 @@
           <select name="lang"><option value="ko" selected>한국어</option><option value="en">English (모델과 같은 원문)</option></select></label>
         <label class="f"><span>모델이 읽을 프롬프트</span>
           <select name="model_lang"><option value="ko" selected>한국어 (내 언어를 따라감)</option><option value="en">English (실험 원문)</option></select></label>
+        <label class="f" id="seat-code-box" hidden><span>연구자 코드 (실험 모델 자리를 엶)</span>
+          <input name="seat_code" type="password" maxlength="80" autocomplete="off" placeholder="연구자만"></label>
       </div>
       <p class="small muted hint-line" id="create-hint">서버 확인 중…</p>
       <div class="row"><button class="primary big" type="submit" id="btn-create">방 만들기</button><span class="form-err" id="create-err"></span></div>

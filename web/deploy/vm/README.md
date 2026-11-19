@@ -25,6 +25,25 @@ curl "$(PROJECT=<ID> bash web/deploy/vm/deploy.sh url)/api/health"
 # 전환: web/frontend/config.js 의 WEB5_API 를 위 주소로 바꿔 main에 push(Pages), Render 서비스 정지
 ```
 
+## 연구자 전용 Claude · GPT 자리 (2026-11-19)
+
+공개 서버는 일반 방문자에게 Ollama `gpt-oss:120b`만 준다. 로비에 **연구자 코드**를 넣은 사람에게만 실험 자리
+`public_opus`(Claude Code, claude-opus-5-5) · `public_astra` · `public_sol` · `public_luna`(Codex, GPT-6)가 열린다
+(`compose.yaml`의 `WEB5_SEATS`; 코드는 `/api/models`의 헤더 `X-Seat-Code`와 방 만들기 본문의 `seat_code`로만 오가고 저장되지 않는다).
+구독 로그인으로 부르므로 그 구독의 사용량 한도를 함께 쓴다.
+
+```bash
+claude setup-token                                    # 이 컴퓨터에서, 자리에 쓸 Claude 계정으로 (1년짜리 토큰을 출력)
+CLAUDE_SETUP_TOKEN=<출력값> PROJECT=<ID> bash web/deploy/vm/deploy.sh seats   # 토큰 + 연구자 코드를 Secret Manager로 (코드를 한 번 출력)
+PROJECT=<ID> bash web/deploy/vm/deploy.sh deploy     # 새 이미지(node + claude-code 2.1.303 + codex 0.162.1 + relay)
+PROJECT=<ID> bash web/deploy/vm/deploy.sh codex-login   # VM 안에서 codex 기기 로그인(브라우저에 코드 입력), /opt/arena/data/codex/auth.json
+```
+
+- codex 로그인은 노트북의 `~/.codex/auth.json`을 복사하지 않고 VM에서 따로 한다. 갱신 토큰은 한 번 쓰면 바뀌므로 두 곳이
+  같은 것을 쓰면 한쪽이 끊긴다. 엔진은 호출 뒤 갱신된 `auth.json`을 원본에 다시 쓴다(`CodexCLI._keep_login`).
+- 로그인이 없으면 로비가 그 자리를 끄고 이유를 붙인다(`seat_ready`).
+- 메모리: `e2-small`(2 GB)에서 Claude CLI(node)를 여러 자리가 동시에 띄우면 빠듯하다. 느리거나 OOM이면 `e2-medium`으로.
+
 ## 데이터
 
 ```bash

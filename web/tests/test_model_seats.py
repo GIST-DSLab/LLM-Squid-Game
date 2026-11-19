@@ -11,7 +11,7 @@ import re
 
 import httpx
 import pytest
-from conftest import answers_for, basic, make_room, play, start
+from conftest import SEEDS, Player, answers_for, basic, make_room, play, start
 
 from squid5.core import providers, rules
 from web.server import engine
@@ -172,9 +172,11 @@ class FakeCli(providers.Provider):
         return providers.Reply(FakeOllama().text({"messages": messages}), 222, 1000, "thinking it over", False)
 
 
-def test_experiment_seats_are_the_run_configs_model_sections_called_as_the_runs_called_them(client, fake, monkeypatch):
+def test_experiment_seats_are_the_run_configs_model_sections_called_as_the_runs_called_them(client, fake, monkeypatch, tmp_path):
     import yaml
 
+    (tmp_path / "auth.json").write_text("{}")  # a codex login of its own, not this machine's ~/.codex
+    monkeypatch.setenv("CODEX_HOME", str(tmp_path))
     gemma = yaml.safe_load((engine._cfg.CONFIGS / "e52v33_codex_gemma4.yaml").read_text())["model"]
     m = client.get("/api/models").json()
     seats = {s["seat"]: s for s in m["seats"]}
@@ -229,3 +231,44 @@ def test_public_server_takes_no_provider_address_or_key_name_from_the_client(cli
     assert client.post("/api/rooms", json={"settings": {"fill": "bots"}}).status_code == 200  # bots cost nothing
     monkeypatch.setattr(engine, "budget_left", lambda: 0)
     assert client.post("/api/rooms", json={"settings": {"fill": "models"}}, headers={"x-forwarded-for": "9.9.9.9"}).status_code == 429
+
+
+def test_public_server_offers_researcher_seats_only_with_the_seat_code(client, fake, monkeypatch, tmp_path):
+    """WEB5_SEATS + WEB5_SEAT_CODE on the deployed server: the named experiment seats (CLIs logged in on the VM) are listed
+    (header X-Seat-Code) and taken (body seat_code) only with the code; other seats stay out; the code is never served."""
+    monkeypatch.setattr(engine, "PUBLIC", True)
+    monkeypatch.setattr(engine, "PUBLIC_MODELS", ["gpt-oss:120b"])
+    monkeypatch.setattr(engine, "SEATS", {n: d for n, d in engine._seats().items() if n in ("public_opus", "public_sol")})
+    monkeypatch.setattr(engine, "SEAT_CODE", "lab-code-123")
+    monkeypatch.setattr(engine, "LIMITS", {"model_rooms": 5, "per_ip_hour": 10, "daily_tokens": 10**9})
+    monkeypatch.setattr(engine.shutil, "which", lambda name: f"/usr/local/bin/{name}")
+    monkeypatch.setattr(engine, "_listening", lambda url: True)
+    monkeypatch.setattr(engine, "make_provider", lambda cfg: FakeCli(cfg))
+    assert client.get("/api/models").json()["seats"] == []
+    assert client.get("/api/models", headers={"X-Seat-Code": "wrong"}).json()["seats"] == []
+    m = client.get("/api/models", headers={"X-Seat-Code": "lab-code-123"}).json()
+    assert {s["seat"] for s in m["seats"]} == {"public_opus", "public_sol"} and "lab-code-123" not in str(m)
+    plan = [{"who": "me"}, {"who": "model", "seat": "public_opus"}, {"who": "model", "seat": "public_sol"},
+            {"who": "model", "model": "gpt-oss:120b"}]
+    body = {"host_name": "ann", "lang": "en", "settings": {"plan": plan, "rounds": 1, "seed": SEED, "model_retries": 0,
+                                                          "rate": 50, "talk_timeout_s": 30, "timeout_s": 30, "watch_hold_s": 0}}
+    assert client.post("/api/rooms", json=body).status_code == 403
+    assert client.post("/api/rooms", json={**body, "seat_code": "wrong"}).status_code == 403
+    other = {**body["settings"], "plan": plan[:3] + [{"who": "model", "seat": "codex_gemma"}]}
+    assert client.post("/api/rooms", json={**body, "seat_code": "lab-code-123", "settings": other}).status_code == 400
+    monkeypatch.setenv("CODEX_HOME", str(tmp_path))
+    monkeypatch.delenv("SQUID5_CLAUDE_OAUTH_TOKEN", raising=False)
+    r = client.post("/api/rooms", json={**body, "seat_code": "lab-code-123"})
+    assert r.status_code == 400 and "codex is not logged in" in r.text and "SQUID5_CLAUDE_OAUTH_TOKEN" in r.text
+    (tmp_path / "auth.json").write_text("{}")
+    monkeypatch.setenv("SQUID5_CLAUDE_OAUTH_TOKEN", "setup-token-not-real")
+    r = client.post("/api/rooms", json={**body, "seat_code": "lab-code-123"})
+    assert r.status_code == 200, r.text
+    d = r.json()
+    SEEDS[d["code"]] = SEED
+    ps = [Player(client, d["code"], d["token"], d["agent"], d["name"])]
+    start(client, ps)
+    s = play(ps, basic, max_s=90)
+    assert s["status"] == "finished", s["error"]
+    assert [x["model"] for x in s["seats"][1:]] == ["claude-opus-5-5", "gpt-6-sol", "gpt-oss:120b"]
+    assert "lab-code-123" not in str(s)

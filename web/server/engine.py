@@ -34,6 +34,7 @@ observes its events, which also go live to a run directory (config.yaml, meta.js
 from __future__ import annotations
 
 import functools
+import hmac
 import json
 import os
 import random
@@ -153,7 +154,18 @@ def _seats() -> dict[str, dict]:
     return out
 
 
-SEATS: dict[str, dict] = {} if PUBLIC else _seats()  # never on the deployed server (CLIs and logins of this machine)
+# The deployed server offers only the experiment seats named in WEB5_SEATS (CLIs logged in on that VM: Claude Code with
+# its setup token, Codex with its own device login), and only to a room maker who gives WEB5_SEAT_CODE (the researchers);
+# without the code it offers none, as before.
+SEAT_CODE = os.environ.get("WEB5_SEAT_CODE", "").strip()
+_PUBLIC_SEATS = {s.strip() for s in os.environ.get("WEB5_SEATS", "").split(",") if s.strip()}
+SEATS: dict[str, dict] = ({n: d for n, d in _seats().items() if n in _PUBLIC_SEATS} if SEAT_CODE else {}) if PUBLIC \
+    else _seats()
+
+
+def seat_code_ok(given) -> bool:
+    """Whether *given* is this server's seat code (always true off the deployed server)."""
+    return not PUBLIC or bool(SEAT_CODE) and hmac.compare_digest(str(given or "").encode(), SEAT_CODE.encode())
 
 
 def seat_config(name: str) -> ProviderConfig:
@@ -180,6 +192,11 @@ def seat_ready(cfg: ProviderConfig) -> str:
         return f"provider kind {cfg.kind} is not offered"
     if not shutil.which(cli):
         return f"the {cli} CLI is not on this server's PATH"
+    home = Path(os.environ.get("CODEX_HOME") or Path.home() / ".codex")
+    if cli == "codex" and not (home / "auth.json").is_file():
+        return f"codex is not logged in on this server (no {home}/auth.json: codex login --device-auth)"
+    if cli == "claude" and PUBLIC and not os.environ.get("SQUID5_CLAUDE_OAUTH_TOKEN"):
+        return "claude has no login on this server (SQUID5_CLAUDE_OAUTH_TOKEN from claude setup-token)"
     if cfg.base_url and urlparse(cfg.base_url).hostname in ("127.0.0.1", "localhost") and not _listening(cfg.base_url):
         what = "the relay (python3 tools/relay.py 18781)" if cfg.kind == "claude_cli" \
             else "the local Ollama daemon"
@@ -272,9 +289,8 @@ class RoomSettings:
                 raise ValueError("model must be an API model name such as gpt-oss:20b")
         self.model = str(self.model).strip()
         if PUBLIC:  # the deployed server: nothing about the provider, its address or its key comes from the client
-            if self.seat or any("seat" in x for x in self.models or []):
-                raise ValueError("experiment seats run only on the researchers' machine")
-            names = [self.model] + [x["model"] for x in self.models or []]
+            # (experiment seats: only those of SEATS, checked above; the seat code is checked where the room is made)
+            names = [self.model] + [x["model"] for x in self.models or [] if "seat" not in x]
             if self.kind != "ollama" or any(x.get("kind", "ollama") != "ollama" for x in self.models or []):
                 raise ValueError("model seats here are Ollama Cloud only")
             if any(n not in PUBLIC_MODELS for n in names):
