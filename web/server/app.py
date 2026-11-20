@@ -86,7 +86,7 @@ DEFAULT_CORS = ["http://localhost:5600", "http://127.0.0.1:5600", "http://localh
 FRONTEND = Path(__file__).resolve().parents[1] / "frontend"
 
 
-SERVER_SETTINGS = ("seed", "rate", "talk_timeout_s", "timeout_s")  # the server's own: a client's values are ignored
+SERVER_SETTINGS = ("seed", "rate", "char_rate", "talk_timeout_s", "timeout_s")  # the server's own: a client's values are ignored
 
 
 def make_app(store: Store | None = None, export_root: Path | None = None, runs_root: Path | None = None,
@@ -234,7 +234,7 @@ def make_app(store: Store | None = None, export_root: Path | None = None, runs_r
         except (LookupError, ValueError) as err:  # no screen, or not the screen that is open any more
             raise HTTPException(409, str(err)) from err
         return {"kind": p.kind, "round": p.round, "tick": p.tick, "phase": p.phase, "charged": p.charged,
-                "seconds": p.seconds, "outcome": p.outcome, "void": p.charged >= p.cap, "reply": p.reply.text}
+                "seconds": p.seconds, "typed": p.typed if p.kind == "talk" else None, "outcome": p.outcome, "void": p.charged >= p.cap, "reply": p.reply.text}
 
     @app.post("/api/rooms/{code}/watched")
     def watched(code: str, token: str = Query(""), body: dict = Body(default={})) -> dict:

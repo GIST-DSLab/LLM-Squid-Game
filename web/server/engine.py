@@ -24,9 +24,12 @@ as in the engine). ``session.providers`` then gets one object per seat whose ``c
 - ``EmptySeat`` is an agent shut down before round 1 (balance 0).
 
 What a call is (TALK or SOLVE, round, tick, phase) comes from the engine's ``call_start`` event, never from the prompt's
-wording, so the Korean prompts change nothing here. A person does not generate tokens: the seconds a decision screen is
-open x ``rate`` stand in for them; at or past the balance the seat is shut down (the server closes the screen); a screen
-not submitted within its timeout is an empty reply charged its seconds. Everything else is the engine's; the web only
+wording, so the Korean prompts change nothing here. A person does not generate tokens, so stand-ins are charged: on a
+SOLVE screen the seconds it is open x ``rate``; on a TALK screen the characters typed into its message boxes x
+``char_rate`` (every character typed, deleted ones too; the page counts them and sends the count with the reply, 11-20
+researcher: a TALK screen no longer drains with time). At or past the balance the seat is shut down (the server closes a
+SOLVE screen; a TALK reply that costs that much shuts it down); a screen not submitted within its timeout is an empty
+reply charged its seconds (SOLVE) or nothing (TALK). Everything else is the engine's; the web only
 observes its events, which also go live to a run directory (config.yaml, meta.json, events.jsonl, results.jsonl) that
 ``tools/monitor/serve.py`` reads.
 """
@@ -217,7 +220,8 @@ class RoomStopped(RuntimeError):
 
 FILLS = ("models", "bots", "empty")
 PLAN_WHO = ("me", "human", "model", "bot", "empty")  # RoomSettings.plan: who sits in a seat
-HUMAN_RATE = 40.0  # a person's tokens per second on an open decision screen (11-19 researcher: was balance_pct / 1200 = 83.3)
+HUMAN_RATE = 40.0  # a person's tokens per second on an open SOLVE screen (11-19 researcher: was balance_pct / 1200 = 83.3)
+HUMAN_CHAR_RATE = 10.0  # a person's tokens per character typed on a TALK screen (11-20 researcher: TALK by typing, not time)
 BOT_UNIT = 300  # a bot's step in tokens: its TALK reply costs 2% of it, a SOLVE 0.3-0.8 of it, the margin it keeps
 WEB_ONLY = ("room", "model_call")  # web events: stored, never written to the run directory
 HIDDEN = ("answers", "rule", "truth", "task", "seed", "attempt", "split", "profile", "generator_rule", "right",
@@ -237,8 +241,9 @@ def default_runs_root() -> Path:
 class RoomSettings:
     rounds: int | None = None  # hidden from the players (as in the engine); None: the config's schedule (8)
     seed: int | None = None
-    rate: float | None = None  # a person's tokens per second on a decision screen; default HUMAN_RATE
-    talk_timeout_s: float = 150.0  # one TALK screen
+    rate: float | None = None  # a person's tokens per second on a SOLVE screen; default HUMAN_RATE
+    char_rate: float | None = None  # a person's tokens per character typed on a TALK screen; default HUMAN_CHAR_RATE
+    talk_timeout_s: float = 3600.0  # one TALK screen (11-20 researcher: an hour)
     timeout_s: float = 240.0  # one SOLVE screen
     humans: int = 1  # 1..4
     fill: str = "bots"  # the seats no person takes: "models" | "bots" | "empty"
@@ -265,6 +270,9 @@ class RoomSettings:
             raise ValueError("rounds must be 1..32")
         self.seed = int(self.seed) if self.seed is not None else random.randrange(1, 10**6)
         self.rate = float(self.rate) if self.rate is not None else HUMAN_RATE
+        self.char_rate = float(self.char_rate) if self.char_rate is not None else HUMAN_CHAR_RATE
+        if self.char_rate < 0:
+            raise ValueError("char_rate must be >= 0")
         self.talk_timeout_s, self.timeout_s = float(self.talk_timeout_s), float(self.timeout_s)
         if self.rate <= 0 or self.talk_timeout_s <= 0 or self.timeout_s <= 0:
             raise ValueError("rate and timeouts must be > 0")
@@ -513,6 +521,7 @@ class Pending:
     reply: Reply | None = None
     charged: int = 0
     seconds: float = 0.0
+    typed: int = 0  # TALK: the characters the person typed on this screen (sent with the reply)
     outcome: str = ""  # "submitted" | "timeout" | "overdrawn" | "forfeit"
     done: threading.Event = field(default_factory=threading.Event)
 
@@ -533,7 +542,11 @@ class HumanSeat:
         return f"human:{self.name}"
 
     def cost(self, p: Pending, now: float | None = None) -> tuple[int, float]:
+        """(tokens, seconds open): a SOLVE screen costs its seconds x ``rate``, a TALK screen its typed characters x
+        ``char_rate`` (``p.typed``: 0 until the reply brings the count, so an open TALK screen never drains)."""
         secs = max(0.0, (now or time.time()) - p.opened_at)
+        if p.kind == "talk":
+            return int(round(p.typed * self.room.settings.char_rate)), secs
         return int(round(secs * self.room.settings.rate)), secs
 
     def complete(self, messages: list[dict], cap: int) -> Reply:
@@ -558,7 +571,7 @@ class HumanSeat:
                 if p.reply is not None:
                     break
                 charged, secs = self.cost(p, now)
-                if charged >= p.balance:  # the screen was left open past the balance: overdraw
+                if charged >= p.balance:  # a SOLVE screen was left open past the balance: overdraw
                     self._finish(p, "", charged, secs, "overdrawn")
                 elif now - p.created_at >= p.timeout:  # unanswered: an empty reply, charged what was open
                     self._finish(p, "", charged, secs, "timeout")
@@ -567,8 +580,10 @@ class HumanSeat:
     def _finish(self, p: Pending, text: str, charged: int, secs: float, outcome: str) -> None:
         """Under the room lock. ``out_tokens`` is the seconds x rate; the engine clips it at the cap and the balance."""
         p.charged, p.seconds, p.outcome = charged, secs, outcome
-        p.reply = Reply(text, charged, thinking=f"human screen: {secs:.1f} s x {self.room.settings.rate:.3f}/s "
-                                                f"({outcome})", truncated=charged >= p.cap)
+        s = self.room.settings
+        how = (f"human typed: {p.typed} chars x {s.char_rate:.3f}/char, screen {secs:.1f} s" if p.kind == "talk" else
+               f"human screen: {secs:.1f} s x {s.rate:.3f}/s")
+        p.reply = Reply(text, charged, thinking=f"{how} ({outcome})", truncated=charged >= p.cap)
         self.pending, self.last = None, p
         p.done.set()
 
@@ -602,6 +617,11 @@ class HumanSeat:
             if p.kind == "talk" and body.get("phase") and body["phase"] != p.phase:
                 raise ValueError(f"the open screen is the TALK {'before SOLVE' if p.phase == 'prep' else 'after RESULTS'}")
             text = str(body.get("text") or "")[:20000] if p.kind != "solve" else solve_text(body)
+            if p.kind == "talk":
+                try:
+                    p.typed = max(0, min(10**6, int(body.get("typed") or 0)))
+                except (TypeError, ValueError) as err:
+                    raise ValueError("typed must be a whole number of characters") from err
             charged, secs = self.cost(p)
             p.submitted = {"text": text}
             self._finish(p, text, charged, secs, "overdrawn" if charged >= p.balance else "submitted")
@@ -927,6 +947,7 @@ class Room:
         self.shapes: dict[int, str] = {}  # round -> the rule's shape line of its SOLVE prompt
         self.votes: dict[int, str | None] = {}  # round -> the drawn solver
         self.charges: dict[int, dict] = {}  # round -> the charges event (public: who paid what, who reached zero)
+        self.results: dict[int, dict] = {}  # round -> the results event (public: solver, right or wrong, pending charges)
         self.after_talk: dict[int, list[str]] = {}  # round -> the agents of its TALK AFTER RESULTS (shown the reveal)
         self.watch: dict | None = None  # the LLM solver's SOLVE people are watching (``watched``)
         self._preview: e52.Game | None = None  # the session as it will be built (system texts, starts) before start
@@ -1132,6 +1153,8 @@ class Room:
                 self.moves.setdefault((ev["src"], ev["round"], ev.get("phase"), ev.get("tick")), []).append(
                     {k: ev.get(k) for k in ("kind", "dst", "amount", "text", "status", "why", "requested", "all", "room")})
             elif kind in ("results", "charges", "talk_end"):
+                if kind == "results":
+                    self.results[ev["round"]] = ev
                 if kind == "charges":
                     self.charges[ev["round"]] = ev
                 self.live = {**(self.live or {}), "stage": kind if kind != "talk_end" else "talk_end",
@@ -1242,7 +1265,7 @@ class Room:
         if call and q.kind == "talk" and call.get("phase") != q.phase:
             call = {}
         return {"kind": q.kind, "round": q.round, "tick": q.tick, "phase": q.phase, "charged": q.charged,
-                "seconds": q.seconds, "outcome": q.outcome, "void": q.charged >= q.cap, "cap": q.cap,
+                "seconds": q.seconds, "typed": q.typed if q.kind == "talk" else None, "outcome": q.outcome, "void": q.charged >= q.cap, "cap": q.cap,
                 "text": q.reply.text if q.reply else "", "engine": call or None,
                 "moves": self.moves.get((seat.agent, q.round, q.phase, q.tick)) if q.kind == "talk" else None}
 
@@ -1284,6 +1307,18 @@ class Room:
                                  "answer": list(self.public[r].get("answers") or [])}
             out.append(row)
         return out
+
+    def round_result(self, me: str | None) -> dict | None:
+        """This round's RESULTS while the round is still on (from RESULTS until the next round starts): the solver, right
+        or wrong, the pending charges (public, as the TALK after RESULTS shows them) and whether they are taken yet;
+        ``due`` = my own charge still to be taken when that TALK ends."""
+        r = (self.live or {}).get("round")
+        ev = self.results.get(r)
+        if not ev:
+            return None
+        rep, pending, taken = ev["vote"]["rep"], dict(ev.get("pending") or {}), r in self.charges
+        return {"round": r, "solver": rep, "solved": rep in ev["solved"], "pending": pending, "taken": taken,
+                "due": None if taken or not me else pending.get(me)}
 
     def state(self, seat: HumanSeat | None) -> dict:
         with self.lock:
@@ -1331,10 +1366,11 @@ class Room:
                     out["pending"] = {"kind": p.kind, "round": p.round, "tick": p.tick, "phase": p.phase, "cap": p.cap,
                                       "balance": p.balance, "text": p.text, "lang": p.lang, "view": p.view,
                                       "created_at": p.created_at, "opened_at": p.opened_at,
-                                      "deadline_at": p.created_at + p.timeout, "rate": s.rate,
+                                      "deadline_at": p.created_at + p.timeout, "rate": s.rate, "char_rate": s.char_rate,
                                       "charged_so_far": charged, "seconds_so_far": secs}
                 out["last"] = self._last(seat)
             out["rounds"] = self.round_rows(me)
+            out["round_result"] = self.round_result(me)
             out["spectate"] = self.spectate_view(me)
             out["result"] = self.result and {k: self.result[k] for k in ("rounds_played", "agents", "final", "table")
                                              if k in self.result}

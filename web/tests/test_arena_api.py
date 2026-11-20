@@ -165,10 +165,27 @@ def test_timeout_overdraw_and_forfeit(client):
     start(client, ps)
     s = play(ps, lambda p, pend: None if pend["kind"] == "talk" else basic(p, pend))
     assert s["status"] == "finished" and s["last"]["outcome"] == "timeout"
-    ps = make_room(client, 1, seed=SEED, rounds=1, rate=10**7)
+    ps = make_room(client, 1, seed=SEED, rounds=1, rate=10**7)  # a SOLVE screen drains with time; a TALK screen does not
     start(client, ps)
-    s = play(ps, lambda p, pend: done(), hold=0.2)
-    assert s["you"]["status"] == "dead"
+    s = play(ps, lambda p, pend: done() if pend["kind"] == "talk" else None, hold=0.2,
+             until=lambda st: st["you"]["status"] != "in" or st["status"] == "finished")
+    talks = [x["reply"] for x in ps[0].seen if x["kind"] == "talk" and "reply" in x]
+    assert talks and all(r["charged"] == 0 for r in talks)  # 0.2 s open at 10^7/s, nothing typed: free
+    ps = make_room(client, 1, seed=SEED, rounds=1, char_rate=10**6)  # 1 typed character costs more than any balance
+    start(client, ps)
+    s = play(ps, lambda p, pend: {**done(), "typed": 1} if pend["kind"] == "talk" else basic(p, pend))
+    assert s["you"]["status"] == "dead" and s["last"]["outcome"] == "overdrawn"
+
+
+def test_a_talk_reply_costs_its_typed_characters(client):
+    ps = make_room(client, 1, seed=SEED, rounds=1, rate=10**7, char_rate=10)
+    start(client, ps)
+    s = play(ps, lambda p, pend: {**done(), "typed": 37} if pend["kind"] == "talk" else basic(p, pend),
+             until=lambda st: any(x["kind"] == "talk" and "reply" in x for x in ps[0].seen))
+    r = next(x["reply"] for x in ps[0].seen if x["kind"] == "talk" and "reply" in x)
+    assert r["charged"] == 370 and r["typed"] == 37
+    bad = client.post(f"/api/rooms/{ps[0].code}/submit", params={"token": ps[0].token}, json={"kind": "talk", "typed": "x"})
+    assert bad.status_code in (400, 409)
     ps = make_room(client, 1, seed=SEED, rounds=2)
     start(client, ps)
     play(ps, lambda p, pend: None, until=lambda st: st["pending"] is not None)

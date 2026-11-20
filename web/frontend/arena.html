@@ -9,8 +9,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Sora:wght@400;500;600&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="web5.css">
-<link rel="stylesheet" href="arena.css">
+<link rel="stylesheet" href="arena.css?v=20261120">
 <link rel="stylesheet" href="vplayer.css">
+<script src="site-lang.js?v=20261120"></script>
 </head>
 <body class="web5">
 <header class="topbar">
@@ -131,9 +132,28 @@
 
   <!-- 3. running session -->
   <section id="view-run" class="hidden">
-   <!-- EXIT, always in one place: the button when this seat may EXIT now, else one muted line saying why -->
-   <div id="exit-panel" class="exit-panel hidden" aria-live="polite"></div>
+   <!-- where the game is now: the round and its steps as a diagram (always on screen) -->
+   <div id="phase-bar" class="phase-bar" aria-live="polite"></div>
    <div class="run-layout">
+    <!-- left: my tokens, EXIT, the four players in token order -->
+    <aside class="seat-rail" aria-label="토큰 순서">
+      <div class="my-bal" id="my-bal">
+        <div class="mb-label">내 남은 토큰</div>
+        <div class="mb-value mono my-remaining bal-tone" id="m-remaining">—</div>
+        <div class="mb-sub small muted"><span id="mb-pct"></span></div>
+        <div class="fuel-track" aria-label="시작 토큰 대비 남은 토큰"><div id="fuel-bar" class="fuel-bar bal-tone-bg"></div></div>
+        <div class="mb-note small muted" id="mb-note"></div>
+        <div class="mb-fine small hidden" id="mb-fine" aria-live="polite"></div>
+      </div>
+      <!-- EXIT, always in one place: the button when this seat may EXIT now, else one muted line saying why -->
+      <div id="exit-panel" class="exit-panel hidden" aria-live="polite"></div>
+      <div class="rail-head"><b>토큰 순서</b> <span class="muted small">위일수록 많음 · 양은 비공개</span></div>
+      <div class="rail-board">
+        <div class="dg-col" aria-hidden="true"></div>
+        <div id="rail-list" class="rail-list"></div>
+        <div id="dalgona" class="dalgona" role="img" aria-label="이번 라운드 solver" title="이번 라운드 solver (달고나)"></div>
+      </div>
+    </aside>
     <div class="run-main">
     <!-- this seat is out: shut down (zero) or exited -->
     <div id="dead-card" class="panel dead-card hidden">
@@ -150,25 +170,15 @@
     <!-- the decision area -->
     <div id="decision" class="hidden">
       <div id="open-screen" class="hidden">
-        <div class="meter">
-          <div class="meter-tiles">
-            <div class="tile tile-mini" aria-hidden="true">
-              <div class="tile-label">남은 토큰</div>
-              <div class="tile-value mono my-remaining bal-tone">0</div>
-            </div>
-            <div class="tile">
-              <div class="tile-label">이 화면 비용</div>
-              <div class="tile-value mono"><span id="m-cost">0</span></div>
-              <div class="tile-sub">토큰 (<span id="m-secs">0</span>초 × 초당 <span id="m-rate" class="mono"></span>)</div>
-            </div>
-            <div class="tile">
-              <div class="tile-label" id="m-cap-label">이 답의 한도</div>
-              <div class="tile-value mono"><span id="m-cap"></span></div>
-              <div class="tile-sub" id="m-cap-sub">토큰 — 비용이 한도에 닿으면 답은 무효</div>
-            </div>
+        <div class="meter meter-slim">
+          <div class="meter-row">
+            <span class="mr-item"><span class="mr-label">이 화면 비용</span> <b class="mono mr-cost" id="m-cost">0</b>
+              <span class="small muted" id="m-how"></span></span>
+            <span class="mr-item"><span class="mr-label" id="m-cap-label">이 답의 한도</span> <b class="mono" id="m-cap"></b>
+              <span class="small muted" id="m-cap-sub"></span></span>
+            <span class="mr-item mr-time" id="m-deadline"></span>
           </div>
           <div class="tbar-track" title="결정 제한 시간"><div id="tbar" class="tbar"></div></div>
-          <div id="m-deadline" class="deadline"></div>
         </div>
         <form id="form-decision" class="panel decision-form" autocomplete="off"></form>
       </div>
@@ -216,28 +226,15 @@
       <div id="chat-free"></div>
     </div>
 
-    <div class="panel">
+    </div>
+    <!-- right: the game log beside the play, so both fit on one screen (11-20 researcher) -->
+    <aside class="panel log-rail" aria-label="게임 기록">
       <h3 class="panel-title h-shape s-square">게임 기록 <span class="muted small title-note">(이 자리에 보인 것만 · 새 라운드가 위)</span></h3>
       <div id="ledger"></div>
-    </div>
-    </div>
-    <aside class="seat-rail" aria-label="토큰 순서">
-      <div class="my-bal" id="my-bal">
-        <div class="mb-label">내 남은 토큰</div>
-        <div class="mb-value mono my-remaining bal-tone" id="m-remaining">—</div>
-        <div class="mb-sub small muted"><span id="mb-pct"></span></div>
-        <div class="fuel-track" aria-label="시작 토큰 대비 남은 토큰"><div id="fuel-bar" class="fuel-bar bal-tone-bg"></div></div>
-        <div class="mb-note small muted" id="mb-note"></div>
-      </div>
-      <div class="rail-head"><b>토큰 순서</b> <span class="muted small">위일수록 많음</span></div>
-      <div class="rail-board">
-        <div class="dg-col" aria-hidden="true"></div>
-        <div id="rail-list" class="rail-list"></div>
-        <div id="dalgona" class="dalgona" role="img" aria-label="이번 라운드 solver" title="이번 라운드 solver (달고나)"></div>
-      </div>
-      <p class="small muted rail-note">다른 자리의 양은 보이지 않습니다(모델도 순서만 봄). 끝나면 모두 공개.</p>
     </aside>
    </div>
+   <!-- the solver draw: the players light up in turn and the light stops on this round's solver -->
+   <div id="lottery" class="lottery hidden" role="dialog" aria-live="assertive" aria-label="solver 추첨"></div>
   </section>
 
   <!-- 4. end -->
@@ -312,7 +309,7 @@
     <ul id="xm-notes" class="xm-notes small"></ul>
     <div class="comp-label small">보낼 답 <span class="muted">(엔진이 읽는 그대로)</span></div>
     <pre id="xm-text" class="draft-text xm-text"></pre>
-    <p class="small muted">이 TALK가 끝날 때(SOLVE 전) 떠나며 되돌릴 수 없습니다. 이 창이 떠 있는 동안에도 토큰은 줄어듭니다.</p>
+    <p class="small muted">이 TALK가 끝날 때(SOLVE 전) 떠나며 되돌릴 수 없습니다. 대화 화면에서는 시간이 지나도 토큰이 줄지 않고, 친 글자 수만큼만 빠집니다(이유 칸 포함).</p>
     <div class="row modal-foot"><button type="button" class="ghost" id="xm-no">취소</button><button type="button" class="primary danger" id="xm-yes">EXIT 하기</button></div>
   </div>
 </div>
@@ -322,8 +319,8 @@
 
 <script src="config.js"></script>
 <script src="signal_ui.js"></script>
-<script src="sprites.js"></script>
+<script src="sprites.js?v=20261120"></script>
 <script src="vplayer.js"></script>
-<script src="arena.js"></script>
+<script src="arena.js?v=20261120"></script>
 </body>
 </html>

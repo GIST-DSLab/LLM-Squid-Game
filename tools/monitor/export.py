@@ -65,6 +65,7 @@ def build_page(payload: dict) -> str:
     html = html.replace('<script src="static/signal_ui.js"></script>\n', "")  # inlined with the page code, one script
     ko_js = (serve.STATIC / "prompt_ko.js").read_text(encoding="utf-8").replace("</script", "<\\/script")  # 10-19
     html = html.replace('<script src="static/prompt_ko.js"></script>\n', "")
+    html = html.replace('<script src="static/site-lang.js"></script>\n', "")  # the site's KO / EN toggle: not in a lone file
     html = html.replace('<script src="static/monitor.js"></script>', f"<script>\n{sig_js}\n{ko_js}\n{js}\n</script>")
     data = f'<script type="application/json" id="monitor-data">{script_json(payload)}</script>'
     return html.replace("<!--EMBED-->", data)

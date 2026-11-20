@@ -19,7 +19,7 @@
     at: -1, follow: true, runs: [], sessions: [], assets: null, open: new Set(), filt: { date: "", model: "", ver: "", harness: "", seed: "" },
     live: false, mtime: 0, now: 0, rendered: "", polling: false, err: "",
     give: { tab: "give", scope: "session", x: "full", data: new Map(), an: new Map() }, // per-model panels, this game only (10-17); x = % of 20,000 or own start
-    lang: "ko", sys: { run: "", data: null }, // 10-19: prompts in Korean (engine wording only) or as sent; the run's SYSTEM prompts (api/system)
+    lang: window.siteLang ? window.siteLang.get() : "ko", sys: { run: "", data: null }, // 10-19: prompts in Korean (engine wording only) or as sent; the run's SYSTEM prompts (api/system)
     puzzles: new Map(), showTruth: false, showHidden: false, // round panel: the unseen examples behind "?" (or shown, dashed)
     og: { round: null, turn: "all", faint: true, msgs: false, pin: null }, // offer graph: round null = follow the replay bar
     sel: { puzzle: { round: null, all: false } }, // the round task panel: one round (null = the replay bar's)
@@ -3189,6 +3189,7 @@
       S.rf.sel = S.rf.sel === b.dataset.step ? null : b.dataset.step;
       render(true);
     });
+    window.addEventListener("site-lang", (ev) => { S.lang = ev.detail; render(true); }); // the site-wide KO / EN toggle
     $("#sup").addEventListener("click", (ev) => { // the guard's bubble: whose prompt, back to the current box, seek to the call
       const b = ev.target.closest("[data-agent], [data-rf], [data-at], [data-lang]");
       if (!b) return;

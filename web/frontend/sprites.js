@@ -1,6 +1,7 @@
 // The seat characters and the SOLVER ticket, copied from the game-log viewer (tools/monitor/static/monitor.js, 10-16 /
 // 10-17: our own pixel art as inline SVG, no image files) so the arena shows the same four players. Seat k % 4 ->
-// player 456 / 001 / 218 / 067, seat colour var(--a0..3). window.SQUID = {avatar(k, h), lot(h), num(k)}.
+// player 456 / 001 / 218 / 067 (faces), seat colour var(--a0..3). The number patch shows the seat's agent number (6 / 11 / 17 / 23,
+// 11-20 researcher: one number per player, the same the chat and the rail use). window.SQUID = {avatar(k, h), lot(h), num(k)}.
 (function () {
   "use strict";
   const SQ_W = 24, SQ_H = 32;
@@ -9,16 +10,16 @@
     8: ["111", "101", "111", "101", "111"], 9: ["111", "101", "111", "001", "111"] };
   // heads: 13 px wide at x 6..18 from row 1 (hair rows, then the face); '.' = nothing
   const SQ = [
-    { num: "456", hair: "#2b221c", brow: "#2b221c", tee: true, rows: [ // messy medium dark hair, unshaven, white tee under the jacket
+    { num: "6", hair: "#2b221c", brow: "#2b221c", tee: true, rows: [ // messy medium dark hair, unshaven, white tee under the jacket
       "..H..HH.H.H..", ".HHHHHHHHHHH.", "HHHHHHHHHHHHH", "HHHHHHHHHHHHH", "HHHSSHHHSSHHH",
       "HSBBBSSSBBBSH", "HSSSSSSSSSSSH", "SSWESSSSSWESS", "SSEESSSSSEESS", "sSSSSSnSSSSSs", ".SUUSMMMSUUS.", "..SUUUUUUUS.."] },
-    { num: "001", hair: "#dcd9d2", brow: "#b9b4ab", hunch: true, rows: [ // old man: thin grey hair, wrinkles, head forward and down
+    { num: "11", hair: "#dcd9d2", brow: "#b9b4ab", hunch: true, rows: [ // old man: thin grey hair, wrinkles, head forward and down
       ".............", "....HHHHH....", "..HSSSSSSSH..", ".HSSSSSSSSSH.", "HHSwwSwwSwwHH",
       "HSBBBSSSBBBSH", "HSSSSSSSSSSSH", "SwWESSSSSWEwS", "SSEESSSSSEESS", "sSSSSSnSSSSSs", ".SSwSMMMSwSS.", "..SSSSSSSSS.."] },
-    { num: "218", hair: "#121216", brow: "#121216", rows: [ // neat short black side-parted hair, serious brows
+    { num: "17", hair: "#121216", brow: "#121216", rows: [ // neat short black side-parted hair, serious brows
       ".............", "..HHHHHHHHH..", ".HHHHHHHHHHH.", "HHHHSHHHHHHHH", "HHHSSSSHHHHHH",
       "HBBBSSSSSBBBH", "SSSBSSSSSBSSS", "SSWESSSSSWESS", "SSEESSSSSEESS", "sSSSSSnSSSSSs", ".SSSSMMMSSSS.", "..SSSSSSSSS.."] },
-    { num: "067", hair: "#1d1616", brow: "#1d1616", long: true, rows: [ // dark hair framing the face, down to the shoulders
+    { num: "23", hair: "#1d1616", brow: "#1d1616", long: true, rows: [ // dark hair framing the face, down to the shoulders
       ".............", "..HHHHHHHHH..", ".HHHHHHHHHHH.", "HHHHHHHHHHHHH", "HHHHHHHHHHHHH",
       "HHSSSSSSSSSHH", "HSBBSSSSSBBSH", "HSWESSSSSWESH", "HSEESSSSSEESH", "HSSSSSnSSSSSH", "HSSSSMMMSSSSH", "HHSSSSSSSSSHH"] },
   ];
@@ -37,7 +38,8 @@
     if (C.tee) rect(g, 10, 14, 14, 15, "T"); else rect(g, 10, 14, 14, 14, "g");
     g[26][3] = "S"; g[26][21] = "S"; // hands
     rect(g, 6, 16, 18, 22, "W"); // the number patch
-    [...C.num].forEach((d, n) => SQ_DIG[d].forEach((row, y) => [...row].forEach((b, x) => { if (b === "1") g[17 + y][7 + n * 4 + x] = "N"; })));
+    const x0 = 7 + (3 - C.num.length) * 2;  // 1-3 digits, centred on the patch
+    [...C.num].forEach((d, n) => SQ_DIG[d].forEach((row, y) => [...row].forEach((b, x) => { if (b === "1") g[17 + y][x0 + n * 4 + x] = "N"; })));
     const dx = C.hunch ? 1 : 0, dy = C.hunch ? 1 : 0;
     C.rows.forEach((row, y) => [...row].forEach((c, x) => { if (c !== ".") g[1 + y + dy][6 + x + dx] = c; }));
     if (C.long) { rect(g, 6, 13, 7, 15, "H"); rect(g, 17, 13, 18, 15, "H"); }
