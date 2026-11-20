@@ -220,8 +220,8 @@ class RoomStopped(RuntimeError):
 
 FILLS = ("models", "bots", "empty")
 PLAN_WHO = ("me", "human", "model", "bot", "empty")  # RoomSettings.plan: who sits in a seat
-HUMAN_RATE = 40.0  # a person's tokens per second on an open SOLVE screen (11-19 researcher: was balance_pct / 1200 = 83.3)
-HUMAN_CHAR_RATE = 10.0  # a person's tokens per character typed on a TALK screen (11-20 researcher: TALK by typing, not time)
+HUMAN_RATE = 10.0  # a person's tokens per second on an open SOLVE screen (11-20 researcher: a quarter of 40; 11-19: was balance_pct / 1200 = 83.3)
+HUMAN_CHAR_RATE = 2.0  # a person's tokens per character typed on a TALK screen (11-20 researcher: TALK by typing, not time; a fifth of 10)
 BOT_UNIT = 300  # a bot's step in tokens: its TALK reply costs 2% of it, a SOLVE 0.3-0.8 of it, the margin it keeps
 WEB_ONLY = ("room", "model_call")  # web events: stored, never written to the run directory
 HIDDEN = ("answers", "rule", "truth", "task", "seed", "attempt", "split", "profile", "generator_rule", "right",

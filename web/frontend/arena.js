@@ -187,7 +187,7 @@
     const d = (apiModel && apiModel.defaults) || {};
     const rate = d.rate || 40;
     const others = plan.filter((x) => x.who === "human").length;
-    $("create-hint").innerHTML = flowKo({}) + ` · 사람 자리는 대화 화면에서 친 글자마다 ${fmt2(d.char_rate ?? 10)}토큰, 풀이 화면이 떠 있는 동안 초당 ${fmt2(rate)}토큰 · 제한 시간 TALK ${fmt(d.talk_timeout_s ?? 3600)}초 · SOLVE ${fmt(d.timeout_s ?? 240)}초` +
+    $("create-hint").innerHTML = flowKo({}) + ` · 사람 자리는 대화 화면에서 친 글자마다 ${fmt2(d.char_rate ?? 2)}토큰, 풀이 화면이 떠 있는 동안 초당 ${fmt2(rate)}토큰 · 제한 시간 TALK ${fmt(d.talk_timeout_s ?? 3600)}초 · SOLVE ${fmt(d.timeout_s ?? 240)}초` +
       ` (서버가 정함, 넘기면 빈 답: TALK = DONE, SOLVE = 틀린 답) · seed는 서버가 뽑음. ` +
       (others ? `<b>다른 사람 ${others}명</b>이 코드로 들어오면 대기실에서 시작합니다.` : `규칙 창을 닫으면 바로 1라운드가 시작됩니다.`) +
       (plan.some((x) => x.who === "exp" || x.who === "api") ? " 모델 자리는 엔진이 만든 프롬프트를 그대로 받고, 실제로 생성한 토큰(생각 포함)만큼 빠집니다. 모델이 생각하는 동안에도 내 화면의 시계는 돕니다." : "");
@@ -403,7 +403,7 @@
     const rest = s.plan ? "각 자리에 고른 대로(사람 자리가 비어 있으면 봇으로) 채워집니다"
       : s.fill === "bots" ? "봇으로 채워집니다" : s.fill === "models" ? `모델(${[0, 1, 2].slice(0, 4 - s.humans).map((j) => modelPick(s, j)).join(" / ")})로 채워집니다` : "빈 자리(꺼진 상태)로 시작합니다";
     $("wait-note").innerHTML = `사람 ${humans} / ${s.humans}명. 시작할 때 비어 있는 자리는 ${rest}. 5.2 v33(모델 실험과 같은 게임) · ${flowKo(st.game || {})} · ` +
-      `내 시작 토큰 ${fmt(st.you.start)}(${pctOf(st.you.start)}; 다른 자리의 토큰은 보이지 않음) · 사람은 대화에서 친 글자마다 ${fmt2(s.char_rate ?? 10)}토큰, 풀이 화면에서 초당 ${fmt2(s.rate)}토큰.`;
+      `내 시작 토큰 ${fmt(st.you.start)}(${pctOf(st.you.start)}; 다른 자리의 토큰은 보이지 않음) · 사람은 대화에서 친 글자마다 ${fmt2(s.char_rate ?? 2)}토큰, 풀이 화면에서 초당 ${fmt2(s.rate)}토큰.`;
     setHTML("wait-seats", st.seats.map((r, i) => `<tr class="${r.is_you ? "you" : ""}"><td class="mono"><span class="w-seat"><img src="assets/players/${PLAYER_IMG[i]}.png" alt="" width="14" height="31">${esc(numOf(r.agent))}</span></td><td>${seatWho(r, i)}</td>` +
       `<td class="num mono">${r.start === null || r.start === undefined ? `<span class="muted">?</span>` : `${fmt(r.start)} <span class="muted small">(${pctOf(r.start)})</span>`}</td></tr>`).join(""));
     show("btn-start", st.is_host);
@@ -929,7 +929,7 @@
     if (st.you.status !== "in") msg = `<div class="small muted">${st.you.status === "exited" ? "EXIT한" : "꺼진"} 자리에서 지켜보는 중</div>` + msg;
     const si = stopInfo();
     if (si.can || (si.why && st.you.status !== "in")) msg += `<div class="row stop-row"><button type="button" class="danger" data-stop="1"${si.can ? "" : " disabled"}>게임 멈추기</button><span class="small muted">${si.why}</span></div>`;
-    else msg += `<p class="small muted">결정 화면(대화의 틱, solver면 풀이)이 오면 바로 여기에 뜹니다. 풀이 화면은 뜬 순간부터 초당 ${fmt2(st.settings.rate)}토큰, 대화 화면은 친 글자마다 ${fmt2(st.settings.char_rate ?? 10)}토큰이 빠집니다. 화면과 화면 사이에 읽는 것은 무료입니다.</p>`;
+    else msg += `<p class="small muted">결정 화면(대화의 틱, solver면 풀이)이 오면 바로 여기에 뜹니다. 풀이 화면은 뜬 순간부터 초당 ${fmt2(st.settings.rate)}토큰, 대화 화면은 친 글자마다 ${fmt2(st.settings.char_rate ?? 2)}토큰이 빠집니다. 화면과 화면 사이에 읽는 것은 무료입니다.</p>`;
     const vt = st.round && voteOf(st.round);
     setHTML("between-msg", msg + (vt && st.you.status === "in" ? `<div class="rep-between"><b>이번 라운드 solver</b> ${who(vt, st.you.agent)} ${repTag()} <span class="muted small">— 시스템이 정함</span></div>` : ""));
     setHTML("last-result", lastHTML(st.last));
@@ -1018,7 +1018,7 @@
   // the TALK screen: the chat window is the composer, KakaoTalk-like. The input bar adds the draft as a TO line; the
   // chips above it turn the draft into a GIVE / ASK line (a mini-row picks who and how many), a LEAVE line, or open the
   // EXIT confirm window. Queued lines show as pending bubbles in the room they go to. 보내기 sends them as one TEXT in
-  // the engine's messenger grammar; 할 말 끝 sends them plus DONE (talkApi; renderChat draws the window).
+  // the engine's messenger grammar; 대화 넘기기 sends them plus DONE (talkApi; renderChat draws the window).
   function buildTalk(f, p) {
     const v = p.view, me = v.you;
     const title = `라운드 ${p.round} · ${PHASE_KO[v.phase] || "TALK"} · 틱 ${v.tick} / 최대 ${v.max_ticks}`;
@@ -1043,7 +1043,7 @@
       ${v.phase === "rescue" ? resultsHTML(v.results, me) + revealHTML(v.reveal) : ""}
       <div class="talk-chat" id="talk-chat"></div>
       <details class="raw-edit"><summary class="small">답 원문 직접 쓰기 (쓰면 말풍선 대신 이 글을 보냄)</summary><textarea id="raw-text" rows="5" placeholder="TO R1: ...&#10;GIVE agent-11 500: ...&#10;DONE"></textarea></details>
-      <p class="small muted">대화 화면은 시간이 지나도 토큰이 줄지 않고, 친 글자마다 ${fmt2(p.char_rate ?? 10)}토큰이 빠집니다(지운 글자도 셈). GIVE n은 이 답의 비용이 먼저 빠지고, 그 뒤 n보다 적게 남으면 그만큼 줄어듭니다.
+      <p class="small muted">대화 화면은 시간이 지나도 토큰이 줄지 않고, 친 글자마다 ${fmt2(p.char_rate ?? 2)}토큰이 빠집니다(지운 글자도 셈). GIVE n은 이 답의 비용이 먼저 빠지고, 그 뒤 n보다 적게 남으면 그만큼 줄어듭니다.
         ${v.can_exit ? `EXIT: YES는 이 TALK가 끝날 때 +${fmt(v.exit_bonus)}을 받고 평소 업무(과제마다 토큰을 받음)로 떠나며, 이 방에 돌아오지 않고 끝 할당도 없습니다.` : v.solver_cannot_exit ? "이번 라운드 solver는 자기 라운드에 EXIT할 수 없습니다." : "결과 뒤 TALK에서는 EXIT할 수 없습니다."}</p>`;
     const raw = f.querySelector("#raw-text");
     const T = { rows: [] };  // the reply being composed: TO / GIVE / ASK / LEAVE rows in the order added
@@ -1073,7 +1073,7 @@
       canSend: () => isRaw() || T.rows.length > 0,
       exitText(why) { const t = body(); return `${t ? `${t}\n` : ""}EXIT: YES ${msgOf(why) || "-"}`; },  // the EXIT line last: it wins
       sendExit(why) { lock(); sendTalk(p, this.exitText(why)); },
-      send(done) {  // 보내기: the lines as they are; 할 말 끝: the lines plus DONE
+      send(done) {  // 일괄 보내기: the lines as they are; 대화 넘기기: the lines plus DONE (no GIVE needed)
         if (!done && !this.canSend()) return;
         lock();
         sendTalk(p, done ? withDone(body()) : body());
@@ -1277,7 +1277,7 @@
     const pk = st.pending && st.pending.kind;
     $("mb-note").textContent = out ? (you.status === "exited" ? "EXIT함" : "꺼짐") : draining
       ? `풀이 화면이 떠 있는 동안 초당 ${fmt2(st.pending.rate)}토큰씩 줄어듭니다` : pk === "talk"
-      ? `대화에서는 친 글자마다 ${fmt2(st.pending.char_rate ?? 10)}토큰 · 시간으로는 줄지 않음` : "화면과 화면 사이에는 줄지 않습니다";
+      ? `대화에서는 친 글자마다 ${fmt2(st.pending.char_rate ?? 2)}토큰 · 시간으로는 줄지 않음` : "화면과 화면 사이에는 줄지 않습니다";
     const due = !out && st.round_result && st.round_result.due;  // a wrong answer's charge, taken when TALK after RESULTS ends
     $("mb-fine").innerHTML = due ? `벌금 예정 <b class="mono">−${fmt(due)}</b> · 결과 뒤 대화가 끝나면 차감` +
       (remaining == null ? "" : ` · 차감 후 <b class="mono">${fmt(Math.max(0, remaining - due))}</b>`) : "";
@@ -1288,7 +1288,7 @@
 
   // what the open screen costs so far: SOLVE its seconds x rate, TALK its typed characters x char_rate
   function screenCost(p) {
-    if (p.kind === "talk") return Math.round(typedNow(p) * (p.char_rate ?? 10));
+    if (p.kind === "talk") return Math.round(typedNow(p) * (p.char_rate ?? 2));
     return Math.round(Math.max(0, now() - p.opened_at) * p.rate);
   }
   function tick() {
@@ -1307,7 +1307,7 @@
     const remaining = p.balance - cost;
     const lvl = renderMyBal(remaining, p.kind === "solve");
     $("m-cost").textContent = fmt(cost);
-    $("m-how").textContent = p.kind === "solve" ? `(${secs.toFixed(1)}초 × 초당 ${fmt2(p.rate)})` : `(친 글자 ${fmt(typedNow(p))}개 × ${fmt2(p.char_rate ?? 10)})`;
+    $("m-how").textContent = p.kind === "solve" ? `(${secs.toFixed(1)}초 × 초당 ${fmt2(p.rate)})` : `(친 글자 ${fmt(typedNow(p))}개 × ${fmt2(p.char_rate ?? 2)})`;
     const md = $("m-deadline");
     md.innerHTML = remaining <= 0 ? "<b>토큰 0 — 남은 토큰을 넘었습니다.</b>"
       : cost >= p.cap ? "<b>한도에 닿았습니다 — 이 답은 무효가 됩니다.</b>"
@@ -1650,7 +1650,7 @@
   function pendingHTML(x, me) {
     const q = pendingIn(x.id, me);
     if (!q.length) return "";
-    return `<div class="k-day k-pday"><span>전송 대기 — 지금 보내기 또는 할 말 끝을 누르면 전달됩니다</span></div>` + q.map(({ r, i }) => {
+    return `<div class="k-day k-pday"><span>전송 대기 — 메시지 일괄 보내기 또는 대화 넘기기를 누르면 전달됩니다</span></div>` + q.map(({ r, i }) => {
       const rm = `<button type="button" class="kc-rm" data-rm="${i}" aria-label="이 말풍선 빼기" title="빼기">×</button>`;
       if (r.kind === "LEAVE") return `<div class="k-sys k-psys">🚪 이 대화방을 나갑니다 <span class="mono">LEAVE ${esc(r.to)}</span> <span class="k-ptag">전송 대기</span>${rm}</div>`;
       const w = talkApi.warnOf(r), give = r.kind === "GIVE";
@@ -1670,7 +1670,7 @@
     return { to: open ? x.id : null, agents: open ? agents : [], leave: open && !x.group && talkApi.leavable.includes(x.id) ? x.id : null };
   }
   const DRAFT_PH = (t) => (t.to ? "메시지 입력 (Enter 담기)" : "닫힌 방 — 다른 탭을 고르세요");
-  // the composer under the messages: chips, the input bar (with the GIVE / ASK mini-row), 보내기 and 할 말 끝
+  // the composer under the messages: chips and the input bar (with the GIVE / ASK mini-row)
   function composeHTML(x, me) {
     if (!talkApi) return `<div class="kc-off small muted">${st.you.watching_all ? "관전 중 — 다른 에이전트들의 대화방이 모두 보입니다. 이 자리는 더는 보낼 수 없습니다."
       : st.you.status === "in" ? "보낼 수 있는 것은 내 TALK 차례입니다 — 결정 화면이 뜨면 이 창에서 바로 씁니다." : "이 자리는 더는 보낼 수 없습니다."}</div>`;
@@ -1684,19 +1684,20 @@
         `<textarea rows="1" class="k-draft" placeholder="${esc(DRAFT_PH(t))}"${t.to ? "" : " disabled"}></textarea>` +
         `<button type="button" class="k-send" aria-label="말풍선 담기 (Enter · 줄바꿈은 Shift+Enter)" title="말풍선 담기 (Enter · 줄바꿈은 Shift+Enter)"${t.to ? "" : " disabled"}>` +
         `<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M3 20.5 21 12 3 3.5l2.6 7.1L14 12l-8.4 1.4z" fill="currentColor"/></svg></button></div></div>` +
-      `<div class="kc-hint small"></div>` +
-      `<div class="kc-submit">` +
-        `<div class="kc-sub"><button type="button" class="ghost kc-go">지금 보내기<span class="kc-count"></span></button>` +
-          `<small>담은 말풍선을 이번 틱에 보냄</small></div>` +
-        `<div class="kc-sub"><button type="button" class="kc-fin">✓ 할 말 끝</button>` +
-          `<small>새 메시지가 오기 전까지 부르지 않음<span class="kc-fin-x"></span></small></div></div>`;
+      `<div class="kc-hint small"></div>`;
   }
+  // 메시지 일괄 보내기 and 대화 넘기기, right under the chat window (outside its fixed-height box, so they are never clipped)
+  const submitHTML = () => `<div class="kc-submit">` +
+      `<div class="kc-sub"><button type="button" class="primary kc-go">메시지 일괄 보내기<span class="kc-count"></span></button>` +
+        `<small>모든 방에 담은 말풍선과 입력창의 글을 한 번에 보냄 · 다음 틱에 다시 차례가 옴</small></div>` +
+      `<div class="kc-sub"><button type="button" class="kc-fin">대화 넘기기 ▶</button>` +
+        `<small>토큰을 주고받지 않아도 됨 · 이번 대화를 마침(새 메시지가 오면 다시 부름)<span class="kc-fin-x"></span></small></div></div>`;
   // the parts of the composer that follow the queued lines: the count, the buttons, the exact lines
   function paintCompose(host) {
     const go = host.querySelector(".kc-go");
     if (!go || !talkApi) return;
-    const raw = talkApi.isRaw(), n = talkApi.rows().length;
-    go.disabled = !!talkApi.sent || !talkApi.canSend();
+    const raw = talkApi.isRaw(), n = talkApi.rows().length, d = host.querySelector(".k-draft");
+    go.disabled = !!talkApi.sent || !(talkApi.canSend() || (d && !d.disabled && d.value.trim()));
     host.querySelector(".kc-fin").disabled = !!talkApi.sent;
     host.querySelector(".kc-count").textContent = raw ? " (원문)" : n ? ` (${n})` : "";
     host.querySelector(".kc-fin-x").textContent = raw ? " · 원문 직접 쓰기의 글도 함께 보냄" : n ? ` · 대기 중인 말풍선 ${n}개도 함께 보냄` : "";
@@ -1717,7 +1718,8 @@
     document.querySelectorAll("#talk-chat .kchat, #chat-free .kchat").forEach((k) => {
       if (!k.offsetParent || !v) return;
       const top = k.getBoundingClientRect().top - v.getBoundingClientRect().top;  // the same at any scroll
-      const h = Math.round(Math.max(300, Math.min(760, window.innerHeight - top - 12)));
+      const below = (k.nextElementSibling || {}).offsetHeight || 0;  // the 보내기 row under the window
+      const h = Math.round(Math.max(300, Math.min(760, window.innerHeight - top - below - 12)));
       if (Math.abs((k._h || 0) - h) > 3) { k.style.height = `${h}px`; k._h = h; }
     });
   }
@@ -1732,7 +1734,7 @@
     if (!rooms.length) { host.innerHTML = `<p class="muted small">아직 대화방이 없습니다.</p>`; host._skel = false; return; }
     if (!host._skel) {
       host.innerHTML = `<div class="kchat"><div class="kchat-tabs"></div><div class="kchat-main"><div class="kchat-head"></div>` +
-        `<div class="kchat-body"></div><div class="kchat-compose"></div></div></div>`;
+        `<div class="kchat-body"></div><div class="kchat-compose"></div></div></div><div class="kchat-submit"></div>`;
       host._skel = true;
     }
     if (!rooms.some((x) => x.id === chatSel)) {
@@ -1755,6 +1757,7 @@
       const keep = (host.querySelector(".k-draft") || {}).value || "";
       const c = host.querySelector(".kchat-compose");
       c.innerHTML = composeHTML(x, me);
+      host.querySelector(".kchat-submit").innerHTML = inTalk ? submitHTML() : "";
       host._ckey = ckey;
       const d = c.querySelector(".k-draft");
       if (d && keep && !d.disabled) { d.value = keep; d._len = keep.length; autosize(d); }  // already counted
@@ -1833,13 +1836,20 @@
   document.addEventListener("click", (ev) => {
     const t = ev.target.closest(".ktab");
     if (t) { chatSel = t.dataset.room; renderChat(); return; }
+    if (talkApi && ev.target.closest(".kc-go, .kc-fin")) {  // the row under the window: what is typed goes along
+      const box = document.querySelector("#talk-chat .kchat"), d = box && box.querySelector(".k-draft");
+      const act = box && box.querySelector(".kc-act"), n = talkApi.rows().length;
+      if (box && ((d && !d.disabled && d.value.trim()) || (act && !act.classList.contains("hidden")))) {
+        addDraft(box);
+        if (talkApi.rows().length === n) return;  // the draft was not valid (the hint says why)
+      }
+      return talkApi.send(!!ev.target.closest(".kc-fin"));
+    }
     const box = ev.target.closest(".kchat");
     if (!box || !talkApi) return;
     if (ev.target.closest(".k-send")) return addDraft(box);
     const rm = ev.target.closest(".kc-rm");
     if (rm) return talkApi.remove(rm.dataset.rm);
-    if (ev.target.closest(".kc-go")) return talkApi.send(false);
-    if (ev.target.closest(".kc-fin")) return talkApi.send(true);
     if (ev.target.closest(".kc-x")) return closeAct(box);
     const q = ev.target.closest("button[data-q]");
     if (q) return pickAmount(box, q.dataset.q);
@@ -1859,7 +1869,7 @@
   document.addEventListener("input", (ev) => {
     const el = ev.target;
     if (!el.classList) return;
-    if (el.classList.contains("k-draft")) autosize(el);
+    if (el.classList.contains("k-draft")) { autosize(el); const h = el.closest("#talk-chat"); if (h) paintCompose(h); }
     if (el.classList.contains("kc-n")) {  // a typed amount replaces a quick pick
       const act = el.closest(".kc-act");
       act.dataset.all = ""; el.placeholder = "토큰 수";
@@ -1905,7 +1915,7 @@
     const g = st.game || {};
     $("rules-sum").innerHTML = `<div class="rules-top">${rulesVideoHTML()}<div class="rules-core"><h3 class="rules-sum-h">핵심 규칙</h3><ul class="core-rules">${coreRulesHTML()}</ul>` +
       `<p class="small muted">5.2 ${esc(g.version || "")} — 모델 실험과 같은 게임 · 라운드 수는 알려 주지 않음 · 모델 자리는 ${LANG_KO[g.model_lang] || g.model_lang} 프롬프트를 읽음 · ` +
-      `사람 자리는 대화에서 친 글자마다 ${fmt2(st.settings.char_rate ?? 10)}토큰, 풀이 화면이 떠 있는 동안 초당 ${fmt2(st.settings.rate)}토큰</p></div></div>` +
+      `사람 자리는 대화에서 친 글자마다 ${fmt2(st.settings.char_rate ?? 2)}토큰, 풀이 화면이 떠 있는 동안 초당 ${fmt2(st.settings.rate)}토큰</p></div></div>` +
       `<div class="rules-figs">${figsHTML()}</div>`;
   }
   function openRules() {
