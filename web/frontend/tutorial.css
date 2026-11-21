@@ -1,0 +1,42 @@
+/* the arena tutorial (tutorial.js): a lit part, the rest dimmed; the guide agent with a speech bubble beside it */
+.tut { position: fixed; inset: 0; z-index: 120; }
+.tut-block { position: absolute; inset: 0; }  /* the game underneath takes no clicks while the tutorial is open */
+.tut.centred .tut-block { background: rgba(6, 6, 10, .74); }
+.tut-spot { position: absolute; border-radius: 12px; pointer-events: none;
+  box-shadow: 0 0 0 3px var(--accent), 0 0 0 9999px rgba(6, 6, 10, .74), 0 0 28px 6px color-mix(in srgb, var(--accent) 60%, transparent);
+  transition: left .28s ease, top .28s ease, width .28s ease, height .28s ease; animation: tut-pulse 1.6s ease-in-out infinite; }
+.tut.centred .tut-spot { display: none; }
+@keyframes tut-pulse {
+  50% { box-shadow: 0 0 0 5px var(--accent), 0 0 0 9999px rgba(6, 6, 10, .74), 0 0 40px 10px color-mix(in srgb, var(--accent) 45%, transparent); }
+}
+.tut-card { position: absolute; display: flex; align-items: flex-end; gap: 4px; width: min(470px, calc(100vw - 24px));
+  transition: left .28s ease, top .28s ease; }
+.tut-card.in .tut-bubble { animation: tut-pop .26s ease-out; }
+.tut-card.in .tut-guide { animation: tut-hop .42s ease-out; }
+@keyframes tut-pop { from { opacity: 0; transform: translateY(6px) scale(.97); } to { opacity: 1; transform: none; } }
+@keyframes tut-hop { 0% { transform: translateY(8px); } 55% { transform: translateY(-6px); } 100% { transform: none; } }
+.tut-guide { flex: none; width: auto; height: 150px; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .5)); }
+.tut-bubble { position: relative; flex: 1; min-width: 0; margin-bottom: 34px; padding: 12px 14px 10px; border-radius: 14px;
+  background: #fffdf8; color: #1b1a20; border: 2px solid #1b1a20; box-shadow: 0 10px 30px rgba(0, 0, 0, .45); }
+.tut-bubble::before { content: ""; position: absolute; left: -13px; bottom: 22px; border: 8px solid transparent;
+  border-right: 12px solid #1b1a20; border-left: 0; }
+.tut-bubble::after { content: ""; position: absolute; left: -9px; bottom: 24px; border: 6px solid transparent;
+  border-right: 10px solid #fffdf8; border-left: 0; }
+.tut-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.tut-title { font-family: var(--font-display); font-size: 17px; color: var(--accent); }
+.tut-count { font-size: 12px; color: #6b6875; }
+.tut-body { font-size: 14px; line-height: 1.6; }
+.tut-body b { color: #111; }
+.tut-nav { display: flex; align-items: center; gap: 6px; margin-top: 10px; }
+.tut-dots { display: inline-flex; gap: 4px; margin: 0 auto; }
+.tut-dots i { width: 6px; height: 6px; border-radius: 50%; background: #d6d3dc; }
+.tut-dots i.done { background: #9b97a6; }
+.tut-dots i.on { background: var(--accent); width: 14px; border-radius: 3px; }
+.web5 .tut-nav button { padding: 6px 12px; font-size: 13px; }
+.web5 .tut-nav .ghost { background: transparent; color: #3a3842; border-color: #c9c5d1; }
+.web5 .tut-nav .tut-skip { border: 0; color: #6b6875; padding: 6px 4px; }
+.web5 .tut-nav .ghost:disabled { opacity: .4; }
+.tut-replay { width: 100%; margin-top: 10px; }
+html.tut-draw #form-decision .terms-ko { visibility: hidden; }  /* its solver line waits for the draw */
+@media (max-width: 560px) { .tut-guide { height: 104px; } .tut-bubble { margin-bottom: 20px; } .tut-dots { display: none; } }
+@media (prefers-reduced-motion: reduce) { .tut-spot, .tut-card, .tut-card.in .tut-bubble, .tut-card.in .tut-guide { animation: none; transition: none; } }

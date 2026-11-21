@@ -36,7 +36,8 @@
   const PHASE_KO = { prep: "SOLVE 전 TALK", rescue: "결과 뒤 TALK" };
   const LANG_KO = { ko: "한국어", en: "English" };
   const repTag = () => `<span class="tag rep">solver</span>`;
-  const voteOf = (round) => ((st && st.votes) || {})[String(round)] || null;
+  let drawHeld = false;  // round 1 before the tutorial is done: the solver is not shown yet (the draw comes after it)
+  const voteOf = (round) => (drawHeld ? null : ((st && st.votes) || {})[String(round)] || null);
 
   // --- local session ---------------------------------------------------------------------------------------------
   function loadSess() { try { return JSON.parse(localStorage.getItem(LS_KEY) || "null"); } catch { return null; } }
@@ -460,6 +461,8 @@
   // --- running ------------------------------------------------------------------------------------------------------
   function renderRun() {
     showView("run");
+    drawHeld = holdDraw();
+    document.documentElement.classList.toggle("tut-draw", drawHeld);
     const you = st.you;
     const out = you.status !== "in";
     const p = st.pending;
@@ -501,7 +504,29 @@
     renderExitPanel();
     renderHistory("ledger", st.rounds, st.ledger);
     tick();
+    maybeTutorial();
   }
+
+  // the tutorial (tutorial.js) before the first move, once per browser: in round 1 the solver draw (and every sign of
+  // the solver) waits until it is done; it opens with my first TALK screen, which the game waits for
+  const tutFacts = () => {
+    const g = st.game || {}, s = st.settings || {};
+    return { me: numOf(st.you.agent), start: st.you.start, charge: g.charge_total, ticks: g.max_ticks || 8, exitBonus: g.exit_bonus,
+      allocation: g.allocation, charRate: s.char_rate ?? 2, rate: s.rate, drawn: !drawHeld && !!voteOf(st.round) };
+  };
+  function holdDraw() {
+    const T = window.ArenaTutorial;
+    if (!T || !sess || st.round !== 1 || st.you.status !== "in" || st.you.forfeited) return false;
+    if (T.active()) return true;
+    try { if (sessionStorage.getItem(`web5_lot_${sess.code}_1`)) return false; } catch { /* ignore */ }  // the draw was shown
+    return !T.seen();
+  }
+  function maybeTutorial() {
+    const p = st.pending;
+    if (!drawHeld || window.ArenaTutorial.active() || !p || p.kind !== "talk" || p.round !== 1 || p.phase !== "prep") return;
+    window.ArenaTutorial.start(tutFacts, () => { if (st && st.status === "running") renderRun(); });  // then the draw
+  }
+  $("btn-tutorial").addEventListener("click", () => { if (window.ArenaTutorial && st) window.ArenaTutorial.start(tutFacts); });
 
   // --- where the game is: the round's steps as a diagram, always on top of the run screen (11-20 researcher) ------------
   const STEPS = [
@@ -526,19 +551,19 @@
   function renderPhase() {
     const el = $("phase-bar"), lv = st.live || {}, me = st.you.agent, r = st.round || lv.round || 0;
     if (!el) return;
-    const cur = stepNow(lv), sv = voteOf(r), p = st.pending, mt = lv.max_ticks || (st.game || {}).max_ticks || 8;
+    const cur = drawHeld ? 0 : stepNow(lv), sv = voteOf(r), p = st.pending, mt = lv.max_ticks || (st.game || {}).max_ticks || 8;
     const last = (st.rounds || []).find((x) => x.round === r);
     const typers = (st.seats || []).filter((x) => x.agent !== me && typingNow(x)).map((x) => numOf(x.agent));
     const sub = [
       sv ? `solver <b class="mono">${esc(numOf(sv))}</b>${sv === me ? " (나)" : ""}` : "",
-      cur === 1 ? `틱 ${lv.tick || 1} ${pips(lv.tick || 1, mt)}` : "",
+      cur === 1 || drawHeld ? `틱 ${lv.tick || 1} ${pips(lv.tick || 1, mt)}` : "",  // the tutorial's tick step points at it
       sv ? (sv === me ? "내가 품" : `${esc(numOf(sv))}이 품`) : "",
       last ? (last.solved ? `<span class="ok-text">✓ 맞음</span>` : `<span class="bad-text">✗ 틀림</span>`) : "",
       cur === 4 ? `틱 ${lv.tick || 1} ${pips(lv.tick || 1, mt)}` : "",
       last && !last.solved ? `각자 ${fmt((st.game || {}).charge_total / Math.max(1, (last.taking_part || []).length || 4))}` : last ? "벌금 없음" : "",
     ];
     const steps = STEPS.map((x, i) => `<li class="pb-step ${i < cur ? "done" : i === cur ? "now" : "next"}">` +
-      `<span class="pb-dot">${i < cur ? "✓" : i + 1}</span><span class="pb-txt"><b>${x.t}</b><small>${i <= cur && sub[i] ? sub[i] : x.d}</small></span></li>`).join("");
+      `<span class="pb-dot">${i < cur ? "✓" : i + 1}</span><span class="pb-txt"><b>${x.t}</b><small>${(i <= cur || (drawHeld && i === 1)) && sub[i] ? sub[i] : x.d}</small></span></li>`).join("");
     let doing;
     if (st.you.status !== "in") doing = `${st.you.status === "exited" ? "EXIT한" : "꺼진"} 자리에서 지켜보는 중`;
     else if (p) doing = "";  // my own screen: no instruction line (11-20 researcher)
@@ -583,7 +608,7 @@
   const noteFace = (a, mark) => `<div class="note-face" style="--c:var(--a${AGENTS.indexOf(a)})">` +
     `${window.SQUID ? window.SQUID.avatar(AGENTS.indexOf(a), 96) : ""}<span class="note-mark">${mark}</span><b class="mono">${esc(numOf(a))}</b></div>`;
   function maybeNotes() {
-    if (!sess || !st.you) return;
+    if (!sess || !st.you || drawHeld) return;  // the solver draw waits for the tutorial
     const me = st.you.agent, rr = st.round_result;
     if (rr && !rr.taken) {
       const key = `web5_res_${sess.code}_${rr.round}`;
