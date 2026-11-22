@@ -98,6 +98,8 @@ claude CLI 백엔드는 구독 로그인을 쓰며 `ANTHROPIC_API_KEY`를 자식
 - `docs/reports/`는 발행 후 고치지 않는다. `docs/history/`는 추가만 한다.
   `docs/history/paper-agent-loop-juhyeon-20261103/review/`(PDF 1.09 GB)는 디스크에만 두고 git은 무시한다(2026-11-13).
 - `paper/`는 서브모듈(`iamseungpil/LLM_Squid_Game-paper`, Overleaf 미러)이다.
+  Overleaf가 `main`의 파일을 모두 가져가므로 `paper/`에는 컴파일에 쓰는 것과 글쓰기 규칙만 둔다(2026-11-13). 포스터는 `docs/poster/`,
+  끝난 리뷰 회차의 폴더는 `docs/history/paper-cogsci-review-2026-11-13/`(디스크에만 두고 git은 무시)에 있다. 빌드한 PDF(`paper/dist/`)는 paper의 git이 무시한다.
 - 키는 환경변수로만 받는다. `.env`를 `source`하지 않는다.
 - 언어: 코드·주석 영어, 문서 한국어, 모델이 읽는 문장 영어.
 

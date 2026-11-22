@@ -171,6 +171,9 @@ result/2026-09-09/score_equiv_probe/analysis/score_equiv_pilot/**/judge_cache/
 # Paper-agent loop review copy (2026-11-03): 4,648 files, 1.09 GB of PDFs. Kept on disk only (2026-11-13 researcher);
 # it was committed once (1c97242b, never pushed) and taken back out.
 /docs/history/paper-agent-loop-juhyeon-20261103/review/
+# Finished review rounds of the CogSci paper, moved out of paper/review on 2026-11-13 (32 folders, 913 files, 1.1 GB,
+# mostly rendered pages and PDF copies). Kept on disk only, like the folder above.
+/docs/history/paper-cogsci-review-2026-11-13/
 
 # The rules video's Remotion project (web/video): dependencies live in node_modules.nosync (iCloud skips *.nosync)
 # behind the node_modules symlink; out/ is render scratch.
