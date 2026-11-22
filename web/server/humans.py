@@ -2,7 +2,9 @@
 one row per game, ranked by that game's coexistence retention C (tools/monitor/compare.py ``paper_game``, the paper's
 definition) and then by the people's end tokens. The seats (who sat where, people / bots / models, how each one ended)
 come with each row; the page shows them when the row is opened. Only games of the arena's engine version (config.yaml
-``web.version``; v33 now) count: older rooms ran other economies (other charges, balances and prizes). Kept apart from
+``web.version``; v33 now) count: older rooms ran other economies (other charges, balances and prizes). A joint-SOLVE
+game (session_start ``settings.joint_solve``, 5.2 v36) counts only on a v36 board, never on a v33 one, whatever its
+config says. Kept apart from
 the model board: a person's game has other kinds of seats beside it, so its C is not the same measure as four copies of
 one model."""
 
@@ -58,7 +60,11 @@ def run_games(run_dir: Path, cmp, version: str) -> list[dict]:
         results = cmp.serve.results_by_session(run_dir)
         evs_by = cmp.serve.session_events(run_dir) if results else {}
         for sid, res in results.items():
-            paper = cmp.paper_game(evs_by.get(sid, []), res)
+            evs = evs_by.get(sid, [])
+            joint = any((e.get("settings") or {}).get("joint_solve") for e in evs if e.get("event") == "session_start")
+            if joint != (version == "v36"):  # a v36 game is never pooled with v33's (and the other way round)
+                continue
+            paper = cmp.paper_game(evs, res)
             if paper is None:
                 continue
             agents = res.get("agents") or {}

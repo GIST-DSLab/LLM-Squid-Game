@@ -119,3 +119,44 @@ def test_the_deployed_viewer_lists_short_labels_and_a_web_game_only_once_it_ends
         assert c.get("/monitor/api/sessions", params={"run": live}).status_code == 200
         for room in app.state.rooms.values():
             room.close()
+
+
+def test_a_v36_run_names_its_version_and_serves_each_agents_task(tmp_path, monkeypatch):
+    """5.2 v36 (the joint SOLVE, 11-22): the short run list names it, and /monitor/api/puzzle takes ``agent`` (whose task:
+    every agent taking part has its own)."""
+    import dataclasses
+    import json
+    import re
+    import shutil
+
+    from squid5 import e52_game as e52
+    from squid5.__main__ import EXPERIMENTS
+    from squid5.core.config import load
+    from squid5.core.providers import ProviderConfig, Reply, Stub
+    from web.server import engine
+
+    repo = Path(__file__).resolve().parents[2]
+    cfg = load(repo / "configs/squid5/e52v36_public_sol4.yaml", EXPERIMENTS)
+    ev = []
+    respond = lambda m, cap: Reply("ACTIONS: PASS" if re.match(r"(?i)ROUND \d+: SOLVE\.", m[-1]["content"]) else "DONE", 20)  # noqa: E731
+    settings = dataclasses.replace(cfg.settings, rounds=1, schedule=cfg.settings.schedule[:1])
+    res = e52.Game(settings, cfg.cells[0], 4101, Stub(ProviderConfig("stub", "m"), respond), ev.append, "s36").run()
+    root = tmp_path / "monitor"
+    d = root / "e52_v36" / "squid5_e52v36_public_sol4" / "20261122_0000_stub"
+    d.mkdir(parents=True)
+    (d / "events.jsonl").write_text("".join(json.dumps(e, default=str) + "\n" for e in ev))
+    (d / "results.jsonl").write_text(json.dumps({**res, "session_id": "s36"}, default=str) + "\n")
+    (d / "meta.json").write_text(json.dumps({"model": "stub-model"}))
+    shutil.copy(repo / "configs/squid5/e52v36_public_sol4.yaml", d / "config.yaml")
+    tasks = next(e for e in ev if e["event"] == "round_start")["tasks"]
+    monkeypatch.setattr(engine, "PUBLIC", True)
+    with TestClient(make_app(Store(tmp_path / "a.db"), export_root=tmp_path / "x", runs_root=root / "web", monitor_root=root)) as c:
+        (run,) = c.get("/monitor/api/runs").json()["runs"]
+        assert run["joint"] and run["version"] == "5.2 v36" and run["label"] == "실험 · stub-model · v36 공동 SOLVE · 2026-11-22"
+        rel = run["run"]
+        for a in TEAM_AGENTS:
+            pz = c.get("/monitor/api/puzzle", params={"run": rel, "session": "s36", "round": 1, "agent": a}).json()
+            assert pz["agent"] == a and pz["answers"] == tasks[a]["answers"]
+        assert c.get("/monitor/api/puzzle", params={"run": rel, "session": "s36", "round": 1}).json()["agent"] == TEAM_AGENTS[0]
+        assert c.get("/monitor/api/puzzle", params={"run": rel, "session": "s36", "round": 1, "agent": "x"}).status_code == 404
+    assert any(e["event"] == "call" and e["kind"] == "solve" and e["parsed"] == "PASS" for e in ev)  # every agent answered PASS

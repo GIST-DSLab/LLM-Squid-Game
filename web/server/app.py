@@ -3,7 +3,8 @@
 Rooms (part 2)
     POST /api/rooms                         {host_name, lang, settings{...}}      -> {code, token, agent}
                                             settings.plan = 4 x {who: me | human | model | bot | empty, ...}: who sits
-                                            where (the maker in the "me" seat); seed, rate and the TALK / SOLVE time
+                                            where (the maker in the "me" seat); settings.version = v33 (default) | v36
+                                            (joint SOLVE: every seat answers its own task, see engine.py); seed, rate and the TALK / SOLVE time
                                             limits are the server's own (SERVER_SETTINGS: a client's values are ignored)
     POST /api/rooms/{code}/join             {name, lang}                          -> {token, agent}
     POST /api/rooms/{code}/start?token=     host only
@@ -13,6 +14,7 @@ Rooms (part 2)
     POST /api/rooms/{code}/submit?token=    TALK (pending.kind "talk"): {kind, round, tick, phase, text} (the reply in the
                                             messenger grammar: TO / GIVE / GIVE ALL / ASK / LEAVE / EXIT: YES|NO / DONE);
                                             SOLVE: {kind: "solve", round, actions[], belief{action: %}}
+                                            (v36: {kind: "solve", round, pass: true} = ACTIONS: PASS, no answer)
                                                                                   -> {charged, seconds, outcome, void}
     POST /api/rooms/{code}/watched?token=   {round}: this person is done watching the LLM solver's SOLVE
     POST /api/rooms/{code}/forfeit?token=   give up: EXIT: YES at the next TALK before SOLVE that allows it; else DONE
@@ -76,7 +78,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from . import engine as _eng  # its public-mode switches are read at call time (tests flip them)
-from .engine import (AGENTS, API_KINDS, LANGS, VERSION, THINK_LEVELS, experiment_seats, HumanSeat, Room, RoomSettings, default_runs_root,
+from .engine import (AGENTS, API_KINDS, LANGS, VERSION, VERSIONS, THINK_LEVELS, experiment_seats, HumanSeat, Room, RoomSettings, default_runs_root,
                      public_events, export_files, new_code)
 from . import signal as sig
 from .humans import humans_board
@@ -134,7 +136,7 @@ def make_app(store: Store | None = None, export_root: Path | None = None, runs_r
         return {"kind": d.kind, "kinds": list(API_KINDS), "model": d.model, "base_url": d.base_url or "https://ollama.com",
                 "think": d.think, "think_levels": list(THINK_LEVELS), "api_key_env": API_KINDS[d.kind], "available": not why,
                 "why": why, "timeout": d.model_timeout, "seat_code": bool(_eng.PUBLIC and _eng.SEATS),
-                "langs": list(LANGS), "version": VERSION, "seats": seats,
+                "langs": list(LANGS), "version": VERSION, "versions": list(VERSIONS), "seats": seats,
                 "public": _eng.PUBLIC, "models": _eng.PUBLIC_MODELS if _eng.PUBLIC else None, "defaults": {k: v for k, v in asdict(d).items() if k != "seed"}}
 
     # --- rooms -----------------------------------------------------------------------------------------------------

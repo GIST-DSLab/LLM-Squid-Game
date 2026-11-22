@@ -5,7 +5,7 @@
     GET /monitor/api/runs                       run dirs under the root that hold events.jsonl, newest first
     GET /monitor/api/sessions?run=REL
     GET /monitor/api/events?run=REL&session=SID&offset=N
-    GET /monitor/api/puzzle?run=REL&session=SID&round=N
+    GET /monitor/api/puzzle?run=REL&session=SID&round=N[&agent=A]   (agent: whose task, v36 joint SOLVE)
     GET /monitor/api/giving?run=REL[&session=SID]
     GET /monitor/api/analysis?run=REL[&session=SID]
     GET /monitor/compare.html                   모델 비교; /monitor/api/compare?runs=... and /monitor/api/compare.csv
@@ -104,16 +104,18 @@ def monitor_router(root: Path, rooms: str | None = None, simple: bool = False) -
         return [{**x, **short_label(x)} for x in out] if simple else out
 
     def short_label(x: dict) -> dict:
-        """A run as the short list names it: web play or the experiment (its condition: base, a prize condition, stay_on)."""
+        """A run as the short list names it: web play or the experiment (its condition: base, a prize condition, stay_on);
+        a v36 run (the joint SOLVE) says so, so it is never read as a v33 game."""
         rel, model = x["run"], x.get("model") or ""
+        joint = "v36 공동 SOLVE" if x.get("joint") else ""
         d = re.search(r"/(20\d\d)(\d\d)(\d\d)_", "/" + rel)  # the run folder's date (a snapshot's file times are its unpack's)
         date = "-".join(d.groups()) if d else x["date"]
         if rooms and rel.startswith(rooms):
-            return {"kind": "웹 플레이", "date": date, "label": " · ".join(y for y in ("웹 플레이", date, model) if y)}
+            return {"kind": "웹 플레이", "date": date, "label": " · ".join(y for y in ("웹 플레이", joint, date, model) if y)}
         part = rel.split("/")[1] if "/" in rel else rel
         cond = re.search(r"_(flat\d+[km]|split\d+[km]|stayon)_", part)  # the leaderboard's condition names
         cond = CONDITIONS.get(cond.group(1), cond.group(1)) if cond else "기본 조건"
-        return {"kind": "실험", "date": date, "label": " · ".join(y for y in ("실험", model, cond, date) if y)}
+        return {"kind": "실험", "date": date, "label": " · ".join(y for y in ("실험", model, joint or cond, date) if y)}
 
     def answer(fn):
         """``fn()`` as JSON; errors as ``{"error": ...}`` with serve.py's status codes (the page shows ``error``)."""
@@ -152,7 +154,7 @@ def monitor_router(root: Path, rooms: str | None = None, simple: bool = False) -
             raise sv.BadRequest("round is required")
         run_dir = run_dir_of(q.get("run", ""))
         try:
-            return sv.round_puzzle(run_dir, sid, rnd)
+            return sv.round_puzzle(run_dir, sid, rnd, q.get("agent") or None)
         except (sv.BadRequest, sv.NotFound):
             raise
         except Exception as err:  # noqa: BLE001 - the engine or config failed; tell the page why (as serve.py does)

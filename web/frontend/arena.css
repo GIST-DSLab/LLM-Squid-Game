@@ -1208,6 +1208,14 @@ main.arena:has(#view-run:not(.hidden)) { max-width: 1760px; }
 .note.ok .note-head { color: #3ddc84; }
 .note.bad .note-head { color: #ff6b6b; }
 .note-sub { margin-top: 6px; color: var(--text-dim); }
+.lot-card.jr { position: relative; opacity: .25; transform: scale(.92); transition: opacity .3s, transform .3s, box-shadow .3s; }  /* v36 results */
+.lot-card.jr.shown { opacity: 1; transform: none; }
+.lot-card.jr.out.shown { opacity: .4; filter: grayscale(1); }
+.jr-mark { position: absolute; right: -10px; top: -12px; font: 900 34px/1 var(--font, sans-serif); text-shadow: 0 2px 8px rgba(0, 0, 0, .6); }
+.jr-mark.ok { color: #3ddc84; }
+.jr-mark.bad { color: var(--danger-color, #e3342b); }
+.jr-mark.pass { font-size: 16px; top: -8px; padding: 2px 6px; border-radius: 6px; color: var(--text); background: var(--panel-alt); border: 1px solid var(--border); }
+.lot-card.jr.shown:has(.jr-mark.ok) { border-color: #3ddc84; box-shadow: 0 0 18px color-mix(in srgb, #3ddc84 40%, transparent); }
 .note-due { display: inline-block; margin-top: 10px; padding: 4px 12px; border-radius: 8px; border: 1px solid var(--danger-color, #e3342b); color: #ff6b6b; }
 .note-due b { font-size: 18px; }
 .ktick { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; padding: 8px 10px; border-bottom: 1px solid var(--border);

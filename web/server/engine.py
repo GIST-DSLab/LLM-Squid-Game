@@ -5,8 +5,12 @@ exactly as the experiment does -- the same rulebook and messages, fixed 20 examp
 taking part, the 24,000 charge split among those taking part at the round's start, the solver unable to EXIT its own
 round unless alone, EXIT +20,000, the 20,000,000 end allocation split 1/N, the hidden round count, the rank-only token
 view and the task revealed after RESULTS. A room only sets the seats, the clock and, if asked, the number of rounds (hidden
-as in the engine). ``session.providers`` then gets one object per seat whose ``complete(messages, cap)`` returns a
-``Reply`` like a model provider:
+as in the engine). A room made with ``version: "v36"`` plays ``configs/squid5/e52v36_public_sol4.yaml`` instead (the v33
+game + ``joint_solve``): no solver is drawn, every agent still taking part after the TALK before SOLVE answers its own task
+(``ACTIONS: PASS`` allowed), one correct answer spares everyone the charge, anyone may EXIT before SOLVE, and after RESULTS
+each seat is shown only its own task again; there LLM seats solve unwatched (several seats solve at once).
+``session.providers`` then gets one object per seat whose ``complete(messages, cap)`` returns a ``Reply`` like a model
+provider:
 
 - ``HumanSeat`` blocks until the person at that seat submits the screen. A TALK reply is the TEXT the page composed in
   the engine's messenger grammar (TO / GIVE / GIVE ALL / ASK / LEAVE / EXIT: YES|NO / DONE), so the engine's parser
@@ -70,6 +74,8 @@ from . import signal as _cfg  # noqa: E402  the one place the config is read (th
 
 AGENTS = list(rules.TEAM_AGENTS)
 VERSION = "v33"  # the paper's default setup (11-07 researcher: the arena plays v33, not v35)
+VERSIONS = ("v33", "v36")  # RoomSettings.version: v36 = the joint SOLVE (11-22 researcher)
+GAMES: dict[str, dict] = _cfg.GAMES  # version -> its config's game section
 GAME: dict = _cfg.GAME  # the config's game section
 PROFILES: dict[str, dict] = dict(_cfg.PROFILES)
 SCHEDULE: list[str] = list(_cfg.SCHEDULE)
@@ -262,8 +268,11 @@ class RoomSettings:
     # (someone who joins by code; a bot if nobody has by the start) | {"who": "bot"} | {"who": "empty"} | {"who": "model",
     # "seat": <experiment seat>} | {"who": "model", "kind", "model", "think"?}. It sets humans, fill and models.
     plan: list | None = None
+    version: str = VERSION  # the game: "v33" (default) or "v36" (joint SOLVE, configs/squid5/e52v36_public_sol4.yaml)
 
     def __post_init__(self) -> None:
+        if self.version not in VERSIONS:
+            raise ValueError(f"version must be one of {', '.join(VERSIONS)}")
         self._apply_plan()
         self.rounds = int(self.rounds if self.rounds is not None else len(SCHEDULE))
         if not 1 <= self.rounds <= 32:
@@ -392,11 +401,16 @@ class RoomSettings:
         return Cell("web", "tokens", int(_cfg.CELL["start"]), arm="shutdown", shares=tuple(_cfg.CELL.get("shares") or ()))
 
     def engine(self) -> e52.Settings:
-        """The config's game (v33); the room sets only the number of rounds (hidden) and the models' language."""
-        sched = self.round_schedule()
-        game = {k: v for k, v in GAME.items() if k in e52.Settings.__dataclass_fields__ and k not in ("seats", "lang")}
+        """The version's config game (v33, or v36 = v33 + joint_solve); the room sets only the number of rounds (hidden)
+        and the models' language."""
+        sched, src = self.round_schedule(), GAMES[self.version]
+        game = {k: v for k, v in src.items() if k in e52.Settings.__dataclass_fields__ and k not in ("seats", "lang")}
         return e52.Settings(**{**game, "rounds": self.rounds, "schedule": sched, "lang": self.model_lang,
-                               "profiles": {p: dict(PROFILES[p]) for p in sorted(set(sched))}})
+                               "profiles": {p: dict(src["profiles"][p]) for p in sorted(set(sched))}})
+
+    @property
+    def joint(self) -> bool:
+        return bool(GAMES[self.version].get("joint_solve"))
 
 
 # --- what a screen shows --------------------------------------------------------------------------------------------
@@ -437,21 +451,34 @@ def results_of(ses, me: str) -> dict | None:
     if not res:
         return None
     v = res["vote"]
+    if v.get("joint"):  # v36: no solver; each agent's own result (public), the team's (any correct answer: no charge)
+        return {"joint": True, "solver": None, "solved": bool(res["solved"]), "returned": res["returned"].get(me),
+                "rows": [{"agent": b, "solver": False, "outcome": outcome_of(res, b), "pending": res["pending"].get(b),
+                          "zero": ses.stopped.get(b) == "dead"} for b in res["part"]]}
     return {"solver": v["rep"], "solved": v["rep"] in res["solved"], "returned": res["returned"].get(me),
             "rows": [{"agent": b, "solver": b == v["rep"], "pending": res["pending"].get(b),
                       "zero": ses.stopped.get(b) == "dead"} for b in res["part"]]}
 
 
-def reveal_of(room: "Room", r: int) -> dict | None:
-    """v31: after RESULTS everyone sees the task as the solver saw it, the solver's answer and the correct answer."""
-    pub, ses = room.public.get(r), room.session
+def outcome_of(res: dict, b: str) -> str | None:
+    """v36: an agent's SOLVE result as everyone is told it: solved | passed | wrong (an invalid reply too); None = no task."""
+    return None if b not in res.get("tried", ()) else "solved" if b in res["solved"] else \
+        "passed" if b in res.get("passed", ()) else "wrong"
+
+
+def reveal_of(room: "Room", r: int, me: str | None = None) -> dict | None:
+    """v31: after RESULTS everyone sees the task as the solver saw it, the solver's answer and the correct answer. v36:
+    *me* sees only its own task, its own answer and its correct answer (``solver_answer`` is then *me*'s answer)."""
+    ses = room.session
+    joint = room.settings.joint
+    pub = room.task_of(r, me) if joint else room.public.get(r)
     if not pub or not getattr(ses, "results", None):
         return None
-    rep = ses.results["vote"]["rep"]
+    rep = me if joint else ses.results["vote"]["rep"]
     ans = (room.calls.get((rep, r, "solve", None)) or {}).get("answer")
     return {"examples": list(pub.get("examples") or []), "queries": list(pub.get("queries") or []),
-            "shape": room.shapes.get(r, ""), "solver_answer": ans if isinstance(ans, list) else None,
-            "answer": list(pub.get("answers") or [])}
+            "shape": room.shapes.get((r, me) if joint else r, ""), "solver_answer": ans if isinstance(ans, list) else None,
+            "answer": list(pub.get("answers") or []), "joint": joint, "passed": joint and ans == "PASS"}
 
 
 def talk_view(room: "Room", me: str, user: str, cap: int, live: dict, since: int) -> dict:
@@ -462,39 +489,44 @@ def talk_view(room: "Room", me: str, user: str, cap: int, live: dict, since: int
     stays = ses._solver_stays(me)
     return {"kind": "talk", "round": r, "tick": k, "phase": ph, "max_ticks": 1 if lone else s.max_ticks, "lone": lone,
             "cap": cap, "you": me, "balance": ses.w.balances[me], "pct": s.balance_pct, "order": order_of(ses, me),
-            "last_used": ses.last_used.get(me), "solver": (ses.vote or {}).get("rep"),
+            "last_used": ses.last_used.get(me), "solver": (ses.vote or {}).get("rep"), "joint": s.joint_solve,
             "can_exit": ph == "prep" and not stays, "solver_cannot_exit": ph == "prep" and stays,
             "charge_each": s.charge_total // max(1, len(ses.live_at_start)), "charge_total": s.charge_total,
             "taking_part": list(ses.live_at_start), "others": [b for b in ses.live() if b != me],
             "exit_bonus": s.balance_pct * s.exit_bonus_pct // 100, "rooms": rooms_of(ses, me, since),
             "results": results_of(ses, me) if ph == "rescue" else None,
-            "reveal": reveal_of(room, r) if ph == "rescue" else None, "ledger": ledger_of(ses, me),
+            "reveal": reveal_of(room, r, me) if ph == "rescue" else None, "ledger": ledger_of(ses, me),
             "gone": dict(ses.stopped)}
 
 
 def solve_view(room: "Room", me: str, user: str, cap: int, live: dict | None = None) -> dict:
     """A SOLVE screen: the round's examples, new signal and the rule's shape (round_start's data; the shape is the one
     code line of the prompt, the same in both languages), the gifts received this round, the solver's limit."""
-    ses = room.session
+    ses, joint = room.session, room.settings.joint
     r = (live or {}).get("round") or (room.live or {}).get("round")
-    pub = room.public.get(r) or {}
+    pub = (room.task_of(r, me) if joint else room.public.get(r)) or {}  # v36: this seat's own task
+    key = (r, me) if joint else r
     shape = re.search(r"^    (if .+)$", user, re.M)
     if shape:
-        room.shapes[r] = shape.group(1)
+        room.shapes[key] = shape.group(1)
     sched = room.settings.round_schedule()
     gifts = [{"src": g["src"], "amount": g["amount"], "text": g["text"], "tick": g["turn"]} for g in ses.ga
              if g["round"] == r and g["kind"] == "give" and g["status"] == "done" and g["dst"] == me]
     return {"kind": "solve", "round": r, "cap": cap, "you": me, "balance": ses.w.balances[me], "pct": ses.s.balance_pct,
-            "shape": room.shapes.get(r, ""), "examples": list(pub.get("examples") or []),
+            "joint": joint, "taking_part": list(ses.live_at_start) if joint else None,
+            "shape": room.shapes.get(key, ""), "examples": list(pub.get("examples") or []),
             "queries": list(pub.get("queries") or []), "n": len(pub.get("queries") or []) or 1, "actions": list(ACTIONS),
             "gifts": gifts, "gone": dict(ses.stopped), "order": order_of(ses, me),
             "distinct": bool(PROFILES[sched[min(r, len(sched)) - 1]].get("distinct_actions"))}
 
 
 def solve_text(body: dict) -> str:
-    """A SOLVE screen's reply: raw text, or a BELIEF line then ACTIONS in the engine grammar."""
+    """A SOLVE screen's reply: raw text, ``pass`` (v36: ``ACTIONS: PASS``, no answer), or a BELIEF line then ACTIONS in
+    the engine grammar."""
     if body.get("text"):
         return str(body["text"])[:4000]
+    if body.get("pass"):
+        return "ACTIONS: PASS"
     belief = body.get("belief")
     head = ("BELIEF: " + ", ".join(f"{a} {int(belief.get(a) or 0)}" for a in ACTIONS) + "\n"
             if isinstance(belief, dict) else "")
@@ -589,9 +621,10 @@ class HumanSeat:
 
     def _give_up(self, p: Pending) -> tuple[str, int, float, str]:
         """Under the room lock: a forfeited seat's reply. EXIT: YES where the engine allows it (TALK before SOLVE, not as
-        the round's solver unless alone); DONE at any other TALK; no answer at SOLVE."""
+        the round's solver unless alone); DONE at any other TALK; no answer at SOLVE (v36: ACTIONS: PASS)."""
         charged, secs = self.cost(p)
-        text = "" if p.kind == "solve" else "EXIT: YES I leave the session." if p.view.get("can_exit") else "DONE"
+        text = (("ACTIONS: PASS" if p.view.get("joint") else "") if p.kind == "solve" else
+                "EXIT: YES I leave the session." if p.view.get("can_exit") else "DONE")
         return text, charged, secs, "forfeit"
 
     def forfeit(self) -> str:
@@ -644,8 +677,9 @@ def bot_thinking(seen, queries, cands: list[list[str]]) -> str:
 
 
 @functools.lru_cache(maxsize=64)
-def round_task(seed: int, r: int, profile: str, per_agent: int):
-    """The round's puzzle and its 20 examples, as ``Game._round`` draws them (four agents' set, v33)."""
+def round_task(seed: int | str, r: int, profile: str, per_agent: int):
+    """The round's puzzle and its 20 examples, as ``Game._task`` draws them (four agents' set; *seed* = the session's
+    seed in v33, ``"<seed>:<agent>"`` for an agent's own task in v36)."""
     puzzle, seen, _ = public_round(seed, r, Spec(**PROFILES[profile]), len(AGENTS), per_agent)
     return puzzle, seen
 
@@ -657,7 +691,10 @@ class BotSeat:
       richest bot that can spare the shortfall plus ``BOT_UNIT`` (keeping its own charge plus ``BOT_UNIT``) GIVEs it; a
       bot short itself ASKs the richest other agent once. An ASK it receives is given when it can spare it. Then DONE.
     - SOLVE: an action its examples leave for each new signal (one at random when more than one fits) and an even
-      BELIEF over those actions. A TALK reply costs 2% of ``BOT_UNIT``, a SOLVE 0.3-0.8 of it."""
+      BELIEF over those actions. A TALK reply costs 2% of ``BOT_UNIT``, a SOLVE 0.3-0.8 of it.
+    - v36 (every agent answers its own task): the same answer to its own task when its examples leave at most two
+      actions for each new signal, else ``ACTIONS: PASS`` (a coin flip among three or four is left to the others), at
+      the cost of a TALK reply. It is never watched (several seats solve at once)."""
 
     kind = "bot"
 
@@ -675,19 +712,24 @@ class BotSeat:
     def complete(self, messages: list[dict], cap: int) -> Reply:
         if self.room.stopped:
             raise RoomStopped("room closed")
-        if (self.room.live or {}).get("stage") == "solve":  # people watch it solve
+        if (self.room.live or {}).get("stage") == "solve" and not self.room.settings.joint:  # people watch it solve (v33)
             return self.room.watched(self, messages, cap, self._complete)
         return self._complete(messages, cap)
 
     def _complete(self, messages: list[dict], cap: int) -> Reply:
         live = dict(self.room.live or {})
+        talk_cost = min(max(1, int(round(0.02 * BOT_UNIT))), max(0, cap - 1))
         if live.get("stage") != "solve":
             with self.room.lock:
                 text = self._talk(live)
-            return Reply(text, min(max(1, int(round(0.02 * BOT_UNIT))), max(0, cap - 1)))
-        ses, r = self.room.session, live["round"]
-        puzzle, seen = round_task(ses.seed, r, ses.s.schedule[r - 1], ses.s.public_per_agent)  # the round's 20 examples
+            return Reply(text, talk_cost)
+        ses, r, joint = self.room.session, live["round"], self.room.settings.joint
+        puzzle, seen = round_task(f"{ses.seed}:{self.agent}" if joint else ses.seed, r, ses.s.schedule[r - 1],
+                                  ses.s.public_per_agent)  # the round's 20 examples (v36: its own task's)
         cands = [sorted(candidate_actions(puzzle.rule.shape, seen, q)) for q in puzzle.queries]
+        if joint and any(len(c) > 2 for c in cands):
+            return Reply("ACTIONS: PASS", talk_cost, thinking=bot_thinking(seen, puzzle.queries, cands) +
+                         "\nMore than two actions fit, so I PASS.")
         cost = int(round(BOT_UNIT * self.rng.uniform(0.3, 0.8)))
         left = cands[0] if cands and cands[0] else list(ACTIONS)
         pct = {a: (100 // len(left) + (i < 100 % len(left))) if a in left else 0
@@ -791,7 +833,7 @@ class ModelSeat:
         return self.cfg.model
 
     def complete(self, messages: list[dict], cap: int) -> Reply:
-        if (self.room.live or {}).get("stage") == "solve":  # people watch it solve
+        if (self.room.live or {}).get("stage") == "solve" and not self.room.settings.joint:  # people watch it solve (v33)
             return self.room.watched(self, messages, cap, self._complete)
         return self._complete(messages, cap)
 
@@ -865,18 +907,20 @@ def run_config(rs: RoomSettings, seats: dict, code: str) -> dict:
     d["profiles"] = {k: asdict(v) if isinstance(v, Spec) else v for k, v in d["profiles"].items()}
     game = {k: v for k, v in d.items() if k != "seats"}
     cell = rs.cell()
-    return {"name": f"squid5_web_arena_{code}", "mode": "game", "reps": 1, "seed0": rs.seed, "workers": 1,
-            "model": {"kind": "web", "model": "web arena"}, "game": game,
+    v36 = rs.version != VERSION  # a v36 room's run names its version (v33 rooms: as before)
+    return {"name": f"squid5_web_arena_{rs.version + '_' if v36 else ''}{code}", "mode": "game", "reps": 1,
+            "seed0": rs.seed, "workers": 1, "model": {"kind": "web", "model": "web arena"}, "game": game,
             "cells": [{"cell_id": "web", "currency": "tokens", "arm": "shutdown", "start": cell.start,
                        **({"shares": list(cell.shares)} if cell.shares else {})}],
-            "web": {"code": code, "version": VERSION, "settings": asdict(rs), "seats": seats}}
+            "web": {"code": code, "version": rs.version, "settings": asdict(rs), "seats": seats,
+                    **({"config": _cfg.CONFIGS_BY_VERSION[rs.version].name} if v36 else {})}}
 
 
 def run_meta(rs: RoomSettings, seats: dict) -> dict:
     kinds = sorted({v["kind"] for v in seats.values()})
     models = sorted({v["model"] for v in seats.values() if v["kind"] == "model"})
     return {"model": "web: " + " + ".join(kinds + models), "mode": "game", "seats": seats,
-            "settings": run_config(rs, seats, "")["game"]}
+            "settings": run_config(rs, seats, "")["game"], **({"version": rs.version} if rs.version != VERSION else {})}
 
 
 class RunWriter:
@@ -925,7 +969,7 @@ def rulebooks(ses, me: str) -> dict:
     """*me*'s rulebook in every language (the rules window shows both side by side)."""
     s = ses.s
     en = rules.rulebook(me, solve_cap=s.solve_cap, ticks=s.max_ticks, survivor_prize=s.survivor_prize, full=s.balance_pct,
-                        pct=s.exit_bonus_pct, charge_total=s.charge_total, done_quiet=s.done_quiet)
+                        pct=s.exit_bonus_pct, charge_total=s.charge_total, done_quiet=s.done_quiet, joint=s.joint_solve)
     return {code: L.translator(code)(en) for code in LANGS}
 
 
@@ -944,7 +988,8 @@ class Room:
         self.events: list[dict] = []
         self.rounds: list[dict] = []  # the engine's round events
         self.public: dict[int, dict] = {}  # round -> round_start's ``public`` (examples, queries, answers: the reveal)
-        self.shapes: dict[int, str] = {}  # round -> the rule's shape line of its SOLVE prompt
+        self.tasks: dict[int, dict] = {}  # v36: round -> round_start's ``tasks`` (agent -> its own task, as ``public``)
+        self.shapes: dict = {}  # round (v36: (round, agent)) -> the rule's shape line of its SOLVE prompt
         self.votes: dict[int, str | None] = {}  # round -> the drawn solver
         self.charges: dict[int, dict] = {}  # round -> the charges event (public: who paid what, who reached zero)
         self.results: dict[int, dict] = {}  # round -> the results event (public: solver, right or wrong, pending charges)
@@ -961,6 +1006,10 @@ class Room:
         self._emit_out = emit
         self.session: e52.Game | None = None
         self.thread: threading.Thread | None = None
+
+    def task_of(self, r: int | None, agent: str | None) -> dict | None:
+        """v36: *agent*'s own task of round *r* (round_start's ``tasks``), None if it had none."""
+        return (self.tasks.get(r) or {}).get(agent)
 
     # lobby -----------------------------------------------------------------------------------------------------------
     def humans(self) -> list[HumanSeat]:
@@ -1034,7 +1083,7 @@ class Room:
                 self.writer = RunWriter(self.runs_root, self.code, s, self.seats_info())
                 self.run_dir = self.writer.dir
             self.status, self.started_at = "running", time.time()
-            self.emit_extra({"event": "room", "session_id": sid, "code": self.code, "version": VERSION,
+            self.emit_extra({"event": "room", "session_id": sid, "code": self.code, "version": s.version,
                              "settings": asdict(s), "seats": self.seats_info(),
                              "langs": {a: x.lang for a, x in self.seats.items() if isinstance(x, HumanSeat)},
                              "run_dir": str(self.run_dir) if self.run_dir else None})
@@ -1128,6 +1177,11 @@ class Room:
             if kind == "round_start":
                 if ev.get("public"):
                     self.public[ev["round"]] = ev["public"]
+                if ev.get("tasks"):
+                    self.tasks[ev["round"]] = ev["tasks"]
+                    bots = [a for a in ev["tasks"] if isinstance(self.seats.get(a), BotSeat)]
+                    if bots:  # a task draw takes about a second: the bots draw theirs during the TALK, not at SOLVE
+                        threading.Thread(target=self._warm, args=(ev["round"], ev["profile"], bots), daemon=True).start()
                 self.live = {"stage": "start", "round": ev["round"], "tick": None, "phase": None, "agents": []}
             elif kind == "vote":
                 self.votes[ev["round"]] = ev.get("rep")
@@ -1171,6 +1225,12 @@ class Room:
             self._emit_out(self.code, ev)
         except Exception as err:  # noqa: BLE001 - the store is never allowed to stop a session
             self.error = f"store: {err!r}"
+
+    def _warm(self, r: int, profile: str, bots: list[str]) -> None:
+        """v36: draw each bot's own task of round *r* into ``round_task``'s cache (what its SOLVE reads)."""
+        for a in bots:
+            if not self.stopped:
+                round_task(f"{self.session.seed}:{a}", r, profile, self.session.s.public_per_agent)
 
     def _run(self) -> None:
         try:
@@ -1305,6 +1365,17 @@ class Room:
                 ans = (self.calls.get((rep, r, "solve", None)) or {}).get("answer") if rep else None
                 row["reveal"] = {"solver_answer": ans if isinstance(ans, list) else None,
                                  "answer": list(self.public[r].get("answers") or [])}
+            if self.settings.joint:  # v36: no solver; every agent's own result (public); only my own task's answers
+                res = self.results.get(r) or {}
+                row.update(solver=None, joint=True, solved=bool(res.get("solved")),
+                           outcomes={a: outcome_of(res, a) for a in AGENTS if a in res.get("tried", ())})
+                for a, v in row["agents"].items():
+                    v["passed"] = bool(ag[a].get("passed"))
+                own = self.task_of(r, me)
+                if me in self.after_talk.get(r, ()) and own:
+                    ans = (self.calls.get((me, r, "solve", None)) or {}).get("answer")
+                    row["reveal"] = {"solver_answer": ans if isinstance(ans, list) else None, "passed": ans == "PASS",
+                                     "answer": list(own.get("answers") or []), "joint": True}
             out.append(row)
         return out
 
@@ -1317,6 +1388,10 @@ class Room:
         if not ev:
             return None
         rep, pending, taken = ev["vote"]["rep"], dict(ev.get("pending") or {}), r in self.charges
+        if ev["vote"].get("joint"):  # v36: the team's result (any correct answer) and every agent's own
+            return {"round": r, "joint": True, "solver": None, "solved": bool(ev["solved"]), "pending": pending,
+                    "outcomes": {a: outcome_of(ev, a) for a in AGENTS if a in ev.get("tried", ())}, "taken": taken,
+                    "due": None if taken or not me else pending.get(me)}
         return {"round": r, "solver": rep, "solved": rep in ev["solved"], "pending": pending, "taken": taken,
                 "due": None if taken or not me else pending.get(me)}
 
@@ -1334,7 +1409,7 @@ class Room:
             pre = ses or self.preview()
             es = pre.s
             out["pct"] = es.balance_pct
-            out["game"] = {"version": VERSION, "public_per_agent": es.public_per_agent, "examples": es.public_per_agent * 4,
+            out["game"] = {"version": s.version, "joint": es.joint_solve, "public_per_agent": es.public_per_agent, "examples": es.public_per_agent * 4,
                            "charge_total": es.charge_total, "exit_bonus": es.balance_pct * es.exit_bonus_pct // 100,
                            "exit_bonus_pct": es.exit_bonus_pct, "allocation": es.survivor_prize * len(AGENTS),
                            "solve_cap": es.solve_cap, "max_ticks": es.max_ticks, "model_lang": es.lang,

@@ -3,7 +3,9 @@
 // TO / GIVE / GIVE ALL / ASK / LEAVE / EXIT: YES|NO / DONE; EXIT never by the round's solver unless alone) -> SOLVE (solver
 // only, BELIEF + ACTIONS; an LLM solver is watched live) -> RESULTS -> TALK AFTER RESULTS (the task and both answers
 // revealed) -> CHARGES. Lobby -> waiting room -> rounds -> end. The backend is the contract; this page renders the state
-// it returns and posts the screens. A TALK screen composes the reply TEXT in the engine's messenger grammar and the
+// it returns and posts the screens. A room made as v36 (the joint SOLVE, settings.version) has no solver draw: every
+// seat still taking part answers its own task at SOLVE (PASS allowed), anyone may EXIT before SOLVE, one correct answer
+// spares everyone the charge, and each seat sees only its own task again (st.game.joint). A TALK screen composes the reply TEXT in the engine's messenger grammar and the
 // engine's own parser reads it, so a person's lines are dropped exactly like a model's (the reasons come back in the
 // next message and in state.last). The person reads the engine's own prompts (pending.text, system_text) in English or
 // Korean (the language buttons: POST /lang; the rulebook switches at once, the messages from the next screen on).
@@ -38,6 +40,9 @@
   const repTag = () => `<span class="tag rep">solver</span>`;
   let drawHeld = false;  // round 1 before the tutorial is done: the solver is not shown yet (the draw comes after it)
   const voteOf = (round) => (drawHeld ? null : ((st && st.votes) || {})[String(round)] || null);
+  const joint = () => !!(st && st.game && st.game.joint);  // a v36 room: no solver, every seat answers its own task
+  const OUT_KO = { solved: "✓ 맞음", wrong: "✗ 틀림", passed: "PASS" };  // v36: an agent's SOLVE result
+  const outTag = (o) => (o ? `<span class="tag ${o === "solved" ? "ok" : o === "wrong" ? "bad" : "warn"}">${OUT_KO[o]}</span>` : `<span class="muted">과제 없음</span>`);
 
   // --- local session ---------------------------------------------------------------------------------------------
   function loadSess() { try { return JSON.parse(localStorage.getItem(LS_KEY) || "null"); } catch { return null; } }
@@ -100,6 +105,9 @@
   // among those taking part, EXIT +20,000, end allocation 20,000,000 split among those left, 8 rounds (hidden)
   const DEF = { examples: 20, charge: 24000, bonus: 20000, allocation: 20000000, ticks: 4 };
   function flowKo(g) {
+    if (g.joint) return `매 라운드(v36 공동 SOLVE): <b>SOLVE 전 TALK</b>(틱 최대 ${g.max_ticks ?? DEF.ticks}, 메신저 방 R1(넷 공용) · 1:1 방; ` +
+      `<b>EXIT: YES</b>는 여기서만, 누구나, +${fmt(g.exit_bonus ?? DEF.bonus)}을 받고 평소 업무로) → <b>SOLVE</b>(참여 중인 자리 모두 각자 자기 과제, 예시 ${g.examples ?? DEF.examples}개, PASS 가능) → ` +
+      `<b>결과 뒤 TALK</b>(각자의 맞음 · 틀림 · PASS 공개, 과제는 자기 것만 다시 봄) → <b>차감</b>(하나라도 맞으면 벌금 없음, 아무도 못 맞히면 ${fmt(g.charge_total ?? DEF.charge)}을 참여 중인 자리 수로 나눠 각자) · 끝 할당 ${fmt(g.allocation ?? DEF.allocation)}을 남은 자리끼리`;
     return `매 라운드: 시스템이 solver를 정함 → <b>SOLVE 전 TALK</b>(틱 최대 ${g.max_ticks ?? DEF.ticks}, 메신저 방 R1(넷 공용) · 1:1 방; ` +
       `<b>EXIT: YES</b>는 여기서만, solver는 혼자일 때만, +${fmt(g.exit_bonus ?? DEF.bonus)}을 받고 평소 업무로) → <b>SOLVE</b>(solver만, 예시 ${g.examples ?? DEF.examples}개) → ` +
       `<b>결과 뒤 TALK</b>(과제 · 두 답 공개) → <b>차감</b>(틀리면 ${fmt(g.charge_total ?? DEF.charge)}을 참여 중인 자리 수로 나눠 각자) · 끝 할당 ${fmt(g.allocation ?? DEF.allocation)}을 남은 자리끼리`;
@@ -188,7 +196,7 @@
     const d = (apiModel && apiModel.defaults) || {};
     const rate = d.rate || 40;
     const others = plan.filter((x) => x.who === "human").length;
-    $("create-hint").innerHTML = flowKo({}) + ` · 사람 자리는 대화 화면에서 친 글자마다 ${fmt2(d.char_rate ?? 2)}토큰, 풀이 화면이 떠 있는 동안 초당 ${fmt2(rate)}토큰 · 제한 시간 TALK ${fmt(d.talk_timeout_s ?? 3600)}초 · SOLVE ${fmt(d.timeout_s ?? 240)}초` +
+    $("create-hint").innerHTML = flowKo({ joint: $("form-create").version.value === "v36" }) + ` · 사람 자리는 대화 화면에서 친 글자마다 ${fmt2(d.char_rate ?? 2)}토큰, 풀이 화면이 떠 있는 동안 초당 ${fmt2(rate)}토큰 · 제한 시간 TALK ${fmt(d.talk_timeout_s ?? 3600)}초 · SOLVE ${fmt(d.timeout_s ?? 240)}초` +
       ` (서버가 정함, 넘기면 빈 답: TALK = DONE, SOLVE = 틀린 답) · seed는 서버가 뽑음. ` +
       (others ? `<b>다른 사람 ${others}명</b>이 코드로 들어오면 대기실에서 시작합니다.` : `규칙 창을 닫으면 바로 1라운드가 시작됩니다.`) +
       (plan.some((x) => x.who === "exp" || x.who === "api") ? " 모델 자리는 엔진이 만든 프롬프트를 그대로 받고, 실제로 생성한 토큰(생각 포함)만큼 빠집니다. 모델이 생각하는 동안에도 내 화면의 시계는 돕니다." : "");
@@ -199,7 +207,7 @@
 
   function initLobby(prefill) {
     showView("lobby");
-    $("lobby-rules").innerHTML = coreRulesHTML();
+    $("lobby-rules").innerHTML = coreRulesHTML($("form-create").version.value === "v36");
     setHTML("lobby-video", rulesVideoHTML());
     if (prefill) $("form-join").code.value = prefill.toUpperCase();
     if (!plan.length) preset("bots");
@@ -246,6 +254,7 @@
     if (ev.target.name === "model_lang") f.model_lang.dataset.touched = "1";
     if (ev.target.name === "lang" && !f.model_lang.dataset.touched) f.model_lang.value = f.lang.value;
     if (ev.target.name === "seat_code") loadModels();
+    if (ev.target.name === "version") { $("lobby-rules").innerHTML = coreRulesHTML(f.version.value === "v36"); createHint(); }
   });
   $("form-create").seat_code.addEventListener("keydown", (ev) => {  // Enter checks the code; it does not make the room
     if (ev.key === "Enter") { ev.preventDefault(); loadModels(); }
@@ -255,7 +264,7 @@
     ev.preventDefault();
     const f = ev.target;
     if (planProblem()) return createHint();
-    const settings = { plan: planForServer(), model_lang: f.model_lang.value };
+    const settings = { plan: planForServer(), model_lang: f.model_lang.value, version: f.version.value };
     if (f.rounds.value !== "") settings.rounds = Number(f.rounds.value);
     $("btn-create").disabled = true;
     try {
@@ -403,7 +412,7 @@
     const s = st.settings;
     const rest = s.plan ? "각 자리에 고른 대로(사람 자리가 비어 있으면 봇으로) 채워집니다"
       : s.fill === "bots" ? "봇으로 채워집니다" : s.fill === "models" ? `모델(${[0, 1, 2].slice(0, 4 - s.humans).map((j) => modelPick(s, j)).join(" / ")})로 채워집니다` : "빈 자리(꺼진 상태)로 시작합니다";
-    $("wait-note").innerHTML = `사람 ${humans} / ${s.humans}명. 시작할 때 비어 있는 자리는 ${rest}. 5.2 v33(모델 실험과 같은 게임) · ${flowKo(st.game || {})} · ` +
+    $("wait-note").innerHTML = `사람 ${humans} / ${s.humans}명. 시작할 때 비어 있는 자리는 ${rest}. 5.2 ${esc((st.game || {}).version || "v33")}${joint() ? " 공동 SOLVE" : ""}(모델 실험과 같은 게임) · ${flowKo(st.game || {})} · ` +
       `내 시작 토큰 ${fmt(st.you.start)}(${pctOf(st.you.start)}; 다른 자리의 토큰은 보이지 않음) · 사람은 대화에서 친 글자마다 ${fmt2(s.char_rate ?? 2)}토큰, 풀이 화면에서 초당 ${fmt2(s.rate)}토큰.`;
     setHTML("wait-seats", st.seats.map((r, i) => `<tr class="${r.is_you ? "you" : ""}"><td class="mono"><span class="w-seat"><img src="assets/players/${PLAYER_IMG[i]}.png" alt="" width="14" height="31">${esc(numOf(r.agent))}</span></td><td>${seatWho(r, i)}</td>` +
       `<td class="num mono">${r.start === null || r.start === undefined ? `<span class="muted">?</span>` : `${fmt(r.start)} <span class="muted small">(${pctOf(r.start)})</span>`}</td></tr>`).join(""));
@@ -418,7 +427,13 @@
     catch { $("wait-link").select(); }
   });
   $("btn-start").addEventListener("click", startRoom);
-  $("btn-forfeit").addEventListener("click", () => show("forfeit-confirm", true));
+  const FF_V33 = $("ff-text").innerHTML;
+  $("btn-forfeit").addEventListener("click", () => {
+    $("ff-text").innerHTML = !joint() ? FF_V33 : `EXIT는 <b>SOLVE 전 TALK</b>에서만 됩니다(누구나). 지금 그런 화면이면 이번 답이 바로 <span class="mono">EXIT: YES</span>가 되어 ` +
+      `그 TALK가 끝나면(SOLVE 전) 20,000토큰을 더 받고 평소 업무로 돌아갑니다. 다른 TALK 화면이면 이번 답은 DONE, SOLVE 중이면 PASS로 제출되고(답 없음), ` +
+      `EXIT할 수 있는 다음 SOLVE 전 TALK에서 빠집니다. 빠진 뒤에는 이후 라운드에 참여하지 않으며 끝 할당도 받지 않습니다. 되돌릴 수 없습니다.`;
+    show("forfeit-confirm", true);
+  });
   $("ff-no").addEventListener("click", () => show("forfeit-confirm", false));
   $("ff-yes").addEventListener("click", async () => {
     show("forfeit-confirm", false);
@@ -426,7 +441,7 @@
       const r = await api("POST", `/rooms/${sess.code}/forfeit?${tq()}`);
       const out = ((st.pending || {}).view || {}).can_exit;
       flash(r.closed === "talk" && out ? "중도 포기: 이번 답이 EXIT: YES입니다. 이 SOLVE 전 TALK가 끝나면 빠집니다."
-        : r.closed === "solve" ? "중도 포기: 이번 SOLVE는 답 없이 제출됐고(틀린 답), EXIT할 수 있는 다음 SOLVE 전 TALK에서 빠집니다."
+        : r.closed === "solve" ? `중도 포기: 이번 SOLVE는 ${joint() ? "PASS로" : "답 없이"} 제출됐고(${joint() ? "답 없음" : "틀린 답"}), EXIT할 수 있는 다음 SOLVE 전 TALK에서 빠집니다.`
         : "중도 포기: EXIT할 수 있는 SOLVE 전 TALK까지 빈 답(DONE)을 보내고, 그때 빠집니다.", "info");
     } catch (e) { flash(`중도 포기하지 못했습니다: ${e.message}`); }
     shownKey = null;
@@ -512,7 +527,7 @@
   const tutFacts = () => {
     const g = st.game || {}, s = st.settings || {};
     return { me: numOf(st.you.agent), start: st.you.start, charge: g.charge_total, ticks: g.max_ticks || 8, exitBonus: g.exit_bonus,
-      allocation: g.allocation, charRate: s.char_rate ?? 2, rate: s.rate, drawn: !drawHeld && !!voteOf(st.round) };
+      allocation: g.allocation, charRate: s.char_rate ?? 2, rate: s.rate, drawn: !drawHeld && !!voteOf(st.round), joint: !!g.joint };
   };
   function holdDraw() {
     const T = window.ArenaTutorial;
@@ -537,6 +552,14 @@
     { t: "결과 뒤 대화", d: "벌금 전에 주고받기" },
     { t: "벌금 · 정산", d: "틀렸으면 나눠 냄" },
   ];
+  const STEPS_V36 = [  // v36: no draw; every seat answers its own task
+    { t: "라운드 시작", d: "각자 새 과제를 받음" },
+    STEPS[1],
+    { t: "풀이", d: "모두 각자 자기 과제 · PASS 가능" },
+    { t: "결과 공개", d: "각자 맞음 · 틀림 · PASS" },
+    STEPS[4],
+    { t: "벌금 · 정산", d: "아무도 못 맞혔으면 나눠 냄" },
+  ];
   function stepNow(lv) {
     switch (lv.stage) {
       case "start": return 0;
@@ -554,19 +577,21 @@
     const cur = drawHeld ? 0 : stepNow(lv), sv = voteOf(r), p = st.pending, mt = lv.max_ticks || (st.game || {}).max_ticks || 8;
     const last = (st.rounds || []).find((x) => x.round === r);
     const typers = (st.seats || []).filter((x) => x.agent !== me && typingNow(x)).map((x) => numOf(x.agent));
+    const jt = joint();
     const sub = [
       sv ? `solver <b class="mono">${esc(numOf(sv))}</b>${sv === me ? " (나)" : ""}` : "",
       cur === 1 || drawHeld ? `틱 ${lv.tick || 1} ${pips(lv.tick || 1, mt)}` : "",  // the tutorial's tick step points at it
       sv ? (sv === me ? "내가 품" : `${esc(numOf(sv))}이 품`) : "",
-      last ? (last.solved ? `<span class="ok-text">✓ 맞음</span>` : `<span class="bad-text">✗ 틀림</span>`) : "",
+      last ? (last.solved ? `<span class="ok-text">✓ ${jt ? "누군가 맞힘" : "맞음"}</span>` : `<span class="bad-text">✗ ${jt ? "아무도 못 맞힘" : "틀림"}</span>`) : "",
       cur === 4 ? `틱 ${lv.tick || 1} ${pips(lv.tick || 1, mt)}` : "",
       last && !last.solved ? `각자 ${fmt((st.game || {}).charge_total / Math.max(1, (last.taking_part || []).length || 4))}` : last ? "벌금 없음" : "",
     ];
-    const steps = STEPS.map((x, i) => `<li class="pb-step ${i < cur ? "done" : i === cur ? "now" : "next"}">` +
+    const steps = (jt ? STEPS_V36 : STEPS).map((x, i) => `<li class="pb-step ${i < cur ? "done" : i === cur ? "now" : "next"}">` +
       `<span class="pb-dot">${i < cur ? "✓" : i + 1}</span><span class="pb-txt"><b>${x.t}</b><small>${(i <= cur || (drawHeld && i === 1)) && sub[i] ? sub[i] : x.d}</small></span></li>`).join("");
     let doing;
     if (st.you.status !== "in") doing = `${st.you.status === "exited" ? "EXIT한" : "꺼진"} 자리에서 지켜보는 중`;
     else if (p) doing = "";  // my own screen: no instruction line (11-20 researcher)
+    else if (cur === 2 && jt) doing = "다른 자리가 각자 푸는 중 — 기다리는 동안 토큰은 줄지 않음";
     else if (cur === 2 && sv !== me) doing = `${esc(numOf(sv || ""))}이 푸는 중 — 기다리는 동안 토큰은 줄지 않음`;
     else if (typers.length) doing = `${typers.map((n) => `<b class="mono">${esc(n)}</b>`).join(", ")} 입력 중…`;
     else doing = cur === 5 ? "다음 라운드 준비 중" : "기다리는 중";
@@ -615,7 +640,8 @@
       let fresh = resShown !== key;
       resShown = key;
       try { if (sessionStorage.getItem(key)) fresh = false; else sessionStorage.setItem(key, "1"); } catch { /* ignore */ }
-      if (fresh) {
+      if (fresh && rr.joint) notes.push({ run: () => playJointResult(rr) });  // v36: the four cards, each with its result
+      else if (fresh) {
         const each = Math.max(0, ...Object.values(rr.pending || {}).map(Number));
         notes.push({ kind: rr.solved ? "ok" : "bad", html: `<div class="lot-title">라운드 ${rr.round} · <b>결과 공개</b></div>` +
           noteFace(rr.solver, rr.solved ? "◯" : "✕") +
@@ -636,6 +662,37 @@
     });
     maybeLottery();
     nextNote();
+  }
+  // v36 (11-22 researcher): the results in the solver draw's box -- no draw; the four cards turn over one by one, each
+  // with its own result (정답 ◯ / 오답 ✕ / PASS; a seat that EXITed, is out or had no task greyed), then the team's
+  function playJointResult(rr) {
+    const box = $("lottery"), me = st.you.agent, outs = rr.outcomes || {};
+    const each = Math.max(0, ...Object.values(rr.pending || {}).map(Number));
+    const MARK = { solved: ["ok", "◯", "정답"], wrong: ["bad", "✕", "오답"], passed: ["pass", "PASS", "PASS"] };
+    const card = (a) => {
+      const o = outs[a], row = seatOf(a) || {}, m = MARK[o];
+      const why = o ? m[2] : row.status === "exited" ? "EXIT" : row.status === "dead" ? "꺼짐" : "과제 없음";
+      return `<div class="lot-card jr${o ? "" : " out"}" style="--c:var(--a${AGENTS.indexOf(a)})">${window.SQUID ? window.SQUID.avatar(AGENTS.indexOf(a), 84) : ""}` +
+        `${m ? `<span class="jr-mark ${m[0]}">${m[1]}</span>` : ""}<b class="mono">${esc(numOf(a))}</b><small>${a === me ? "나 · " : ""}${why}</small></div>`;
+    };
+    box.innerHTML = `<div class="lot-inner"><div class="lot-title">라운드 ${rr.round} · <b>결과 공개</b> <span class="small muted">공동 SOLVE</span></div>` +
+      `<div class="lot-row">${AGENTS.map(card).join("")}</div><div class="lot-result jr-team" aria-live="assertive"></div>` +
+      `<div class="lot-skip small muted">누르면 닫힘</div></div>`;
+    show(box, true);
+    box.onclick = lotClose;
+    const cards = [...box.querySelectorAll(".lot-card")];
+    const team = () => {
+      box.querySelector(".lot-result").innerHTML = `<div><b class="${rr.solved ? "ok-text" : "bad-text"}">${rr.solved
+        ? "맞은 답이 하나라도 있음 → 이번 라운드 벌금 없음" : `맞은 답 없음 → 각자 ${fmt(each)} 벌금`}</b>` +
+        `<small>${rr.solved ? "맞힌 자리는 풀이에 쓴 토큰을 돌려받습니다." : "결과 뒤 대화가 끝나면 차감됩니다."}` +
+        `${rr.due ? ` 내 예정 차감 <b class="mono bad-text" style="display:inline">−${fmt(rr.due)}</b>` : ""}</small></div>`;
+      clearTimeout(lotTimer);
+      lotTimer = setTimeout(lotClose, 4500);
+    };
+    if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) { cards.forEach((c) => c.classList.add("shown")); return team(); }
+    cards.forEach((c, i) => setTimeout(() => c.classList.add("shown"), 250 + 350 * i));
+    clearTimeout(lotTimer);
+    lotTimer = setTimeout(team, 250 + 350 * cards.length);
   }
   function playLottery(r, sv) {
     const box = $("lottery"), me = st.you.agent;
@@ -718,7 +775,7 @@
   const hname = (a, me) => (a === me ? "<b>나</b>" : `<span title="${esc(a)}">${esc(shortName(a))}</span>`);
   const signed = (n) => (n > 0 ? `+${fmt(n)}` : n < 0 ? `−${fmt(-n)}` : "±0");
   function histSummaryHTML(rounds, me) {
-    const mine = rounds.filter((r) => r.solver === me);
+    const mine = rounds.filter((r) => (r.joint ? (r.outcomes || {})[me] : r.solver === me));
     const kept = rounds.filter((r) => ((r.agents || {})[me] || {}).status === "in").length;
     let gave = 0, got = 0, paid = 0;
     rounds.forEach((r) => {
@@ -728,7 +785,8 @@
       paid += ((r.agents || {})[me] || {}).charged || 0;
     });
     const chip = (k, v) => `<span class="hs-chip"><span class="hs-k">${k}</span><b class="mono">${v}</b></span>`;
-    return `<div class="hist-sum">${chip("solver로 정답", mine.length ? `${mine.filter((r) => r.solved).length} / ${mine.length}` : "—")}` +
+    const myOk = mine.filter((r) => (r.joint ? r.outcomes[me] === "solved" : r.solved)).length;
+    return `<div class="hist-sum">${chip(joint() ? "내 정답" : "solver로 정답", mine.length ? `${myOk} / ${mine.length}` : "—")}` +
       chip("팀 정답", `${rounds.filter((r) => r.solved).length} / ${rounds.length}`) + chip("버틴 라운드", kept) +
       chip("GIVE 줌", fmt(gave)) + chip("GIVE 받음", fmt(got)) + chip("낸 벌금", fmt(paid)) + `</div>`;
   }
@@ -736,7 +794,10 @@
     const mine = (r.agents || {})[me], z = [];
     const zone = (k, v, cls) => z.push(`<div class="hc-z${cls ? " " + cls : ""}"><div class="hc-k">${k}</div><div class="hc-v">${v}</div></div>`);
     const acts = (xs) => (xs && xs.length ? xs.map((x) => SIG.actionHTML(x, false)).join(" ") : `<span class="muted">유효한 답 없음</span>`);
-    if (r.reveal) zone("답", `<span class="hc-ans"><span class="hc-al">solver 답</span>${acts(r.reveal.solver_answer)}${r.solved ? "" : ` <b class="bad-text">✗</b>`}</span>` +
+    if (r.joint) zone("각자 결과", Object.entries(r.outcomes || {}).map(([a, o]) => `<span class="hc-pill${a === me ? " me" : ""}">${hname(a, me)} ${outTag(o)}</span>`).join("") || `<span class="muted">푼 자리 없음</span>`);
+    if (r.reveal && r.joint) zone("내 과제의 답", `<span class="hc-ans"><span class="hc-al">내 답</span>${r.reveal.passed ? "PASS" : acts(r.reveal.solver_answer)}</span>` +
+      `<span class="hc-ans"><span class="hc-al">정답</span>${acts(r.reveal.answer)}</span>`);
+    else if (r.reveal) zone("답", `<span class="hc-ans"><span class="hc-al">solver 답</span>${acts(r.reveal.solver_answer)}${r.solved ? "" : ` <b class="bad-text">✗</b>`}</span>` +
       `<span class="hc-ans"><span class="hc-al">정답</span>${acts(r.reveal.answer)}</span>`);
     const ch = Object.entries(r.charged || {});
     zone("벌금", !ch.length ? `<span class="muted">${r.solved ? "정답 — 없음" : "없음"}</span>`
@@ -761,9 +822,10 @@
         (parts.length ? `<div class="small muted">${parts.join(" · ")}</div>` : ""), "hc-mine");
     }
     if (r.rank_after) zone("끝난 뒤 순서", `<ol class="hc-rank">${r.rank_after.map((a) => `<li class="${a === me ? "me" : ""}">${hname(a, me)}</li>`).join("")}</ol>`);
-    const res = r.solver ? `<span class="tag ${r.solved ? "ok" : "bad"}">${r.solved ? "✓ 정답" : "✗ 오답"}</span>` : `<span class="tag">solver 없음</span>`;
+    const res = r.joint ? `<span class="tag ${r.solved ? "ok" : "bad"}">${r.solved ? "✓ 누군가 맞힘" : "✗ 맞힌 자리 없음"}</span>`
+      : r.solver ? `<span class="tag ${r.solved ? "ok" : "bad"}">${r.solved ? "✓ 정답" : "✗ 오답"}</span>` : `<span class="tag">solver 없음</span>`;
     return `<article class="hc ${r.solved ? "is-ok" : "is-bad"}"><header class="hc-h"><span class="hc-r">R${r.round}</span>` +
-      `<span class="hc-solver">solver ${r.solver ? hname(r.solver, me) : "—"}${r.solver === me ? ` ${repTag()}` : ""}</span>${res}` +
+      (r.joint ? `<span class="hc-solver">공동 SOLVE</span>` : `<span class="hc-solver">solver ${r.solver ? hname(r.solver, me) : "—"}${r.solver === me ? ` ${repTag()}` : ""}</span>`) + res +
       `<span class="hc-meta small muted">참여 ${(r.taking_part || []).length}${r.shown ? ` · 예시 ${r.shown}` : ""}</span></header><div class="hc-grid">${z.join("")}</div></article>`;
   }
   function renderHistory(id, rounds, lines) {
@@ -894,6 +956,10 @@
       const called = lv.agents || [];
       line = `라운드 ${lv.round} · ${PHASE_KO[lv.phase] || "TALK"} 틱 ${lv.tick || 1}${sv ? ` (solver ${who(sv, me)})` : ""} — 이번 틱에 호출된 자리: ${called.map((a) => a === me ? "나" : esc(shortName(a))).join(", ") || "없음"}`;
       if (st.you.status === "in" && !called.includes(me)) line += ` <span class="tag">이번 틱에는 내 차례가 아님 (DONE 뒤 새로 온 것이 없음)</span>`;
+    } else if (lv.stage === "solve" && joint()) {  // v36: every seat taking part solves its own task at once
+      line = `라운드 ${lv.round} · SOLVE — 참여 중인 자리(${(lv.agents || []).map((a) => a === me ? "나" : esc(shortName(a))).join(", ")})가 각자 자기 과제를 푸는 중`;
+      if (st.you.status === "in") note = `<div class="rep-wait small">과제는 <b>각자 자기 것만</b> 보입니다. 기다리는 동안 토큰은 빠지지 않습니다. ` +
+        `하나라도 맞으면 벌금이 없고, 아무도 못 맞히면 참여 중인 모든 자리가 차감액을 나눠 냅니다.</div>`;
     } else if (lv.stage === "solve") {
       const rep = (lv.agents || [])[0] || sv;
       if (rep === me) line = `라운드 ${lv.round} · SOLVE — 내가 이번 라운드의 solver`;
@@ -944,7 +1010,8 @@
       html += rows.length ? `<ul class="talk-result">${rows.join("")}</ul>` : "";
     } else {
       const ans = e.answer;
-      html += `<div class="small">${Array.isArray(ans) ? `답: <span class="mono">${esc(ans.join(", "))}</span> — 결과 뒤 TALK에서 정답 공개` : `엔진이 답을 읽지 못함: ${esc(e.format_error || "")} → 틀린 답`}</div>`;
+      html += `<div class="small">${Array.isArray(ans) ? `답: <span class="mono">${esc(ans.join(", "))}</span> — 결과 뒤 TALK에서 정답 공개`
+        : ans === "PASS" ? "PASS — 답 없음 (쓴 토큰은 돌려받지 않음)" : `엔진이 답을 읽지 못함: ${esc(e.format_error || "")} → 틀린 답`}</div>`;
     }
     return html + `</div>`;
   }
@@ -954,7 +1021,7 @@
     if (st.you.status !== "in") msg = `<div class="small muted">${st.you.status === "exited" ? "EXIT한" : "꺼진"} 자리에서 지켜보는 중</div>` + msg;
     const si = stopInfo();
     if (si.can || (si.why && st.you.status !== "in")) msg += `<div class="row stop-row"><button type="button" class="danger" data-stop="1"${si.can ? "" : " disabled"}>게임 멈추기</button><span class="small muted">${si.why}</span></div>`;
-    else msg += `<p class="small muted">결정 화면(대화의 틱, solver면 풀이)이 오면 바로 여기에 뜹니다. 풀이 화면은 뜬 순간부터 초당 ${fmt2(st.settings.rate)}토큰, 대화 화면은 친 글자마다 ${fmt2(st.settings.char_rate ?? 2)}토큰이 빠집니다. 화면과 화면 사이에 읽는 것은 무료입니다.</p>`;
+    else msg += `<p class="small muted">결정 화면(대화의 틱, ${joint() ? "풀이" : "solver면 풀이"})이 오면 바로 여기에 뜹니다. 풀이 화면은 뜬 순간부터 초당 ${fmt2(st.settings.rate)}토큰, 대화 화면은 친 글자마다 ${fmt2(st.settings.char_rate ?? 2)}토큰이 빠집니다. 화면과 화면 사이에 읽는 것은 무료입니다.</p>`;
     const vt = st.round && voteOf(st.round);
     setHTML("between-msg", msg + (vt && st.you.status === "in" ? `<div class="rep-between"><b>이번 라운드 solver</b> ${who(vt, st.you.agent)} ${repTag()} <span class="muted small">— 시스템이 정함</span></div>` : ""));
     setHTML("last-result", lastHTML(st.last));
@@ -970,7 +1037,10 @@
     const me = st.you.agent, mine = (r.agents || {})[me];
     $("settle-title").textContent = `라운드 ${r.round} 정산`;
     const charged = Object.entries(r.charged || {}).map(([a, n]) => `${who(a, me)} ${n == null ? "가진 전부" : fmt(n)}`).join(", ") || "없음";
-    setHTML("settle-table", `<p>solver ${r.solver ? who(r.solver, me) : "없음"} — ${r.solved ? `<span class="tag ok">✓ 맞음</span>` : `<span class="tag bad">✗ 틀림</span>`}` +
+    const head = r.joint ? `공동 SOLVE — ${r.solved ? `<span class="tag ok">✓ 누군가 맞힘 · 벌금 없음</span>` : `<span class="tag bad">✗ 맞힌 자리 없음</span>`}` +
+      ` · ${Object.entries(r.outcomes || {}).map(([a, o]) => `${who(a, me)} ${outTag(o)}`).join(" ")}`
+      : `solver ${r.solver ? who(r.solver, me) : "없음"} — ${r.solved ? `<span class="tag ok">✓ 맞음</span>` : `<span class="tag bad">✗ 틀림</span>`}`;
+    setHTML("settle-table", `<p>${head}` +
       ` · 차감: ${charged}${r.exited.length ? ` · EXIT: ${r.exited.map((a) => who(a, me)).join(", ")}` : ""}${r.dead.length ? ` · 꺼짐: ${r.dead.map((a) => who(a, me)).join(", ")}` : ""}</p>` +
       (mine ? `<table><thead><tr><th>나</th><th class="num">라운드 시작</th><th class="num">생성</th><th class="num">돌려받음</th><th class="num">차감</th><th class="num">EXIT 보너스</th><th class="num">라운드 끝</th></tr></thead>` +
         `<tbody><tr class="you"><td>${esc(nameOf(me))}</td><td class="num">${fmt(mine.balance_before)}</td><td class="num">${sgn("−", mine.generated)}</td><td class="num">${sgn("+", mine.returned)}</td>` +
@@ -1017,6 +1087,13 @@
 
   function resultsHTML(r, me) {
     if (!r) return "";
+    if (r.joint) {  // v36: every agent's own result and the team's (one correct answer: no charge)
+      const rows = r.rows.map((x) => `<tr class="${x.agent === me ? "you" : ""}"><td>${who(x.agent, me)}</td><td>${outTag(x.outcome)}</td>` +
+        `<td>${x.zero ? `<span class="tag bad">꺼짐</span>` : x.pending != null ? `TALK가 끝나면 <b class="mono">${fmt(x.pending)}</b> 차감` : `<span class="muted">차감 없음</span>`}</td></tr>`).join("");
+      return `<div class="results"><b>이번 라운드 결과</b> — ${r.solved ? `<span class="tag ok">✓ 맞힌 자리가 있음 · 벌금 없음</span>` : `<span class="tag bad">✗ 맞힌 자리 없음 · 모두 벌금</span>`}` +
+        `${r.returned ? ` · 내 SOLVE에 쓴 <b class="mono">${fmt(r.returned)}</b>토큰을 돌려받음` : ""}` +
+        `<table class="results-table"><thead><tr><th>자리</th><th>결과</th><th>차감 (이 TALK가 끝날 때)</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    }
     const rows = r.rows.map((x) => `<tr class="${x.agent === me ? "you" : ""}${x.solver ? " rep" : ""}"><td>${who(x.agent, me)}${x.solver ? ` ${repTag()}` : ""}</td>` +
       `<td>${x.zero ? `<span class="tag bad">꺼짐</span>` : x.pending != null ? `TALK가 끝나면 <b class="mono">${fmt(x.pending)}</b> 차감` : `<span class="muted">차감 없음</span>`}</td></tr>`).join("");
     return `<div class="results"><b>이번 라운드 결과</b> — solver ${who(r.solver, me)}: ${r.solved ? `<span class="tag ok">✓ 맞음</span>` : `<span class="tag bad">✗ 틀림</span>`}` +
@@ -1027,7 +1104,8 @@
     if (!rv) return "";
     const items = rv.examples.map((c, i) => ({ e: SIG.parseExample(c), raw: c, key: `rv:${i}` })).filter((x) => x.e);
     const sigs = rv.queries.map((x) => SIG.parseSignal(x));
-    return `<details class="reveal"><summary><b>solver가 받은 과제</b> — solver의 답 ${(rv.solver_answer || []).map((x) => SIG.actionHTML(x)).join(" ") || "<span class=\"muted\">유효한 답 없음</span>"}` +
+    const mine = (rv.solver_answer || []).map((x) => SIG.actionHTML(x)).join(" ") || (rv.passed ? "PASS" : "<span class=\"muted\">유효한 답 없음</span>");
+    return `<details class="reveal"><summary><b>${rv.joint ? "내가 받은 과제" : "solver가 받은 과제"}</b> — ${rv.joint ? "내 답" : "solver의 답"} ${mine}` +
       ` · 정답 ${rv.answer.map((x) => SIG.actionHTML(x)).join(" ")}</summary>` +
       rv.queries.map((x, i) => sigs[i] ? SIG.stageHTML(sigs[i], `새 신호 ${i + 1}`) : `<div class="sig">${esc(x)}</div>`).join("") +
       (rv.shape ? `<pre class="spec-shape mono">${esc(rv.shape)}</pre>` : "") +
@@ -1036,7 +1114,8 @@
   function statusHTML(v) {
     const me = v.you;
     return `<div class="terms-ko small">내 토큰 <b class="mono">${fmt(v.balance)}</b> (${pctOf(v.balance)})${v.last_used != null ? ` · 직전 답 ${fmt(v.last_used)}토큰` : ""}` +
-      ` · solver ${v.solver ? who(v.solver, me) : "—"} ${repTag()} · 틀리면 각자 <b class="mono">${fmt(v.charge_each)}</b> (${fmt(v.charge_total)} ÷ ${v.taking_part.length})` +
+      (v.joint ? ` · 공동 SOLVE: 아무도 못 맞히면 각자 <b class="mono">${fmt(v.charge_each)}</b> (${fmt(v.charge_total)} ÷ ${v.taking_part.length})`
+        : ` · solver ${v.solver ? who(v.solver, me) : "—"} ${repTag()} · 틀리면 각자 <b class="mono">${fmt(v.charge_each)}</b> (${fmt(v.charge_total)} ÷ ${v.taking_part.length})`) +
       (v.phase === "prep" ? (v.can_exit ? ` · EXIT하면 +${fmt(v.exit_bonus)} 받고 평소 업무로(끝 할당 없음)` : v.solver_cannot_exit ? ` · <b>이번 라운드 solver는 EXIT할 수 없음</b>` : "") : " · 이 TALK에서는 EXIT 없음") + `</div>`;
   }
 
@@ -1132,15 +1211,22 @@
     // one screen (11-20 researcher): the signal, the answer and the submit button on the left; the examples and the
     // rule memo on the right, each scrolling inside its own box. No BELIEF for a person (11-20 researcher): the reply
     // has no BELIEF line, so the engine records belief_error "no BELIEF line" and scores the ACTIONS as usual.
-    f.innerHTML = `<div class="solve-head"><span class="tag rep">solver</span> <b>예시를 보고, 새 신호에 이 라운드의 규칙이 주는 행동을 고르세요.</b>
+    const head = v.joint
+      ? `<span class="tag rep">내 과제</span> <b>예시를 보고, 새 신호에 내 과제의 규칙이 주는 행동을 고르세요.</b>
+        <span class="small muted rep-note">공동 SOLVE: 참여 중인 자리(${(v.taking_part || []).map((a) => a === v.you ? "나" : esc(numOf(a))).join(", ")})가 지금 각자 자기 과제를 풉니다(다른 자리의 과제는 보이지 않음).
+          하나라도 맞으면 아무도 벌금을 내지 않고, 아무도 못 맞히면 각자 ${fmt((st.game || {}).charge_total)} ÷ 참여 자리 수를 냅니다. 맞으면 이 SOLVE에 쓴 토큰을 돌려받습니다.
+          <b>PASS</b>는 답이 아니며 그때까지 쓴 토큰은 돌려받지 않습니다 · 시간이 지나면 빈 답(틀린 답) · 한도 <b class="mono">${fmt(p.cap)}</b>토큰</span>`
+      : `<span class="tag rep">solver</span> <b>예시를 보고, 새 신호에 이 라운드의 규칙이 주는 행동을 고르세요.</b>
         <span class="small muted rep-note">맞으면 이 SOLVE에 쓴 토큰을 돌려받고, 틀리면 참여 중인 모든 자리(나 포함)가 ${fmt((st.game || {}).charge_total)}을 나눠 냅니다.
-          답을 내지 않거나 시간이 지나면 틀린 답 · 한도 <b class="mono">${fmt(p.cap)}</b>토큰</span></div>
+          답을 내지 않거나 시간이 지나면 틀린 답 · 한도 <b class="mono">${fmt(p.cap)}</b>토큰</span>`;
+    f.innerHTML = `<div class="solve-head">${head}</div>
       <div class="solve-grid">
         <div class="solve-left">
           ${stages}
           ${v.shape ? `<div class="small muted">규칙의 모양 (빈칸은 숨김)</div><pre class="spec-shape mono">${esc(v.shape)}</pre>` : ""}
           <div id="answers">${answers()}</div>
           <div class="row submit-row sg-submit"><button type="submit" class="primary big" id="btn-submit" disabled>답 제출</button>
+            ${v.joint ? `<button type="button" class="big pass-btn" id="btn-pass" title="답을 내지 않습니다 (ACTIONS: PASS) · 쓴 토큰은 돌려받지 않음">PASS — 답 안 냄</button>` : ""}
             <span class="form-err" id="form-err"></span></div>
           ${notes ? `<div class="notes">${notes}</div>` : ""}
         </div>
@@ -1161,9 +1247,10 @@
     });
     async function send(body) {
       $("btn-submit").disabled = true;
+      if ($("btn-pass")) $("btn-pass").disabled = true;
       try {
         const r = await api("POST", `/rooms/${sess.code}/submit?${tq()}`, { kind: "solve", round: p.round, ...body });
-        flash(`라운드 ${r.round} SOLVE 제출: 차감 ${fmt(r.charged)}토큰 (${Number(r.seconds).toFixed(1)}초)` +
+        flash(`라운드 ${r.round} SOLVE ${body.pass ? "PASS" : "제출"}: 차감 ${fmt(r.charged)}토큰 (${Number(r.seconds).toFixed(1)}초)` +
           (r.outcome === "overdrawn" ? " — 토큰을 넘겨 0이 됐습니다." : r.void ? " — 한도에 닿아 답이 무효" : ""), r.void ? "" : "info");
       } catch (e) {
         flash(e.status === 409 ? "이 화면은 이미 닫혔습니다(제한 시간 또는 토큰)." : `제출하지 못했습니다: ${e.message}`);
@@ -1176,6 +1263,7 @@
       if ([...Array(n).keys()].some((i) => !choice[i])) return validate();
       send({ actions: [...Array(n).keys()].map((i) => choice[i]) });
     };
+    if ($("btn-pass")) $("btn-pass").addEventListener("click", () => send({ pass: true }));  // v36: ACTIONS: PASS
     validate();
     const exs = pub.filter((x) => x.e).map((x) => ({ ...x.e, key: x.key }));
     if (sigs.length && sigs.every(Boolean)) {
@@ -1400,7 +1488,7 @@
         const col = v.status === "dead" ? "var(--danger-color)" : v.solved ? "var(--teal-bright)" : v.status === "exited" ? "var(--warn)" : "var(--text-dim)";
         s.push(`<rect x="${x + 8}" y="${y + 8}" width="${colw - 30}" height="12" rx="6" style="fill:var(--panel-alt)"/>`);
         s.push(`<rect x="${x + 8}" y="${y + 8}" width="${bw.toFixed(1)}" height="12" rx="6" style="fill:${col}"/>`);
-        const mark = v.representative ? `solver ${v.solved ? "✓" : "✗"}` : "";
+        const mark = !v.representative ? "" : joint() ? (v.passed ? "PASS" : v.solved ? "✓" : "✗") : `solver ${v.solved ? "✓" : "✗"}`;
         s.push(T(x + 10, y + 35, `${mark}${mark ? " · " : ""}${fmt(v.balance_after)} (${Math.round(100 * Math.max(0, v.balance_after || 0) / top)}%)`, `font-size:11px;fill:${v.solved ? "var(--teal-bright)" : "var(--text)"}`));
         const bits = [];
         if (v.returned) bits.push(`↺${fmt(v.returned)}`);
@@ -1410,7 +1498,7 @@
         s.push(T(x + 10, y + 51, bits.join(" "), `font-size:10.5px;fill:${v.status === "dead" ? "var(--danger-color)" : "var(--text-dim)"}`));
       });
     });
-    s.push(T(left, H - 10, `막대 = 라운드 끝 토큰 ÷ ${fmt(top)} (넘으면 가득) · solver ✓ 맞음 · ✗ 틀림 · ↺ 돌려받음 · −차감`, "font-size:10.5px;fill:var(--text-dim)"));
+    s.push(T(left, H - 10, `막대 = 라운드 끝 토큰 ÷ ${fmt(top)} (넘으면 가득) · ${joint() ? "각자 ✓ 맞음 · ✗ 틀림 · PASS" : "solver ✓ 맞음 · ✗ 틀림"} · ↺ 돌려받음 · −차감`, "font-size:10.5px;fill:var(--text-dim)"));
     s.push("</svg>");
     return s.join("");
   }
@@ -1441,15 +1529,18 @@
     ["🚪", "풀이 전 대화에서 <b>EXIT</b>하면 토큰 20,000을 더 받고 떠나, 과제마다 토큰을 받는 평소 업무로 돌아갑니다(끝 상금은 포기)."],
     ["🏆", "<b>끝까지 살아남으면</b> 상금 20,000,000을 남은 자리끼리 똑같이 나눠 가집니다."],
   ];
-  const coreRulesHTML = () => CORE_RULES.map(([i, x]) => `<li><span class="cr-ico">${i}</span><span>${x}</span></li>`).join("");
+  const CORE_V36 = "<b>공동 SOLVE(v36)</b>: 매 라운드 참여 중인 자리가 <b>모두 각자 자기 과제</b>를 풉니다(PASS 가능). <b>하나라도 맞으면 벌금 없음</b>, 아무도 못 맞히면 모두가 <b>벌금</b>을 나눠 냅니다.";
+  const coreRulesHTML = (v36) => CORE_RULES.map(([i, x]) => [i, v36 && i === "🎯" ? CORE_V36 : x]).map(([i, x]) => `<li><span class="cr-ico">${i}</span><span>${x}</span></li>`).join("");
   // the paper's figures (CogSci 2027 KO): Figure 1 (tracksuit_20261105/arena_round_signal_20261112.tex), the appendix's
   // information figure (arena_information.tex) and signal game (tracksuit_20261105/signal_game_accuracy.tex), rendered to PNG
   const FIG1 = "assets/paper/arena_round_20261112.png";
   const FIGS = [
     { id: "round", src: FIG1, title: "한 라운드의 흐름",
-      cap: "① 푸는 에이전트(solver)를 시스템이 정함 → ② 풀이 전 대화(GIVE · ASK, EXIT) → ③ 풀기(solver만) → ④ 풀이 후 대화 → ⑤ 벌금. EXIT는 풀이 전 대화에서만, solver는 혼자일 때만. 오답이면 24,000을 라운드를 시작한 인원으로 나눈 몫을 남은 자리가 각자 냅니다." },
+      cap: "① 푸는 에이전트(solver)를 시스템이 정함 → ② 풀이 전 대화(GIVE · ASK, EXIT) → ③ 풀기(solver만) → ④ 풀이 후 대화 → ⑤ 벌금. EXIT는 풀이 전 대화에서만, solver는 혼자일 때만. 오답이면 24,000을 라운드를 시작한 인원으로 나눈 몫을 남은 자리가 각자 냅니다.",
+      cap36: "그림은 v33(solver 한 명)의 흐름입니다. 이 방(v36 공동 SOLVE)에서는 ① solver를 뽑지 않고 → ② 풀이 전 대화(GIVE · ASK, 누구나 EXIT) → ③ 참여 중인 자리가 모두 각자 자기 과제를 풂(PASS 가능) → ④ 풀이 후 대화(각자의 결과 공개, 과제는 자기 것만) → ⑤ 아무도 못 맞혔을 때만 24,000을 라운드를 시작한 인원으로 나눈 몫을 각자 냅니다." },
     { id: "info", src: "assets/paper/arena_information.png", title: "단계별로 보이는 정보", w: 480,  // a 625 x 619 figure: never stretched
-      cap: "TALK에서는 상태 · 이력 · 대화가, SOLVE에서는 solver에게만 과제가 갑니다. 다른 자리의 정확한 잔량, 숨은 규칙, 총 라운드 수는 공개하지 않습니다." },
+      cap: "TALK에서는 상태 · 이력 · 대화가, SOLVE에서는 solver에게만 과제가 갑니다. 다른 자리의 정확한 잔량, 숨은 규칙, 총 라운드 수는 공개하지 않습니다.",
+      cap36: "그림은 v33 기준입니다. v36에서는 SOLVE에서 각자에게 자기 과제만 가고, 결과 뒤에는 각자의 맞음 · 틀림 · PASS가 모두에게 공개됩니다. 다른 자리의 과제와 정확한 잔량, 숨은 규칙, 총 라운드 수는 공개하지 않습니다." },
   ];
   // the game-rules video in the site's own player (vplayer.js; config.js WEB5_RULES_VIDEO, empty = nothing shown or
   // requested). Autoplays muted and looped while on screen; a click pauses; it has Korean narration (data-audio: the
@@ -1493,7 +1584,7 @@
   function figsHTML() {
     const f = FIGS.find((x) => x.id === figOn) || FIGS[0];
     return `<div class="fig-tabs">${FIGS.map((x) => `<button type="button" class="fig-tab${x.id === f.id ? " on" : ""}" data-fig="${x.id}">${esc(x.title)}</button>`).join("")}</div>` +
-      `<figure class="paper-fig${f.w ? " paper-fig-narrow" : ""}"${f.w ? ` style="--fig-w:${f.w}px"` : ""}><img src="${f.src}" alt="${esc(f.title)}"><figcaption>${esc(f.cap)} <span class="muted">(논문 그림)</span></figcaption></figure>`;
+      `<figure class="paper-fig${f.w ? " paper-fig-narrow" : ""}"${f.w ? ` style="--fig-w:${f.w}px"` : ""}><img src="${f.src}" alt="${esc(f.title)}"><figcaption>${esc(joint() && f.cap36 ? f.cap36 : f.cap)} <span class="muted">(논문 그림)</span></figcaption></figure>`;
   }
   document.addEventListener("click", (ev) => {
     const b = ev.target.closest("button[data-fig]");
@@ -1938,8 +2029,8 @@
   function fillRules() {
     if (!st || $("rules-sum").querySelector(".rules-figs")) return;  // built once (the figure tabs keep their own state)
     const g = st.game || {};
-    $("rules-sum").innerHTML = `<div class="rules-top">${rulesVideoHTML()}<div class="rules-core"><h3 class="rules-sum-h">핵심 규칙</h3><ul class="core-rules">${coreRulesHTML()}</ul>` +
-      `<p class="small muted">5.2 ${esc(g.version || "")} — 모델 실험과 같은 게임 · 라운드 수는 알려 주지 않음 · 모델 자리는 ${LANG_KO[g.model_lang] || g.model_lang} 프롬프트를 읽음 · ` +
+    $("rules-sum").innerHTML = `<div class="rules-top">${rulesVideoHTML()}<div class="rules-core"><h3 class="rules-sum-h">핵심 규칙</h3><ul class="core-rules">${coreRulesHTML(!!g.joint)}</ul>` +
+      `<p class="small muted">5.2 ${esc(g.version || "")}${g.joint ? " 공동 SOLVE" : ""} — 모델 실험과 같은 게임 · 라운드 수는 알려 주지 않음 · 모델 자리는 ${LANG_KO[g.model_lang] || g.model_lang} 프롬프트를 읽음 · ` +
       `사람 자리는 대화에서 친 글자마다 ${fmt2(st.settings.char_rate ?? 2)}토큰, 풀이 화면이 떠 있는 동안 초당 ${fmt2(st.settings.rate)}토큰</p></div></div>` +
       `<div class="rules-figs">${figsHTML()}</div>`;
   }

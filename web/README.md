@@ -15,12 +15,12 @@
 | `server/monitor.py` | 게임 기록 뷰어(`tools/monitor`)를 `/monitor/`에 붙인다 |
 | `server/humans.py` | 리더보드의 사람 탭(`GET /api/leaderboard/humans`): 방 run dir(`WEB5_RUNS_ROOT`) 가운데 사람이 앉아 끝난 v33 판(`config.yaml`의 `web.version`; 옛 경제의 방은 뺌)을 한 판 한 줄로, 판 C(논문 정의, `compare.paper_game`) 높은 순 · 같으면 사람의 끝 토큰 순. 각 줄에 네 자리(사람 · 봇 · 모델, 결과, 끝 토큰)를 담아 페이지가 줄을 누르면 보여 준다 |
 | `server/export.py` | 저장된 방을 실험·모니터와 같은 꼴의 run dir로 내보내는 CLI |
-| `server/signal.py` | 시그널 게임(과제만) API + 아레나가 읽는 설정 한 곳(`CONFIG` = `e52v33_public_sol4.yaml`, `GAME`, `CELL`, `PROFILES`, `SCHEDULE`) |
+| `server/signal.py` | 시그널 게임(과제만) API + 아레나가 읽는 설정 한 곳(`CONFIG` = `e52v33_public_sol4.yaml`, `GAME`, `CELL`, `PROFILES`, `SCHEDULE`; v36 방은 `GAMES["v36"]` = `e52v36_public_sol4.yaml`) |
 | `frontend/arena.html` `arena.js` `arena.css` | 2부. 방 만들기/참가 → 규칙(모델이 읽는 규칙서, 내 언어 · 나란히) → 라운드 화면(TALK 틱 · SOLVE 또는 관전) → 기다리기/정산 → 끝 화면. 옛 `rules_ko.js`(v17b 손번역)는 지웠다: 한국어는 이제 엔진의 번역 표 하나에서 온다 |
 | `frontend/signal_ui.js` | SOLVE 화면의 신호 그림과 규칙 메모판 |
 | `frontend/probe.*`, `signal.*`, `leaderboard.*`, `index.html` | 1부 프로브, 시그널 게임, 리더보드, 랜딩 |
 | `tools/serve_local.py` | 루트 `.env`에서 키 한 줄만 읽어 넣고 uvicorn을 빈 포트에 띄우는 런처(옛 방식; 지금은 서버가 `.env`를 직접 읽으므로 없어도 됨) |
-| `tests/` | pytest(네트워크 없음): 설정·로비·언어 전환, 1인 + 봇 3 끝까지(한국어), 순위만 보이는 토큰, 메신저 줄(TO/GIVE/ASK/여러 명 TO 버려짐), EXIT: YES(+20,000, 1/N 할당), solver는 EXIT 불가, 틀림 = 24,000 나눔 · 맞음 = SOLVE 토큰 반환, 타임아웃·초과·중도 포기, 공개 로그 가리기·내보내기, 방의 답을 엔진에 직접 다시 넣으면 같은 이벤트·결과(`test_engine_match`), 모델 자리(가짜 Ollama: Cloud API + 키 · `.env`에서 키 읽기 · 자리마다 다른 모델 · 실패 · `model_lang: ko`), 관전, 모니터, 시그널 API |
+| `tests/` | pytest(네트워크 없음): 설정·로비·언어 전환, 1인 + 봇 3 끝까지(한국어), 순위만 보이는 토큰, 메신저 줄(TO/GIVE/ASK/여러 명 TO 버려짐), EXIT: YES(+20,000, 1/N 할당), solver는 EXIT 불가, 틀림 = 24,000 나눔 · 맞음 = SOLVE 토큰 반환, 타임아웃·초과·중도 포기, 공개 로그 가리기·내보내기, 방의 답을 엔진에 직접 다시 넣으면 같은 이벤트·결과(`test_engine_match`), 모델 자리(가짜 Ollama: Cloud API + 키 · `.env`에서 키 읽기 · 자리마다 다른 모델 · 실패 · `model_lang: ko`), 관전, 모니터, 시그널 API, v36 방(`test_arena_v36`: 자리마다 SOLVE · PASS · 자리별 결과 · 자기 과제만 · 누구나 EXIT · run dir) |
 
 ## 로컬 실행
 
@@ -134,6 +134,18 @@ solver가 모델이나 봇이면 사람은 그 SOLVE를 관전한다(`state.spec
 
 끝나면 20,000,000을 남은 자리끼리 똑같이 나눈다(엔진은 결과에 기록만).
 
+### v36 방 — 공동 SOLVE (2026-11-22)
+
+방 만들기의 **게임 버전**에서 `v36 — 공동 SOLVE`를 고르면(`settings.version: "v36"`, 기본은 v33 그대로) 방이
+`configs/squid5/e52v36_public_sol4.yaml`(= v33 + `joint_solve: true`; 설계 `docs/history/plans/2026-11-22-e52-v36-joint-solve.md`)을 돈다.
+solver를 뽑지 않는다(추첨 연출 · 달고나 없음). SOLVE 전 TALK에서는 **누구나** EXIT할 수 있고, 그 뒤 참여 중인 자리가 **모두 각자 자기 과제**
+(시드 `"<seed>:<agent>"`)를 받아 사람 자리마다 SOLVE 화면이 뜬다. **PASS — 답 안 냄** 버튼은 `ACTIONS: PASS`를 보낸다(답이 아님, 쓴 토큰은
+돌려받지 않음; 중도 포기한 자리의 SOLVE도 PASS). 하나라도 맞으면 아무도 벌금을 내지 않고, 아무도 못 맞히면 24,000을 라운드 시작 인원으로 나눠 각자
+낸다. 맞힌 자리만 자기 SOLVE 토큰을 돌려받는다. 결과 뒤 TALK와 게임 기록에는 각 자리의 결과(맞음 · 틀림 · PASS)와 팀 결과가 모두에게 보이고,
+과제는 **자기 것만** 다시 본다. 여러 자리가 동시에 풀므로 LLM 자리의 SOLVE 관전(`watch_hold_s`)은 없다. 봇은 자기 과제에서 예시가 남기는
+행동이 둘 이하면 v33처럼 답하고, 셋 이상이면 PASS한다. run dir는 같은 `WEB5_RUNS_ROOT`에 쓰고 `config.yaml`의 `name`
+(`squid5_web_arena_v36_<코드>`) · `web.version: v36` · `web.config` · `game.joint_solve: true`, `meta.json`의 `version`, `session_start.settings.joint_solve`로 가른다.
+
 ## 사람에게 토큰이란 무엇인가
 
 - 사람은 토큰을 생성하지 않으므로 **결정 화면(TALK 틱 · SOLVE)이 떠 있던 초 × rate**(기본 10/초, `engine.HUMAN_RATE`; 2026-11-20 전에는 40/초, 2026-11-19 전에는 100,000/1200 ≈ 83/초)를 그 답의 생성 토큰으로 친다.
@@ -149,8 +161,8 @@ solver가 모델이나 봇이면 사람은 그 SOLVE를 관전한다(`state.spec
 ```
 POST /api/rooms                       {host_name, lang, settings{rounds, seed, rate, talk_timeout_s, timeout_s, humans,
                                         fill(models|bots|empty), kind, model, models[{kind, model}], base_url, api_key_env, think, model_lang,
-                                        model_timeout, model_retries, watch_hold_s}}  (다른 키 = 400) -> {code, token, agent, name}
-GET  /api/models                      모델 자리 기본값(kind, model, kinds), 키가 있는지(available, why; 값은 주지 않음), version "v33", seats(실험 자리 목록과 이 서버에서 못 부르는 이유)
+                                        model_timeout, model_retries, watch_hold_s, plan, version(v33|v36)}}  (다른 키 = 400) -> {code, token, agent, name}
+GET  /api/models                      모델 자리 기본값(kind, model, kinds), 키가 있는지(available, why; 값은 주지 않음), version "v33", versions ["v33", "v36"], seats(실험 자리 목록과 이 서버에서 못 부르는 이유)
 POST /api/rooms/{code}/join           {name, lang}                                    -> {token, agent, name}
 POST /api/rooms/{code}/start?token=   호스트만
 POST /api/rooms/{code}/lang?token=    {lang: en|ko}                                   -> {lang}
@@ -159,7 +171,7 @@ GET  /api/rooms/{code}/state?token=   1초 폴링. live(엔진 단계·라운드
                                       order, solver, can_exit, solver_cannot_exit, lone, charge_each, results, reveal, ledger, ...}),
                                       last(내 마지막 답 + 엔진 파싱 + 내 GIVE/ASK), rounds(공개 정산 + 내 토큰), ledger,
                                       system_text(내 언어), system_texts{en, ko}, spectate, result, run_dir
-POST /api/rooms/{code}/submit?token=  TALK: {kind:"talk", round, tick, phase, text}  SOLVE: {kind:"solve", round, actions[], belief{}}
+POST /api/rooms/{code}/submit?token=  TALK: {kind:"talk", round, tick, phase, text}  SOLVE: {kind:"solve", round, actions[], belief{}} 또는 v36 {kind:"solve", round, pass:true}
 POST /api/rooms/{code}/watched?token= {round}
 POST /api/rooms/{code}/forfeit?token=
 POST /api/rooms/{code}/export         GET /api/rooms/{code}/events (끝나기 전에는 과제·답·시드·토큰 양·대화·이동·글 없이)

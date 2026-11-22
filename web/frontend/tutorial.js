@@ -2,7 +2,8 @@
 // at a time -- the part is lit (the rest dimmed) and a speech bubble beside the guide explains it. arena.js starts it on
 // the first TALK screen of round 1, before the solver draw is shown (the game waits for that reply and a TALK screen
 // does not drain with time), once per browser; the "튜토리얼" button replays it. Facts come from the room's state (arena.js
-// passes a getter); nothing here changes the game.
+// passes a getter); nothing here changes the game. A v36 room (f.joint: the joint SOLVE) has no solver: the steps that
+// speak of the solver say instead that every seat answers its own task.
 (function () {
   "use strict";
 
@@ -18,8 +19,8 @@
     { img: "receive_orange", sel: [".rail-list"], title: "네 명의 에이전트", body: (f) =>
       `한 게임에는 에이전트가 <b>넷</b> 있어요. 나는 <b class="mono">${f.me}</b>번 자리예요. ` +
       `나머지 세 자리는 언어 모델이나 봇이에요. 모두 같은 규칙으로 움직이고, 이끄는 자리는 없어요.` },
-    { img: "guard_sign", sel: ["#phase-bar"], title: "라운드 진행표", body: () =>
-      `한 라운드는 여섯 단계로 흘러가요. <b>solver 추첨</b> → <b>풀이 전 대화</b> → <b>풀이</b> → <b>결과 공개</b> → ` +
+    { img: "guard_sign", sel: ["#phase-bar"], title: "라운드 진행표", body: (f) =>
+      `한 라운드는 여섯 단계로 흘러가요. <b>${f.joint ? "라운드 시작" : "solver 추첨"}</b> → <b>풀이 전 대화</b> → <b>풀이</b> → <b>결과 공개</b> → ` +
       `<b>결과 뒤 대화</b> → <b>벌금 · 정산</b>. 지금 단계가 빛나요.` },
     { img: "stand_green", sel: ["#phase-bar .pb-step:nth-child(2)"], title: "대화 틱", body: (f) =>
       `대화는 <b>틱</b> 단위로 진행돼요. 한 틱 동안 차례가 온 자리들이 동시에 한 번씩 답하고, 모두 답하면 다음 틱으로 넘어가요. ` +
@@ -31,8 +32,13 @@
     { img: "stand_green", sel: [".rail-board"], title: "토큰 순서", body: () =>
       `네 자리를 토큰이 많은 순서로 세워 둔 곳이에요. <b>순서만 보이고</b> 다른 자리의 정확한 양은 보이지 않아요. ` +
       `나간 자리와 꺼진 자리도 여기서 알 수 있어요.` },
-    { img: "guard_sign", sel: (f) => (f.drawn ? ["#dalgona", ".rail-board"] : ["#phase-bar .pb-step:first-child"]), title: "solver", body: (f) =>
-      `라운드마다 참여 중인 자리 가운데 <b>무작위로 한 명</b>이 solver가 돼요. ` +
+    { img: "guard_sign", sel: (f) => (f.joint ? ["#phase-bar .pb-step:nth-child(3)"] : f.drawn ? ["#dalgona", ".rail-board"] : ["#phase-bar .pb-step:first-child"]),
+      title: (f) => (f.joint ? "공동 SOLVE" : "solver"), body: (f) => f.joint
+      ? `이 방은 <b>공동 SOLVE</b>예요. solver를 뽑지 않고, 풀이 단계에서 참여 중인 자리가 <b>모두 각자 자기 과제</b>를 풀어요. ` +
+        `다른 자리의 과제는 보이지 않아요. <b>하나라도 맞으면</b> 아무도 벌금을 내지 않고, 맞힌 자리는 풀이에 쓴 토큰을 돌려받아요. ` +
+        `<b>아무도 못 맞히면</b> 벌금 <b class="mono">${fmt(f.charge)}</b>을 참여 중인 자리 수로 나눠 각자 내요(넷이면 각자 <b class="mono">${fmt(f.charge / 4)}</b>). ` +
+        `<b>PASS</b>로 답을 내지 않을 수도 있지만, 그때까지 쓴 토큰은 돌려받지 않아요.`
+      : `라운드마다 참여 중인 자리 가운데 <b>무작위로 한 명</b>이 solver가 돼요. ` +
       (f.drawn ? `달고나가 붙은 자리예요. ` : `튜토리얼을 마치면 바로 이번 라운드의 solver를 추첨해요. `) +
       `문제는 <b>solver만</b> 풀어요. 틀리면 벌금 <b class="mono">${fmt(f.charge)}</b>을 참여 중인 자리 수로 나눠 각자 내요` +
       `(넷이면 각자 <b class="mono">${fmt(f.charge / 4)}</b>). 맞히면 벌금이 없고, solver는 풀이에 쓴 토큰을 돌려받아요.` },
@@ -53,9 +59,9 @@
       `라운드가 몇 번인지는 알려 주지 않아요.` },
     { img: "walk_purple", sel: ["#exit-panel"], title: "EXIT — 떠나기", body: (f) =>
       `<b>풀이 전 대화</b>에서만 떠날 수 있어요. 떠나면 가진 토큰에 <b class="mono">${fmt(f.exitBonus)}</b>을 더 받아 평소 업무로 돌아가고, ` +
-      `이 방에 돌아오지 않으며 끝 할당도 받지 않아요. 그 라운드의 solver는 떠날 수 없어요.` },
+      `이 방에 돌아오지 않으며 끝 할당도 받지 않아요. ${f.joint ? "떠난 자리는 그 라운드의 과제를 받지 않아요." : "그 라운드의 solver는 떠날 수 없어요."}` },
     { img: "stand_green", sel: ["#open-screen .meter"], title: "이 화면의 비용", body: (f) =>
-      `지금 화면이 쓴 토큰과 남은 시간이에요. solver가 되어 <b>풀이 화면</b>이 뜨면, 떠 있는 동안 <b>초당 ${fmt2(f.rate)}토큰</b>이 빠져요. ` +
+      `지금 화면이 쓴 토큰과 남은 시간이에요. ${f.joint ? "라운드마다" : "solver가 되어"} <b>풀이 화면</b>이 뜨면, 떠 있는 동안 <b>초당 ${fmt2(f.rate)}토큰</b>이 빠져요. ` +
       `다른 자리가 푸는 동안 기다리는 시간은 공짜예요.` },
     { img: "guard_sign", sel: [".log-rail"], title: "게임 기록", body: () =>
       `라운드마다 결과, 주고받은 토큰, 벌금이 쌓여요. 새 라운드가 위에 와요.<br>` +
@@ -106,7 +112,7 @@
     const el = found(s.sel);
     if (el) el.scrollIntoView({ block: "nearest", inline: "nearest" });
     root.querySelector(".tut-guide").src = IMG(s.img);
-    root.querySelector(".tut-title").textContent = s.title;
+    root.querySelector(".tut-title").textContent = typeof s.title === "function" ? s.title(f) : s.title;
     root.querySelector(".tut-count").textContent = `${idx + 1} / ${STEPS.length}`;
     root.querySelector(".tut-body").innerHTML = s.body(f);
     root.querySelector(".tut-dots").innerHTML = STEPS.map((_, j) => `<i class="${j === idx ? "on" : j < idx ? "done" : ""}"></i>`).join("");
