@@ -13,6 +13,7 @@
 | `server/engine.py` | 방 = 백그라운드 스레드에서 도는 `e52_game.Game`(설정 파일의 v33 게임 그대로; 방이 바꾸는 것은 자리·시계·라운드 수(숨김)·모델의 언어뿐). 호출이 TALK인지 SOLVE인지, 라운드·틱·단계는 엔진의 `call_start` 이벤트에서 읽는다(프롬프트 문구를 파싱하지 않으므로 한국어 프롬프트여도 같다). 사람 자리(`HumanSeat`)는 제출까지 블록하고 페이지가 메신저 문법으로 짠 답 TEXT를 돌려줌, 모델 자리(`ModelSeat`)는 squid5의 프로바이더(**실험 자리** = `e52v33_*.yaml`의 `model` 칸 그대로 · 또는 API 자리 = 프로바이더 kind + 모델 이름, 기본 Ollama Cloud API의 `gpt-oss:20b`; Ollama SOLVE는 관전용 스트리밍), 봇 자리(`BotSeat`)는 즉답(EXIT 안 함), 빈 자리는 1라운드 전에 꺼진 에이전트. 엔진 이벤트를 run dir에 실시간으로 쓴다(`RunWriter`) |
 | `server/store.py` | 이벤트 저장소. 기본 SQLite `outputs/web5/arena.db`, `WEB5_DSN`이 있으면 Postgres(psycopg) |
 | `server/monitor.py` | 게임 기록 뷰어(`tools/monitor`)를 `/monitor/`에 붙인다 |
+| `server/humans.py` | 리더보드의 사람 탭(`GET /api/leaderboard/humans`): 방 run dir(`WEB5_RUNS_ROOT`) 가운데 사람이 앉아 끝난 v33 판(`config.yaml`의 `web.version`; 옛 경제의 방은 뺌)을 한 판 한 줄로, 판 C(논문 정의, `compare.paper_game`) 높은 순 · 같으면 사람의 끝 토큰 순. 각 줄에 네 자리(사람 · 봇 · 모델, 결과, 끝 토큰)를 담아 페이지가 줄을 누르면 보여 준다 |
 | `server/export.py` | 저장된 방을 실험·모니터와 같은 꼴의 run dir로 내보내는 CLI |
 | `server/signal.py` | 시그널 게임(과제만) API + 아레나가 읽는 설정 한 곳(`CONFIG` = `e52v33_public_sol4.yaml`, `GAME`, `CELL`, `PROFILES`, `SCHEDULE`) |
 | `frontend/arena.html` `arena.js` `arena.css` | 2부. 방 만들기/참가 → 규칙(모델이 읽는 규칙서, 내 언어 · 나란히) → 라운드 화면(TALK 틱 · SOLVE 또는 관전) → 기다리기/정산 → 끝 화면. 옛 `rules_ko.js`(v17b 손번역)는 지웠다: 한국어는 이제 엔진의 번역 표 하나에서 온다 |

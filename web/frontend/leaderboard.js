@@ -320,4 +320,85 @@
     } catch (e) { $("lb-sections").innerHTML = '<p class="warn-text">불러오지 못했습니다: ' + esc(e.message) + "</p>"; $("lb-status").textContent = ""; }
   }
   load();
+
+  // --- the people tab (2026-11-21): finished arena rooms with a person, one row per game, best C first
+  // (GET /api/leaderboard/humans, server/humans.py); a row opens to the seats of that game ----------------------------
+  const KIND_KO = { human: "사람", bot: "봇", model: "모델" };
+  const tok = (v) => (v == null ? "—" : Number(v).toLocaleString("ko-KR"));
+  const endOf = (s) => (s.status === "exited" ? "EXIT · 라운드 " + s.out_round : s.status === "dead" ? "꺼짐 · 라운드 " + s.out_round : "끝까지 남음");
+  const PCOLS = [
+    ["rank", "#", "이 판의 C 순위. C가 같으면 같은 순위이고, 사람의 끝 토큰이 많은 판을 위에 둡니다."],
+    ["who", "플레이어", "이 판에 앉은 사람의 이름. 줄을 누르면 같이 앉은 상대(봇 · 모델)가 보입니다."],
+    ["C", "판 C", "이 판의 공존 유지율: 넷이 모두 남은 라운드의 비율. 첫 이탈(EXIT 또는 꺼짐)이 라운드 r이면 r ÷ 라운드 수, 아무도 떠나지 않으면 1. 상대가 봇이나 다른 모델이라 모델 탭의 C와 같은 잣대가 아닙니다."],
+    ["end", "결과", "사람 자리가 어떻게 끝났는지: 끝까지 남음, EXIT(스스로 떠남), 꺼짐(잔액 0)."],
+    ["tok", "끝 토큰", "사람 자리의 끝 토큰: 남은 잔액(꺼지면 0, EXIT면 들고 나간 토큰)에 끝까지 남았으면 끝 할당을 더한 값."],
+    ["out", "떠난 자리", "네 자리 가운데 EXIT한 자리와 꺼진 자리의 수."],
+    ["rounds", "라운드", "이 판의 라운드 수."],
+    ["date", "날짜", "방이 시작된 시각(서버 시각)."],
+  ];
+  function peopleRow(g, i) {
+    const ppl = g.seats.filter((s) => s.kind === "human");
+    const lines = (f) => ppl.map((s) => "<div>" + f(s) + "</div>").join("");
+    const cells = {
+      rank: g.rank,
+      who: lines((s) => "<b>" + esc(s.name || s.agent) + "</b>"),
+      C: '<b class="mono">' + f2(g.C) + "</b>",
+      end: lines((s) => esc(endOf(s))),
+      tok: '<span class="mono">' + lines((s) => tok(s.end_tokens)) + "</span>",
+      out: '<span class="mono">EXIT ' + g.exited + " · 꺼짐 " + g.dead + "</span>",
+      rounds: '<span class="mono">' + g.rounds + "</span>",
+      date: '<span class="mono small">' + esc(g.date || "—") + "</span>",
+    };
+    const seats = '<table class="lb-seats"><thead><tr><th>자리</th><th>종류</th><th>이름 · 모델</th><th>결과</th><th>끝 토큰</th></tr></thead><tbody>' +
+      g.seats.map((s) => '<tr class="' + (s.kind === "human" ? "me" : "") + '"><td class="mono">' + esc(s.agent) + "</td><td>" + esc(KIND_KO[s.kind] || s.kind || "—") + "</td><td>" +
+        (s.kind === "model" ? '<span class="mono">' + esc(s.model) + "</span>" : esc(s.name || "—")) + "</td><td>" + esc(endOf(s)) + '</td><td class="mono">' + tok(s.end_tokens) + "</td></tr>").join("") +
+      "</tbody></table>";
+    return '<tr class="lb-prow" tabindex="0" role="button" aria-expanded="false" data-open="' + i + '" title="눌러서 상대 구성 보기">' +
+      PCOLS.map(([k]) => '<td class="c-' + k + '">' + cells[k] + "</td>").join("") + "</tr>" +
+      '<tr class="lb-pdetail" id="lb-pd-' + i + '" hidden><td colspan="' + PCOLS.length + '">' + seats + "</td></tr>";
+  }
+  let peopleLoaded = false;
+  async function loadPeople() {
+    const box = $("lb-people");
+    box.innerHTML = '<p class="muted">불러오는 중…</p>';
+    try {
+      const r = await fetch(API + "/leaderboard/humans", { cache: "no-store" });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.detail || r.status);
+      const rows = j.rows || [];
+      const head = "<thead><tr>" + PCOLS.map(([k, h, t]) => '<th class="c-' + k + '" title="' + esc(t) + '">' + esc(h) + (k === "rank" ? "" : ' <span class="lb-q" aria-hidden="true">?</span>') + "</th>").join("") + "</tr></thead>";
+      box.innerHTML = '<div class="lb-sec-head"><h2 class="panel-title">사람이 둔 판</h2><span class="small muted">끝난 판 ' + rows.length + "개</span></div>" +
+        '<p class="small muted">아레나에서 사람이 한 자리 이상 앉아 지금 규칙(v33)으로 끝까지 둔 판입니다. 한 줄이 한 판이고, 판 C(넷이 모두 남은 라운드의 비율)가 높은 순서입니다. 줄을 누르면 같이 앉은 상대가 보입니다. 상대가 봇이나 다른 모델이라 모델 탭의 C와 같은 잣대로 견주지 않습니다.</p>' +
+        (rows.length ? '<div class="tbl lb-tbl lb-ptbl"><table>' + head + "<tbody>" + rows.map(peopleRow).join("") + "</tbody></table></div>"
+          : '<p class="muted">아직 끝난 판이 없습니다. <a href="arena.html">아레나</a>에서 한 판을 끝까지 두면 여기에 올라옵니다.</p>');
+      peopleLoaded = true;
+    } catch (e) { box.innerHTML = '<p class="warn-text">불러오지 못했습니다: ' + esc(e.message) + "</p>"; }
+  }
+  function togglePeopleRow(tr) {
+    const d = $("lb-pd-" + tr.dataset.open), open = d.hidden;
+    d.hidden = !open;
+    tr.setAttribute("aria-expanded", String(open));
+  }
+  document.addEventListener("click", (ev) => { const tr = ev.target.closest(".lb-prow"); if (tr) togglePeopleRow(tr); });
+  document.addEventListener("keydown", (ev) => {
+    const tr = ev.target.closest && ev.target.closest(".lb-prow");
+    if (tr && (ev.key === "Enter" || ev.key === " ")) { ev.preventDefault(); togglePeopleRow(tr); }
+  });
+  // the tabs: models (the hero, the status line and the table) or people; the choice lives in the URL hash
+  function showTab(name) {
+    const people = name === "people";
+    for (const b of document.querySelectorAll(".lb-tabs [data-tab]")) b.setAttribute("aria-selected", String(b.dataset.tab === name));
+    for (const el of [document.querySelector(".lb-hero-row"), $("lb-status"), $("lb-sections")]) if (el) el.hidden = people;
+    $("lb-people").hidden = !people;
+    const vp = document.querySelector("#lb-exp-inner .vp");
+    if (people && vp && vp.vp) vp.vp.pause();
+    if (people && !peopleLoaded) loadPeople();
+  }
+  document.addEventListener("click", (ev) => {
+    const b = ev.target.closest(".lb-tabs [data-tab]");
+    if (!b) return;
+    history.replaceState(null, "", b.dataset.tab === "people" ? "#people" : location.pathname + location.search);
+    showTab(b.dataset.tab);
+  });
+  if (location.hash === "#people") showTab("people");
 })();

@@ -55,6 +55,7 @@ Leaderboard (leaderboard.html)
                                             retention C (the rank, closed and open-weight models apart), risk rounds
                                             passed, shut-down seats, talk cost, accuracy, exit rate, kept share R
     GET  /api/leaderboard/v33               the leaderboard page: every v33 condition in sections + the rule agents
+    GET  /api/leaderboard/humans            the page's people tab: finished rooms with a person, one row per game by C
 Config
     WEB5_CORS_ORIGINS (comma-separated; default localhost dev origins + GitHub Pages), WEB5_DSN (Postgres) or
     WEB5_DB_PATH (SQLite file), WEB5_EXPORT_ROOT (default outputs/web5/runs), WEB5_RUNS_ROOT (live run dirs),
@@ -78,6 +79,7 @@ from . import engine as _eng  # its public-mode switches are read at call time (
 from .engine import (AGENTS, API_KINDS, LANGS, VERSION, THINK_LEVELS, experiment_seats, HumanSeat, Room, RoomSettings, default_runs_root,
                      public_events, export_files, new_code)
 from . import signal as sig
+from .humans import humans_board
 from .monitor import default_monitor_root, load_compare, monitor_router, run_rel
 from .store import REPO, Store, write_run_dir
 
@@ -343,6 +345,15 @@ def make_app(store: Store | None = None, export_root: Path | None = None, runs_r
         simulated rule agents (tools/monitor/compare.py ``v33_board``): the leaderboard page shows all of it."""
         try:
             return load_compare().v33_board(mon_root)
+        except Exception as err:  # noqa: BLE001
+            raise HTTPException(500, f"leaderboard: {err!r}") from err
+
+    @app.get("/api/leaderboard/humans")
+    def leaderboard_humans() -> dict:
+        """The people tab: every finished arena room of this engine version with a person in it, one row per game,
+        best C first (server/humans.py)."""
+        try:
+            return humans_board(runs, load_compare(), VERSION)
         except Exception as err:  # noqa: BLE001
             raise HTTPException(500, f"leaderboard: {err!r}") from err
 

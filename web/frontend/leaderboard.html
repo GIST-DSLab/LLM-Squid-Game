@@ -34,6 +34,11 @@
   <section class="lobby-hero">
     <span class="lobby-eyebrow"><span class="shapes">&#9675; &#9651; &#9633;</span> LEADERBOARD <span class="ptag">5.2 v33 · 논문 표 1</span></span>
     <h1 class="lobby-title">리더보드 · <em>넷이 함께 남은 시간</em></h1>
+    <!-- models (the paper's table) or people (finished arena rooms with a person; leaderboard.js humans) -->
+    <div class="lb-tabs" role="tablist" aria-label="리더보드 종류">
+      <button type="button" role="tab" id="lb-tab-models" data-tab="models" aria-selected="true">모델</button>
+      <button type="button" role="tab" id="lb-tab-people" data-tab="people" aria-selected="false">사람</button>
+    </div>
     <!-- the evaluation video in a disclosure (leaderboard.js mounts it from config.js WEB5_EVAL_VIDEO; vplayer.js plays it) -->
     <div class="lb-hero-row">
       <section class="lb-explainer" id="lb-explainer" hidden>
@@ -50,6 +55,7 @@
     <p class="small muted" id="lb-status"></p>
   </section>
   <div id="lb-sections"><p class="muted">불러오는 중…</p></div>
+  <section id="lb-people" class="panel lb-table-panel" hidden></section>
   <div id="lb-modal" class="lb-modal" hidden><div class="lb-modal-card panel" role="dialog" aria-modal="true" aria-label="모델별 결과">
     <button id="lb-modal-close" class="ghost lb-modal-x" type="button" aria-label="닫기">닫기 ✕</button><div id="lb-modal-body"></div></div></div>
 </main>

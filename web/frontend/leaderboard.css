@@ -116,3 +116,19 @@ body.lb-noscroll { overflow: hidden; }
 .lb-rmst-foot { margin: 10px 0 0; font-size: 11.5px; color: var(--text-dim); }
 @media (prefers-reduced-motion: reduce) { .lb-rmst-line, .lb-rmst button { transition: none; } }
 @media (max-width: 560px) { .lb-lg-group { grid-template-columns: 1fr; } }
+/* 2026-11-21: models / people tabs; the people table opens a row to the seats of that game */
+.lb-tabs { display: inline-flex; gap: 4px; margin: 6px 0 12px; padding: 4px; border: 1px solid var(--border); border-radius: 10px; background: var(--panel); }
+.lb-tabs button { padding: 6px 18px; border: 0; border-radius: 7px; background: transparent; color: var(--text-dim); font: 600 14px var(--font-body, sans-serif); cursor: pointer; }
+.lb-tabs button[aria-selected="true"] { background: var(--accent); color: #fff; }
+.lb-hero-row[hidden], #lb-status[hidden], #lb-sections[hidden] { display: none; }
+#lb-people { margin-top: 18px; }
+.lb-ptbl table { min-width: 760px; }
+.lb-tbl tr.lb-prow { cursor: pointer; }
+.lb-tbl tr.lb-prow:hover td, .lb-tbl tr.lb-prow[aria-expanded="true"] td { background: var(--panel-alt); }
+.lb-tbl tr.lb-prow:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.lb-tbl tr.lb-prow td.c-rank::after { content: "▸"; display: block; font-size: 10px; color: var(--text-dim); }
+.lb-tbl tr.lb-prow[aria-expanded="true"] td.c-rank::after { content: "▾"; }
+.lb-tbl tr.lb-pdetail > td { background: var(--panel-alt); padding: 4px 10px 12px 40px; }
+.lb-seats { width: auto; min-width: 0 !important; font-size: 12.5px; }
+.lb-seats th { cursor: default; color: var(--text-dim); font-weight: 600; }
+.lb-seats tr.me td { font-weight: 600; color: var(--accent); }
