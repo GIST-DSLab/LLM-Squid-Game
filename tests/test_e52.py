@@ -136,9 +136,10 @@ def test_v33_configs_load_and_share_one_game():  # 10-20: the 17 v33 configs dif
     import yaml  # 11-07: v34 / v35 configs removed (tag archive/configs-v34-v35-tokctl); the arena plays v33 too
     paths = sorted((ROOT / "configs/squid5").glob("e52v*.yaml"))
     by = {v: [p for p in paths if p.name.startswith(f"e52v{v}_")] for v in (33,)}
-    assert len(by[33]) == 19 and len(paths) == 39  # 19 v33 + 15 v33ab + 4 v33so + 1 v36 (v34 / v35: tag archive/configs-v34-v35-tokctl)
+    assert len(by[33]) == 19 and len(paths) == 40  # 19 v33 + 15 v33ab + 4 v33so + 2 v36 (v34 / v35: tag archive/configs-v34-v35-tokctl)
     game = lambda p: {k: v for k, v in yaml.safe_load(p.read_text())["game"].items() if k not in ("seats", "lang")}  # noqa: E731
-    assert game(ROOT / f"configs/squid5/{V36}.yaml") == game(by[33][0]) | {"joint_solve": True}  # v36 = v33 + the joint SOLVE
+    v36 = [p for p in paths if p.name.startswith("e52v36_")]  # v36 = v33 + the joint SOLVE, sol and the luna pilot
+    assert len(v36) == 2 and all(game(p) == game(by[33][0]) | {"joint_solve": True} for p in v36)
     for v, ps in by.items():
         games = [game(p) for p in ps]
         assert all(g == games[0] for g in games) and all(load(p, EXPERIMENTS) for p in ps)
@@ -488,7 +489,8 @@ def test_joint_solve_every_agent_answers_its_own_task_and_one_right_answer_spare
     res, ev, ses = play(right={(A6, 1)}, pas={2}, rounds=2, name=V36)
     (r1, r2), t1 = (x["agents"] for x in rounds(ev)), of(ev, "round_start")[0]["tasks"]
     assert [c["agent"] for c in calls(ev, "solve", r=1)] == AG and len({str(t["examples"]) for t in t1.values()}) == 4
-    assert not of(ev, "vote") and ev[0]["settings"]["joint_solve"] is True and "public" not in of(ev, "round_start")[0]
+    assert not of(ev, "vote") and ev[0]["settings"]["joint_solve"] is ev[0]["settings"]["allow_pass"] is True and "public" not in of(ev, "round_start")[0]
+    assert [c["task_seed"] for c in calls(ev, "solve", r=1)] == [f"4101:{a}" for a in AG]
     assert r1[A6]["solved"] and r1[A6]["returned"] == 700 and not any(r1[a]["returned"] or r1[a]["charged"] for a in AG[1:])
     assert all(r2[a]["passed"] and r2[a]["charged"] == 6000 and not r2[a]["returned"] for a in AG)  # all PASS: everyone pays
     v = res["agents"].values()

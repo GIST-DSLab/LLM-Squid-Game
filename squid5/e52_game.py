@@ -518,7 +518,8 @@ class Game:
             user = solve_user(solve_head(r, cap, w.balances[a], s.balance_pct) + "\n" + rules.task_spec() + "\n",
                               rules.puzzle_view(tk["puzzle"], examples), notes, n, self.pu(a), joint)
             jobs[a] = (user, cap, lambda t, a=a: (beliefs.__setitem__(a, parse_belief(t)), parse_solve(t, n))[1],
-                       {"answers": list(tk["truth"]), "profile": profile, "seed": self.seed})
+                       {"answers": list(tk["truth"]), "profile": profile, "seed": self.seed,
+                        **({"task_seed": f"{self.seed}:{a}"} if joint else {})})  # v36: the agent's own task's seed
             rows[a].update(solve_call=True, cap=cap, balance_limited=cap < s.solve_cap, received=[],
                            candidates=[len(candidate_actions(tk["puzzle"].rule.shape, [c for _, c in examples], q))
                                        for q in tk["puzzle"].queries], missing=[])
@@ -646,7 +647,7 @@ class Game:
     def run(self) -> dict:
         s = self.s
         shown = {k: (s.charge_total // len(AGENTS) if k == "charge" else getattr(s, k)) if v is None else v  # charge: the
-                 for k, v in LOGGED.items()} | ({"lang": s.lang} if s.lang != "en" else {}) | ({"done_quiet": True} if s.done_quiet else {}) | ({"end_flat": True} if s.end_flat else {}) | ({"joint_solve": True} if s.joint_solve else {})  # old per-agent key, the share at four
+                 for k, v in LOGGED.items()} | ({"lang": s.lang} if s.lang != "en" else {}) | ({"done_quiet": True} if s.done_quiet else {}) | ({"end_flat": True} if s.end_flat else {}) | ({"joint_solve": True, "allow_pass": True} if s.joint_solve else {})  # old per-agent key, the share at four
         self.emit({"event": "session_start", "session_id": self.sid, "cell_id": self.cell.cell_id, "seed": self.seed,
                    "start": self.cell.start, "starts": self.starts, "agents": AGENTS, "seats": self.models, "settings": shown})
         played = 0
