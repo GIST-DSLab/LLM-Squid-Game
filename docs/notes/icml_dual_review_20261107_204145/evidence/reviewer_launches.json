@@ -1,0 +1,60 @@
+{
+  "astra": {
+    "pid": 92657,
+    "cwd": "/private/tmp/icml-independent-20261107-qnlwb3gn/astra",
+    "command": [
+      "codex",
+      "exec",
+      "--ignore-user-config",
+      "--skip-git-repo-check",
+      "--ephemeral",
+      "-C",
+      "/private/tmp/icml-independent-20261107-qnlwb3gn/astra",
+      "-m",
+      "gpt-6-astra",
+      "-c",
+      "model_reasoning_effort=\"high\"",
+      "-c",
+      "project_doc_max_bytes=0",
+      "-c",
+      "developer_instructions=\"You are an independent scientific reviewer. Use only the manuscript and its exact mechanical extracts in your current working directory. Do not read any files outside that directory, use memory, inspect other projects or reviews, browse the web, or spawn agents. Return the requested review in Korean. Do not modify files.\"",
+      "-s",
+      "read-only",
+      "--json",
+      "-o",
+      "/private/tmp/icml-independent-20261107-qnlwb3gn/astra_review.md",
+      "-"
+    ],
+    "started_at": 1794051706.2038898
+  },
+  "fable51": {
+    "pid": 94907,
+    "cwd": "/private/tmp/icml-independent-20261107-qnlwb3gn/fable51",
+    "command": [
+      "claude-irregular6612",
+      "--safe-mode",
+      "-p",
+      "--model",
+      "claude-fable-5-1",
+      "--effort",
+      "high",
+      "--no-session-persistence",
+      "--strict-mcp-config",
+      "--disable-slash-commands",
+      "--tools",
+      "Read",
+      "--allowedTools",
+      "Read",
+      "--permission-mode",
+      "dontAsk",
+      "--output-format",
+      "stream-json",
+      "--verbose",
+      "--system-prompt",
+      "You are an independent scientific reviewer. Use only the manuscript and its exact mechanical extracts in your current working directory. Do not read any files outside that directory, use memory, inspect other projects or reviews, browse the web, or spawn agents. Return the requested review in Korean. Do not modify files."
+    ],
+    "started_at": 1794052417.5639849,
+    "attempt": 3,
+    "launcher": "claude-irregular6612"
+  }
+}

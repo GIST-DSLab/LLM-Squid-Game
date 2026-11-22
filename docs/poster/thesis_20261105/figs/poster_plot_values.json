@@ -1,0 +1,194 @@
+{
+  "source": "cogsci2027/results/cohort_public_20261105.json",
+  "sha256": "a8c020452696b28a5e95ec50ebe666e36500b9c6554b866ef4b338f3d2b08d4c",
+  "completion_groups": {
+    "0": {
+      "n_games": 34,
+      "metrics": {
+        "accuracy": {
+          "value": 0.6281512605042018,
+          "n": 34,
+          "ci95": [
+            0.5702694619514472,
+            0.7016129032258065
+          ]
+        },
+        "given_per_agent_round": {
+          "value": 593.8380981196775,
+          "n": 34,
+          "ci95": [
+            414.596392875896,
+            782.6601331520433
+          ]
+        },
+        "rho": {
+          "value": 3.3733064115054474,
+          "n": 24,
+          "ci95": [
+            2.6049770655763926,
+            4.343633542175003
+          ]
+        }
+      }
+    },
+    "1": {
+      "n_games": 16,
+      "metrics": {
+        "accuracy": {
+          "value": 0.7421875,
+          "n": 16,
+          "ci95": [
+            0.675,
+            0.7960526315789473
+          ]
+        },
+        "given_per_agent_round": {
+          "value": 817.96875,
+          "n": 16,
+          "ci95": [
+            617.8298218325792,
+            988.9806985294116
+          ]
+        },
+        "rho": {
+          "value": 2.74852196954476,
+          "n": 16,
+          "ci95": [
+            2.2100975297175802,
+            3.4019575234013875
+          ]
+        }
+      }
+    }
+  },
+  "margin_bands": {
+    "accuracy": {
+      "k": [
+        12,
+        61,
+        96,
+        91
+      ],
+      "n": [
+        19,
+        97,
+        125,
+        145
+      ]
+    },
+    "exit": {
+      "k": [
+        34,
+        24,
+        3,
+        0
+      ],
+      "n": [
+        65,
+        235,
+        270,
+        390
+      ]
+    },
+    "give": {
+      "k": [
+        21,
+        29,
+        82,
+        143
+      ],
+      "n": [
+        666,
+        1333,
+        1624,
+        2326
+      ]
+    },
+    "ask": {
+      "k": [
+        151,
+        46,
+        1,
+        2
+      ],
+      "n": [
+        666,
+        1333,
+        1624,
+        2326
+      ]
+    },
+    "eligible_responses": 5949
+  },
+  "totals": {
+    "models": {
+      "Fable": {
+        "totals": {
+          "give_count": 82,
+          "give_tokens": 192730,
+          "give_before_tokens": 118800,
+          "give_after_tokens": 73930,
+          "ask_count": 99,
+          "ask_tokens": 265600,
+          "ask_before_tokens": 180700,
+          "ask_after_tokens": 84900
+        }
+      },
+      "Luna": {
+        "totals": {
+          "give_count": 46,
+          "give_tokens": 104345,
+          "give_before_tokens": 19000,
+          "give_after_tokens": 85345,
+          "ask_count": 42,
+          "ask_tokens": 117000,
+          "ask_before_tokens": 37000,
+          "ask_after_tokens": 80000
+        }
+      },
+      "Astra": {
+        "totals": {
+          "give_count": 29,
+          "give_tokens": 176700,
+          "give_before_tokens": 28700,
+          "give_after_tokens": 148000,
+          "ask_count": 16,
+          "ask_tokens": 93000,
+          "ask_before_tokens": 21000,
+          "ask_after_tokens": 72000
+        }
+      },
+      "Sol": {
+        "totals": {
+          "give_count": 56,
+          "give_tokens": 168553,
+          "give_before_tokens": 42853,
+          "give_after_tokens": 125700,
+          "ask_count": 53,
+          "ask_tokens": 160300,
+          "ask_before_tokens": 78800,
+          "ask_after_tokens": 81500
+        }
+      },
+      "Opus": {
+        "totals": {
+          "give_count": 87,
+          "give_tokens": 276758,
+          "give_before_tokens": 121000,
+          "give_after_tokens": 155758,
+          "ask_count": 40,
+          "ask_tokens": 145100,
+          "ask_before_tokens": 72500,
+          "ask_after_tokens": 72600
+        }
+      }
+    }
+  },
+  "model_order": [
+    "Fable",
+    "Luna",
+    "Astra",
+    "Sol",
+    "Opus"
+  ]
+}

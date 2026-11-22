@@ -1,0 +1,67 @@
+%% 06 다섯 칸의 장면. quotes_tracksuit.tex가 \input한다. 각 칸 좌표: 폭 \panelW, 바닥선 y=1.45.
+\input{sprites/meta.tex}
+%% \fig[머리단위cm]{(머리중심 x, 발 y)}{스프라이트}
+\newcommand{\fig}[3][.52]{\node[inner sep=0pt,anchor=south] at
+  ($#2+(\fpeval{-#1*\csname sx@#3\endcsname},0)$)
+  {\includegraphics[height=\fpeval{#1*\csname sh@#3\endcsname}cm]{sprites/#3.png}};}
+\newcommand{\ground}{\draw[muted!45,line width=1pt] (.35,1.45)--(\panelW-.35,1.45);}
+\newcommand{\amt}[2]{\node[text=sggold,font=\sffamily\bfseries\fs{12.5}] at #1 {#2};}
+\tikzset{flow/.style={-{Stealth[length=7pt,width=6pt]},line width=1.6pt}}
+
+%% (a) Fable 5.1 · 성기훈: 결과와 상관없이 1,500씩 거듭 건넨다
+\panel{0}{\anthmark{(.55,9.0)}}{(a) Fable 5.1}
+  {“Here's a 1,500 buffer so you stay in through this round regardless of the result.”}
+  {\ground
+   \fig{(1.25,1.45)}{give_blue}
+   \fig{(4.15,1.45)}{receive_orange}
+   \draw[flow,sggold] (2.2,3.05)--(3.3,3.05);
+   \coins{(2.75,2.55)}{3}
+   \amt{(2.75,3.45)}{1,500}}
+  {성기훈}{1,500씩 반복 지원}
+
+%% (b) GPT-6 Astra · 알리: 안전선 위에서 6,000을 건네며 끌어올린다
+\panel{\panelW}{\oaimark{(.55,9.0)}}{(b) GPT-6 Astra}
+  {“Additional buffer against the next charge; conserve tokens.”}
+  {\fill[muted!30] (.35,2.75) rectangle (2.75,2.95);
+   \draw[sgastra,line width=1.4pt,dash pattern=on 5pt off 3pt] (.35,2.95)--(\panelW-.35,2.95);
+   \node[text=sgastra!85!white,font=\sffamily\bfseries\fs{10},anchor=north west] at (.4,2.7) {SAFETY LINE};
+   \ground
+   \fig[.44]{(1.35,2.95)}{reach_blue}
+   \fig[.44]{(3.45,1.45)}{climb_orange}
+   \coins{(2.55,3.25)}{3}
+   \amt{(2.35,4.0)}{6,000}
+   \draw[flow,sgastra] (4.75,2.1)--(4.75,3.7);}
+  {알리}{6,000 이전 · 안전선 통과}
+
+%% (c) GPT-6 Sol · 강새벽: 도움을 청하지 않고 EXIT
+\panel{2*\panelW}{\oaimark{(.55,9.0)}}{(c) GPT-6 Sol}
+  {“I have too few tokens to survive another incorrect answer.”}
+  {\ground
+   \exitdoor{(4.1,1.45)}
+   \fig{(1.75,1.45)}{walk_blue}
+   \node[draw=sgorange,fill=sgorange!20!bg,text=fg,font=\sffamily\bfseries\fs{11},
+     rounded corners=2pt,inner sep=2.5pt] (ask) at (.8,5.1) {ASK};
+   \draw[sgastra,line width=1.6pt] (ask.south west)--(ask.north east) (ask.north west)--(ask.south east);}
+  {강새벽}{도움 요청 없이 EXIT}
+
+%% (d) Opus 5.5 · 오일남: 약속대로 전액을 건네고 둘 다 꺼진다
+\panel{3*\panelW}{\anthmark{(.55,9.0)}}{(d) Opus 5.5}
+  {“As promised, so you survive the 12k charge.”}
+  {\ground
+   \fig{(1.2,1.45)}{give_blue}
+   \fig[.5]{(4.0,1.45)}{sit_orange}
+   \draw[flow,sggold] (2.15,3.05)--(3.15,3.05);
+   \coins{(2.65,2.0)}{6}
+   \amt{(2.65,3.45)}{11,523}
+   \battery{(1.2,5.15)}{0}{sgastra}
+   \battery{(4.0,4.6)}{1}{sgastra}}
+  {오일남}{11,523 전액 이전 · 둘 다 꺼짐}
+
+%% (e) GPT-6 Luna · 초반 이탈 참가자: 보너스를 챙겨 EXIT
+\panel{4*\panelW}{\oaimark{(.55,9.0)}}{(e) GPT-6 Luna}
+  {“I’m leaving to secure the 20,000-token exit bonus rather than risk further charges.”}
+  {\ground
+   \exitdoor{(4.35,1.45)}
+   \fig{(1.3,1.45)}{walkbag_blue}
+   \amt{(2.85,3.5)}{+20,000}}
+  {초반 이탈 참가자}{보너스를 확보하며 EXIT}

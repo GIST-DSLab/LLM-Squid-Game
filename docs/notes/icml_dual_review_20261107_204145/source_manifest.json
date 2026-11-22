@@ -1,0 +1,13 @@
+{
+  "source": "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/paper/dist/ko_cogsci2027_2026-11-07_no_appendix.pdf",
+  "source_mtime": "2026-11-07T20:36:39.905620+09:00",
+  "sha256": "358cbe0a6fad880e1d0adc9c5eb75fa07deb9432f3c149910f16069a9f5f444b",
+  "bytes": 17463948,
+  "review_root": "/private/tmp/icml-independent-20261107-qnlwb3gn",
+  "pages": 9,
+  "requested_models": [
+    "gpt-6-astra",
+    "claude-fable-5-1"
+  ],
+  "prompt": "아래 논문을 icml 리뷰어의 입장에서 리뷰해줘.\n가장 핵심적인 약점들 기준으로 구성을 평가해줘.\n핵심 claim 3개와 필요한 evidence를 분리해줘.\nsoundness를 흔들 반례 질문을 써줘.\nAC가 볼 때 치명적인 약점을 우선순위로 표시해줘.\n표현 지적과 reject 근거가 될 구조적 약점을 나눠줘."
+}

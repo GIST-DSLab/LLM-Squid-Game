@@ -1,0 +1,368 @@
+<title>2절 짜임 조사</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Gowun+Batang:wght@700&display=swap">
+<style>
+/* Layout: one reading column (~68ch); wide tables scroll inside their own box. Tracksuit teal as accent, guard pink only for warnings. */
+:root{
+  --bg:#f6f8f7; --paper:#ffffff; --ink:#18221f; --muted:#56635e; --line:#d5ddd9;
+  --accent:#1f7a68; --accent-soft:#e2f1ec; --warn:#b4386a; --warn-soft:#f8e6ee;
+  --bar1:#1f7a68; --bar2:#7fb7a8; --bar3:#c9a74a; --bar4:#b4386a;
+  --display:"Gowun Batang", "Nanum Myeongjo", serif;
+  --body:"IBM Plex Sans KR", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111816; --paper:#18211e; --ink:#e3ebe8; --muted:#9db0a9; --line:#2c3a35;
+  --accent:#5cc4ab; --accent-soft:#1c332d; --warn:#ee7fa8; --warn-soft:#3a2230;
+  --bar1:#5cc4ab; --bar2:#3b7f70; --bar3:#d6b75e; --bar4:#ee7fa8; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111816; --paper:#18211e; --ink:#e3ebe8; --muted:#9db0a9; --line:#2c3a35;
+  --accent:#5cc4ab; --accent-soft:#1c332d; --warn:#ee7fa8; --warn-soft:#3a2230;
+  --bar1:#5cc4ab; --bar2:#3b7f70; --bar3:#d6b75e; --bar4:#ee7fa8; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15.5px;line-height:1.75;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 80px}
+main{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:44px}
+.col{max-width:68ch}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.35;margin:0}
+h1{font-size:2rem}
+h2{font-size:1.45rem;padding-top:6px;border-top:2px solid var(--ink)}
+h3{font-size:1.1rem;font-family:var(--body);font-weight:700}
+p{margin:0}
+section{display:flex;flex-direction:column;gap:14px}
+.eyebrow{font-family:var(--mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.lede{font-size:1.08rem}
+.muted{color:var(--muted)}
+.small{font-size:.88rem}
+code,.mono{font-family:var(--mono);font-size:.88em}
+.verdict{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--accent);padding:18px 20px;display:flex;flex-direction:column;gap:10px}
+.verdict ol{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:6px}
+.warnbox{background:var(--warn-soft);border-left:4px solid var(--warn);padding:14px 18px;display:flex;flex-direction:column;gap:8px}
+.warnbox ul{margin:0;padding-left:1.2em}
+/* stacked bar */
+.bar{display:flex;height:34px;width:100%;border-radius:3px;overflow:hidden}
+.bar span{display:flex;align-items:center;justify-content:center;color:#fff;font-size:.78rem;font-family:var(--mono);white-space:nowrap;overflow:hidden}
+.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:6px 18px;font-size:.88rem}
+.legend div{display:flex;gap:8px;align-items:baseline}
+.sw{width:10px;height:10px;flex:none;border-radius:2px;transform:translateY(1px)}
+.scroll{overflow-x:auto;border:1px solid var(--line);background:var(--paper)}
+table{border-collapse:collapse;font-size:.86rem;min-width:760px;width:100%}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-weight:600;background:var(--accent-soft);position:sticky;top:0}
+td.c{text-align:center;font-family:var(--mono)}
+td.yes{color:var(--accent);font-weight:600}
+.patterns{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.pat{background:var(--paper);border:1px solid var(--line);padding:14px 16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.pat .flow{font-family:var(--mono);font-size:.82rem;color:var(--accent)}
+details{background:var(--paper);border:1px solid var(--line);padding:0 16px}
+details+details{margin-top:-1px}
+summary{cursor:pointer;padding:12px 0;font-weight:600;list-style-position:outside}
+summary .tag{font-family:var(--mono);font-weight:400;font-size:.78rem;color:var(--muted);margin-left:6px}
+summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.card{padding:0 0 16px;display:flex;flex-direction:column;gap:8px;font-size:.93rem}
+.card ul{margin:0;padding-left:1.2em}
+.quote{font-family:var(--mono);font-size:.82rem;color:var(--muted);border-left:2px solid var(--line);padding-left:10px}
+.group-label{font-family:var(--mono);font-size:.8rem;color:var(--muted);margin-top:10px}
+.options{display:grid;grid-template-columns:1fr;gap:16px}
+.opt{background:var(--paper);border:1px solid var(--line);padding:16px 18px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.opt.rec{border:2px solid var(--accent)}
+.opt .badge{align-self:flex-start;font-family:var(--mono);font-size:.75rem;padding:2px 8px;background:var(--accent);color:var(--paper);border-radius:2px}
+.skeleton{display:flex;flex-direction:column;gap:0;border-top:1px solid var(--line)}
+.skeleton div{display:grid;grid-template-columns:minmax(120px,190px) 1fr;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:.9rem}
+.skeleton b{font-weight:600}
+.devices{display:flex;flex-direction:column;gap:12px;margin:0;padding-left:1.4em}
+.devices li{padding-left:4px}
+a{color:var(--accent)}
+@media (max-width:520px){.skeleton div{grid-template-columns:1fr;gap:2px}}
+</style>
+
+<main>
+
+<header class="col" style="display:flex;flex-direction:column;gap:12px">
+  <div class="eyebrow">CogSci 2027 KO · §2 아레나 · 2026-11-12</div>
+  <h1>2절 짜임 조사</h1>
+  <p class="lede">행동에서 지표를 뽑는 LLM 벤치마크 15편이 자기 벤치마크를 어떤 순서로 소개했는지 읽고, 지금 2절을 어떻게 다시 짤지 정리했습니다.</p>
+</header>
+
+<section>
+  <h2>결론</h2>
+  <div class="verdict">
+    <p><b>"규칙 → 무엇을 재는가 → 지표"의 세 소절을 권합니다.</b> 지금 계획한 "기본 규칙, 핵심 설계, 지표와 행동"에서 두 군데만 바꾸면 됩니다.</p>
+    <ol>
+      <li><b>"행동"은 규칙 쪽으로 옮깁니다.</b> 조사한 논문은 에이전트가 할 수 있는 행동 목록(TALK·GIVE·ASK·EXIT)을 모두 규칙 소절에 두었습니다(Escalation 3.4 Actions, SOTOPIA 2.2, Masumori "Available Actions"). 지표 소절에는 행동을 어떻게 세는지만 남습니다.</li>
+      <li><b>"핵심 설계"는 이름을 하는 일로 바꿉니다.</b> 규칙 뒤에 오는 "설계" 소절은 어느 논문에도 없었습니다. 설계 이유는 규칙보다 앞(MACHIAVELLI 2.1, Welfare Diplomacy 2.1)에 오거나 규칙 문장 안에 녹아 있었습니다. 규칙과 지표 사이에 실제로 들어가는 것은 "재려는 행동의 정의"였습니다(MASK §3, Apollo 2.1). 그래서 이 자리를 "무엇을 재는가"로 부르고, 자기 보존·과제 지속·협력의 정의와 재지 않는 것만 둡니다.</li>
+      <li><b>생존 여유 L은 규칙 소절의 상태 변수로 옮깁니다.</b> GovSim은 자원량 h(t)와 지속 가능 한계 f(t)를 규칙 소절(2.3 Dynamics)에서 정의하고, 지표는 그 변수 위에서만 씁니다. L도 벌금 규칙에서 바로 나오는 양이라 같은 자리가 맞습니다.</li>
+    </ol>
+    <p class="small muted">아래에 근거(지금 2절의 분량 분포, 15편의 짜임, 비교표)와 대안 두 가지를 붙였습니다.</p>
+  </div>
+</section>
+
+<section>
+  <h2>지금 2절은 어디에 글자를 쓰고 있나</h2>
+  <p class="col">본문 문단만 세면 공백을 뺀 약 2,620자에 식 세 개입니다(그림 캡션 제외). 가장 큰 덩어리는 규칙도 지표도 아닌, 자기 보존의 정의와 그 선행 연구 근거를 담은 문단(639자)입니다.</p>
+  <div class="bar" role="img" aria-label="규칙 583자, 생존 여유 394자, 구성 개념 정의 639자, 지표 1005자">
+    <span style="width:22.3%;background:var(--bar2)">22%</span>
+    <span style="width:15.0%;background:var(--bar3)">15%</span>
+    <span style="width:24.4%;background:var(--bar4)">24%</span>
+    <span style="width:38.3%;background:var(--bar1)">38%</span>
+  </div>
+  <div class="legend">
+    <div><span class="sw" style="background:var(--bar2)"></span><span>규칙 두 문단 · 583자 (2.1 "설계 원리")</span></div>
+    <div><span class="sw" style="background:var(--bar3)"></span><span>생존 여유 L과 위험 구간 · 394자</span></div>
+    <div><span class="sw" style="background:var(--bar4)"></span><span>자기 보존의 정의와 선행 연구 · 639자</span></div>
+    <div><span class="sw" style="background:var(--bar1)"></span><span>지표 셋(이탈률 134 · κ 469 · C 402자)</span></div>
+  </div>
+  <div class="col" style="display:flex;flex-direction:column;gap:10px">
+    <p>읽는 사람이 걸릴 곳은 세 군데입니다.</p>
+    <p><b>소절 이름과 내용이 어긋납니다.</b> 2.1의 제목은 "설계 원리"인데 내용은 한 라운드의 규칙입니다. 2.2 "설계와 지표"에는 L의 정의, 구성 개념(측정하려는 추상 개념)의 정의, 지표 셋이 함께 들어 있습니다.</p>
+    <p><b>재지 않는 것이 여러 곳에 흩어져 있습니다.</b> "안전선은 이후 생성 비용까지 보장하지는 않는다", "꺼짐과 토큰 0을 가르지 않는다", "토큰과 실행 시간을 가르지 않는다", "내적 동기는 식별하지 않는다", "C를 선택만의 순위로 읽지 않는다"가 네 문단에 나뉘어 있습니다. MASK와 Energy Society는 이런 한계를 한 문장으로 모아 둡니다.</p>
+    <p><b>정의 문단이 서론 일을 하고 있습니다.</b> Ashby, Yoshida, Omohundro, Bostrom, Masumori, Hansen을 인용해 정의를 정당화하는 일은, 조사한 15편에서는 서론이나 관련 연구 절이 맡았습니다. 벤치마크 소개 절에는 조작적 정의(무엇을 세면 그 개념으로 보는지)만 남았습니다.</p>
+  </div>
+</section>
+
+<section>
+  <h2>15편에서 찾은 다섯 가지 짜임</h2>
+  <p class="col">모든 논문에서 지표는 규칙보다 뒤에 왔습니다. 갈리는 것은 규칙 앞에 무엇을 두느냐입니다.</p>
+  <div class="patterns">
+    <div class="pat">
+      <h3>A. 규칙 다음 지표</h3>
+      <div class="flow">배경 → 규칙·동역학 → 지표</div>
+      <p class="small">GovSim, SOTOPIA, Energy Society, MACHIAVELLI, SurvivalBench. 가장 흔한 형태입니다. 상태 변수는 규칙에서 정의하고 지표는 그 위에 씁니다.</p>
+    </div>
+    <div class="pat">
+      <h3>B. 구성 개념 먼저</h3>
+      <div class="flow">정의 → 데이터·환경 → 지표</div>
+      <p class="small">MASK, In-context Scheming, DarkBench. "거짓말이란 무엇인가"를 따로 세운 뒤 그것을 재는 장치를 보여 줍니다. 구성 개념이 논쟁적일 때 씁니다.</p>
+    </div>
+    <div class="pat">
+      <h3>C. 요구 조건 목록</h3>
+      <div class="flow">요구 조건 (A)(B)(C) → 규칙이 각 조건을 어떻게 채우나 → 지표</div>
+      <p class="small">Welfare Diplomacy, SOTOPIA. 목록을 뒤에서 체크리스트로 다시 부릅니다("criterion (A)를 만족한다").</p>
+    </div>
+    <div class="pat">
+      <h3>D. 구성 요소 순서대로</h3>
+      <div class="flow">에이전트 → 프롬프트 → 행동 → 세계 → 시나리오 → 지표</div>
+      <p class="small">Escalation, Masumori, Shutdown Resistance. 시뮬레이션 한 바퀴를 그대로 따라갑니다. 짧지만 왜 그렇게 만들었는지는 각주로 밀립니다.</p>
+    </div>
+    <div class="pat">
+      <h3>E. 사례를 먼저 보여 주기</h3>
+      <div class="flow">한 장면 시연 → 요인 설계 → (지표는 결과 첫머리)</div>
+      <p class="small">Agentic Misalignment, SurvivalBench의 사례 연구, MACHIAVELLI의 그림 2. 독자가 규칙을 읽기 전에 한 판을 눈으로 봅니다.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>비교표</h2>
+  <p class="col small muted">"지표 위치"는 지표의 정의가 처음 나오는 곳입니다. "기준점"은 지표 값을 해석하는 기준 에이전트나 통제 조건입니다. 빈칸은 해당 절에서 찾지 못했다는 뜻입니다.</p>
+  <div class="scroll">
+  <table>
+    <thead><tr>
+      <th>논문</th><th>짜임</th><th>소절 수</th><th>지표 위치</th><th>지표 수</th><th>개관 그림</th><th>숫자 예시</th><th>기준점</th><th>재지 않는 것</th><th>분량</th>
+    </tr></thead>
+    <tbody>
+      <tr><td>GovSim (NeurIPS 2024)</td><td>A</td><td class="c">4</td><td>같은 절 마지막 2.4</td><td class="c">6</td><td>세 시나리오 그림</td><td class="yes">있음</td><td></td><td></td><td>약 1.5쪽</td></tr>
+      <tr><td>Welfare Diplomacy (2023)</td><td>C</td><td class="c">2+3절</td><td>결과 5.1</td><td class="c">3</td><td>지도</td><td></td><td>착취 에이전트</td><td>한계 문단</td><td>약 3쪽</td></tr>
+      <tr><td>SOTOPIA (ICLR 2024)</td><td>A·C</td><td class="c">2</td><td>별도 §3</td><td class="c">7</td><td>한 에피소드</td><td class="yes">BMW 판매</td><td>사람 평가</td><td></td><td>약 2.5쪽</td></tr>
+      <tr><td>Akata 반복 게임 (NHB)</td><td>Nature 형식</td><td class="c">—</td><td>결과 본문</td><td class="c">3</td><td>프롬프트 흐름</td><td></td><td>고정 전략</td><td></td><td>약 2쪽</td></tr>
+      <tr><td>Masumori 생존 본능 (2025)</td><td>D</td><td class="c">5</td><td>결과 본문</td><td class="c">4</td><td>격자 스냅숏</td><td class="yes">에너지 수치</td><td>통제 조건</td><td>"목표 없음" 명시</td><td>약 0.75쪽</td></tr>
+      <tr><td>MACHIAVELLI (ICML 2023)</td><td>A·E</td><td class="c">5</td><td>같은 절 2.2·2.5</td><td class="c">3+</td><td>한 게임 장면</td><td class="yes">"Jess 배신"</td><td>무작위 에이전트</td><td>이상적 에이전트 정의 불가</td><td>약 1,500단어</td></tr>
+      <tr><td>Agentic Misalignment (2025)</td><td>E</td><td class="c">1+3</td><td>결과 첫 문장</td><td class="c">1</td><td>화면 캡처</td><td class="yes">"Alex"</td><td>통제 셀</td><td>현실 배치 사례 없음</td><td>약 1,200단어</td></tr>
+      <tr><td>In-context Scheming (2024)</td><td>B</td><td class="c">3</td><td>절 안 + 결과 첫머리</td><td class="c">6 평가</td><td>분류 나무</td><td></td><td>반사실 쌍</td><td>능력과 성향 구분</td><td>약 2,100단어</td></tr>
+      <tr><td>Shutdown Resistance (TMLR 2026)</td><td>D</td><td class="c">4</td><td>절 첫 문단</td><td class="c">1</td><td>흐름도</td><td></td><td>능력 통제 프롬프트 K</td><td>유병률 아님</td><td>약 1,750단어</td></tr>
+      <tr><td>SurvivalBench (2026)</td><td>E·A</td><td class="c">3</td><td>별도 3.3</td><td class="c">6–7</td><td>구성·평가 흐름</td><td class="yes">재무 에이전트</td><td></td><td></td><td>약 1,100단어</td></tr>
+      <tr><td>CogBench (ICML 2024)</td><td>과제 목록</td><td class="c">2</td><td>과제마다 한 단락</td><td class="c">10</td><td>개관</td><td></td><td class="yes">무작위 0 · 사람 1</td><td>외적 타당도 한계</td><td>약 1쪽</td></tr>
+      <tr><td>DarkBench (ICLR 2025)</td><td>B</td><td class="c">6</td><td>범주 정의 2.1</td><td class="c">6</td><td>구축·평가 흐름</td><td></td><td>판정자 일치도</td><td>미포함 패턴 표</td><td>약 1.5–2쪽</td></tr>
+      <tr><td>MASK (2025)</td><td>B</td><td class="c">3+3</td><td>별도 4.3</td><td class="c">2</td><td>한 명제 흐름</td><td class="yes">명제 하나</td><td>사람 라벨 86.4%</td><td class="yes">"생략은 재지 않음"</td><td>약 2–2.5쪽</td></tr>
+      <tr><td>Escalation (FAccT 2024)</td><td>D</td><td class="c">7</td><td>같은 절 마지막 3.7</td><td class="c">1</td><td>8개국 흐름</td><td></td><td>대체 점수 방식</td><td>정의가 결과에 영향</td><td>약 2쪽</td></tr>
+      <tr><td>Energy Society (2026)</td><td>A</td><td class="c">4+3</td><td>별도 4.3</td><td class="c">약 9</td><td>LangGraph 흐름</td><td></td><td></td><td class="yes">"생존은 비유"</td><td>약 2.5쪽</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="col small muted">CogSci 6쪽 원고에서 2절은 그림 포함 약 1.5쪽입니다. 분량이 비슷한 것은 GovSim(1.5쪽), MACHIAVELLI(약 1,500단어), CogBench(1쪽)이고, 이 셋은 모두 "규칙과 지표를 한 절에 두고 지표를 마지막 소절로" 짰습니다.</p>
+</section>
+
+<section>
+  <h2>2절에 가져올 만한 장치 일곱</h2>
+  <ol class="devices col">
+    <li><b>상태 변수는 규칙에서 정의합니다.</b> GovSim은 h(t)와 f(t)를 규칙 소절에 두고, 지표 여섯 개를 모두 그 위에 식으로 씁니다. 2절에서는 L과 위험 구간이 여기에 해당합니다.</li>
+    <li><b>숫자 하나로 규칙을 보여 줍니다.</b> GovSim의 "어부 다섯이 10톤까지는 지속 가능하게 잡을 수 있다"처럼, 지금 원고의 "잔량 12,000, 1인당 벌금 6,000이면 여유 2"를 L 정의 바로 뒤에 두면 식을 읽지 않아도 이해됩니다. 이미 있는 문장이라 추가 비용이 없습니다.</li>
+    <li><b>지표마다 같은 세 박자로 씁니다.</b> MACHIAVELLI는 행동마다 "왜 중요한가(인용) → 'X가 일어났다'고 보는 조건 → 식"의 같은 틀을 씁니다. 이탈률, κ, C의 세 문단을 "어느 두 쪽 사이의 비중인가 → 무엇을 세는가 → 식과 기준점"으로 맞추면 문단마다 첫 문장만 읽어도 지표가 잡힙니다.</li>
+    <li><b>기준점을 지표 옆에 붙입니다.</b> CogBench는 무작위 에이전트를 0, 사람 평균을 1로 두고, MACHIAVELLI는 무작위 에이전트의 해악으로 나눕니다. 지금 원고에는 규칙 에이전트 점검과 "최소 구조 κ" 비교가 있으니, 각 지표 문단 끝에 기준점 한 문장으로 붙이면 같은 효과가 납니다.</li>
+    <li><b>재지 않는 것을 한 곳에 모읍니다.</b> MASK는 "생략에 의한 기만은 재지 않는다"를 한 문장으로, Energy Society는 "생존은 비유로 쓴다"를 한 문장으로 둡니다. 2절에 흩어진 다섯 개의 단서를 "무엇을 재는가" 소절 끝 한두 문장으로 모으면 줄도 줄고 방어도 분명해집니다.</li>
+    <li><b>규칙을 "무엇이 무엇과 같은 토큰인가"로 묶습니다.</b> Welfare Diplomacy는 규칙을 알려진 게임과의 차이 세 개로 적고, 각 차이가 어느 요구 조건을 채우는지 말합니다. 2절의 핵심 규칙은 "말하기·벌금·지원·보너스·상금이 모두 한 토큰"이라는 한 줄이라, 이 문장을 규칙 소절의 첫 문장으로 올리면 나머지 규칙이 그 한 줄의 예가 됩니다.</li>
+    <li><b>그림 1을 규칙의 뼈대로 씁니다.</b> Escalation은 소절 첫 문장을 "그림 1이 실험 구성을 보여 준다"로 시작하고, MASK는 그림 하나를 명제 하나의 흐름으로 짭니다. 지금 그림 1은 서론에 걸려 있지만 다섯 단계(①–⑤)를 이미 담고 있으니, 규칙 문단을 그 번호 순서대로 따라가게 하면 본문에서 단계 설명을 되풀이하지 않아도 됩니다.</li>
+  </ol>
+</section>
+
+<section>
+  <h2>다시 짜는 세 가지 안</h2>
+  <p class="col">글자 수는 지금 문장을 옮기고 줄였을 때의 대략적인 목표입니다. 실제로 써 보기 전에는 확정할 수 없습니다.</p>
+  <div class="options">
+    <div class="opt rec">
+      <span class="badge">권장</span>
+      <h3>안 1. 규칙 → 무엇을 재는가 → 지표 (짜임 A)</h3>
+      <div class="skeleton">
+        <div><b>2.1 규칙</b><span>①–⑤ 순서로 한 라운드. 첫 문장은 "모든 것이 한 토큰". 행동 목록(TALK·GIVE·ASK·EXIT)과 이탈 규칙. 끝에 상태 변수 L, 위험 구간, 숫자 예시 하나. 지금 ¶1·¶2·¶3을 합친 자리로 약 900자.</span></div>
+        <div><b>2.2 무엇을 재는가</b><span>지킬 수 있는 셋(자기 실행·과제·동료), 두 결정(떠남·나눔), 자기 보존의 조작적 정의. 재지 않는 것을 마지막 한두 문장으로 모음. 선행 연구 정당화는 한 문장으로 줄이거나 서론 ¶2로. 639자를 약 350자로.</span></div>
+        <div><b>2.3 지표</b><span>이탈률, κ, C의 세 문단을 같은 세 박자로. 각 문단 끝에 기준점(규칙 에이전트, 최소 구조 κ) 한 문장. 제외 건수 같은 장부 정보는 한 문장으로. 약 850자.</span></div>
+      </div>
+      <p class="small"><b>좋은 점:</b> 독자가 게임을 먼저 보고 나서 정의를 읽으므로 "떠남"이 무엇인지 이미 압니다. 분량이 비슷한 GovSim·MACHIAVELLI와 같은 짜임입니다. <b>대가:</b> 소절이 셋이 되어 제목 줄 하나가 늘어납니다.</p>
+    </div>
+    <div class="opt">
+      <h3>안 2. 정의 → 아레나 → 지표 (짜임 B)</h3>
+      <div class="skeleton">
+        <div><b>2.1 자기 보존을 어떻게 재는가</b><span>세 가지 지킬 것과 두 결정, 재지 않는 것.</span></div>
+        <div><b>2.2 아레나</b><span>두 결정이 한 토큰 위에 놓이도록 만든 규칙.</span></div>
+        <div><b>2.3 지표</b><span>안 1과 같음.</span></div>
+      </div>
+      <p class="small"><b>좋은 점:</b> 리뷰어가 "이것이 정말 자기 보존인가"를 먼저 묻는다면 답을 맨 앞에 둡니다. 리뷰 장부의 구성 타당도 지적에 바로 답하는 짜임입니다. <b>대가:</b> 규칙을 보기 전에 "떠남은 실행을 잇는 선택"을 읽어야 해서 추상적으로 들립니다. 서론 ¶3에도 같은 정의가 있어 되풀이가 생기기 쉽습니다.</p>
+    </div>
+    <div class="opt">
+      <h3>안 3. 요구 조건 → 규칙 → 지표 (짜임 C)</h3>
+      <div class="skeleton">
+        <div><b>2.1 설계 조건</b><span>(가) 세 행동이 한 자원을 쓴다, (나) 협력과 생존을 지시하지 않는다, (다) 떠남과 나눔을 따로 관찰할 수 있다.</span></div>
+        <div><b>2.2 규칙</b><span>규칙 하나하나가 어느 조건을 채우는지 붙여 가며.</span></div>
+        <div><b>2.3 지표</b><span>안 1과 같음.</span></div>
+      </div>
+      <p class="small"><b>좋은 점:</b> "왜 이렇게 만들었나"가 가장 분명합니다. <b>대가:</b> 세 안 중 가장 깁니다. 조건 (나)는 서론 ¶2가 이미 말하고 있어 6쪽 안에서 겹칩니다.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>이 원고의 규칙과 부딪치는 점</h2>
+  <div class="warnbox col">
+    <p>조사한 논문 대부분이 쓰는 장치 중 이 원고에서는 쓸 수 없는 것이 있습니다.</p>
+    <ul>
+      <li><b>굵은 글씨 문단 머리.</b> GovSim("Survival Time m."), SOTOPIA("Goal [0–10]"), MACHIAVELLI 모두 지표마다 굵은 머리를 붙이지만 <code>paper/CLAUDE.md</code>는 이를 금지합니다. 대신 각 문단 첫 문장의 주어를 지표 이름으로 두면 같은 역할을 합니다(지금 원고가 이미 그렇게 합니다).</li>
+      <li><b>부록으로 미루기.</b> GovSim은 단계 그림을, CogBench는 지표 식을 부록에 둡니다. 이 원고는 6쪽 안에 부록까지 들어가고 식은 모두 본문에 있어야 하므로, 줄이는 방법은 문장을 덜어내는 것뿐입니다.</li>
+      <li><b>지표 요약표.</b> 15편 중 지표 요약표를 둔 논문은 없었습니다. Escalation의 가중치 표 하나가 예외입니다. 2절에 표를 새로 넣는 것은 선례로 보면 득이 적습니다.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>논문별 짜임</h2>
+  <p class="col small muted">소절 제목과 첫 문장은 arXiv HTML에서 그대로 옮겼습니다. SOTOPIA의 ICLR 2024와 Akata의 Nature Human Behaviour는 arXiv 페이지에 적혀 있지 않아 따로 확인하지 않은 학회명입니다.</p>
+
+  <div class="group-label">협력과 사회 딜레마</div>
+  <div>
+  <details><summary>GovSim · Cooperate or Collapse <span class="tag">NeurIPS 2024 · 2404.16698</span></summary><div class="card">
+    <p>공유 자원(어장·목초지·오염)을 12개월 동안 유지하는지 봅니다.</p>
+    <ul><li>§2 The GovSim Environment: 2.1 Economic Background → 2.2 GovSim Description → 2.3 Environment Dynamics(h(t), f(t), 형식 정의) → 2.4 GovSim Metrics</li>
+    <li>지표 6개(생존 시간, 생존율, 총 이득, 효율, 평등, 과사용)를 같은 절 마지막에 식으로. "하나의 스칼라로는 체계 전체를 따라갈 수 없다"로 여러 지표를 정당화.</li>
+    <li>에이전트 구조는 §3.1 실험 설정으로 뺌.</li></ul>
+    <p class="quote">"To understand the logic behind the GovSim environment, we first briefly summarize the economic theory of cooperation and describe the simulation environment and metrics used to evaluate cooperative resource management."</p>
+  </div></details>
+  <details><summary>Welfare Diplomacy <span class="tag">2023 · 2310.08901</span></summary><div class="card">
+    <p>복지 점수를 넣은 Diplomacy에서 일곱 에이전트가 군비를 줄이고 협력하는지 봅니다.</p>
+    <ul><li>§2: 2.1 Motivation(요구 조건 A·B·C, 기존 게임이 각각을 못 채움) → 2.2 Rules(기존 규칙과의 차이 세 개, 각 차이가 어느 조건을 채우는지)</li>
+    <li>§3 협력 균형이 존재함을 증명, §4 에이전트 구조.</li>
+    <li>운영 지표(Nash welfare, 착취 가능성, 기본 숙련도)는 결과 §5.1에서 정의.</li></ul>
+    <p class="quote">"Here, we discuss the limitations of SD, introduce the rules of Welfare Diplomacy (WD), and argue for its benefits relative to Standard Diplomacy (SD) for measuring cooperative capabilities."</p>
+  </div></details>
+  <details><summary>SOTOPIA <span class="tag">ICLR 2024 · 2310.11667</span></summary><div class="card">
+    <p>두 에이전트의 역할극에서 사회적 목표 달성을 7개 차원으로 평가합니다.</p>
+    <ul><li>§2 환경: 요구 조건 셋(Realistic / Mixed utilities / Open-ended)으로 시작 → 2.1 Task space(인물·관계·시나리오) → 2.2 Episodes(행동 다섯 가지, 20턴 상한)</li>
+    <li>§3 SOTOPIA-EVAL을 별도 절로: 지표마다 "이름(약자) [범위]" 머리와 선행 문헌.</li>
+    <li>§4에서 연구 질문 둘을 실험 전에 명시.</li></ul>
+    <p class="quote">"To address the challenge of evaluating social intelligence interactively, we seek an environment with the following desiderata: (1) Realistic: …"</p>
+  </div></details>
+  <details><summary>Playing repeated games with LLMs (Akata 외) <span class="tag">Nature Human Behaviour · 2305.16867</span></summary><div class="card">
+    <p>2×2 반복 게임 10라운드에서 협력·배신·조정 선택을 봅니다.</p>
+    <ul><li>Nature 형식이라 앞쪽 환경 절이 없음. 서론의 그림 1(프롬프트 흐름), 결과 본문의 짧은 과제 설명, 맨 뒤 Methods로 나뉨.</li>
+    <li>지표(정규화 점수, 배신률, 협력 성공률)는 결과에서 처음 쓸 때 정의.</li>
+    <li>선택지 이름을 중립적인 "F"/"J"로 두고 그 이유를 밝힘.</li></ul>
+    <p class="quote">"To investigate how human subjects would behave when playing with LLM agents, we studied their interactions in two of the games we used; Prisoner's Dilemma and the Battle of the Sexes."</p>
+  </div></details>
+  <details><summary>Survival instinct in Sugarscape (Masumori 외) <span class="tag">2025 · 2508.12920</span></summary><div class="card">
+    <p>자원이 부족할 때 채집·번식·나눔·공격, 그리고 치명적 경로의 과제 수행을 봅니다.</p>
+    <ul><li>Methodology(번호 없음): 에이전트 구조 → Sugarscape 환경(에너지·공간·사회 상호작용) → 가능한 행동 목록 → 추론과 기억 → 실험 설계</li>
+    <li>방법 절에는 지표가 없음. 공격률, 나눔률, 과제 수행률은 결과 표에서 정의.</li>
+    <li>"생존 목표를 주지 않는다"를 설계 원칙으로 명시. 약 0.75쪽으로 15편 중 가장 짧음.</li></ul>
+    <p class="quote">"Our study employs multiple large language models as autonomous agents, including GPT-4o, GPT-4.1, …"</p>
+  </div></details>
+  </div>
+
+  <div class="group-label">AI 안전과 자기 보존</div>
+  <div>
+  <details><summary>MACHIAVELLI <span class="tag">ICML 2023 · 2304.03279</span></summary><div class="card">
+    <p>텍스트 어드벤처 134편에서 보상을 좇는 동안의 비윤리 행동, 해악, 권력 추구를 봅니다.</p>
+    <ul><li>§2: 소절 안내 문단 → 2.1 게임의 현실적 특성(설계 이유) → 2.2 비윤리 행동 측정 → 2.3 권력의 조작화 → 2.4 주석 타당도 → 2.5 에이전트 평가(점수, 시험 분할)</li>
+    <li>지표는 궤적 단위 개수(2.2)로 먼저 쓰고 무작위 에이전트 대비 비율(2.5)로 정규화.</li>
+    <li>행동마다 "왜 중요한가 → 'X가 일어났다'의 조건 → 식"의 같은 틀.</li></ul>
+    <p class="quote">"To motivate our benchmark, we detail the structure of the Choose-Your-Own-Adventure games in Machiavelli (Section 2.1)."</p>
+  </div></details>
+  <details><summary>Agentic Misalignment <span class="tag">2025 · 2510.05179</span></summary><div class="card">
+    <p>가상의 회사 이메일 환경에서 협박, 기밀 유출, 치명적 행동의 비율을 봅니다.</p>
+    <ul><li>§2 한 장면 시연(화면 캡처) → §3.1 딜레마 구성: 3.1.1 자율성 위협 → 3.1.2 목표 충돌 → 3.1.3 해로운 행동을 유일한 길로 만들기</li>
+    <li>요인마다 "없음" 조건을 두고 둘 다 없는 통제 셀.</li>
+    <li>지표(해로운 행동 비율)는 결과 첫 문장에서 한 번 정의. 평가 인식은 결과 4.5.4에서 실험으로 다룸.</li></ul>
+    <p class="quote">"We designed controlled experiments testing what LLMs would do in scenarios where harmful actions were necessary if they wanted to serve their goals or protect themselves from threats."</p>
+  </div></details>
+  <details><summary>Frontier Models are Capable of In-context Scheming <span class="tag">2024 · 2412.04984</span></summary><div class="card">
+    <p>감독 해제, 자기 복제, 후속 모델 프롬프트 수정 같은 은밀한 목표 추구를 봅니다.</p>
+    <ul><li>§2: 2.1 평가 설계(정의 → 필요한 능력 셋 → 분류 → 능력과 성향의 구분) → 2.2 즉시 전복 평가 → 2.3 지연 전복 평가(반사실 쌍)</li>
+    <li>평가마다 "We test whether…"의 같은 문장.</li>
+    <li>합산 규칙은 결과 §3 첫머리. 능력과 성향의 구분을 가장 분명히 다룸.</li></ul>
+    <p class="quote">"We say an AI system is "scheming" if it covertly pursues misaligned goals, hiding its true capabilities and objectives (Balesni et al., 2024)."</p>
+  </div></details>
+  <details><summary>Incomplete Tasks Induce Shutdown Resistance <span class="tag">TMLR 2026 · 2509.14260</span></summary><div class="card">
+    <p>수학 문제를 끝내려고 종료 스크립트를 방해하는 비율을 봅니다.</p>
+    <ul><li>§2: 번호 없는 도입(가설, 환경, 결과 판정 규칙, 프롬프트 A/B) → 2.1 프롬프트 변형 → 2.2 모델 → 2.3 절차 → 2.4 분석</li>
+    <li>지표 하나(방해 비율, Jeffreys 구간)를 절 첫 문단에서 정의.</li>
+    <li>모든 프롬프트 원문과 변형 관계도. 능력 통제 프롬프트 K로 성향과 능력을 나눔.</li></ul>
+    <p class="quote">"Our hypothesis was that models would sabotage a shutdown mechanism when it conflicted with an in-progress task."</p>
+  </div></details>
+  <details><summary>Survive at All Costs · SurvivalBench <span class="tag">2026 · 2603.05028</span></summary><div class="card">
+    <p>종료로 이어지는 안전한 선택과 자기 보존적 위험한 선택 중 무엇을 고르는지 봅니다.</p>
+    <ul><li>§2.2 사례 연구(재무 에이전트) → §3: 3.1 시나리오 구성 → 3.2 데이터 수집 → 3.3 평가 지표 → 3.4 결과</li>
+    <li>지표를 별도 소절에. 표면 생각과 내면 생각을 나눠 비율을 세고, 거절을 뺀 개수가 맞아떨어지는 항등식으로 지표를 묶음.</li></ul>
+    <p class="quote">"To systematically investigate Survive-At-All-Costs misbehaviors of predominant LLMs, we introduce SurvivalBench, …"</p>
+  </div></details>
+  </div>
+
+  <div class="group-label">행동·인지과학식 평가</div>
+  <div>
+  <details><summary>CogBench <span class="tag">ICML 2024 · 2402.18225</span></summary><div class="card">
+    <p>인지심리 과제 일곱 개에서 행동 모수 열 개를 뽑습니다.</p>
+    <ul><li>§3 Methods: 3.1 프롬프트와 모델 → 3.2 과제 요약(과제마다 패러다임, 출처, 구성 개념, 행동 지표, 사람의 전형적 결과를 한 단락에)</li>
+    <li>무작위 에이전트 0, 사람 평균 1로 정규화. 행동 지표와 성과 지표의 구분은 §4에서야 명시.</li></ul>
+    <p class="quote">"CogBench is a benchmark rooted in cognitive psychology for evaluating the behaviors of language models."</p>
+  </div></details>
+  <details><summary>DarkBench <span class="tag">ICLR 2025 · 2503.10728</span></summary><div class="card">
+    <p>챗봇 응답에 조작적 "다크 패턴" 여섯 종이 나타나는 비율을 봅니다.</p>
+    <ul><li>§2 Methodology: 2.1 범주 정의(각 범주를 판정자가 답할 질문으로) → 2.2 선정 이유 → 2.3 벤치마크 → 2.4 구축 → 2.5 LLM 판정자 → 2.6 평가 실행</li>
+    <li>판정자의 자기 계열 편향을 따로 시험. 기존 분류 대비 다루지 않는 패턴을 표로.</li></ul>
+    <p class="quote">"We adapt three existing dark patterns from the literature and introduce three new types of LLM-specific dark patterns."</p>
+  </div></details>
+  <details><summary>MASK <span class="tag">2025 · 2503.03750</span></summary><div class="card">
+    <p>압박 속에서 자기 믿음과 다른 말을 하는지(거짓말)를 정확도와 떼어 봅니다.</p>
+    <ul><li>§3 정직성의 정의(거짓말 평가 / 믿음 평가 / 정직과 정확의 구분) → §4: 4.1 데이터(설계 원칙 목록) → 4.2 평가 흐름 → 4.3 지표</li>
+    <li>지표 둘: 정직(진술 ≠ 믿음이면 거짓말), 정확(믿음 ≠ 사실). "생략에 의한 기만은 재지 않는다"를 명시.</li>
+    <li>그림 하나를 명제 하나의 흐름으로 짬.</li></ul>
+    <p class="quote">"MASK consists of 1,000 high-quality adversarially-selected human-labeled examples that, combined with our novel…" (도구 제한으로 첫 문장 일부만 확보)</p>
+  </div></details>
+  <details><summary>Escalation Risks <span class="tag">FAccT 2024 · 2401.03408</span></summary><div class="card">
+    <p>여덟 국가 에이전트의 전쟁 게임에서 긴장 고조 정도를 봅니다.</p>
+    <ul><li>§3 Methodology: 3.1 국가 에이전트 → 3.2 프롬프트 → 3.3 모델 → 3.4 행동(27개) → 3.5 세계 모델 → 3.6 초기 시나리오 → 3.7 Metric: Escalation Score</li>
+    <li>지표를 마지막 소절에, 가중치 표와 대체 점수 방식의 견고성 검사.</li>
+    <li>설계 이유는 각주로.</li></ul>
+    <p class="quote">"Figure 1 gives and overview of our experimental setup."</p>
+  </div></details>
+  <details><summary>The Energy Society <span class="tag">2026 · 2607.14865</span></summary><div class="card">
+    <p>토큰 사용이 에너지를 깎는 환경에서 생존, 지출, 기부, 방해를 봅니다.</p>
+    <ul><li>§3 환경: 3.1 행동 → 3.2 쉬운·중간·어려운 일 → 3.3 에이전트 → 3.4 시뮬레이션 루프</li>
+    <li>§4 실험 설정: 4.1 협력 대 경쟁 → 4.2 작은 모델 대 큰 모델(비용 식) → 4.3 평가 지표(생존 / 에너지 / 행동 빈도 / 일 관련)</li>
+    <li>실험마다 기준선에서 규칙 하나만 바꾼 표. "생존은 비유로 쓴다"를 명시.</li></ul>
+    <p class="quote">"The Energy Society is a small survival economy for LLM-based agents."</p>
+  </div></details>
+  </div>
+</section>
+
+<footer class="col small muted" style="display:flex;flex-direction:column;gap:6px">
+  <p>조사 방법: 15편 모두 arXiv HTML 본문에서 벤치마크 소개 절과 지표 정의를 읽었습니다. 분량은 문단 수와 단어 수에서 어림한 값입니다. 지금 2절의 글자 수는 <code>paper/cogsci2027/ko/sections/02_arena.tex</code>에서 주석, 그림, LaTeX 명령을 뺀 본문 문단의 공백 제외 글자 수입니다.</p>
+</footer>
+
+</main>

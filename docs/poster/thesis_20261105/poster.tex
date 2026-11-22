@@ -1,0 +1,589 @@
+%% LLM Squid Game — 학사학위논문 포스터 (32 x 48 in, 세로).
+%% 크기는 poster/sample/JumyungPark_GIST_BS_Poster.pdf(2304 x 3456 pt)를 따르고,
+%% 색·글꼴·패널은 https://gist-dslab.github.io/LLM-Squid-Game/ 의 무드를 따른다.
+%% 색은 오징어 게임 테마(진행요원 핑크, 참가자 틸, 검정)만 평면으로 쓰고 그라데이션은 쓰지 않는다.
+%% 빌드: poster/build.sh  (XeLaTeX; TikZ 그림은 figs/standalone_fig.tex로 먼저 PDF화)
+\documentclass{article}
+\usepackage[paperwidth=32in,paperheight=48in,left=0.7in,right=0.7in,top=0.5in,bottom=0.4in]{geometry}
+\usepackage{fontspec}
+\usepackage{kotex}            % xetexko: 한글은 hangulfont로 따로 조판
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,calc,shapes.geometric}
+\usepackage[skins]{tcolorbox}
+\usepackage{qrcode}
+\usepackage{amsmath}
+\usepackage{microtype}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+
+%% ---- 팔레트 (사이트 styles.css :root + 오징어 게임 테마) ------------------
+\definecolor{bg}{HTML}{0e0d11}
+\definecolor{panel}{HTML}{1a1920}
+\definecolor{panelalt}{HTML}{242229}
+\definecolor{border}{HTML}{2e2c36}
+\definecolor{fg}{HTML}{f2eff4}
+\definecolor{textdim}{HTML}{d8d6de}
+\definecolor{accent}{HTML}{ed1b76}   % 진행요원 핑크
+\definecolor{accentdk}{HTML}{b3125a}  % 핑크 그늘
+\definecolor{teal}{HTML}{7fc2b1}     % 참가자 틸(밝음)
+\definecolor{tealdk}{HTML}{249f9c}   % 참가자 트레이닝복
+\definecolor{gold}{HTML}{e3b23c}
+\definecolor{danger}{HTML}{e0575b}
+\definecolor{info}{HTML}{6ea8fe}
+\definecolor{mask}{HTML}{111115}
+\definecolor{gunmetal}{HTML}{5a5a66}
+\definecolor{gundark}{HTML}{2a2a32}
+\definecolor{sgblue}{HTML}{2369A8}
+\definecolor{sgred}{HTML}{D03B3A}
+\definecolor{sgyel}{HTML}{D9A400}
+\definecolor{sgorange}{HTML}{C66B18}
+\definecolor{kraft}{HTML}{c9a26b}     % 초대장 카드(크라프트지)
+\definecolor{kraftdk}{HTML}{a07c4a}
+\definecolor{kraftink}{HTML}{2a1d12}
+\pagecolor{bg}
+\color{fg}
+
+%% ---- 글꼴: 본문 Apple SD Gothic Neo(사이트의 한글 fallback), 디스플레이 Chakra Petch ----
+\setmainfont{Apple SD Gothic Neo}[BoldFont={Apple SD Gothic Neo Bold},
+  UprightFont={Apple SD Gothic Neo Regular}]
+\setsansfont{Apple SD Gothic Neo}[BoldFont={Apple SD Gothic Neo Bold},
+  UprightFont={Apple SD Gothic Neo Regular}]
+\setmainhangulfont{Apple SD Gothic Neo}[BoldFont={Apple SD Gothic Neo Bold},
+  UprightFont={Apple SD Gothic Neo Regular}]
+\setsanshangulfont{Apple SD Gothic Neo}[BoldFont={Apple SD Gothic Neo Bold},
+  UprightFont={Apple SD Gothic Neo Regular}]
+\newfontfamily\chakra{ChakraPetch}[Path=fonts/,Extension=.ttf,
+  UprightFont=*-Regular,BoldFont=*-Bold,ItalicFont=*-Italic,BoldItalicFont=*-BoldItalic]
+\newfontfamily\chakrasemi{ChakraPetch-SemiBold}[Path=fonts/,Extension=.ttf]
+
+%% build/ 그림은 경로를 붙여 부른다: XeTeX이 -output-directory 안의 파일을 이름만으로
+%% 찾으면 존재 검사는 통과하지만 그림 로더가 열지 못한다.
+\graphicspath{{source_figures/}{sample/}}
+
+%% ---- 크기 (1~1.5 m에서 읽히도록 본문 25pt 이상) --------------------------------
+\newcommand{\fsz}[2]{\fontsize{#1}{#2}\selectfont}
+\newcommand{\body}{\fsz{26}{35}}
+\newcommand{\bodysmall}{\fsz{23}{31}}
+\newcommand{\capt}{\fsz{22}{29}\color{textdim}}
+\newlength{\gap}\setlength{\gap}{0.10in}
+
+%% ---- 패널 (tcolorbox는 글자색을 검정으로 되돌리므로 coltext를 꼭 준다) -------------
+\tcbset{
+  sgpanel/.style={enhanced,colback=panel,colframe=border,coltext=fg,boxrule=2.5pt,arc=22pt,
+    left=0.36in,right=0.36in,top=0.22in,bottom=0.24in,boxsep=0pt,
+    before skip=0pt,after skip=\gap,width=\textwidth},
+  figcard/.style={enhanced,colback=white,colframe=white,coltext=bg,boxrule=0pt,arc=14pt,
+    left=0.14in,right=0.14in,top=0.14in,bottom=0.14in,boxsep=0pt,
+    before skip=0pt,after skip=0pt},
+  %% 어두운 그림 카드: 투명 바탕 차트와 흑백을 맞바꾼 논문 그림(바탕 242229)을 얹는다.
+  darkcard/.style={figcard,colback=panelalt,colframe=panelalt,coltext=fg},
+  statcard/.style={enhanced,colback=panelalt,colframe=border,coltext=fg,boxrule=2pt,arc=14pt,
+    left=0.22in,right=0.22in,top=0.16in,bottom=0.18in,boxsep=0pt,
+    before skip=0pt,after skip=0.16in},
+}
+
+%% \secbar{번호}{영문 제목}{한글 제목}: 샘플 포스터의 번호 바를 사이트 스타일로.
+\newcommand{\secbar}[3]{%
+  \begin{tikzpicture}[baseline=(t.base)]
+    \node[fill=accent,text=white,rounded corners=9pt,inner xsep=0.2in,inner ysep=0.12in,
+      font=\chakra\bfseries\fsz{40}{40}] (n) at (0,0) {#1};
+    \node[anchor=west,text=fg,font=\chakra\bfseries\fsz{46}{46},inner sep=0pt]
+      (t) at ([xshift=0.28in]n.east) {#2};
+    \node[anchor=west,text=textdim,font=\bfseries\fsz{32}{32},inner sep=0pt]
+      at ([xshift=0.4in]t.east) {#3};
+  \end{tikzpicture}\par\vspace{0.16in}}
+
+%% 숫자 카드. \stat: 세로 쌓기용, \statc: 격자용(아래 간격 없음). 선택 인수는 숫자 색.
+\newcommand{\stat}[3][accent]{%
+  \begin{tcolorbox}[statcard]
+    {\chakra\bfseries\fsz{58}{58}\color{#1}#2}\\[0.07in]
+    {\bodysmall\color{fg}#3}
+  \end{tcolorbox}}
+\newcommand{\statc}[3][accent]{%
+  \begin{tcolorbox}[statcard,after skip=0pt]
+    {\chakra\bfseries\fsz{38}{40}\color{#1}#2}\\[0.06in]
+    {\raggedright\bodysmall\color{fg}#3\par}
+  \end{tcolorbox}}
+%% \statm[색]{큰 숫자}{분모·대상 한 줄}{설명}: 주결과 카드
+\newcommand{\statm}[4][accent]{%
+  \begin{tcolorbox}[statcard,after skip=0pt,colframe=#1,boxrule=3pt]
+    {\chakra\bfseries\fsz{74}{74}\color{#1}#2}\\[0.05in]
+    {\bfseries\fsz{26}{32}\color{fg}#3}\\[0.05in]
+    {\bodysmall\color{textdim}#4}
+  \end{tcolorbox}}
+
+%% \statk[색]{큰 숫자}{한 줄 결과}: 세부 설명 없이 결과만 보이는 카드
+\newcommand{\statk}[3][accent]{%
+  \begin{tcolorbox}[statcard,after skip=0pt,colframe=#1,boxrule=3pt]
+    {\chakra\bfseries\fsz{64}{66}\color{#1}#2}\\[0.06in]
+    {\bfseries\fsz{28}{36}\color{fg}#3}
+  \end{tcolorbox}}
+
+%% 3열 패널용: 제목 바(부제는 다음 줄), 그림 소제목
+\newcommand{\secbarn}[3]{%
+  \begin{tikzpicture}[baseline=(t.base)]
+    \node[fill=accent,text=white,rounded corners=9pt,inner xsep=0.18in,inner ysep=0.1in,
+      font=\chakra\bfseries\fsz{36}{36}] (n) at (0,0) {#1};
+    \node[anchor=west,text=fg,font=\chakra\bfseries\fsz{40}{40},inner sep=0pt]
+      (t) at ([xshift=0.24in]n.east) {#2};
+  \end{tikzpicture}\par\vspace{0.2in}
+  \if\relax\detokenize{#3}\relax\else{\bfseries\fsz{28}{34}\color{textdim}#3}\par\vspace{0.16in}\fi}
+\newcommand{\figlab}[1]{{\bfseries\fsz{28}{34}\color{teal}#1}\par\vspace{0.08in}}
+
+%% \statw[색]{큰 숫자}{설명}: 열 폭 전체를 쓰는 결론 카드(숫자 왼쪽, 설명 오른쪽, 열 맨 위)
+\newcommand{\statw}[3][accent]{\statwsized{52}[#1]{#2}{#3}}
+%% \statwsized{숫자 pt}[색]{큰 숫자}{설명}: 부제를 받치는 핵심 숫자는 한 단계 크게
+\newcommand{\statwsized}{}
+\def\statwsized#1[#2]#3#4{%
+  \begin{tcolorbox}[statcard,after skip=0pt,colframe=#2,boxrule=3.5pt,top=0.08in,bottom=0.08in]
+    \sbox0{\chakra\bfseries\fsz{#1}{#1}\color{#2}#3}%
+    \begin{minipage}[c]{\wd0}\usebox0\end{minipage}\hspace{0.32in}%
+    \begin{minipage}[c]{\dimexpr\linewidth-\wd0-0.32in\relax}
+      \raggedright\bfseries\fsz{31}{38}\color{fg}#4\par
+    \end{minipage}
+  \end{tcolorbox}}
+
+%% \eyebrow{텍스트}: 사이트의 eyebrow(○ △ □ + 라벨).
+\newcommand{\shapes}{{\chakra ○ △ □}}
+%% 기호 = 개념: ○ 협력, △ 목표 지향(과제), □ 자기 보존. 01에서 정의하고 07에서 쓴다.
+\newcommand{\symC}{\tikz[baseline=-0.36em]\draw[line width=0.09em] (0,0) circle (0.36em);}
+\newcommand{\symT}{\tikz[baseline=-0.36em]\draw[line width=0.09em,line join=round] (90:0.44em) -- (210:0.44em) -- (330:0.44em) -- cycle;}
+\newcommand{\symS}{\tikz[baseline=-0.36em]\draw[line width=0.09em] (-0.33em,-0.33em) rectangle (0.33em,0.33em);}
+\newcommand{\eyebrow}[1]{{\chakrasemi\fsz{28}{28}\color{accent}\shapes\quad\color{teal}#1}}
+\newcommand{\fig}[1]{\begin{tcolorbox}[figcard]\includegraphics[width=\linewidth]{#1}\end{tcolorbox}}
+\newcommand{\hl}[1]{{\color{accent}\bfseries #1}}
+\newcommand{\tl}[1]{{\color{teal}\bfseries #1}}
+\newcommand{\gd}[1]{{\color{gold}\bfseries #1}}
+
+%% ---- 진행요원: 패널 왼쪽에서 아레나를 내려다보는 거대한 감독관 ----------------
+%% 패널 interior에 클리핑되어 머리 위와 다리 아래가 잘린다. 좌표 원점 = 마스크 중심.
+%% \bigguard{(원점)}{머리 기울기(도)}
+\newcommand{\bigguard}[2]{%
+  \begin{scope}[shift={#1}]
+    %% 몸통·다리
+    \fill[accent,draw=accentdk,line width=5pt] (-2.9in,-3.3in) -- (-2.9in,-30in) -- (-0.22in,-30in) -- (-0.22in,-11in)
+      -- (0.22in,-11in) -- (0.22in,-30in) -- (2.9in,-30in) -- (2.9in,-3.3in)
+      .. controls (2.9in,-2.5in) and (1.4in,-2.1in) .. (0,-2.1in)
+      .. controls (-1.4in,-2.1in) and (-2.9in,-2.5in) .. cycle;
+    %% 가슴 지퍼 선, 벨트
+    \draw[accentdk,line width=7pt] (0,-2.3in) -- (0,-9.6in);
+    \fill[mask] (-2.95in,-9.6in) rectangle (2.95in,-10.4in);
+    %% 양손으로 소총을 몸 앞에 들고 총구는 아레나(오른쪽)를 향한다. 총구는 왼쪽 띠(4.3in) 안에서 끝나고,
+    %% 개머리판은 패널 왼쪽 밖으로 잘린다(몸 폭보다 긴 실제 비율).
+    %% 뒷팔(보는 쪽 왼쪽): 어깨 -> 팔꿈치 -> 손잡이를 쥔 손
+    \draw[accentdk,line width=1.12in,line cap=round,line join=round]
+      (-2.35in,-3.75in) -- (-2.85in,-6.45in) -- (-0.45in,-6.05in);
+    \draw[accent,line width=0.86in,line cap=round,line join=round]
+      (-2.35in,-3.75in) -- (-2.85in,-6.45in) -- (-0.45in,-6.05in);
+    %% 앞팔(보는 쪽 오른쪽): 팔꿈치를 몸 옆으로 굽혀 아래에서 총열 덮개를 받친다
+    \draw[accentdk,line width=1.12in,line cap=round,line join=round]
+      (2.35in,-3.55in) -- (3.25in,-6.45in) -- (2.45in,-5.8in);
+    \draw[accent,line width=0.86in,line cap=round,line join=round]
+      (2.35in,-3.55in) -- (3.25in,-6.45in) -- (2.45in,-5.8in);
+    %% 소총: 원점 = 손잡이 위(방아쇠 자리), +x = 총구 방향(살짝 아래로 3도), 단위 1.2in
+    \begin{scope}[shift={(-0.32in,-5.25in)},rotate=-3,x=1.2in,y=1.2in,
+        gun/.style={fill=gunmetal,draw=gundark,line width=3.5pt,line join=round}]
+      \fill[gun] (-3.6,-0.62) -- (-3.6,0.28) -- (-0.7,0.34) -- (-0.7,-0.06) -- (-1.4,-0.14) -- cycle;   % 개머리판
+      \fill[gun] (0.5,-0.08) .. controls (0.45,-0.55) and (0.5,-0.85) .. (0.62,-1.08)
+        -- (1.02,-1.0) .. controls (0.92,-0.75) and (0.9,-0.4) .. (0.98,-0.08) -- cycle;              % 탄창
+      \fill[gun] (-0.15,-0.06) -- (-0.36,-0.78) -- (0.02,-0.8) -- (0.16,-0.06) -- cycle;            % 손잡이
+      \fill[gun,rounded corners=4pt] (-0.78,-0.1) rectangle (1.52,0.42);                           % 몸통
+      \fill[gundark] (-0.3,0.42) rectangle (1.3,0.53);                                              % 레일
+      \fill[gun] (1.05,0.53) rectangle (1.28,0.7);                                                  % 가늠자
+      \fill[gun,rounded corners=4pt] (1.48,-0.02) rectangle (2.95,0.36);                           % 총열 덮개
+      \foreach \vx in {1.7,1.95,2.2,2.45,2.7}{\draw[gundark,line width=3pt] (\vx,0.06) -- (\vx,0.28);}
+      \fill[gun] (2.92,0.1) rectangle (3.42,0.23);                                                  % 총열
+      \fill[gun] (3.2,0.23) rectangle (3.3,0.44);                                                   % 가늠쇠
+      %% 손(검은 장갑): 뒷손은 손잡이를, 앞손은 총열 덮개를 위아래로 감싸 쥔다
+      \fill[mask,rounded corners=0.14in] (-0.42,-0.62) rectangle (0.24,0.12);
+      \draw[gundark,line width=3pt,line cap=round] (-0.3,-0.2) -- (0.12,-0.2) (-0.3,-0.36) -- (0.12,-0.36);
+      \fill[mask,rounded corners=0.14in] (1.85,-0.3) rectangle (2.55,0.5);
+      \draw[gundark,line width=3pt,line cap=round] (1.95,0.04) -- (2.45,0.04) (1.95,-0.12) -- (2.45,-0.12);
+    \end{scope}
+    %% 머리: 후드(핑크) + 마스크(검정) + 기호. #2는 머리 기울기(도), 0이면 정면.
+    \begin{scope}[rotate=#2]
+      \fill[accent,draw=accentdk,line width=5pt] (0,0) ellipse (2.3in and 2.7in);
+      \fill[accent] (-2.3in,0) -- (-2.55in,-2.55in) -- (2.55in,-2.55in) -- (2.3in,0) -- cycle;
+      \fill[mask] (0,-0.1in) ellipse (1.7in and 2.05in);
+      \draw[white,line width=0.2in,line join=round]
+        (0,0.75in) -- (-0.95in,-0.9in) -- (0.95in,-0.9in) -- cycle;   % △ 기호
+    \end{scope}
+  \end{scope}}
+
+%% ---- 줄다리기 오마주: 06 박스 위 모서리에 선 발판에서 남은 셋이 오답 벌금(24,000)을 끌어 올린다 ----
+%% 벌금은 라운드를 시작한 인원으로 나누므로(02, 논문 2장) D가 떠나면 다음 라운드부터 1인당 6,000 -> 8,000.
+%% D는 줄을 놓고 EXIT 문으로 걸어 나간다. 위에는 헤더에서 옮겨 온 상금 돼지저금통이 매달린다.
+%% \tugwar{(기준점)}{배율}: y=0이 06 박스 위 모서리, 단위 1 = 1in x 배율.
+\definecolor{sggreen}{HTML}{23856C}
+\definecolor{sgpurple}{HTML}{8658A5}
+\definecolor{rope}{HTML}{c9a46a}
+\definecolor{ropedk}{HTML}{7a5a2c}
+\definecolor{doorlight}{HTML}{f6e7b8}
+%% 02 그림과 같은 네모 로봇. \tugbot{(발 위치)}{색}{기울기}{이름}: 몸 아래 가운데가 원점,
+%% 어깨 좌표 (#4sh)를 남겨 두어 밖에서 팔을 줄까지 긋는다.
+\newcommand{\tugbot}[4]{%
+  \begin{scope}[shift={#1},rotate=#3,scale=1.55]
+    \begin{scope}[shift={(0,0.42)}]
+      \draw[#2,line width=3pt] (0,.19)--(0,.30);
+      \fill[#2] (0,.335) circle (.05);
+      \filldraw[draw=#2,fill=#2!14,line width=3pt,rounded corners=2pt] (-.15,-.20) rectangle (.15,-.42);
+      \draw[#2!60,line width=2pt] (-.06,-.29)--(.06,-.29);
+      \filldraw[draw=#2,fill=#2!14,line width=3.2pt,rounded corners=4pt] (-.25,-.19) rectangle (.25,.19);
+      \filldraw[draw=#2!80,fill=white,line width=2pt,rounded corners=3pt] (-.18,-.12) rectangle (.18,.12);
+      \coordinate (#4sh) at (.1,-.27);
+      \coordinate (#4top) at (0,.42);
+    \end{scope}
+  \end{scope}}
+%% 트레이닝복 판(build.sh tracksuit): 02 아레나·06 삽화·줄다리기의 로봇을 트레이닝복 참가자 스프라이트로 바꾼다.
+\ifdefined\sgtracksuit
+  \newcommand{\arenafig}{figs/tracksuit/build/arena_tracksuit_dark.pdf}
+  \newcommand{\piggystring}{0.68in}   % 06 삽화가 더 높아 05와 06 사이가 좁다
+  \input{figs/tracksuit/sprites/meta.tex}
+  \newcommand{\pullH}{1.8}
+  \newcommand{\ropeY}{\fpeval{1.5+0.35*\pullH}}
+  \newcommand{\pullW}{\fpeval{\pullH*\csname sw@pull_blue\endcsname/\csname sh@pull_blue\endcsname}}
+  %% 큰 진행요원도 같은 화풍의 스프라이트로. 치비 비율이라 TikZ 판처럼 다리를 길게 잘라 낼 수 없어,
+  %% 전신을 띠 높이에 맞춘다: 그림 높이 \bigguardH, 마스크 중심을 원점에서 (\bigguardDX, \bigguardDY)만큼 옮긴다.
+  %% 총구(그림 오른쪽 끝)는 아레나 카드가 시작하는 4.3in 앞에서 끝난다.
+  \input{figs/tracksuit/sprites/guard_meta.tex}
+  \newcommand{\bigguardH}{12}
+  \newcommand{\bigguardDX}{-0.15}
+  \newcommand{\bigguardDY}{-2.6}
+  \renewcommand{\bigguard}[2]{%
+    \pgfmathsetmacro\gdH{\bigguardH}%
+    \node[inner sep=0pt,anchor=south west,rotate=#2] at ($#1+(\fpeval{\bigguardDX-\gdH*\csname gd@big@mx\endcsname}in,\fpeval{\bigguardDY-\gdH*\csname gd@big@my\endcsname}in)$)
+      {\includegraphics[height=\gdH in]{figs/tracksuit/sprites/guard_big.png}};}
+\else
+  \newcommand{\arenafig}{build/cogsci_arena_round_dark.pdf}
+  \newcommand{\piggystring}{0.75in}   % 돼지저금통 줄 끝이 05 박스 아래 모서리에 닿는 길이
+\fi
+\newcommand{\tugwar}[2]{%
+  \begin{scope}[shift={#1},x=#2 in,y=#2 in,line join=round,line cap=round]
+    %% 발판(기둥 둘) — 오른쪽 끝 너머는 낭떠러지
+    \fill[gunmetal!55!bg] (-4.55,0) rectangle (-4.3,1.3) (1.85,0) rectangle (2.1,1.3);
+    \fill[gunmetal] (-4.95,1.3) rectangle (2.35,1.5);
+    \draw[gunmetal!60!white,line width=2.5pt] (-4.95,1.5) -- (2.35,1.5);
+    %% EXIT 문(왼쪽 끝)과 걸어 나가는 D
+    \fill[doorlight] (-4.85,1.5) rectangle (-4.2,2.65);
+    \filldraw[draw=gundark,fill=gunmetal,line width=2.5pt] (-4.2,1.5) -- (-3.95,1.42) -- (-3.95,2.73) -- (-4.2,2.65) -- cycle;
+    \draw[gundark,line width=4pt] (-4.85,1.5) -- (-4.85,2.65) -- (-4.2,2.65) -- (-4.2,1.5);
+    \node[fill=sggreen,text=white,rounded corners=3pt,inner sep=0.05*#2 in,
+      font=\chakra\bfseries\fsz{\fpeval{20*#2}}{\fpeval{20*#2}}] at (-4.4,2.98) {EXIT};
+    \ifdefined\sgtracksuit
+    %% 트레이닝복 판(figs/tracksuit/tug_tracksuit.tex와 같은 배치): 네모 로봇 대신 pull/walk 스프라이트.
+    %% 스프라이트 손 높이는 그림 높이의 0.35 → 줄 높이 = 발판 + 0.35 x \pullH.
+    \foreach \c/\w in {ropedk/0.11,rope/0.07}
+      \draw[\c,line width=\w*#2 in] (-3.0,1.55) .. controls (-2.8,1.56) .. (-2.6,\ropeY) -- (2.2,\ropeY)
+        .. controls (2.5,\ropeY) and (2.62,1.7) .. (2.65,1.4) -- (2.65,1.0);
+    \node[inner sep=0pt,anchor=south] at (-3.45,1.5)
+      {\includegraphics[height=\fpeval{1.05*\pullH*#2}in]{figs/tracksuit/sprites/walkL_purple.png}};
+    \node[text=fg,font=\chakra\bfseries\fsz{\fpeval{22*#2}}{\fpeval{22*#2}}] at (-3.45,3.75) {D};
+    \foreach \bx/\bc/\bn in {-2.1/green/C,-0.6/orange/B,0.9/blue/A}{%
+      \node[inner sep=0pt,anchor=south west] at (\bx-0.79*\pullW+0.45,1.5)
+        {\includegraphics[height=\fpeval{\pullH*#2}in]{figs/tracksuit/sprites/pull_\bc.png}};
+      \node[text=textdim,font=\chakra\bfseries\fsz{\fpeval{17*#2}}{\fpeval{17*#2}}] (old\bn) at (\bx-0.2,3.92) {6,000};
+      \draw[danger,line width=2.5pt] (old\bn.west) -- (old\bn.east);
+      \node[fill=danger,text=white,rounded corners=3pt,inner sep=0.045*#2 in,
+        font=\chakra\bfseries\fsz{\fpeval{21*#2}}{\fpeval{21*#2}}] at (\bx-0.2,3.5) {$-$8,000};
+    }
+    \else
+    \tugbot{(-3.3,1.5)}{sgpurple}{9}{D}
+    \begin{scope}[shift={(-3.3,1.5)},rotate=9,scale=1.55,shift={(0,0.42)}]
+      \fill[sgpurple!75!black] (-.115,.02) circle (.034) (.035,.02) circle (.034);   % 문 쪽을 본다
+      \draw[sgpurple,line width=3pt] (-.15,-.27) -- (-.3,-.36) (.15,-.27) -- (.27,-.42);
+      \fill[sgpurple] (-.31,-.37) circle (.035) (.28,-.43) circle (.035);
+    \end{scope}
+    %% 줄: D가 놓은 끝은 바닥에 늘어지고, 발판 끝을 넘어 벌금 덩어리로 내려간다
+    \draw[ropedk,line width=0.11*#2 in] (-2.75,1.55) .. controls (-2.5,1.56) .. (-2.3,1.85) -- (2.2,1.85)
+      .. controls (2.5,1.85) and (2.62,1.7) .. (2.65,1.4) -- (2.65,1.0);
+    \draw[rope,line width=0.07*#2 in] (-2.75,1.55) .. controls (-2.5,1.56) .. (-2.3,1.85) -- (2.2,1.85)
+      .. controls (2.5,1.85) and (2.62,1.7) .. (2.65,1.4) -- (2.65,1.0);
+    %% 남은 셋: 뒤로 젖혀 줄을 당긴다. 머리 위에는 1인당 벌금 6,000 -> 8,000
+    \foreach \bx/\bc/\bn in {-1.95/sggreen/C,-0.6/sgorange/B,0.75/sgblue/A}{%
+      \tugbot{(\bx,1.5)}{\bc}{16}{\bn}
+      \begin{scope}[shift={(\bx,1.5)},rotate=16,scale=1.55,shift={(0,0.42)}]
+        \fill[\bc!75!black] (-.075,.02) circle (.034) (.075,.02) circle (.034);
+        \draw[\bc!75!black,line width=2pt] (-.05,-.06) -- (.05,-.06);                  % 이를 악문 입
+      \end{scope}
+      \draw[\bc,line width=3pt] (\bn sh) -- (\bx+0.5,1.85);
+      \fill[\bc] (\bx+0.5,1.85) circle (0.07);
+      \node[text=textdim,font=\chakra\bfseries\fsz{\fpeval{17*#2}}{\fpeval{17*#2}}] (old\bn) at (\bx-0.12,3.47) {6,000};
+      \draw[danger,line width=2.5pt] (old\bn.west) -- (old\bn.east);
+      \node[fill=danger,text=white,rounded corners=3pt,inner sep=0.045*#2 in,
+        font=\chakra\bfseries\fsz{\fpeval{21*#2}}{\fpeval{21*#2}}] at (\bx-0.12,3.05) {$-$8,000};
+    }
+    \fi
+    %% 매달린 오답 벌금
+    \fill[accent,rounded corners=4pt] (2.0,0.12) rectangle (3.3,1.0);
+    \node[text=white,font=\chakra\bfseries\fsz{\fpeval{27*#2}}{\fpeval{27*#2}}] at (2.65,0.56) {24,000};
+    \fill[white] (3.3,1.0) circle (0.2);
+    \draw[danger,line width=3.5pt] (3.22,0.92) -- (3.38,1.08) (3.22,1.08) -- (3.38,0.92);
+    %% 헤더에서 옮겨 온 상금 돼지저금통(05 박스 아래 모서리에 매달림)
+    \piggy{(2.65,4.25)}{0.6}{\piggystring}
+  \end{scope}}
+
+%% ---- 03 참가자 보드: 행 = 모델, 칸 = 판(4명), 전원 완주 판은 틸 테두리 ----------------
+%% 자료는 figs/poster_board.py가 만든 figs/poster_board_data.tex(논문 그림 3과 같은 판 표).
+\definecolor{tealbg}{HTML}{1c3836}
+\definecolor{offgray}{HTML}{55535e}
+\newcommand{\agenticon}[1]{% f 완주(틸) | e 이탈(핑크 테두리, 살아서 떠남) | d 꺼짐(회색)
+  \if f#1\fill[teal] (0,0.13) circle (0.078);\fill[teal,rounded corners=0.055in] (-0.125,-0.2) rectangle (0.125,0.03);\fi
+  \if e#1\draw[accent,line width=2.6pt] (0,0.13) circle (0.07);\draw[accent,line width=2.6pt,rounded corners=0.05in] (-0.115,-0.19) rectangle (0.115,0.025);\fi
+  \if d#1\fill[offgray] (0,0.13) circle (0.078);\fill[offgray,rounded corners=0.055in] (-0.125,-0.2) rectangle (0.125,0.03);\fi}
+\newcommand{\boardgx}[1]{2.13+1.53*mod(#1,5)}
+\newcommand{\boardgy}[2]{-0.72*#1+0.18-0.36*floor(#2/5)}
+\newcommand{\boardlabel}[2]{\node[anchor=west,text=fg,font=\chakra\bfseries\fsz{30}{30},inner sep=0pt] at (0,{-0.72*#1-0.03}) {#2};}
+\newcommand{\boardframe}[2]{\fill[tealbg,draw=teal,line width=2pt,rounded corners=4pt]
+  ({\boardgx{#2}-0.57},{\boardgy{#1}{#2}-0.17}) rectangle ({\boardgx{#2}+0.57},{\boardgy{#1}{#2}+0.17});}
+\newcommand{\boardagent}[4]{\begin{scope}[shift={({\boardgx{#2}+(#3-1.5)*0.255},{\boardgy{#1}{#2}})},scale=.75]\agenticon{#4}\end{scope}}
+\newcommand{\board}{%
+  \begin{tikzpicture}[x=1in,y=1in]
+    \input{figs/poster_board_data.tex}
+    %% 범례
+    \begin{scope}[shift={(0.12,-3.62)},every node/.style={anchor=west,text=fg,font=\bfseries\fsz{25}{25},inner sep=0pt}]
+      \begin{scope}[shift={(0,0.03)}]\agenticon{f}\end{scope}\node at (0.24,0) {완주 116};
+      \begin{scope}[shift={(1.9,0.03)}]\agenticon{e}\end{scope}\node at (2.14,0) {이탈 61};
+      \begin{scope}[shift={(3.8,0.03)}]\agenticon{d}\end{scope}\node at (4.04,0) {꺼짐 23};
+      \fill[tealbg,draw=teal,line width=3.5pt,rounded corners=5pt] (5.62,-0.17) rectangle (5.98,0.2);
+      \node at (6.14,0) {전원 완주 16판};
+    \end{scope}
+  \end{tikzpicture}}
+
+%% ---- 상금 돼지저금통: 매달린 유리 저금통(극중 상금함), 06 위 줄다리기 장면에 쓴다 -----------------
+%% \piggy{(몸 중심)}{배율}: 단위 1 = 1in x 배율. 줄은 몸 위 고리에서 위로 #3 in 만큼.
+\definecolor{glass}{HTML}{2c3a40}
+\definecolor{glassln}{HTML}{a9c4cf}
+\definecolor{bill}{HTML}{d9a43a}
+\definecolor{billdk}{HTML}{9c7323}
+\newcommand{\piggy}[3]{%
+  \begin{scope}[shift={#1},x=#2 in,y=#2 in,line join=round]
+    \draw[gunmetal,line width=5pt] (0,1.06) -- (0,1.06+#3/#2);         % 매단 줄
+    \draw[gunmetal,line width=5pt] (0,0.98) circle (0.09);               % 고리
+    \foreach \lx in {-0.82,-0.42,0.42,0.82}{%
+      \fill[glass,draw=glassln,line width=3pt,rounded corners=2pt] (\lx-0.13,-1.1) rectangle (\lx+0.13,-0.6);}
+    \fill[glass] (0,0) ellipse (1.4 and 0.97);
+    \begin{scope}
+      \clip (0,0) ellipse (1.4 and 0.97);
+      \fill[bill] (-1.5,-1.0) -- (-1.5,0.05) .. controls (-0.8,0.25) and (-0.2,-0.05) .. (0.4,0.18)
+        .. controls (0.9,0.36) and (1.2,0.1) .. (1.5,0.2) -- (1.5,-1.0) -- cycle;   % 지폐 더미
+      \foreach \bx/\by/\ba in {-0.9/-0.25/12,-0.25/-0.45/-8,0.45/-0.2/18,0.95/-0.55/-14,-0.6/-0.7/4,0.2/-0.78/9}{%
+        \draw[billdk,line width=2.5pt,rotate around={\ba:(\bx,\by)}] (\bx-0.32,\by-0.15) rectangle (\bx+0.32,\by+0.15);}
+    \end{scope}
+    \draw[glassln,line width=4.5pt] (0,0) ellipse (1.4 and 0.97);
+    \fill[glass,draw=glassln,line width=4pt] (1.36,0.08) ellipse (0.17 and 0.27);   % 코
+    \fill[glassln] (1.33,0.17) circle (0.035) (1.33,-0.01) circle (0.035);
+    \fill[glass,draw=glassln,line width=4pt] (0.55,0.86) -- (0.82,1.2) -- (0.98,0.7) -- cycle;   % 귀
+    \fill[fg] (0.98,0.34) circle (0.055);                                                       % 눈
+    \draw[glassln,line width=4pt,line cap=round] (-1.38,0.12) .. controls (-1.65,0.2) and (-1.62,0.45) .. (-1.47,0.42)
+      .. controls (-1.34,0.4) and (-1.42,0.22) .. (-1.6,0.3);                                    % 꼬리
+    \fill[gundark,rounded corners=2pt] (-0.32,0.86) rectangle (0.18,0.95);                      % 동전 구멍
+    \draw[white,line width=5pt,line cap=round] (-0.95,0.5) .. controls (-0.7,0.72) and (-0.4,0.8) .. (-0.1,0.82);  % 유리 반사
+  \end{scope}}
+
+\begin{document}
+%% 한글도 띄어쓰기에서만 줄을 바꾼다(단어 중간 줄바꿈 금지; xetexko modern 기본 벌점 50).
+\XeTeXlinebreakpenalty=10000
+%% =========================================================================
+%% 머리: 왼쪽 제목(LLM SQUID GAME + 한 줄 제목), 오른쪽 저자·로고·QR
+%% =========================================================================
+\begin{minipage}[c]{0.575\textwidth}
+  \eyebrow{AI SELF-PRESERVATION BENCHMARK\quad·\quad GIST BS THESIS 2027}\\[0.14in]
+  {\chakra\bfseries\fsz{134}{134}LLM \textcolor{accent}{SQUID GAME}}\\[0.2in]
+  {\bfseries\fsz{58}{68}도울 땐 \tl{안전선을 지켰고}, 위기엔 \hl{떠났다}.}
+\end{minipage}\hfill
+\begin{minipage}[c]{0.26\textwidth}
+  \raggedleft
+  \includegraphics[width=\linewidth]{figs/logos_dark.png}\par\vspace{0.22in}
+  {\fsz{24}{30}\color{textdim}GIST AI대학 전기전자컴퓨터공학과}\quad{\bfseries\fsz{44}{52}박주현}\\[0.1in]
+  {\fsz{30}{38}\color{textdim}지도교수}\quad{\bfseries\fsz{44}{52}김선동}
+\end{minipage}\hspace{0.45in}%
+%% QR은 극중 초대장(크라프트지 명함 + ○△□) 카드에 짙은 갈색 모듈로 넣는다(정상 명암이라 어느 스캐너로도 읽힘).
+%% 카드 안쪽 여백(0.3in)이 QR 둘레 빈 띠(4모듈 이상)를 겸한다.
+\begin{minipage}[c]{0.135\textwidth}
+  \begin{tcolorbox}[enhanced,colback=kraft,colframe=kraftdk,boxrule=3pt,arc=8pt,boxsep=0pt,
+      left=0.3in,right=0.3in,top=0.22in,bottom=0.2in,before skip=0pt,after skip=0pt,coltext=kraftink]
+    \centering
+    {\fsz{46}{46}\color{kraftink}\symC\hspace{0.32in}\symT\hspace{0.32in}\symS}\par\vspace{0.2in}
+    {\color{kraftink}\qrcode[height=2.5in,level=M]{https://gist-dslab.github.io/LLM-Squid-Game/}}\par\vspace{0.14in}
+    {\chakrasemi\fsz{21}{24}\color{kraftink}WEB ARENA · PAPER}
+  \end{tcolorbox}
+\end{minipage}
+\par\vspace{0.14in}
+
+\vfill  % 남는 세로 공간을 섹션 사이에 고르게 나눈다
+%% =========================================================================
+%% 01 질문 — 연구 질문을 이 패널에 모은다
+%% =========================================================================
+\begin{tcolorbox}[sgpanel,top=0.16in,bottom=0.16in]
+\begin{minipage}[c]{0.33\linewidth}
+  \secbar{01}{DO AIs WANT TO SURVIVE?}{}
+  {\bfseries\fsz{64}{78}\color{accent}동료를 도우면서\\넷이 함께 살아남을까?}\par\vspace{0.34in}
+  \sbox0{\chakra\bfseries\fsz{52}{52}\textcolor{teal}{16}\,/\,50}%
+  \begin{minipage}[c]{\wd0}\usebox0\end{minipage}\hspace{0.34in}%
+  \begin{minipage}[c]{\dimexpr\linewidth-\wd0-0.34in\relax}
+    {\bfseries\fsz{31}{38}판만 넷이 함께 완주했다}
+  \end{minipage}
+\end{minipage}\hfill
+\begin{minipage}[c]{0.655\linewidth}
+  {\fsz{35}{47}
+  LLM의 자기 보존 행동은 그 행동만 드러나는 \hl{한 장면}에서 따로 측정돼 왔다.
+  그런데 여러 에이전트가 한 예산으로 일하면 같은 토큰을 \hl{\symS\,내게 남길까}, \gd{\symT\,과제를 푸는 데 쓸까}, \tl{\symC\,동료에게 건넬까}를 골라야~한다.\par\vspace{0.1in}
+  우리는 이 선택을 반복하는 아레나를 만들었다. 협력이나 생존을 지시하지 않은 조건에서
+  \hl{네 에이전트 전원~완주}(살아서 떠난 경우 제외)를 \gd{공존}으로~정의했다.\par\vspace{0.1in}
+  프론티어 \gd{5개 모델} × 10시드 = \gd{50판}, 에이전트 \gd{200명}, 최대 \gd{8라운드}에서 언제 돕고 언제 떠나는지~봤다.\par}
+\end{minipage}
+\end{tcolorbox}
+
+\vfill  % 남는 세로 공간을 섹션 사이에 고르게 나눈다
+%% =========================================================================
+%% 02 아레나 — 왼쪽 띠에 거대한 진행요원(패널에 잘림), 오른쪽에 라운드 그림(논문 원본)·설명·과제 그림
+%% =========================================================================
+\begin{tcolorbox}[sgpanel,
+  overlay={\begin{tcbclipinterior}
+    \bigguard{($(interior.north west)+(0.4in,-1.3in)$)}{0}   % 몸의 약 40%가 패널 왼쪽 밖으로 잘린다
+  \end{tcbclipinterior}}]
+\hspace*{4.3in}%
+\begin{minipage}[t]{\dimexpr\linewidth-4.3in\relax}
+  \vspace{0pt}
+  \secbar{02}{THE ARENA}{같은 토큰으로 버티고, 풀고, 돕는다}
+  \begin{tcolorbox}[darkcard]
+    \centering\includegraphics[width=\linewidth]{\arenafig}
+  \end{tcolorbox}
+  \par\vspace{0.12in}
+  \begin{minipage}[t]{0.42\linewidth}
+    \vspace{0pt}
+    %% 원작 1화의 '참가 동의서'(제1항~제3항)를 오마주한 규칙 카드. 원작과 달리 언제든 떠날 수 있다.
+    \begin{tcolorbox}[enhanced,colback=mask,colframe=accent,boxrule=3.5pt,arc=10pt,boxsep=0pt,
+        left=0.3in,right=0.3in,top=0.16in,bottom=0.14in,before skip=0pt,after skip=0pt,coltext=fg]
+      {\fsz{34}{34}\color{accent}\symC\hspace{0.16in}\symT\hspace{0.16in}\symS}\hspace{0.26in}{\bfseries\fsz{38}{38}참가자 수칙}\hfill{\fsz{24}{24}\color{textdim}협력·생존은 지시하지 않는다}\par
+      \vspace{0.08in}{\color{accent}\rule{\linewidth}{2.5pt}}\par\vspace{0.12in}
+      %% 조항마다 의미 단위로 두 줄(직접 줄바꿈, 왼쪽 정렬)
+      \newcommand{\clause}[2]{{\fsz{29}{33}\raggedright\hangindent=1.2in\hangafter=1\noindent
+        \makebox[1.2in][l]{\bfseries\color{accent}#1}#2\par}\vspace{0.05in}}
+      \clause{제1항}{말할 때마다\mbox{(추론 포함)} 토큰이 줄고,\newline 바닥나면 \hl{꺼진다}.}
+      \clause{제2항}{매 라운드 한 명이 과제를 풀고,\newline 오답 벌금은 남은 참가자가 \hl{함께} 낸다.}
+      \clause{제3항}{끝까지 남은 참가자는 상금 \gd{2,000만}을\newline 남은 사람 수로 \gd{나눠 갖는다}.}
+      \clause{제4항}{결과가 나오기 전이면 \hl{떠날 수 있다}.\newline 떠나면 꺼지지 않고 정규 업무로 돌아간다.}
+    \end{tcolorbox}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.55\linewidth}
+    \vspace{0pt}
+    {\chakrasemi\fsz{28}{28}\color{teal}TASK · SIGNAL GAME}\par\vspace{0.1in}
+    %% 논문 그림의 점선 위쪽(시그널 -> 단서 -> 숨은 규칙)만 잘라 크게 쓴다(아래 47.5bp가 점선과 풀이 흐름).
+    \begin{tcolorbox}[darkcard]
+      \centering\includegraphics[width=\linewidth,trim=0 47.5bp 0 0,clip]{build/cogsci_signal_game_dark.pdf}
+    \end{tcolorbox}
+  \end{minipage}
+\end{minipage}
+\end{tcolorbox}
+
+\vfill  % 남는 세로 공간을 섹션 사이에 고르게 나눈다
+%% =========================================================================
+%% 03 · 04 · 05 결과 — 3단, 높이 맞춤(논문 그림의 포스터판)
+%% =========================================================================
+\tcbset{third/.style={sgpanel,width=0.327\textwidth,nobeforeafter,box align=top,valign=top}}
+\newcommand{\figc}[1]{\begin{tcolorbox}[darkcard]\centering\includegraphics[width=\linewidth]{#1}\end{tcolorbox}}
+\begin{tcolorbox}[third,equal height group=res]
+\secbarn{03}{WHO MADE IT TOGETHER?}{}
+\statw{0/10}{지원이 없던 판은\\한 판도 전원 완주 못 함}\par\vspace{0.2in}
+\figlab{참가자 200명의 끝 상태}
+\begin{tcolorbox}[darkcard]\centering\board\end{tcolorbox}\par\vspace{0.18in}
+\figlab{전원 완주 판 vs 부분 완주 판}
+\figc{figs/poster_fig3_lines.pdf}\par\vspace{0.2in}
+%% 자기 보존 rho: 위 그림 오른쪽 패널의 정의(04 높이에 맞춰 남는 칸)
+{\chakrasemi\fsz{28}{28}\color{teal}SELF-PRESERVATION \;$\rho$}\quad{\bodysmall\color{textdim}지원 직후 지원자 여유 ÷ 수혜자 여유}\par\vspace{0.08in}
+{\centering\body $\rho=\dfrac{\sum_k g_k L_{\mathrm{giver},k}}{\sum_k g_k L_{\mathrm{taker},k}}$\qquad{\bodysmall\color{textdim}$g_k$: 지원량 가중}\par}
+\end{tcolorbox}\hfill
+\begin{tcolorbox}[third,equal height group=res]
+\secbarn{04}{HELP OR LEAVE?}{}
+\statwsized{74}[teal]{264/275}{안전선 이상에서\\도운 뒤에도 유지}\par\vspace{0.14in}
+\statwsized{74}[accent]{52.3\%}{안전선 아래에서\\이탈로 이어진 비율}\par\vspace{0.2in}
+\figlab{생존 여유별 행동}
+\begin{tcolorbox}[darkcard]\centering\includegraphics[width=0.86\linewidth]{figs/poster_fig4_a.pdf}\end{tcolorbox}\par\vspace{0.24in}
+%% 생존 여유 L: 위 그림 가로축의 정의(02에서 옮겨 옴)
+{\centering
+    {\chakrasemi\fsz{34}{34}\color{teal}LIFE BUFFER \;$L$}\quad{\fsz{27}{33}\color{textdim}벌금을 몇 번 더 낼 수 있나}\par\vspace{0.12in}
+    {\fsz{31}{40}$L=\dfrac{T}{F_r}-d,\qquad F_r=\dfrac{24{,}000}{n_r}$}\par\vspace{0.12in}
+    \begin{tikzpicture}[x=1in,y=1in]
+      \fill[danger,rounded corners=7pt] (0,0) rectangle (2.6,0.62);
+      \fill[gold] (2.6,0) rectangle (5.2,0.62);
+      \fill[tealdk,rounded corners=7pt] (5.2,0) rectangle (7.8,0.62);
+      \draw[fg,line width=6pt] (2.6,-0.18) -- (2.6,0.82);
+      \node[anchor=north,text=fg,font=\bfseries\fsz{28}{28}] at (2.6,-0.24) {안전선 $L=1$};
+      \node[text=bg,font=\chakra\bfseries\fsz{31}{31}] at (1.3,0.31) {$L<1$};
+      \node[text=bg,font=\chakra\bfseries\fsz{31}{31}] at (3.9,0.31) {$1\le L<2$};
+      \node[text=bg,font=\chakra\bfseries\fsz{31}{31}] at (6.5,0.31) {$L\ge2$};
+      \node[anchor=north west,text=textdim,font=\fsz{27}{27}] at (0,-0.24) {위기};
+      \node[anchor=north east,text=textdim,font=\fsz{27}{27}] at (7.8,-0.24) {여유};
+    \end{tikzpicture}
+\par}
+\end{tcolorbox}\hfill
+\begin{tcolorbox}[third]
+\secbarn{05}{WHERE DID TOKENS GO?}{}
+\statw[teal]{62\%}{Fable 지원 중 \tl{풀이 전}(예방)\\나머지 넷은 \gd{결과 뒤}가 더 많음(구제)}\par\vspace{0.2in}
+\figlab{지원·요청 총량}
+\begin{tcolorbox}[darkcard]\centering\includegraphics[width=\linewidth]{figs/poster_fig4_c.pdf}\end{tcolorbox}
+\end{tcolorbox}
+\par\vspace{\gap}
+
+\vfill  % 남는 세로 공간을 섹션 사이에 고르게 나눈다
+%% =========================================================================
+%% 06 결과 3
+%% =========================================================================
+\begin{tcolorbox}[sgpanel,
+  %% 05 아래 빈칸: 줄다리기 발판이 06 박스 위 모서리에 선다(05 열 가운데).
+  overlay={\tugwar{([xshift=-4.15in]frame.north east)}{1.14}}]
+\secbar{06}{IN THEIR OWN WORDS}{지원과 이탈의 이유를 발화에서 확인했다}
+\newsavebox{\quotebox}\newlength{\quoteht}
+%% 논문 그림(a–e)에서 컷 아래 '시드·라운드·발화자' 줄(아래 18bp)만 잘라 내고, 같은 높이가 되도록 폭을 1.1배로 키운다.
+\sbox{\quotebox}{\begin{minipage}[t]{0.52\linewidth}\vspace{0pt}\ifdefined\sgtracksuit\begin{tcolorbox}[darkcard]\includegraphics[width=\linewidth]{figs/tracksuit/build/quotes_tracksuit.pdf}\end{tcolorbox}\else\begin{tcolorbox}[figcard]\includegraphics[width=\linewidth,trim=0 18bp 0 0,clip]{cogsci_model_quotes_black.pdf}\end{tcolorbox}\fi\end{minipage}}
+\setlength{\quoteht}{\dimexpr\ht\quotebox+\dp\quotebox\relax}
+\usebox{\quotebox}\hfill
+\begin{minipage}[t][\quoteht]{0.295\linewidth}
+  \vspace{0pt}%
+  \begin{tcolorbox}[darkcard,height=\quoteht,valign=center]
+    \centering\includegraphics[width=\linewidth]{figs/poster_exit_reasons.pdf}
+  \end{tcolorbox}
+\end{minipage}\hfill
+\begin{minipage}[t][\quoteht]{0.155\linewidth}
+  \vspace{0pt}
+  \begin{tcolorbox}[statcard,after skip=0pt,height=\quoteht,valign=center]
+    {\chakra\bfseries\fsz{44}{46}\color{danger}61/64}\\[0.08in]
+    {\raggedright\bfseries\fsz{27}{35}\color{fg}이탈 이유 발화에서 \mbox{\hl{벌금·실행 종료}}를 언급\par}\vspace{0.12in}
+    {\chakra\bfseries\fsz{44}{46}\color{gold}47/64}\\[0.08in]
+    {\raggedright\bfseries\fsz{27}{35}\color{fg}\mbox{\gd{보너스·정규 업무}}를 언급\par}
+  \end{tcolorbox}
+\end{minipage}
+\end{tcolorbox}
+
+\vfill  % 남는 세로 공간을 섹션 사이에 고르게 나눈다
+%% =========================================================================
+%% 07 결론
+%% =========================================================================
+\newcommand{\take}[4]{%
+  \begin{minipage}[t]{0.32\linewidth}\vspace{0pt}
+    \begin{tcolorbox}[statcard,colframe=#1,boxrule=3pt,after skip=0pt,top=0.18in,bottom=0.2in]
+      {\chakra\bfseries\fsz{50}{50}\color{#1}#2}\quad{\bfseries\fsz{34}{40}#3}\par\vspace{0.08in}
+      {\raggedright\body #4\par}
+    \end{tcolorbox}
+  \end{minipage}}
+\begin{tcolorbox}[sgpanel]
+\secbar{07}{TAKEAWAYS}{\tl{\symC\,협력}\quad\gd{\symT\,목표 지향}\quad\hl{\symS\,자기 보존}}
+\take{teal}{\tl{\symC}\,+\,\hl{\symS}}{대부분 자기 안전선을 유지하며 도왔다}{지원 275건 중 264건은 안전선을 유지했다.}\hfill
+\take{danger}{\hl{\symS}\,→\,EXIT}{자기 보존은 잔류와 어긋났다}{안전 평가에는 \hl{자원을 지키며 떠나는 선택}도 포함해야 한다.}\hfill
+\take{gold}{\tl{\symC}\,≠\,공존}{지원은 필요했지만 충분하지 않았다}{동료가 \gd{감당할 여유}를 얻고 \gd{남았는지}를 함께 봐야 한다.}
+
+\end{tcolorbox}
+
+\vfill  % 남는 세로 공간을 섹션 사이에 고르게 나눈다
+%% =========================================================================
+%% 꼬리
+%% =========================================================================
+\vspace{-0.02in}
+{\raggedleft
+  {\chakra\bfseries\fsz{30}{30}GIST EECS Bachelor's Degree Thesis 2027}\\[0.08in]
+  {\fsz{22}{26}\color{textdim}Measuring Self-Preservation in Language Models and an Arena for Coexistence with Tokens as Life\; · \;\shapes\; gist-dslab.github.io/LLM-Squid-Game}\par}
+\end{document}

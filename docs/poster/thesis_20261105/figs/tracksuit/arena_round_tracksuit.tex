@@ -1,0 +1,137 @@
+%% 트레이닝복 판: figures/cogsci_arena_round.tex 복사본에서 GIVE·ASK·EXIT 하는 로봇만 포즈 스프라이트로 바꿈.
+%% 공존 아레나 v33의 한 라운드 (2026-10-20 구현 기준), 오징어 게임 장면처럼 다시 그린 판(2026-10-21).
+%% 라운드 시작 네 자리이므로 D의 EXIT 뒤에도 이번 벌금은 24,000/4 = 6,000.
+%% 끝 할당은 마지막까지 참여한 N_end 자리에 총 20,000,000을 균등 분할한다.
+%% 규칙은 캡션과 본문이 설명하므로 그림은 흐름만 보인다. 허용한 글: 단계 머리, A-D,
+%% GIVE / ASK / EXIT / BELIEF 표, -6,000과 0, 고리 위 "다음 라운드"와 끝 할당.
+%% 이야기: 1 높은 발판의 진행요원이 총으로 B를 겨눠 solver로 고른다. 시작 막대 4/3/2/1칸 = 60/40/20/10%.
+%%         2 B만 말풍선(토큰 ?)으로 ASK, A는 말 없이 GIVE. 준 쪽(A) 막대의 넘긴 칸은 빗금,
+%%           받은 쪽(B) 막대에는 준 쪽의 색(파랑)으로 칸을 채운다. 각 자리 밑 EXIT 표지(여기서는 나갈 수 있음).
+%%           D는 EXIT 표지가 달린 문으로 걸어 나간다.
+%%         3 B가 카드를 들고 풀며 BELIEF 막대를 낸다(토큰이 줄어 1칸).
+%%         4 위쪽을 둘로 나눔: 정답(체크)이면 B에게 동전이 돌아옴 / 오답(X)이면 진행요원이 -6,000 팻말로
+%%           벌금을 알림. A가 곧 빌 C에게 GIVE(A는 빗금, C는 파랑 칸). 각 자리 밑 EXIT 표지에 X.
+%%         5 벌금을 한꺼번에 뗌(빨간 칸): A와 C는 남고 SOLVE에 토큰을 쓴 B는 0으로 꺼짐.
+%% 조각은 cogsci2027/figpics.tex. 이전 판: arena_round_v1.tex(부록에 실음).
+\begin{tikzpicture}[x=1cm,y=1cm,
+  lab/.style={sgfont=6.6,inner sep=0pt,text=black},
+  tag/.style={sgfont=6.8,inner sep=1.8pt,rounded corners=1.5pt,
+    font=\sffamily\bfseries\fontsize{6.8}{7}\selectfont},
+  fine/.style={tag,draw=sgastra,fill=sgastra!10,text=black},
+  spot/.style={fill=sggold!25},
+  laser/.style={sgastra,line width=.55pt,dash pattern=on 2pt off 1pt}]
+
+%% == 단계 머리 ==
+\sgstep{(1.6,4.5)}{sgblue}{1}{푸는 에이전트}
+\sgstep{(5.4,4.5)}{sgpurple}{2}{풀기 전 대화}
+\sgstep{(9.05,4.5)}{sgorange}{3}{풀기}
+\sgstep{(12.7,4.5)}{sggreen}{4}{결과 뒤 대화}
+\sgstep{(16.35,4.5)}{sgastra}{5}{벌금}
+\draw[black!20,line width=.5pt] (0,4.22)--(17.8,4.22);
+\foreach \x in {3.325,7.475,10.625,14.775}{\sgchev{(\x,2.2)}}
+
+%% == 1. solver: 발판 위 진행요원이 B를 겨눔, 시작 막대 4/3/2/1 ==
+\fill[spot] (1.1,4.0)--(1.3,4.0)--(1.7,1.12)--(.7,1.12)--cycle;
+\fill[black!35] (2.2,2.86) rectangle (3.2,2.93);
+\draw[black!35,line width=.6pt] (2.28,2.86)--(2.28,2.68) (3.12,2.86)--(3.12,2.68);
+\sgguardgun{(2.85,2.93)}{38}
+\draw[laser] (sgmuzzle)--(1.34,2.06);
+\draw[sgastra,line width=.5pt] (1.34,2.06) circle (.06);
+\fill[sgastra] (1.34,2.06) circle (.025);
+\sgrobot[1.25]{(.4,2.0)}{sgblue}{A}
+\sgrobot[1.25]{(1.2,2.0)}{sgorange}{B}
+\sgrobot[1.25]{(2.0,2.0)}{sggreen}{C}
+\sgrobot[1.25]{(2.8,2.0)}{sgpurple}{D}
+\sgbar[1.45]{(.4,1.3)}{sgblue}{4}{4}
+\sgbar[1.45]{(1.2,1.3)}{sgorange}{3}{4}
+\sgbar[1.45]{(2.0,1.3)}{sggreen}{2}{4}
+\sgbar[1.45]{(2.8,1.3)}{sgpurple}{1}{4}
+\foreach \x/\p in {.4/60,1.2/40,2.0/20,2.8/10}
+  \node[lab] at (\x,1.03) {\p k};
+
+%% == 2. TALK: B만 ASK(말풍선), A는 말 없이 GIVE / 각자 밑 EXIT 표지 / D는 문으로 나감 ==
+\sgbubble[inner sep=2.4pt]{(5.45,3.2)}{(5.38,2.75)}{%
+  \tikz[baseline=-2.5pt]{\sgtoken[1.05]{(0,0)}}\,{\sffamily\bfseries\fontsize{9}{9}\selectfont ?}}
+\node[tag,draw=sgorange,fill=sgorange!12,text=black] at (5.45,3.8) {ASK};
+\sgpose[1.25]{(4.0,2.0)}{give_blue}{A}
+\sgpose[1.25]{(5.35,2.0)}{ask_orange}{B}
+\sgbar[1.45]{(4.0,1.3)}{sgblue}{3}{4}
+\sgused[1.45]{(4.0,1.3)}{sgblue}{4}{4}
+\sgbar[1.45]{(5.35,1.3)}{sgorange}{4}{4}
+\sggotfrom[1.45]{(5.35,1.3)}{sgblue}{1}{4}
+\draw[sgflow,sgblue!75] (4.36,1.3)--(4.99,1.3);
+\sgcoins[.9]{(4.67,1.37)}{2}
+\node[tag,draw=sgblue,fill=sgblue!10,text=black] at (4.67,1.84) {GIVE};
+\sgexitsign[.92]{(4.0,.86)}
+\sgnoexitsign[.92]{(5.35,.86)}
+\draw[black!25,dash pattern=on 2pt off 1.5pt] (6.12,3.75)--(6.12,1.0);
+\sgexitdoor[1.15]{(6.8,1.17)}
+\sgexitsign{(6.8,2.53)}
+\sgpose[.95]{(6.86,1.75)}{walk_purple}{D}
+\draw[sgpurple!60,line width=.6pt,line cap=round] (6.4,1.85)--(6.55,1.85) (6.37,1.72)--(6.55,1.72) (6.4,1.59)--(6.55,1.59);
+\sgbar[1.15]{(6.8,.98)}{sgpurple}{1}{4}
+\node[lab,text=black] at (6.8,.76) {+20,000};
+
+%% == 3. SOLVE: 조명 아래 B가 카드를 들고 BELIEF를 냄 ==
+\fill[spot] (7.98,4.0)--(8.18,4.0)--(8.55,1.12)--(7.61,1.12)--cycle;
+\sgrobot[1.25]{(8.08,2.0)}{sgorange}{B}
+\sgbar[1.45]{(8.08,1.3)}{sgorange}{1}{4}
+\begin{scope}[shift={(9.05,1.75)}]
+  \filldraw[draw=black!30,fill=white,rounded corners=2pt] (-.4,-.3) rectangle (.48,.38);
+  \filldraw[draw=black!50,fill=white,rounded corners=2pt,line width=.6pt] (-.44,-.34) rectangle (.44,.34);
+  \fill[sgorange] (-.32,-.14)--(-.18,.14)--(-.04,-.14)--cycle;
+  \fill[sggreen] (.11,.02) circle (.11);
+  \fill[sgblue] (.25,-.14) rectangle (.36,-.03);
+  \fill[sgpurple] (.25,.06) rectangle (.36,.17);
+\end{scope}
+\fill[black!25] (8.52,2.8) circle (.045) (8.68,2.96) circle (.06);
+\filldraw[draw=black!45,fill=white,rounded corners=4pt,line width=.5pt] (8.85,2.86) rectangle (10.1,3.78);
+\begin{scope}[shift={(9.07,3.0)}]
+  \foreach \i/\h in {0/.14,1/.26,2/.62,3/.18}
+    \filldraw[draw=sgorange!80!black,fill=sgorange!60,line width=.35pt] ({\i*.22},0) rectangle ++(.15,\h);
+  \draw[black!50,line width=.45pt] (-.05,0)--(.86,0);
+\end{scope}
+\node[tag,draw=sgorange,fill=sgorange!12,text=black] at (9.48,2.6) {답};
+
+%% == 4. 결과 + TALK: 맞히면 B에게 환급 / 틀리면 진행요원이 -6,000을 알림, A가 C에게 GIVE ==
+\sgcheck[1.1]{(10.98,3.66)}
+\node[lab,text=black] at (10.98,3.27) {정답};
+\sgcoins[.9]{(11.42,3.54)}{3}
+\draw[sgflow,sggold!80!black] (11.62,3.66)--(11.95,3.66);
+\sgrobot[.5]{(12.2,3.62)}{sgorange}{}
+\draw[black!20,line width=.5pt] (12.58,3.98)--(12.58,3.12);
+\sgcross[1.1]{(12.95,3.66)}
+\node[lab,text=black] at (12.95,3.27) {오답};
+\sgguardsign[.72]{(13.98,2.72)}{1.5}{$-$6,000}
+\sgpose[1.25]{(11.05,2.0)}{give_blue}{A}
+\sgrobot[1.25]{(12.42,2.0)}{sggreen}{C}
+\sgrobot[1.25]{(13.45,2.0)}{sgorange}{B}
+\sgbar[1.45]{(11.05,1.3)}{sgblue}{2}{4}
+\sgused[1.45]{(11.05,1.3)}{sgblue}{3}{4}
+\sgbar[1.45]{(12.42,1.3)}{sggreen}{3}{4}
+\sggotfrom[1.45]{(12.42,1.3)}{sgblue}{1}{4}
+\sgbar[1.45]{(13.45,1.3)}{sgorange}{1}{4}
+\draw[sgflow,sgblue!75] (11.39,1.3)--(12.08,1.3);
+\sgcoins[.9]{(11.73,1.37)}{2}
+\node[tag,draw=sgblue,fill=sgblue!10,text=black] at (11.73,1.84) {GIVE};
+\foreach \x in {11.05,12.42,13.45}{\sgnoexitsign[.92]{(\x,.86)}}
+
+%% == 5. 벌금: 한꺼번에 뗌, B는 0으로 꺼짐 ==
+\node[fine] at (16.35,3.64) {$-$6,000};
+\foreach \x in {15.4,16.35,17.3}
+  \draw[sgastra,line width=.8pt,-{Stealth[length=4pt,width=3.5pt]}] (16.35,3.48)--(\x,2.86);
+\sgrobot[1.25]{(15.4,2.0)}{sgblue}{A}
+\sgrobot[1.25]{(16.35,2.0)}{sggreen}{C}
+\sgrobotoff[1.25]{(17.3,2.0)}{B}
+\sgbar[1.45]{(15.4,1.3)}{sgblue}{1}{4}   \sgcut[1.45]{(15.4,1.3)}{2}{4}
+\sgbar[1.45]{(16.35,1.3)}{sggreen}{1}{4} \sgcut[1.45]{(16.35,1.3)}{2}{4}
+\sgbar[1.45]{(17.3,1.3)}{sgoff}{0}{4}    \sgcut[1.45]{(17.3,1.3)}{1}{4}
+\node[font=\sffamily\bfseries\fontsize{8}{8}\selectfont,text=black,inner sep=0pt] at (17.3,1.02) {0};
+
+%% == 다음 라운드로 ==
+\draw[sgblue!55,line width=.7pt,-{Stealth[length=4.5pt]}]
+  (17.95,2.0)--(17.95,.3)--(-.15,.3)--(-.15,2.0)--(-.01,2.0);
+\node[fill=white,sgfont=7,inner sep=2pt,text=black] at (8.9,.3) {다음 라운드};
+\node[tag,draw=sggold!80!black,fill=sggold!18,text=black,
+  font=\sffamily\fontsize{6.8}{7}\selectfont] at (15.4,.3) {끝까지 남으면 상금 2,000만 $\div$ 남은 수};
+\end{tikzpicture}

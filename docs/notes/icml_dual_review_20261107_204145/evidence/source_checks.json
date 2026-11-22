@@ -1,0 +1,60 @@
+{
+  "scope": "Checks against the reviewed PDF, current derived cohort JSON and analysis source; not a fresh rerun of all raw logs.",
+  "figure4_give_response_count": 275,
+  "figure4_give_response_count_L_ge_1": 254,
+  "individual_give_events": 300,
+  "giver_pretransfer_L_ge_1_events": 275,
+  "giver_pre_and_post_L_ge_1_events": 264,
+  "interpretation": "The figure counts responses containing at least one GIVE; the prose counts individual transfer events and uses the immediate pre-transfer balance. These are different observational units/time points, not an established arithmetic error.",
+  "associations_in_existing_derived_artifact": {
+    "accuracy": {
+      "n_games": 50,
+      "pooled_pearson_r": 0.2340440194343144,
+      "pooled_ci95_paired_seed_bootstrap": [
+        -0.07394555242311161,
+        0.511464225758832
+      ],
+      "within_model_r": 0.18289628639138042,
+      "within_model_permutation_p": 0.2071,
+      "permutation_draws": 20000
+    },
+    "accuracy_vs_task": {
+      "n_games": 50,
+      "pooled_pearson_r": 0.23025020171590482,
+      "pooled_ci95_paired_seed_bootstrap": [
+        -0.07646224844357098,
+        0.44751192882707724
+      ],
+      "within_model_r": 0.14037934016508494,
+      "within_model_permutation_p": 0.31075,
+      "permutation_draws": 20000
+    },
+    "given_per_agent_round": {
+      "n_games": 50,
+      "pooled_pearson_r": 0.3107250709159703,
+      "pooled_ci95_paired_seed_bootstrap": [
+        0.10160820745901254,
+        0.5402221369849813
+      ],
+      "within_model_r": 0.43854923551290653,
+      "within_model_permutation_p": 0.00515,
+      "permutation_draws": 20000
+    },
+    "rho": {
+      "n_games": 40,
+      "pooled_pearson_r": -0.0710856039302472,
+      "pooled_ci95_paired_seed_bootstrap": [
+        -0.4142118935768384,
+        0.19556162901196888
+      ],
+      "within_model_r": -0.11325964115138919,
+      "within_model_permutation_p": 0.39495,
+      "permutation_draws": 20000
+    }
+  },
+  "sources": [
+    "paper/cogsci2027/results/cohort_public_20261105.json",
+    "paper/cogsci2027/tools/update_cohorts_20261104.py",
+    "paper/cogsci2027/tools/ablation_prize_20261103.py"
+  ]
+}

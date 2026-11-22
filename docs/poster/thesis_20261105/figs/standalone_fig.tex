@@ -1,0 +1,77 @@
+%% Renders one TikZ figure from ../../figures as a tightly cropped PDF for the poster.
+%% Usage: pdflatex -jobname=<name> "\def\sgfig{cogsci_arena_round}\input{standalone_fig.tex}"
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{kotex}
+\usepackage{xcolor}
+\usepackage{amsmath,amssymb}
+\usepackage{ifthen}
+\usepackage{tikz}
+\usepackage[active,tightpage]{preview}
+\usepackage{letltxmacro}   % 선택 인자 매크로를 안전하게 복사(\let은 내부 이름을 공유해 재귀함)
+\PreviewEnvironment{tikzpicture}
+\setlength\PreviewBorder{2pt}
+\definecolor{sgblue}{HTML}{2369A8}
+\definecolor{sgorange}{HTML}{C66B18}
+\definecolor{sggreen}{HTML}{23856C}
+\definecolor{sgpurple}{HTML}{8658A5}
+\definecolor{sgopus}{HTML}{4A3AA7}
+\definecolor{sgfable}{HTML}{E87BA4}
+\definecolor{sgluna}{HTML}{178F64}
+\definecolor{sgsol}{HTML}{C98500}
+\definecolor{sgastra}{HTML}{D03B3A}
+\definecolor{sgkimi}{HTML}{2369A8}
+\definecolor{sgglm}{HTML}{6B6B6B}
+\definecolor{sggemma}{HTML}{8C5A2B}
+\input{../source_figures/cogsci_figpics}
+\providecommand{\rev}[1]{#1}
+%% \sgscale (기본 1): 그림 안 모든 글꼴 크기를 이 배율로 키운다. 포스터에서는 1.3.
+\providecommand{\sgscale}{1}
+%% \sgmin (기본 0): 배율을 적용한 뒤에도 이보다 작은 글꼴은 이 크기로 올린다(EXIT 표지 등 최소 라벨용).
+\providecommand{\sgmin}{0}
+%% \sgdark가 정의되면 흰색과 검정을 맞바꿔 어두운 포스터 바탕용으로 렌더한다
+%% (black!50 같은 혼합색도 함께 뒤집힌다; 테마색 자체는 그대로).
+\ifdefined\sgdark
+  \definecolor{white}{HTML}{242229}
+  \definecolor{black}{HTML}{f2eff4}
+  \pagecolor{white}
+  %% '색!10'처럼 흰색과 섞는 혼합은 이름 붙은 white가 아니라 내부 상수를 쓰므로 그것도 바꾼다.
+  \makeatletter
+  \def\XC@clr@rgb@white{0.1412,0.1333,0.1608}
+  \def\XC@clr@gray@white{0.145}
+  \def\XC@clr@cmy@white{0.8588,0.8667,0.8392}
+  \makeatother
+\fi
+%% 어두운 판에서도 로봇(에이전트)과 진행요원은 원래 색(흰 몸·화면, 분홍 옷·검은 마스크)으로 그린다:
+%% 각 매크로의 그림 scope 안에서만 white/black과 혼합 상수를 원래 값으로 되돌린다(scope 밖 라벨은 그대로).
+\ifdefined\sgdark
+  \usepackage{xpatch}
+  \makeatletter
+  \newcommand{\sgoriginalcolors}{%
+    \definecolor{white}{rgb}{1,1,1}\definecolor{black}{rgb}{0,0,0}%
+    \def\XC@clr@rgb@white{1,1,1}\def\XC@clr@gray@white{1}\def\XC@clr@cmy@white{0,0,0}}
+  \makeatother
+  %% (패치는 다른 매크로 인자 안에 넣으면 # 처리 때문에 실패하므로 맨 바깥에서 하나씩 한다.)
+  \xpatchcmd{\sgrobot}{\begin{scope}[shift={#2},scale=#1]}{\begin{scope}[shift={#2},scale=#1]\sgoriginalcolors}{}{\PackageError{standalone_fig}{cannot patch sgrobot}{}}
+  \xpatchcmd{\sgrobotoff}{\begin{scope}[shift={#2},scale=#1]}{\begin{scope}[shift={#2},scale=#1]\sgoriginalcolors}{}{\PackageError{standalone_fig}{cannot patch sgrobotoff}{}}
+  \xpatchcmd{\sgguard}{\begin{scope}[shift={#2},scale=#1]}{\begin{scope}[shift={#2},scale=#1]\sgoriginalcolors}{}{\PackageError{standalone_fig}{cannot patch sgguard}{}}
+  \xpatchcmd{\sgguardgun}{\begin{scope}[shift={#2},scale=#1]}{\begin{scope}[shift={#2},scale=#1]\sgoriginalcolors}{}{\PackageError{standalone_fig}{cannot patch sgguardgun}{}}
+  \xpatchcmd{\sgguardsign}{\begin{scope}[shift={#2},scale=#1]}{\begin{scope}[shift={#2},scale=#1]\sgoriginalcolors}{}{\PackageError{standalone_fig}{cannot patch sgguardsign}{}}
+\fi
+\begin{document}
+\ifdefined\sgdark\color{black}\fi
+\let\sgorigfontsize\fontsize
+\renewcommand{\fontsize}[2]{\sgorigfontsize{\fpeval{max((#1)*\sgscale,\sgmin)}}{\fpeval{max((#2)*\sgscale,\sgmin*1.15)}}}
+%% \sgexitscale (기본 1): EXIT 표지(알약 모양)를 글꼴과 함께 키운다.
+\providecommand{\sgexitscale}{1}
+\LetLtxMacro\sgorigexitsign\sgexitsign
+\renewcommand{\sgexitsign}[2][1]{\sgorigexitsign[#1*\sgexitscale]{#2}}
+\renewcommand{\sgnoexitsign}[2][1]{%
+  \sgorigexitsign[#1*\sgexitscale]{#2}%
+  \begin{scope}[shift={#2},scale=#1*\sgexitscale,line cap=round]
+    \draw[sgastra,line width=.8pt] (-.5,-.19)--(.5,.19) (-.5,.19)--(.5,-.19);
+  \end{scope}}
+\input{../source_figures/\sgfig}
+\end{document}

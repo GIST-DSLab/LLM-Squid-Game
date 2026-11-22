@@ -1,0 +1,10 @@
+Use the built-in image_gen tool (not code, not SVG) to generate ONE image, then copy the final PNG to ./base_contestant_v1.png in the current directory. Do not edit any other file.
+
+Use case: illustration-story (character model sheet asset)
+Asset type: a reusable character sprite for an academic poster with a near-black background (#0e0d11 / #242229 panels).
+Input images: Image 1 = reference for the character's HEAD design only (the square robot heads labelled A–D). Match that head: rounded-square head with a thick coloured outline, light-tinted face panel, inner white screen with two round dot eyes and a small smile, single antenna with a ball on top.
+Subject: ONE robot contestant, full body, front view, standing neutrally, arms relaxed at sides. Head exactly in the style of robot A (blue outline #2369A8, light blue tint). Body: wears a teal-green zip-up track jacket and track pants (game contestant uniform, colour about #2E8B74) with white stripes down the sleeves and pant legs, white trim on collar and zip, white sneakers. A white rectangular number patch on the left chest reading "001" in black. Robot hands are simple round mitts in the head colour.
+Proportions: chibi — head about 40% of total height, so it still reads at small size.
+Style/medium: flat vector illustration, clean thick outlines, solid flat colours only, NO gradients, NO soft shading, NO glow, NO texture, NO 3D render look. Must look like it belongs next to the reference's flat TikZ drawing.
+Composition: single character centred, whole body visible with margin, plain transparent background (alpha), no floor shadow, no scene, no extra text other than "001".
+Avoid: human face, realistic proportions, gradients, drop shadows, pink guard costume, masks, weapons, logos.

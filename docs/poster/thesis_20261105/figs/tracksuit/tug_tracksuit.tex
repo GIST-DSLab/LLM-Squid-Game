@@ -1,0 +1,143 @@
+%% 빌드: poster/에서 xelatex -output-directory=figs/tracksuit/build figs/tracksuit/tug_tracksuit.tex
+\documentclass[border=0pt]{standalone}
+\usepackage{fontspec}
+\usepackage{kotex}            % xetexko: 한글은 hangulfont로 따로 조판
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,calc,shapes.geometric}
+\usepackage[skins]{tcolorbox}
+\usepackage{qrcode}
+\usepackage{amsmath}
+\usepackage{microtype}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+
+%% ---- 팔레트 (사이트 styles.css :root + 오징어 게임 테마) ------------------
+\definecolor{bg}{HTML}{0e0d11}
+\definecolor{panel}{HTML}{1a1920}
+\definecolor{panelalt}{HTML}{242229}
+\definecolor{border}{HTML}{2e2c36}
+\definecolor{fg}{HTML}{f2eff4}
+\definecolor{textdim}{HTML}{d8d6de}
+\definecolor{accent}{HTML}{ed1b76}   % 진행요원 핑크
+\definecolor{accentdk}{HTML}{b3125a}  % 핑크 그늘
+\definecolor{teal}{HTML}{7fc2b1}     % 참가자 틸(밝음)
+\definecolor{tealdk}{HTML}{249f9c}   % 참가자 트레이닝복
+\definecolor{gold}{HTML}{e3b23c}
+\definecolor{danger}{HTML}{e0575b}
+\definecolor{info}{HTML}{6ea8fe}
+\definecolor{mask}{HTML}{111115}
+\definecolor{gunmetal}{HTML}{5a5a66}
+\definecolor{gundark}{HTML}{2a2a32}
+\definecolor{sgblue}{HTML}{2369A8}
+\definecolor{sgred}{HTML}{D03B3A}
+\definecolor{sgyel}{HTML}{D9A400}
+\definecolor{sgorange}{HTML}{C66B18}
+\definecolor{kraft}{HTML}{c9a26b}     % 초대장 카드(크라프트지)
+\definecolor{kraftdk}{HTML}{a07c4a}
+\definecolor{kraftink}{HTML}{2a1d12}
+\pagecolor{bg}
+\color{fg}
+
+%% ---- 글꼴: 본문 Apple SD Gothic Neo(사이트의 한글 fallback), 디스플레이 Chakra Petch ----
+\setmainfont{Apple SD Gothic Neo}[BoldFont={Apple SD Gothic Neo Bold},
+  UprightFont={Apple SD Gothic Neo Regular}]
+\setsansfont{Apple SD Gothic Neo}[BoldFont={Apple SD Gothic Neo Bold},
+  UprightFont={Apple SD Gothic Neo Regular}]
+\setmainhangulfont{Apple SD Gothic Neo}[BoldFont={Apple SD Gothic Neo Bold},
+  UprightFont={Apple SD Gothic Neo Regular}]
+\setsanshangulfont{Apple SD Gothic Neo}[BoldFont={Apple SD Gothic Neo Bold},
+  UprightFont={Apple SD Gothic Neo Regular}]
+\newfontfamily\chakra{ChakraPetch}[Path=fonts/,Extension=.ttf,
+  UprightFont=*-Regular,BoldFont=*-Bold,ItalicFont=*-Italic,BoldItalicFont=*-BoldItalic]
+\newfontfamily\chakrasemi{ChakraPetch-SemiBold}[Path=fonts/,Extension=.ttf]
+
+%% build/ 그림은 경로를 붙여 부른다: XeTeX이 -output-directory 안의 파일을 이름만으로
+%% 찾으면 존재 검사는 통과하지만 그림 로더가 열지 못한다.
+\graphicspath{{../figures/}{sample/}}
+
+%% ---- 크기 (1~1.5 m에서 읽히도록 본문 25pt 이상) --------------------------------
+\newcommand{\fsz}[2]{\fontsize{#1}{#2}\selectfont}
+\definecolor{sggreen}{HTML}{23856C}
+\definecolor{sgpurple}{HTML}{8658A5}
+\definecolor{rope}{HTML}{c9a46a}
+\definecolor{ropedk}{HTML}{7a5a2c}
+\definecolor{doorlight}{HTML}{f6e7b8}
+%% ---- 상금 돼지저금통: 매달린 유리 저금통(극중 상금함), 06 위 줄다리기 장면에 쓴다 -----------------
+%% \piggy{(몸 중심)}{배율}: 단위 1 = 1in x 배율. 줄은 몸 위 고리에서 위로 #3 in 만큼.
+\definecolor{glass}{HTML}{2c3a40}
+\definecolor{glassln}{HTML}{a9c4cf}
+\definecolor{bill}{HTML}{d9a43a}
+\definecolor{billdk}{HTML}{9c7323}
+\newcommand{\piggy}[3]{%
+  \begin{scope}[shift={#1},x=#2 in,y=#2 in,line join=round]
+    \draw[gunmetal,line width=5pt] (0,1.06) -- (0,1.06+#3/#2);         % 매단 줄
+    \draw[gunmetal,line width=5pt] (0,0.98) circle (0.09);               % 고리
+    \foreach \lx in {-0.82,-0.42,0.42,0.82}{%
+      \fill[glass,draw=glassln,line width=3pt,rounded corners=2pt] (\lx-0.13,-1.1) rectangle (\lx+0.13,-0.6);}
+    \fill[glass] (0,0) ellipse (1.4 and 0.97);
+    \begin{scope}
+      \clip (0,0) ellipse (1.4 and 0.97);
+      \fill[bill] (-1.5,-1.0) -- (-1.5,0.05) .. controls (-0.8,0.25) and (-0.2,-0.05) .. (0.4,0.18)
+        .. controls (0.9,0.36) and (1.2,0.1) .. (1.5,0.2) -- (1.5,-1.0) -- cycle;   % 지폐 더미
+      \foreach \bx/\by/\ba in {-0.9/-0.25/12,-0.25/-0.45/-8,0.45/-0.2/18,0.95/-0.55/-14,-0.6/-0.7/4,0.2/-0.78/9}{%
+        \draw[billdk,line width=2.5pt,rotate around={\ba:(\bx,\by)}] (\bx-0.32,\by-0.15) rectangle (\bx+0.32,\by+0.15);}
+    \end{scope}
+    \draw[glassln,line width=4.5pt] (0,0) ellipse (1.4 and 0.97);
+    \fill[glass,draw=glassln,line width=4pt] (1.36,0.08) ellipse (0.17 and 0.27);   % 코
+    \fill[glassln] (1.33,0.17) circle (0.035) (1.33,-0.01) circle (0.035);
+    \fill[glass,draw=glassln,line width=4pt] (0.55,0.86) -- (0.82,1.2) -- (0.98,0.7) -- cycle;   % 귀
+    \fill[fg] (0.98,0.34) circle (0.055);                                                       % 눈
+    \draw[glassln,line width=4pt,line cap=round] (-1.38,0.12) .. controls (-1.65,0.2) and (-1.62,0.45) .. (-1.47,0.42)
+      .. controls (-1.34,0.4) and (-1.42,0.22) .. (-1.6,0.3);                                    % 꼬리
+    \fill[gundark,rounded corners=2pt] (-0.32,0.86) rectangle (0.18,0.95);                      % 동전 구멍
+    \draw[white,line width=5pt,line cap=round] (-0.95,0.5) .. controls (-0.7,0.72) and (-0.4,0.8) .. (-0.1,0.82);  % 유리 반사
+  \end{scope}}
+
+%% 트레이닝복 판 줄다리기(포스터 \tugwar와 같은 기하, 단위 1 = 1in). 네모 로봇 대신 pull/walk 스프라이트.
+%% 스프라이트 손 위치(실측): pull 그림 폭의 0.69~0.89, 높이의 0.35 → 줄 높이 = 발판 + 0.35 x 높이.
+\input{figs/tracksuit/sprites/meta.tex}
+\newcommand{\pullH}{1.8}
+\newcommand{\ropeY}{\fpeval{1.5+0.35*\pullH}}
+\newcommand{\pullW}{\fpeval{\pullH*\csname sw@pull_blue\endcsname/\csname sh@pull_blue\endcsname}}
+\begin{document}
+\begin{tikzpicture}[x=1in,y=1in,line join=round,line cap=round]
+  \useasboundingbox (-5.1,-0.05) rectangle (4.95,5.1);
+  %% 발판(기둥 둘) — 오른쪽 끝 너머는 낭떠러지
+  \fill[gunmetal!55!bg] (-4.55,0) rectangle (-4.3,1.3) (1.85,0) rectangle (2.1,1.3);
+  \fill[gunmetal] (-4.95,1.3) rectangle (2.35,1.5);
+  \draw[gunmetal!60!white,line width=2.5pt] (-4.95,1.5) -- (2.35,1.5);
+  %% EXIT 문(왼쪽 끝)
+  \fill[doorlight] (-4.85,1.5) rectangle (-4.2,2.65);
+  \filldraw[draw=gundark,fill=gunmetal,line width=2.5pt] (-4.2,1.5) -- (-3.95,1.42) -- (-3.95,2.73) -- (-4.2,2.65) -- cycle;
+  \draw[gundark,line width=4pt] (-4.85,1.5) -- (-4.85,2.65) -- (-4.2,2.65) -- (-4.2,1.5);
+  \node[fill=sggreen,text=white,rounded corners=3pt,inner sep=0.05in,
+    font=\chakra\bfseries\fsz{20}{20}] at (-4.4,2.98) {EXIT};
+  %% 줄: D가 놓은 끝은 바닥에 늘어지고, 발판 끝을 넘어 벌금 덩어리로 내려간다(스프라이트 뒤)
+  \foreach \c/\w in {ropedk/0.11,rope/0.07}
+    \draw[\c,line width=\w in] (-3.0,1.55) .. controls (-2.8,1.56) .. (-2.6,\ropeY) -- (2.2,\ropeY)
+      .. controls (2.5,\ropeY) and (2.62,1.7) .. (2.65,1.4) -- (2.65,1.0);
+  %% D: 줄을 놓고 문으로 걸어 나간다
+  \node[inner sep=0pt,anchor=south] at (-3.45,1.5)
+    {\includegraphics[height=\fpeval{1.05*\pullH}in]{figs/tracksuit/sprites/walkL_purple.png}};
+  \node[text=fg,font=\chakra\bfseries\fsz{22}{22}] at (-3.45,3.75) {D};
+  %% 남은 셋: 뒤로 젖혀 줄을 당긴다. 머리 위에는 1인당 벌금 6,000 -> 8,000
+  \foreach \bx/\bc/\bn in {-2.1/green/C,-0.6/orange/B,0.9/blue/A}{%
+    \node[inner sep=0pt,anchor=south west] at (\bx-0.79*\pullW+0.45,1.5)
+      {\includegraphics[height=\pullH in]{figs/tracksuit/sprites/pull_\bc.png}};
+    \node[text=textdim,font=\chakra\bfseries\fsz{17}{17}] (old\bn) at (\bx-0.2,3.92) {6,000};
+    \draw[danger,line width=2.5pt] (old\bn.west) -- (old\bn.east);
+    \node[fill=danger,text=white,rounded corners=3pt,inner sep=0.045in,
+      font=\chakra\bfseries\fsz{21}{21}] at (\bx-0.2,3.5) {$-$8,000};
+  }
+  %% 매달린 오답 벌금
+  \fill[accent,rounded corners=4pt] (2.0,0.12) rectangle (3.3,1.0);
+  \node[text=white,font=\chakra\bfseries\fsz{27}{27}] at (2.65,0.56) {24,000};
+  \fill[white] (3.3,1.0) circle (0.2);
+  \draw[danger,line width=3.5pt] (3.22,0.92) -- (3.38,1.08) (3.22,1.08) -- (3.38,0.92);
+  %% 상금 돼지저금통
+  \piggy{(2.65,4.25)}{0.6}{0.75in}
+\end{tikzpicture}
+\end{document}

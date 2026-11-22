@@ -1,0 +1,10 @@
+Use the built-in image_gen tool (not code, not SVG) to generate ONE image, then copy the final PNG to ./poses/walk_v1.png (relative to the current directory). Do not edit or create any other file.
+
+Use case: illustration-story (pose sheet for an existing character)
+Input images: Image 1 = THE character model. Keep it IDENTICAL: same rounded-square robot head with blue outline (#1768B3), light-blue tint ring, white screen face with two round navy dot eyes, single antenna with ball; same teal-green zip track jacket and pants (#218D7D) with white stripes and white collar trim, dark navy outlines, blue round mitt hands, white sneakers; same blank white chest patch (keep it blank, no number); same line weight and flat colours.
+Subject: that same robot contestant, seen in side view walking to the RIGHT, mid-stride, arms swinging, body facing the direction of travel, head turned to the right.
+Expression on the screen face: calm, neutral (dot eyes, flat small mouth).
+Style/medium: flat vector illustration exactly like Image 1. Solid flat colours, clean thick outlines. NO gradients, NO shading, NO glow, NO texture, NO 3D look.
+Composition: single character, whole body visible with a small margin, transparent background (real alpha). No floor, no shadow, no scene, no text, no other characters.
+Props: none.
+Avoid: changing the head shape or colours, human features, extra limbs, logos, numbers, text, pink guard costume, weapons.

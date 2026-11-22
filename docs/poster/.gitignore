@@ -1,0 +1,16 @@
+# Local build / preview artifacts (Overleaf compiles from source).
+*.aux
+*.log
+*.nav
+*.out
+*.snm
+*.toc
+missfont.log
+dist/
+# Local verification renders (not needed for the Overleaf build).
+full-*.png
+verify-*.png
+hdr*-1.png
+# Compiled PDFs — Overleaf rebuilds these itself.
+poster-en.pdf
+poster-ko.pdf

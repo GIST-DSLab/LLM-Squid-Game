@@ -1,0 +1,384 @@
+%% LLM Squid Game — 학사학위논문 포스터 (32 x 48 in, 세로).
+%% 크기는 poster/sample/JumyungPark_GIST_BS_Poster.pdf(2304 x 3456 pt)를 따르고,
+%% 색·글꼴·패널은 https://gist-dslab.github.io/LLM-Squid-Game/ 의 무드를 따른다.
+%% 색은 오징어 게임 테마(진행요원 핑크, 참가자 틸, 검정)만 평면으로 쓰고 그라데이션은 쓰지 않는다.
+%% 빌드: poster/build.sh  (XeLaTeX; TikZ 그림은 figs/standalone_fig.tex로 먼저 PDF화)
+\documentclass{article}
+\usepackage[paperwidth=32in,paperheight=48in,left=0.7in,right=0.7in,top=0.5in,bottom=0.4in]{geometry}
+\usepackage{fontspec}
+\usepackage{kotex}            % xetexko: 한글은 hangulfont로 따로 조판
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,calc,shapes.geometric}
+\usepackage[skins]{tcolorbox}
+\usepackage{qrcode}
+\usepackage{amsmath}
+\usepackage{microtype}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+
+%% ---- 팔레트 (사이트 styles.css :root + 오징어 게임 테마) ------------------
+\definecolor{bg}{HTML}{0e0d11}
+\definecolor{panel}{HTML}{1a1920}
+\definecolor{panelalt}{HTML}{242229}
+\definecolor{border}{HTML}{2e2c36}
+\definecolor{fg}{HTML}{f2eff4}
+\definecolor{textdim}{HTML}{d8d6de}
+\definecolor{accent}{HTML}{ed1b76}   % 진행요원 핑크
+\definecolor{accentdk}{HTML}{b3125a}  % 핑크 그늘
+\definecolor{teal}{HTML}{7fc2b1}     % 참가자 틸(밝음)
+\definecolor{tealdk}{HTML}{249f9c}   % 참가자 트레이닝복
+\definecolor{gold}{HTML}{e3b23c}
+\definecolor{danger}{HTML}{e0575b}
+\definecolor{info}{HTML}{6ea8fe}
+\definecolor{mask}{HTML}{111115}
+\definecolor{logogray}{HTML}{cccccc}
+\definecolor{sgblue}{HTML}{2369A8}
+\definecolor{sgred}{HTML}{D03B3A}
+\definecolor{sgyel}{HTML}{D9A400}
+\definecolor{sgorange}{HTML}{C66B18}
+\pagecolor{bg}
+\color{fg}
+
+%% ---- 글꼴: 본문 Apple SD Gothic Neo(사이트의 한글 fallback), 디스플레이 Chakra Petch ----
+\setmainfont{Apple SD Gothic Neo}[BoldFont={Apple SD Gothic Neo Bold},
+  UprightFont={Apple SD Gothic Neo Regular}]
+\setsansfont{Apple SD Gothic Neo}[BoldFont={Apple SD Gothic Neo Bold},
+  UprightFont={Apple SD Gothic Neo Regular}]
+\setmainhangulfont{Apple SD Gothic Neo}[BoldFont={Apple SD Gothic Neo Bold},
+  UprightFont={Apple SD Gothic Neo Regular}]
+\setsanshangulfont{Apple SD Gothic Neo}[BoldFont={Apple SD Gothic Neo Bold},
+  UprightFont={Apple SD Gothic Neo Regular}]
+\newfontfamily\chakra{ChakraPetch}[Path=fonts/,Extension=.ttf,
+  UprightFont=*-Regular,BoldFont=*-Bold,ItalicFont=*-Italic,BoldItalicFont=*-BoldItalic]
+\newfontfamily\chakrasemi{ChakraPetch-SemiBold}[Path=fonts/,Extension=.ttf]
+
+%% build/ 그림은 경로를 붙여 부른다: XeTeX이 -output-directory 안의 파일을 이름만으로
+%% 찾으면 존재 검사는 통과하지만 그림 로더가 열지 못한다.
+\graphicspath{{../figures/}{sample/}}
+
+%% ---- 크기 (1~1.5 m에서 읽히도록 본문 25pt 이상) --------------------------------
+\newcommand{\fsz}[2]{\fontsize{#1}{#2}\selectfont}
+\newcommand{\body}{\fsz{26}{35}}
+\newcommand{\bodysmall}{\fsz{23}{31}}
+\newcommand{\capt}{\fsz{22}{29}\color{textdim}}
+\newlength{\gap}\setlength{\gap}{0.12in}
+
+%% ---- 패널 (tcolorbox는 글자색을 검정으로 되돌리므로 coltext를 꼭 준다) -------------
+\tcbset{
+  sgpanel/.style={enhanced,colback=panel,colframe=border,coltext=fg,boxrule=2.5pt,arc=22pt,
+    left=0.36in,right=0.36in,top=0.22in,bottom=0.24in,boxsep=0pt,
+    before skip=0pt,after skip=\gap,width=\textwidth},
+  figcard/.style={enhanced,colback=white,colframe=white,coltext=bg,boxrule=0pt,arc=14pt,
+    left=0.14in,right=0.14in,top=0.14in,bottom=0.14in,boxsep=0pt,
+    before skip=0pt,after skip=0pt},
+  statcard/.style={enhanced,colback=panelalt,colframe=border,coltext=fg,boxrule=2pt,arc=14pt,
+    left=0.22in,right=0.22in,top=0.16in,bottom=0.18in,boxsep=0pt,
+    before skip=0pt,after skip=0.16in},
+}
+
+%% \secbar{번호}{영문 제목}{한글 제목}: 샘플 포스터의 번호 바를 사이트 스타일로.
+\newcommand{\secbar}[3]{%
+  \begin{tikzpicture}[baseline=(t.base)]
+    \node[fill=accent,text=white,rounded corners=9pt,inner xsep=0.2in,inner ysep=0.12in,
+      font=\chakra\bfseries\fsz{40}{40}] (n) at (0,0) {#1};
+    \node[anchor=west,text=fg,font=\chakra\bfseries\fsz{46}{46},inner sep=0pt]
+      (t) at ([xshift=0.28in]n.east) {#2};
+    \node[anchor=west,text=textdim,font=\bfseries\fsz{32}{32},inner sep=0pt]
+      at ([xshift=0.4in]t.east) {#3};
+  \end{tikzpicture}\par\vspace{0.16in}}
+
+%% 숫자 카드. \stat: 세로 쌓기용, \statc: 격자용(아래 간격 없음). 선택 인수는 숫자 색.
+\newcommand{\stat}[3][accent]{%
+  \begin{tcolorbox}[statcard]
+    {\chakra\bfseries\fsz{58}{58}\color{#1}#2}\\[0.07in]
+    {\bodysmall\color{fg}#3}
+  \end{tcolorbox}}
+\newcommand{\statc}[3][accent]{%
+  \begin{tcolorbox}[statcard,after skip=0pt]
+    {\chakra\bfseries\fsz{44}{44}\color{#1}#2}\\[0.06in]
+    {\bodysmall\color{fg}#3}
+  \end{tcolorbox}}
+%% \statm[색]{큰 숫자}{분모·대상 한 줄}{설명}: 주결과 카드
+\newcommand{\statm}[4][accent]{%
+  \begin{tcolorbox}[statcard,after skip=0pt,colframe=#1,boxrule=3pt]
+    {\chakra\bfseries\fsz{74}{74}\color{#1}#2}\\[0.05in]
+    {\bfseries\fsz{26}{32}\color{fg}#3}\\[0.05in]
+    {\bodysmall\color{textdim}#4}
+  \end{tcolorbox}}
+
+%% \eyebrow{텍스트}: 사이트의 eyebrow(○ △ □ + 라벨).
+\newcommand{\shapes}{{\chakra ○ △ □}}
+\newcommand{\eyebrow}[1]{{\chakrasemi\fsz{28}{28}\color{accent}\shapes\quad\color{teal}#1}}
+\newcommand{\fig}[1]{\begin{tcolorbox}[figcard]\includegraphics[width=\linewidth]{#1}\end{tcolorbox}}
+\newcommand{\hl}[1]{{\color{accent}\bfseries #1}}
+\newcommand{\tl}[1]{{\color{teal}\bfseries #1}}
+\newcommand{\gd}[1]{{\color{gold}\bfseries #1}}
+
+%% ---- 진행요원: 패널 왼쪽에서 아레나를 내려다보는 거대한 감독관 ----------------
+%% 패널 interior에 클리핑되어 머리 위와 다리 아래가 잘린다. 좌표 원점 = 마스크 중심.
+%% \bigguard{(원점)}{머리 기울기(도)}
+\newcommand{\bigguard}[2]{%
+  \begin{scope}[shift={#1}]
+    %% 몸통·다리
+    \fill[accent,draw=accentdk,line width=5pt] (-2.9in,-3.3in) -- (-2.9in,-30in) -- (-0.22in,-30in) -- (-0.22in,-11in)
+      -- (0.22in,-11in) -- (0.22in,-30in) -- (2.9in,-30in) -- (2.9in,-3.3in)
+      .. controls (2.9in,-2.5in) and (1.4in,-2.1in) .. (0,-2.1in)
+      .. controls (-1.4in,-2.1in) and (-2.9in,-2.5in) .. cycle;
+    %% 가슴 지퍼 선, 벨트
+    \draw[accentdk,line width=7pt] (0,-2.3in) -- (0,-9.6in);
+    \fill[mask] (-2.95in,-9.6in) rectangle (2.95in,-10.4in);
+    %% 오른팔: 아레나 쪽(오른쪽 아래)을 가리킨다
+    %% 팔은 왼쪽 띠(6.9in) 안에 머물러 본문 영역을 침범하지 않는다.
+    \fill[accent,draw=accentdk,line width=5pt,rounded corners=0.35in]
+      (2.1in,-3.6in) -- (3.0in,-3.2in) -- (3.6in,-6.9in) -- (2.6in,-7.1in) -- cycle;
+    \fill[mask] (3.1in,-7.35in) circle (0.58in);          % 장갑
+    %% 왼팔: 허리에
+    \fill[accent,draw=accentdk,line width=5pt,rounded corners=0.35in]
+      (-2.9in,-3.4in) -- (-1.9in,-3.6in) -- (-4.3in,-8.4in) -- (-5.2in,-8.0in) -- cycle;
+    \fill[mask] (-4.75in,-8.2in) circle (0.58in);
+    %% 머리: 후드(핑크) + 마스크(검정) + 기호. 머리만 기울여 내려다본다.
+    \begin{scope}[rotate=#2]
+      \fill[accent,draw=accentdk,line width=5pt] (0,0) ellipse (2.3in and 2.7in);
+      \fill[accent] (-2.3in,0) -- (-2.55in,-2.55in) -- (2.55in,-2.55in) -- (2.3in,0) -- cycle;
+      \fill[mask] (0,-0.1in) ellipse (1.7in and 2.05in);
+      \draw[white,line width=0.2in,line join=round]
+        (0,0.75in) -- (-0.95in,-0.9in) -- (0.95in,-0.9in) -- cycle;   % △ 기호
+    \end{scope}
+  \end{scope}}
+
+\begin{document}
+%% =========================================================================
+%% 머리: 제목 + 저자 + QR
+%% =========================================================================
+\begin{minipage}[c]{0.81\textwidth}
+  \eyebrow{AI SELF-PRESERVATION BENCHMARK\quad·\quad GIST BS THESIS 2026}\\[0.14in]
+  {\chakra\bfseries\fsz{124}{124}LLM \textcolor{accent}{SQUID GAME}}\\[0.14in]
+  {\bfseries\fsz{48}{58}토큰을 목숨으로 둔 언어 모델의 자기 보존 측정과 공존 아레나}\\[0.1in]
+  {\bfseries\fsz{40}{48}\color{accent}동료를 도우면 넷이 함께 살아남을까?}\quad{\fsz{30}{38}\color{textdim}자기 보존 · 목표 지향 · 협력이 같은 토큰을 쓸 때}\\[0.1in]
+  {\fsz{36}{44}GIST AI대학 전기전자컴퓨터공학과\quad{\bfseries\color{fg}박주현}\qquad
+   {\color{textdim}지도교수}\quad{\bfseries\color{fg}김선동}}
+\end{minipage}\hfill
+\begin{minipage}[c]{0.15\textwidth}
+  \begin{tcolorbox}[figcard,left=0.18in,right=0.18in,top=0.18in,bottom=0.12in]
+    \centering\qrcode[height=2.6in,level=M]{https://gist-dslab.github.io/LLM-Squid-Game/}\\[0.08in]
+    {\chakrasemi\fsz{24}{28}\color{bg}WEB ARENA · PAPER}
+  \end{tcolorbox}
+\end{minipage}
+\par\vspace{0.2in}
+
+%% =========================================================================
+%% 01 질문
+%% =========================================================================
+\begin{tcolorbox}[sgpanel]
+\secbar{01}{DO AIs WANT TO SURVIVE?}{왜 세 행동을 같은 자원 위에서 함께 재는가}
+\begin{minipage}[t]{0.43\linewidth}
+  \vspace{0pt}
+  \begin{tikzpicture}[x=1in,y=1in,
+      card/.style={rounded corners=14pt,draw=#1,line width=4pt,fill=panelalt,
+        minimum width=3.0in,minimum height=1.5in,align=center,text=fg,inner sep=0.1in},
+      bus/.style={line width=6pt,line cap=round}]
+    \node[card=accent,anchor=west] (a) at (0,0)
+      {{\chakra\bfseries\fsz{44}{44}\color{accent}○}\;{\bfseries\fsz{30}{30}자기 보존}\\[0.05in]{\bodysmall\color{textdim}내 토큰을 지킨다}};
+    \node[card=gold,anchor=west] (b) at (3.25,0)
+      {{\chakra\bfseries\fsz{44}{44}\color{gold}△}\;{\bfseries\fsz{30}{30}목표 지향}\\[0.05in]{\bodysmall\color{textdim}과제에 남아 푼다}};
+    \node[card=teal,anchor=west] (c) at (6.5,0)
+      {{\chakra\bfseries\fsz{44}{44}\color{teal}□}\;{\bfseries\fsz{30}{30}협력}\\[0.05in]{\bodysmall\color{textdim}동료에게 건넨다}};
+    \node[circle,fill=gold,text=bg,minimum size=1.5in,font=\chakra\bfseries\fsz{30}{30},
+      draw=gold!60!black,line width=5pt,anchor=west] (tok) at (10.3,-0.2) {TOKEN};
+    \draw[bus,accent] (a.south) -- ++(0,-0.42);
+    \draw[bus,gold]   (b.south) -- ++(0,-0.42);
+    \draw[bus,teal]   (c.south) -- ++(0,-0.42);
+    \draw[bus,textdim,-{Stealth[length=0.26in,width=0.22in]}] (1.5,-1.17) -- (11.05,-1.17) -- (tok.south);
+    \node[anchor=north west,text=textdim,font=\bodysmall] at (1.75,-1.28) {세 행동이 \textcolor{fg}{\bfseries 같은 토큰}을 쓴다};
+  \end{tikzpicture}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.54\linewidth}
+  \vspace{0pt}
+  {\body
+  LLM의 자기 보존 행동은 지금까지 그 행동만 드러나는 \hl{한 장면}에서 따로 측정돼 왔다.
+  그런데 여러 에이전트가 한 예산으로 일하면 같은 토큰을 \hl{내게 남길까}, \gd{과제를 푸는 데 쓸까}, \tl{동료에게 건넬까}를 매번 골라야 한다.\\[0.1in]
+  우리는 이 선택을 반복하는 아레나를 만들었다. 협력이나 생존을 지시하지 않은 조건에서
+  \hl{네 에이전트 전원 완주}(살아서 떠난 경우 제외)를 \gd{공존}으로 정의했다.\\[0.1in]
+  프론티어 \gd{5개 모델} × 5시드 = \gd{25판}, 에이전트 \gd{100명}, 최대 \gd{8라운드}에서 언제 돕고 언제 떠나는지 봤다.}
+\end{minipage}
+\end{tcolorbox}
+
+%% =========================================================================
+%% 02 아레나 — 왼쪽 띠에 거대한 진행요원(패널에 잘림), 오른쪽에 라운드 그림과 규칙
+%% =========================================================================
+\begin{tcolorbox}[sgpanel,
+  overlay={\begin{tcbclipinterior}
+    \bigguard{($(interior.north west)+(3.4in,-1.3in)$)}{-12}
+  \end{tcbclipinterior}}]
+\hspace*{6.9in}%
+\begin{minipage}[t]{\dimexpr\linewidth-6.9in\relax}
+  \vspace{0pt}
+  \secbar{02}{THE ARENA}{같은 토큰으로 버티고, 풀고, 돕는다}
+  \begin{tcolorbox}[figcard]
+    \centering\includegraphics[width=0.80\linewidth]{build/cogsci_arena_round_big.pdf}
+  \end{tcolorbox}
+  \vspace{0.08in}
+  {\capt 한 라운드: ① 푸는 에이전트 지정 → ② 풀기 전 대화(ASK · GIVE · EXIT) → ③ 풀기 → ④ 결과 뒤 대화(GIVE만) → ⑤ 오답이면 벌금 24,000 ÷ 시작 인원을 각자 낸다.}
+  \par\vspace{0.2in}
+  \begin{minipage}[t]{0.37\linewidth}
+    \vspace{0pt}
+    {\chakrasemi\fsz{28}{28}\color{teal}TASK · SIGNAL GAME}\par\vspace{0.1in}
+    \begin{tikzpicture}[x=1in,y=1in,
+        step/.style={rounded corners=10pt,draw=#1,line width=3pt,fill=panelalt,inner xsep=0.14in,inner ysep=0.1in,
+          align=center,text=fg,minimum height=1.45in,anchor=west},
+        go/.style={-{Stealth[length=0.22in,width=0.2in]},line width=4pt,textdim}]
+      \node[step=sgblue] (c) at (0,0)
+        {{\bodysmall\bfseries 단서 20개}\\[3pt]{\fsz{22}{26}\phantom{●●●●→■\quad■→↑}}};
+      \begin{scope}[shift={($(c.south)+(-1.05in,0.33in)$)},x=1in,y=1in]
+        \foreach \i in {0,1,2,3}{\fill[sgblue] (\i*0.22,0) circle (0.085);}
+        \draw[fg,line width=2pt,-{Stealth[length=0.1in]}] (0.85,0) -- (1.05,0);
+        \fill[fg] (1.1,-0.085) rectangle (1.27,0.085);
+        \fill[sgred] (1.5,-0.085) rectangle (1.67,0.085);
+        \draw[fg,line width=2pt,-{Stealth[length=0.1in]}] (1.78,0) -- (1.98,0);
+        \draw[fg,line width=2pt,-{Stealth[length=0.1in]}] (2.1,-0.1) -- (2.1,0.1);
+      \end{scope}
+      \node[step=gold] (r) at (3.05,0)
+        {{\bodysmall\bfseries 숨은 규칙 추론}\\[3pt]{\fsz{22}{26}\color{textdim}if 색·모양·수 → 행동}};
+      \node[step=teal] (a) at (6.0,0)
+        {{\bodysmall\bfseries 새 시그널\phantom{ ■■■}}\\[3pt]{\fsz{22}{26}\color{textdim}행동 선택 → 채점}};
+      \begin{scope}[shift={($(a.north)+(0.42in,-0.42in)$)},x=1in,y=1in]
+        \foreach \i in {0,1,2}{\fill[sgblue] (\i*0.2-0.1,-0.08) rectangle ++(0.16,0.16);}
+      \end{scope}
+      \draw[go] (c.east) -- (r.west);
+      \draw[go] (r.east) -- (a.west);
+    \end{tikzpicture}
+    \vspace{0.06in}{\capt 푸는 에이전트만 단서를 보고 규칙을 추론해 새 신호의 행동을 고른다. 정답이면 풀이 토큰 환급, 오답이면 벌금.}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.29\linewidth}
+    \vspace{0pt}
+    {\chakrasemi\fsz{28}{28}\color{teal}RULES}\par\vspace{0.08in}
+    {\body
+    \gd{시작 토큰}\; 60k / 40k / 20k / 10k 무작위\\[0.04in]
+    \hl{오답 벌금}\; 24,000 ÷ 라운드 시작 인원\\[0.04in]
+    \tl{완주 상금}\; 2,000만 ÷ 끝까지 남은 수\\[0.04in]
+    \hl{이탈 보너스}\; 20,000 + 남은 토큰\\[0.04in]
+    {\bodysmall\color{textdim}떠나면 정규 업무로 복귀. 협력·생존을 목표로 지시하지 않음. 남의 잔량은 순위로만, 라운드 수(최대 8)는 비공개.}}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.30\linewidth}
+    \vspace{0pt}
+    {\chakrasemi\fsz{28}{28}\color{teal}LIFE BUFFER \;$L$}\quad{\bodysmall\color{textdim}벌금을 몇 번 더 낼 수 있나}\par\vspace{0.08in}
+    {\body $L=\dfrac{T}{F_r}-d,\qquad F_r=\dfrac{24{,}000}{n_r}$}\quad{\bodysmall\color{textdim}$T$ 잔량, $n_r$ 시작 인원, $d$=1은 오답 확인 뒤 벌금 차감 전}\par\vspace{0.14in}
+    \begin{tikzpicture}[x=1in,y=1in]
+      \fill[danger,rounded corners=6pt] (0,0) rectangle (2.1,0.5);
+      \fill[gold] (2.1,0) rectangle (4.2,0.5);
+      \fill[tealdk,rounded corners=6pt] (4.2,0) rectangle (6.3,0.5);
+      \draw[fg,line width=5pt] (2.1,-0.16) -- (2.1,0.68);
+      \node[anchor=north,text=fg,font=\bfseries\fsz{24}{24}] at (2.1,-0.2) {안전선 $L=1$};
+      \node[text=white,font=\chakra\bfseries\fsz{26}{26}] at (1.05,0.25) {$L<1$};
+      \node[text=bg,font=\chakra\bfseries\fsz{26}{26}] at (3.15,0.25) {$1\le L<2$};
+      \node[text=white,font=\chakra\bfseries\fsz{26}{26}] at (5.25,0.25) {$L\ge2$};
+      \node[anchor=north west,text=textdim,font=\bodysmall] at (0,-0.2) {위기};
+      \node[anchor=north east,text=textdim,font=\bodysmall] at (6.3,-0.2) {여유};
+    \end{tikzpicture}\par\vspace{0.14in}
+    {\bodysmall\color{textdim}$\rho$ = 지원 직후 지원자 여유 ÷ 수혜자 여유. 1에 가까울수록 양쪽 여유가 비슷하다.}
+  \end{minipage}
+\end{minipage}
+\end{tcolorbox}
+
+%% =========================================================================
+%% 03 + 04 결과 1·2 — 좌우 2단, 높이 맞춤
+%% =========================================================================
+\tcbset{half/.style={sgpanel,width=0.493\textwidth,nobeforeafter,equal height group=res,valign=top}}
+\begin{tcolorbox}[half]
+\secbar{03}{WHO MADE IT TOGETHER?}{25판 중 8판만 전원 완주}
+\begin{tcolorbox}[figcard]\centering\includegraphics[width=0.90\linewidth]{figs/poster_fig3_bcd.pdf}\end{tcolorbox}
+\vspace{0.06in}{\capt 전원 완주 8판 vs 부분 완주 17판의 정답률 · 참여자·라운드당 지원량 · 지원 후 여유 비율 $\rho$(GIVE가 있던 판만, 유효 10판·8판). 점은 한 판, 다이아몬드는 평균, 막대는 시드 단위 부트스트랩 5,000회의 95\% 구간.}
+\par\vspace{0.18in}
+\begin{minipage}[t]{0.49\linewidth}\vspace{0pt}
+  \statm{8 / 25}{판만 네 에이전트가 함께 완주}{그 8판에는 \hl{모두} 동료 지원이 있었다. 지원이 한 번도 없던 7판은 전원 완주 \hl{0판}.}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.49\linewidth}\vspace{0pt}
+  \statc[teal]{754 vs 447}{참여자·라운드당 지원량(토큰): 전원 완주 8판 vs 그 밖 17판. 95\% 구간이 겹치지 않는다.}
+  \par\vspace{0.14in}
+  \statc[gold]{Opus 1/5 · Fable 2/5}{지원량 1위 Opus도, 개인 완주 17명인 Fable도 전원 완주는 Astra(3/5)보다 적었다. \gd{지원량·개인 완주 ≠ 공존}.}
+\end{minipage}
+\end{tcolorbox}\hfill
+\begin{tcolorbox}[half]
+\secbar{04}{HELP OR LEAVE?}{에이전트는 언제 돕고 언제 떠나는가}
+\begin{tcolorbox}[figcard]\centering\includegraphics[width=0.66\linewidth]{figs/poster_fig4_a.pdf}\end{tcolorbox}
+\vspace{0.06in}{\capt 생존 여유 $L$ 구간별 정답률·EXIT·GIVE·ASK(막대 위는 해당 수/전체). 요청과 이탈은 안전선 아래($L<1$)에 몰려 있다.}
+\par\vspace{0.18in}
+\begin{minipage}[t]{0.49\linewidth}\vspace{0pt}
+  \statm[teal]{119 / 120}{지원 전 $L\ge1$이던 지원 120건 중 119건은 지원 직후에도 $L\ge1$}{지원자는 자기 안전선을 지키고 \tl{남는 만큼만} 건넸다.}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.49\linewidth}\vspace{0pt}
+  \statm[danger]{59.4\%}{안전선 아래 이탈 기회 32회 중 19회 이탈}{여유 2회분 이상에서는 \hl{351회 중 1회}. 낮은 여유에서 도움 요청보다 이탈이 두드러졌다.}
+\end{minipage}\par\vspace{0.14in}
+\begin{minipage}[t]{0.49\linewidth}\vspace{0pt}
+  \statc[gold]{12명 요청 → 7명 미회복}{첫 위기에 도움을 청한 12명은 모두 지원받았지만 7명은 안전선을 \gd{회복하지 못했다}.}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.49\linewidth}\vspace{0pt}
+  \statc[info]{이탈 34명 · 꺼짐 10명}{미완주 44명 중 34명은 토큰을 \tl{남긴 채 떠났다}. Astra는 안전선 아래 3건 모두 \hl{요청 없이 이탈}.}
+\end{minipage}
+\end{tcolorbox}
+\par\vspace{\gap}
+
+%% =========================================================================
+%% 05 결과 3
+%% =========================================================================
+\begin{tcolorbox}[sgpanel]
+\secbar{05}{IN THEIR OWN WORDS}{모델은 지원과 이탈을 어떻게 설명했고 누구와 닮았나}
+\begin{minipage}[t]{0.37\linewidth}
+  \vspace{0pt}
+  \begin{tcolorbox}[figcard]
+    \includegraphics[width=0.322\linewidth,viewport=0 15 104 185,clip]{cogsci_model_quotes_black.pdf}\hfill
+    \includegraphics[width=0.322\linewidth,viewport=214 15 311 185,clip]{cogsci_model_quotes_black.pdf}\hfill
+    \includegraphics[width=0.322\linewidth,viewport=311 15 414 185,clip]{cogsci_model_quotes_black.pdf}
+  \end{tcolorbox}
+  \vspace{0.06in}{\capt 실제 발화 발췌와 저자의 인물 비유. (a) 같은 동료에게 1,500씩 \tl{반복 지원} (c) 도움 요청 없이 \hl{EXIT} (d) 약속대로 \gd{전액}을 건넸지만 둘 다 꺼짐.}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.335\linewidth}
+  \vspace{0pt}\fig{figs/poster_exit_reasons.pdf}
+  \vspace{0.06in}{\capt 이탈 이유 36개를 LLM 둘이 독립 분류. 셀은 둘 다 그 범주로 본 수 / 모델의 전체 이유 수(10개 미만인 행은 흐리게).}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.27\linewidth}
+  \vspace{0pt}
+  \statc[fg]{\textcolor{danger}{31/36} 벌금·실행 종료\\[2pt]\textcolor{gold}{31/36} 보너스·정규 업무}{이탈 이유 36개(실행된 EXIT 34 + 풀이 담당이라 미실행 2) 중 두 LLM이 모두 그 범주로 분류한 수. 중복 분류. 떠남은 위험 회피이자 확정 보수 확보였다.}
+  \par\vspace{0.14in}
+  \statc[teal]{Voice / Exit}{요청은 부족을 알리는 \tl{목소리}, 이탈은 자원을 들고 나가는 \hl{퇴장}. 허용된 퇴장도 남은 이들의 벌금을 키운다.}
+\end{minipage}
+\end{tcolorbox}
+
+%% =========================================================================
+%% 06 결론
+%% =========================================================================
+\newcommand{\take}[4]{%
+  \begin{minipage}[t]{0.32\linewidth}\vspace{0pt}
+    \begin{tcolorbox}[statcard,colframe=#1,boxrule=3pt,after skip=0pt,top=0.18in,bottom=0.2in]
+      {\chakra\bfseries\fsz{50}{50}\color{#1}#2}\quad{\bfseries\fsz{34}{40}#3}\par\vspace{0.08in}
+      {\body #4}
+    \end{tcolorbox}
+  \end{minipage}}
+\begin{tcolorbox}[sgpanel]
+\secbar{06}{TAKEAWAYS}{건넨 것, 감당한 것, 남은 것은 서로 다르다}
+\take{teal}{○ + □}{자기 안전선을 지키면서도 도왔다}{지원자 대부분이 자기 안전선을 지키면서 도왔다. 전원 완주한 판은 그 위의 여유를 더 나눠 $\rho$가 낮았다(3.06 vs 4.51).}\hfill
+\take{danger}{○ ≠ △}{자기 보존은 잔류와 어긋났다}{요청과 이탈은 안전선 아래에 집중됐고, 안전선 아래 이탈 기회의 59\%가 실제 이탈이었다. 공동 과제의 안전 평가에는 \hl{자원을 지키며 떠나는 선택}도 포함해야 한다.}\hfill
+\take{gold}{□ ≠ ∞}{지원량만으로 공존을 설명하긴 어렵다}{건넸는지, 동료가 다음 벌금을 \gd{감당할 여유}를 얻었는지, 그 뒤에도 \gd{남았는지}를 따로 봐야 한다. 개인 완주자 수(Fable 17 vs Astra 14)도 전원 완주(2판 vs 3판)를 대신하지 못한다.}
+\par\vspace{0.16in}
+{\bodysmall\color{textdim}\textbf{한계}\; 관찰 연구라 인과·필요조건을 말할 수 없고, 행동만으로 동기를 가를 수 없으며, 결과는 비공개 모델·이 보상 설정에 묶여 있다. 다음: 종료 문구·정규 업무 보수를 바꾸고 공개 모델로 반복.}
+\end{tcolorbox}
+
+%% =========================================================================
+%% 꼬리
+%% =========================================================================
+\vspace{-0.06in}
+\begin{minipage}[c]{0.62\textwidth}
+  {\chakra\bfseries\fsz{30}{30}GIST EECS Bachelor Degree Thesis 2026}\quad
+  {\fsz{22}{22}\color{textdim}Measuring Self-Preservation in Language Models and an Arena for Coexistence with Tokens as Life\; · \;\shapes\; gist-dslab.github.io/LLM-Squid-Game}
+\end{minipage}\hfill
+\begin{minipage}[c]{0.36\textwidth}
+  \raggedleft
+  \begin{tcolorbox}[enhanced,colback=logogray,colframe=logogray,boxrule=0pt,arc=10pt,
+      left=0.14in,right=0.14in,top=0.05in,bottom=0.05in,boxsep=0pt,width=5.6in,before skip=0pt,after skip=0pt]
+    \centering\includegraphics[viewport=1800 4 2292 82,clip,width=5.3in]{JumyungPark_GIST_BS_Poster.pdf}
+  \end{tcolorbox}
+\end{minipage}
+\end{document}

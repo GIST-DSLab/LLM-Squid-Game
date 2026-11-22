@@ -1,0 +1,13 @@
+Use the built-in image_gen tool (not code, not SVG) to generate ONE image, then copy the final PNG to ./guard/base_guard_v1.png (relative to the current directory). Do not edit or create any other file.
+
+Use case: illustration-story (character model sheet asset)
+Asset type: a reusable character sprite for an academic poster with a near-black background (#0e0d11 / #242229 panels). It will stand next to the contestant in Image 1.
+Input images: Image 1 = STYLE reference only (an existing contestant sprite from the same poster). Match its drawing style exactly: same thick dark outline weight, same flat solid colours, same chibi proportions (head/hood about 40% of total height), same clean vector look, same white sneaker-like simplicity.
+Subject: ONE game guard (staff member of a survival game), full body, front view, standing straight, arms relaxed at sides.
+- Wears a hooded one-piece jumpsuit in hot pink (#ED1B76) with darker pink outlines/seams (#A8104F), the hood tight around the face, a vertical front zip line, a black belt.
+- Face is completely covered by a glossy-free flat black oval mask (#111115) filling the hood opening, with ONE thick white outlined triangle symbol (△, hollow, pointing up) centred on the mask. No eyes, no mouth, no human features visible.
+- Black gloves, black boots.
+Proportions: chibi like Image 1 — big hooded head, short body — so it reads at small size and clearly belongs to the same cast.
+Style/medium: flat vector illustration, clean thick outlines, solid flat colours only, NO gradients, NO soft shading, NO glow, NO texture, NO 3D render look.
+Composition: single character centred, whole body visible with margin, transparent background (real alpha), no floor shadow, no scene, no text.
+Avoid: robot screen face, antenna, tracksuit, teal colours, weapons, numbers, logos, extra symbols (only the single triangle), realistic human proportions.

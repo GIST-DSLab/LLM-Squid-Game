@@ -1,0 +1,81 @@
+%% 06 IN THEIR OWN WORDS를 트레이닝복 참가자로 다시 그린 판 (어두운 포스터 바탕용).
+%% 캐릭터만 image_gen 스프라이트(poses/*.png → sprites/)이고, 말풍선·동전·문·배터리·안전선·글자는 벡터.
+%% 인용문은 LLM-Squid-Game-DS-Lab/paper/cogsci2027/tools/fig5_quotes_20261029.py의 검증된 발췌 그대로.
+%% 말풍선 꼬리는 위의 모델 머리글을 가리킨다(말한 쪽은 모델, 아래 장면은 저자의 비유).
+%% 말한 모델의 캐릭터는 늘 파랑 머리(아레나의 A), 상대는 주황 머리(B).
+%% 빌드: figs/tracksuit에서 pdflatex -output-directory=build quotes_tracksuit.tex
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{kotex}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{calc,arrows.meta}
+\usepackage[active,tightpage]{preview}
+\PreviewEnvironment{tikzpicture}
+\setlength\PreviewBorder{0pt}
+\definecolor{sgblue}{HTML}{2369A8}
+\definecolor{sgorange}{HTML}{C66B18}
+\definecolor{sggreen}{HTML}{23856C}
+\definecolor{sgpurple}{HTML}{8658A5}
+\definecolor{sgastra}{HTML}{D03B3A}
+\definecolor{sggold}{HTML}{E0A526}
+\definecolor{sgoff}{HTML}{8A8790}
+\definecolor{bg}{HTML}{242229}
+\definecolor{fg}{HTML}{F2EFF4}
+\definecolor{muted}{HTML}{B9B4BF}
+\definecolor{bubble}{HTML}{34313B}
+\definecolor{anth}{HTML}{E8795A}
+\definecolor{pink}{HTML}{ED1B76}
+\definecolor{teal}{HTML}{7FC2B1}
+\pagecolor{bg}
+\hyphenpenalty=10000\exhyphenpenalty=10000  % 단어 중간 줄바꿈 금지
+\newcommand{\fs}[1]{\fontsize{#1}{\fpeval{#1*1.22}}\selectfont}
+
+%% 캐릭터: \pose[높이cm]{(발 가운데)}{파일}
+\newcommand{\pose}[3][3.2]{\node[inner sep=0pt,anchor=south] at #2 {\includegraphics[height=#1cm]{#3}};}
+%% Anthropic 별(12갈래, 끝이 둥근 획)
+\newcommand{\anthmark}[1]{\begin{scope}[shift={#1}]
+  \foreach \a in {0,30,...,330}\draw[anth,line width=2.1pt,line cap=round] (0,0)--(\a:.27);\end{scope}}
+\newcommand{\oaimark}[1]{\node[inner sep=0pt] at #1 {\includegraphics[height=.58cm]{ref/openai_white.png}};}
+%% 동전 더미 \coins{(x,y)}{개수}
+\newcommand{\coins}[2]{\foreach \i in {1,...,#2}
+  \filldraw[draw=sggold!55!black,fill=sggold,line width=.5pt] ($#1+(0,{(\i-1)*.11})$) ellipse (.2 and .07);}
+%% 배터리 \battery{(x,y)}{칸(0-4)}{색}
+\newcommand{\battery}[3]{\begin{scope}[shift={#1}]
+  \draw[fg,line width=1pt,rounded corners=1pt] (-.3,-.14) rectangle (.3,.14);
+  \fill[fg] (.31,-.06) rectangle (.37,.06);
+  \foreach \i in {1,...,4}{\ifnum\i>#2\relax\else\fill[#3] ({-.3+.035+(\i-1)*.14},-.1) rectangle ++(.11,.2);\fi}
+\end{scope}}
+%% EXIT 문 \exitdoor{(문 바닥 가운데)}
+\newcommand{\exitdoor}[1]{\begin{scope}[shift={#1}]
+  \fill[sggold!35] (-.5,0) rectangle (.5,2.3);
+  \draw[muted,line width=1.4pt] (-.5,0)--(-.5,2.3)--(.5,2.3)--(.5,0);
+  \filldraw[draw=muted,fill=bg!70!black,line width=1.2pt] (.5,0)--(.5,2.3)--(.95,2.05)--(.95,.18)--cycle;
+  \node[fill=sggreen,text=fg,font=\sffamily\bfseries\fs{11},rounded corners=2pt,inner sep=2.5pt] at (0,2.65) {EXIT};
+\end{scope}}
+
+%% 한 칸: \panel{x0}{머리 로고 매크로}{머리 글}{인용}{장면}{이름}{부제}
+\newcommand{\panelW}{5.4}
+\newcommand{\panel}[7]{\begin{scope}[shift={(#1,0)}]
+  #2
+  \node[anchor=west,text=fg,font=\sffamily\bfseries\fs{15}] at (.95,9.0) {#3};
+  \node[draw=muted!60,fill=bubble,rounded corners=6pt,text=fg,font=\sffamily\fs{12.5},
+        text width=4.55cm,align=center,inner sep=6pt,anchor=north] (q) at (\panelW/2,8.35) {#4};
+  \fill[bubble] ($(q.north)+(-.18,-.02)$)--($(q.north)+(0,.26)$)--($(q.north)+(.18,-.02)$)--cycle;
+  \draw[muted!60] ($(q.north)+(-.18,0)$)--($(q.north)+(0,.26)$)--($(q.north)+(.18,0)$);
+  #5
+  \node[text=fg,font=\sffamily\bfseries\fs{15}] at (\panelW/2,.95) {#6};
+  \node[text=muted,font=\sffamily\fs{11}] at (\panelW/2,.38) {#7};
+\end{scope}}
+
+\begin{document}
+\begin{tikzpicture}[x=1cm,y=1cm]
+\fill[bg] (0,0) rectangle (5*\panelW,9.6);
+\foreach \i in {1,...,4}\draw[muted!35,line width=.6pt] (\i*\panelW,.3)--(\i*\panelW,9.35);
+\input{quotes_scenes.tex}
+\end{tikzpicture}
+\end{document}

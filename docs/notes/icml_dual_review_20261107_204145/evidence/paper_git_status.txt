@@ -1,0 +1,90 @@
+ M build.sh
+ M cogsci2027/ko/content.tex
+ M cogsci2027/ko/sections/00_abstract.tex
+ M cogsci2027/ko/sections/01_introduction.tex
+ M cogsci2027/ko/sections/02_arena.tex
+ M cogsci2027/ko/sections/03_analysis.tex
+ M cogsci2027/ko/sections/04_discussion.tex
+ M cogsci2027/ko/sections/05_appendix.tex
+ M cogsci2027/ko/tables/ablation_prize_conditions_20261105.tex
+ M cogsci2027/ko/tables/coexistence_metric_candidates.tex
+ M cogsci2027/ko/tables/cohort_public_20261105.tex
+ M dist/ko_cogsci2027_2026-11-05.pdf
+ M dist/ko_cogsci2027_2026-11-05_no_appendix.pdf
+?? cogsci2027/ko/figures/appendix_refresh_20261107/
+?? cogsci2027/ko/figures/results_questions_20261107/
+?? cogsci2027/ko/sections/appendix_reasoning_table_20261107.tex
+?? cogsci2027/ko/sections/appendix_retained_associations_20261107.tex
+?? cogsci2027/ko/sections/appendix_retained_behavior_20261107.tex
+?? cogsci2027/ko/sections/appendix_retained_completion_20261107.tex
+?? cogsci2027/ko/tables/appendix_refresh_20261107/
+?? cogsci2027/results/appendix_exit_followup_20261107.json
+?? cogsci2027/results/appendix_refresh_20261107/
+?? cogsci2027/results/appendix_refresh_c_h_20261107.json
+?? cogsci2027/results/appendix_refresh_relations_20261107.json
+?? cogsci2027/results/appendix_refresh_support_20261107.json
+?? cogsci2027/results/support_followup_posthoc_20261107.json
+?? cogsci2027/tools/appendix_exit_followup_20261107.py
+?? cogsci2027/tools/appendix_refresh_20261107/
+?? cogsci2027/tools/appendix_refresh_c_h_20261107.py
+?? cogsci2027/tools/appendix_refresh_relations_20261107.py
+?? cogsci2027/tools/support_followup_posthoc_20261107.py
+?? dist/ko_cogsci2027_2026-11-04.pdf
+?? dist/ko_cogsci2027_2026-11-04_no_appendix.pdf
+?? dist/ko_cogsci2027_2026-11-07.pdf
+?? dist/ko_cogsci2027_2026-11-07_no_appendix.pdf
+?? poster/thesis_20261105/figs/tracksuit/guard/log_base.txt
+?? poster/thesis_20261105/figs/tracksuit/guard/logs/
+?? poster/thesis_20261105/figs/tracksuit/log_base.txt
+?? poster/thesis_20261105/figs/tracksuit/logs/
+?? poster/thesis_20261105/figs/tracksuit/preview/
+?? poster/thesis_20261105/review/
+?? poster/thesis_20261105/sample/
+?? review/appendix_consolidation_20261107/
+?? review/appendix_metric_trim_20261107/
+?? review/coexistence_findings_20261107/
+?? review/dist_cleanup_20261107/
+?? review/ditto_rmst_20261105/
+?? review/environment_unification_20261107/
+?? review/fig4_split_fig5_audit_20261105/
+?? review/individual_km_20261105/
+?? review/narrative_surgery_20261106/
+?? review/number_trim_figures_20261105/
+?? review/prize_robustness_20261105/blind_r1_anthropic.compact.md
+?? review/prize_robustness_20261105/blind_r1_anthropic.md
+?? review/prize_robustness_20261105/blind_r1_compact_runtime.json
+?? review/prize_robustness_20261105/blind_r1_openai.compact.md
+?? review/prize_robustness_20261105/blind_r1_openai.md
+?? review/prize_robustness_20261105/blind_r1_runtime.json
+?? review/prize_robustness_20261105/blind_r2_anthropic.compact.md
+?? review/prize_robustness_20261105/blind_r2_anthropic.md
+?? review/prize_robustness_20261105/blind_r2_compact_runtime.json
+?? review/prize_robustness_20261105/blind_r2_openai.compact.md
+?? review/prize_robustness_20261105/blind_r2_openai.md
+?? review/prize_robustness_20261105/blind_r2_runtime.json
+?? review/prize_robustness_20261105/blind_r3_runtime.json
+?? review/prize_robustness_20261105/document_v1.md
+?? review/prize_robustness_20261105/document_v2.md
+?? review/prize_robustness_20261105/final/
+?? review/prize_robustness_20261105/logs/
+?? review/prize_robustness_20261105/original/
+?? review/prize_robustness_20261105/poster_before_data_update.tex
+?? review/prize_robustness_20261105/prompts/
+?? review/prize_robustness_20261105/render/
+?? review/prize_robustness_20261105/v1_check.json
+?? review/prize_robustness_20261105/v1_content_gate.json
+?? review/prize_robustness_20261105/v1_pdf_gate.json
+?? review/prize_robustness_20261105/v1_targets.json
+?? review/prize_robustness_20261105/v2_check.json
+?? review/prize_robustness_20261105/v2_content_gate.json
+?? review/prize_robustness_20261105/v2_pdf_gate.json
+?? review/prize_robustness_20261105/v2_targets.json
+?? review/prize_robustness_20261105/v3_check.json
+?? review/prize_robustness_20261105/versions/
+?? review/prize_robustness_20261105/writer_conditions_r1.md
+?? review/prize_robustness_20261105/writer_poster_r1.md
+?? review/prize_robustness_20261105/writer_results_r1.md
+?? review/prize_robustness_20261105/writer_results_r2.md
+?? review/prize_robustness_20261105/writer_table_r1.md
+?? review/results_questions_20261107/
+?? review/sen_appendix_20261107/

@@ -1,0 +1,99 @@
+%% Compact ACTION accuracy view; derived from original shared figure without modifying it.
+\begingroup
+\color{black}
+\definecolor{sgyel}{HTML}{D9A400}
+%% \sgsig{(x,y)}{colour}{shape: circle|triangle|square|star}{count}: repeated glyphs centred at (x,y)
+\newcommand{\sgsig}[4]{%
+  \begin{scope}[shift={#1}]
+    \foreach \j in {1,...,#4}{%
+    \begin{scope}[xshift={.3*(\j-(#4+1)/2)*1cm}]
+    \ifthenelse{\equal{#3}{circle}}{\fill[#2] (0,0) circle (.115);}{}%
+    \ifthenelse{\equal{#3}{square}}{\fill[#2] (-.105,-.105) rectangle (.105,.105);}{}%
+    \ifthenelse{\equal{#3}{triangle}}{\fill[#2] (90:.145)--(210:.145)--(330:.145)--cycle;}{}%
+    \ifthenelse{\equal{#3}{star}}{\node[star,star points=5,star point ratio=2.3,fill=#2,inner sep=0pt,minimum size=.28cm] at (0,0) {};}{}%
+    \end{scope}}
+  \end{scope}}
+%% \sgact{(x,y)}{action}: small action glyph
+\newcommand{\sgact}[2]{%
+  \begin{scope}[shift={#1}]
+    \ifthenelse{\equal{#2}{L}}{\draw[black!70,line width=.9pt,-{Stealth[length=3pt]}] (.14,0)--(-.16,0);}{}%
+    \ifthenelse{\equal{#2}{R}}{\draw[black!70,line width=.9pt,-{Stealth[length=3pt]}] (-.14,0)--(.16,0);}{}%
+    \ifthenelse{\equal{#2}{S}}{\fill[black!70] (-.07,-.07) rectangle (.07,.07);}{}%
+    \ifthenelse{\equal{#2}{J}}{\draw[black!70,line width=.9pt,-{Stealth[length=3pt]}] (0,-.13)--(0,.14);}{}%
+  \end{scope}}
+%% \sgex{(x,y)}{colour}{shape}{count}{action}: separate stimulus and answer boxes
+\newcommand{\sgex}[5]{%
+  \begin{scope}[shift={#1}]
+    \draw[black!25,fill=white,rounded corners=1.5pt] (.1,-.18) rectangle (1.85,.18);
+    \draw[sgorange!40,fill=sgorange!12,rounded corners=1.5pt] (2.02,-.18) rectangle (2.65,.18);
+    \sgsig{(.975,0)}{#2}{#3}{#4}
+    \sgact{(2.335,0)}{#5}
+  \end{scope}}
+\begin{tikzpicture}[x=1cm,y=1cm]
+%% ---- top row: query, compact clues, compact hidden-rule template
+\node[sgfont=7,text=black] at (.85,4.25) {새 시그널};
+\node[sgfont=6.3,text=black] at (.85,3.93) {(정답 미공개)};
+\draw[black!45,fill=white,rounded corners=2pt,line width=.8pt] (.15,2.83) rectangle (1.55,3.27);
+\sgsig{(.85,3.05)}{sgblue}{square}{3}
+\node[sgfont=7,text=black] at (3.4,4.25) {단서 (20개 중 4개)};
+\node[sgfont=6.3,text=black] at (3.025,3.93) {시그널};
+\node[sgfont=6.3,text=black] at (4.385,3.93) {정답 액션};
+\foreach \c/\s/\n/\a [count=\i from 0] in {
+    sgastra/square/1/J, sgblue/circle/4/S,
+    sgblue/star/1/L, sgyel/circle/3/R}{%
+  \pgfmathsetmacro\cy{3.57-\i*0.43}%
+  \sgex{(2.05,\cy)}{\c}{\s}{\n}{\a}}
+\node[sgfont=7,text=black] at (6.72,4.25) {숨은 규칙 (모양만 공개)};
+\begin{scope}[shift={(5.25,2.06)}]
+  \draw[black!30,fill=black!3,rounded corners=3pt] (0,0) rectangle (2.95,1.98);
+  \node[sgfont=6.2,text=black] at (1.3,1.72) {조건(색·모양·수)};
+  \node[sgfont=6.2,text=black] at (2.48,1.72) {액션};
+  \foreach \k/\y in {if/1.36,elif/1.0,elif/.64,else/.28}{%
+    \node[sgfont=7,anchor=west,font=\ttfamily\fontsize{7}{8}\selectfont,text=black] at (.12,\y) {\k};
+    \ifthenelse{\equal{\k}{else}}{}{\fill[black!22,rounded corners=1pt] (.86,\y-.11) rectangle (1.85,\y+.11);}
+    \fill[sgorange!35,rounded corners=1pt] (2.18,\y-.11) rectangle (2.78,\y+.11);}
+\end{scope}
+\draw[black!35,line width=.6pt,-{Stealth[length=3.5pt]}] (4.8,3.05)--(5.18,3.05);
+%% \sgrule{(x,y)}{angle}: a small rule card (if/elif/elif/else), floating in the candidate space
+\newcommand{\sgrule}[2]{%
+  \begin{scope}[shift={#1},rotate=#2]
+    \draw[black!35,fill=white,rounded corners=1pt,line width=.4pt] (-.2,-.17) rectangle (.2,.17);
+    \foreach \y in {.093,.031,-.031}{\fill[black!25] (-.15,\y-.018) rectangle (.02,\y+.018);
+      \fill[sgorange!45] (.06,\y-.018) rectangle (.15,\y+.018);}
+    \fill[sgorange!45] (.06,-.111) rectangle (.15,-.075);
+  \end{scope}}
+%% ---- lower row: solver and submission meet the sampled reference action
+\draw[black!30,dashed,line width=.4pt] (0,2.00)--(8.2,2.00);
+\sgrobot[.62]{(.65,1.10)}{sgorange}{}
+\node[sgfont=7,text=black] at (.65,1.57) {solver};
+\draw[sgorange!80,line width=.6pt,-{Stealth[length=3.5pt]}] (.94,1.1)--(1.56,1.1);
+\node[sgfont=6.3,text=black] at (1.25,.80) {추론};
+\node[sgfont=6.6,text=black] at (1.97,1.57) {제출 행동};
+\draw[black!60,rounded corners=2pt,line width=.6pt] (1.64,.9) rectangle (2.30,1.30);
+\sgact{(1.97,1.1)}{R}
+\node[sgfont=6.6,text=black] at (3.8,1.57) {정답};
+\draw[black!60,rounded corners=2pt,line width=.6pt] (3.47,.9) rectangle (4.13,1.30);
+\sgact{(3.8,1.1)}{R}
+\draw[black!70,line width=.6pt,{Stealth[length=3.5pt]}-{Stealth[length=3.5pt]}] (2.38,1.1)--(3.39,1.1);
+\node[sgfont=6.6,text=black] at (2.88,1.38) {채점};
+\node[sgfont=6.6,text=black] at (2.88,.74) {일치: 정답};
+%% Rule-induced distribution, retaining the original probabilities.
+\node[sgfont=6.6,text=black] at (5.28,1.74) {규칙별 행동 분포};
+\foreach \v/\act [count=\i from 0] in {0/L,.70/R,0/S,.30/J}{%
+  \pgfmathsetmacro\bx{4.58+\i*.40}%
+  \draw[black!75,line width=.7pt] (\bx,.77) rectangle ++(.24,\v);
+  \sgact{(\bx+.12,.61)}{\act}}
+\draw[black!55,line width=.5pt] (4.48,.77)--(6.12,.77);
+\draw[black!70,line width=.6pt,-{Stealth[length=3.5pt]}] (4.48,1.1)--(4.21,1.1);
+%% Candidate cards, with the same accepted/rejected examples as before.
+\node[sgfont=7,text=black] at (7.2,1.74) {숨은 규칙 후보};
+\begin{scope}[shift={(2.58,.35)},scale=.68]
+\fill[black!4] (6.8,1.12) ellipse (1.3 and .36);
+\draw[black!22,line width=.4pt,dash pattern=on 1.5pt off 1pt] (6.8,1.12) ellipse (1.3 and .36);
+\foreach \x/\y/\r/\ok in {5.88/1.14/-8/1, 6.34/.98/6/0, 6.8/1.2/-4/1, 7.26/.99/8/1, 7.72/1.15/-6/0}{%
+  \sgrule{(\x,\y)}{\r}
+  \ifthenelse{\equal{\ok}{1}}{\sgcheck[.55]{(\x+.2,\y+.17)}}{\sgcross[.55]{(\x+.2,\y+.17)}}}
+\end{scope}
+\draw[black!60,line width=.6pt,-{Stealth[length=3.5pt]}] (6.26,1.1)--(6.10,1.1);
+\end{tikzpicture}
+\endgroup

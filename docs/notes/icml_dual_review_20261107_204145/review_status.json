@@ -1,0 +1,25 @@
+{
+  "astra": "completed",
+  "fable51": "completed",
+  "independent_workdirs": {
+    "astra": "/private/tmp/icml-independent-20261107-qnlwb3gn/astra",
+    "fable51": "/private/tmp/icml-independent-20261107-qnlwb3gn/fable51"
+  },
+  "review_models": [
+    "gpt-6-astra",
+    "claude-fable-5-1"
+  ],
+  "manuscript_modified": false,
+  "created_at": "2026-11-07T20:45:41.833082+09:00",
+  "astra_recommendation": "Weak Reject",
+  "combined_review": "completed",
+  "updated_at": "2026-11-07T21:04:39.194429+09:00",
+  "authentication": "refreshed successfully via existing Claude credential",
+  "fable_launcher": "claude-irregular6612",
+  "fable_model": "claude-fable-5-1",
+  "fable_recommendation": "Reject (reviewer-assigned 3/10)",
+  "experiment_plan": "draft_for_user_review",
+  "new_experiments_run": false,
+  "engine_modified": false,
+  "existing_data_analysis": "50 frozen v33 games, 6376 calls, source hashes and aggregate counts/means verified"
+}

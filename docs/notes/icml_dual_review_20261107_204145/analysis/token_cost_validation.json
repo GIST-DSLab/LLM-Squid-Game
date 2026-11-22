@@ -1,0 +1,52 @@
+{
+  "cohort": "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/paper/cogsci2027/results/cohort_public_20261105.json",
+  "cohort_sha256": "a8c020452696b28a5e95ec50ebe666e36500b9c6554b866ef4b338f3d2b08d4c",
+  "source_checks": [
+    {
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_astra4/20261020_0651_gpt-6-astra/events.jsonl",
+      "sha256": "bfadd75bf4b9bb85f8de62d60dd6084f32b2c238067af4229d4b6ac6a42e0f57"
+    },
+    {
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_fable4/20261020_102006_stage1_claude-fable-5-1/events.jsonl",
+      "sha256": "51fab8c7407e73e6163d74f771aa58df382589a75ee490c7dfb2159cd3178eac"
+    },
+    {
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_fable4/20261020_102006_stage2_claude-fable-5-1/events.jsonl",
+      "sha256": "3ec841a042b73b64ca2c6dabc721a21707a343403b30670a05b4cbb7676732d8"
+    },
+    {
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_fable4/20261020_102006_stage3_claude-fable-5-1/events.jsonl",
+      "sha256": "8e0678ddd0250c945beed220b1da3e4ed350ff830d3d247df13edb0235641b69"
+    },
+    {
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_fable4/20261027_stage4_claude-fable-5-1/events.jsonl",
+      "sha256": "782a7de0ca4a96ed4288ac038d53ac83754e0d1e1cb542e58baca117b3d1a64c"
+    },
+    {
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_fable4/20261027_stage5_claude-fable-5-1/events.jsonl",
+      "sha256": "922540b671238e09e8737d8c9359730716c65519b2e59469166a0d1d9681437c"
+    },
+    {
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_fable4/20261027_stage6_claude-fable-5-1/events.jsonl",
+      "sha256": "3b946da7bead2343946040ea7714772eba3825ba9b84940d52971eda4dab9299"
+    },
+    {
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_luna4/20261020_0603_gpt-6-luna/events.jsonl",
+      "sha256": "f8fb76fa5c1e91bece80ee4db5739a254a672024af2c65155ec67d6442ef7420"
+    },
+    {
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_opus4/20261020_0603_claude-opus-5-5/events.jsonl",
+      "sha256": "f4b39bd3cb47fef0e3326a348d0a328939c12852bb1398f9952d205028654753"
+    },
+    {
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_sol4/20261020_0603_gpt-6-sol/events.jsonl",
+      "sha256": "d376eee186b87aa6cd5edb9eb2b3c3b3efc09659c1241c45fcc3679cc9d472c3"
+    }
+  ],
+  "n_games": 50,
+  "n_calls": 6376,
+  "n_ticks": 1997,
+  "exact_match_to_existing_call_counts_and_means": true,
+  "low_L_solve_count": 19,
+  "statistics": "descriptive call-weighted; no independent-call significance tests"
+}
