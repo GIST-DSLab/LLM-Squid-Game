@@ -510,6 +510,8 @@ body.embedded .follow { display: none; }
 .pzn-b { min-width: 26px; padding: 1px 6px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface-2); color: var(--ink); font: 600 12px var(--mono, monospace); cursor: pointer; }
 .pzn-b.real { box-shadow: inset 0 -2px 0 var(--ink-2); }
 .pzn-b.on { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.pzag { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-bottom: 6px; } /* v36: whose task */
+.pzag .btn { padding: 1px 8px; font-size: 12px; }
 .pmid { display: flex; flex-direction: column; }
 .hrule { font: 13px/1.6 var(--mono, monospace); background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; overflow-wrap: anywhere; }
 .hr-l { padding-left: 1.4em; text-indent: -1.4em; }
@@ -913,6 +915,7 @@ body.embedded .follow { display: none; }
 .sv-use .ubar { width: 120px; }
 .sv-res { font-size: 12px; }
 .sv-wait { display: flex; align-items: center; gap: 6px; padding: 6px 2px; }
+.sv-team { padding: 6px 8px; margin-bottom: 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-2); font-size: 12.5px; } /* v36: the joint SOLVE's round line */
 /* the round flow (v22) and the guard reading out a step's USER prompt */
 .rflow-panel { min-width: 0; }
 .rf-flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 14px 16px; }

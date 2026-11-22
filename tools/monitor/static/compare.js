@@ -180,7 +180,7 @@
   async function runList() {
     try {
       const j = await getJSON("api/runs");
-      $("#runlist").innerHTML = j.runs.map((r) => '<label class="rl"><input type="checkbox" value="' + esc(r.run) + '">' + (r.live ? "● " : "") + esc(r.run) + ' <span class="dim">' + esc(r.model || "") + "</span></label>").join("");
+      $("#runlist").innerHTML = j.runs.map((r) => '<label class="rl"><input type="checkbox" value="' + esc(r.run) + '">' + (r.live ? "● " : "") + esc(r.run) + ' <span class="dim">' + esc(r.model || "") + (r.joint ? " · v36 공동 SOLVE (v33과 따로 묶음)" : "") + "</span></label>").join("");
       $("#runlist").addEventListener("change", () => { const v = [...$("#runlist").querySelectorAll("input:checked")].map((x) => x.value); if (v.length) $("#picks").value = v.join(","); });
     } catch (e) { $("#runlist").textContent = e.message; }
   }

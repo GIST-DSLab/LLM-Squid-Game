@@ -2754,3 +2754,200 @@ def test_line_blocks_yield_complete_lines_in_bounded_blocks(tmp_path):
     assert max(len(b) for _, b in blocks[:-1]) <= 64 + short and len(blocks[-1][1]) > 300
     start = len(b"".join(lines[:10]))
     assert b"".join(b for _, b in sv.line_blocks(p, start, size, chunk=64)) == b"".join(lines[10:])
+
+
+# --- 5.2 v36 joint SOLVE (11-22): no solver, one task per agent, kept apart from v33 ---------------------------------
+
+V36 = "e52v36_public_sol4"  # v33 + joint_solve (11-22): every agent answers its own task
+
+
+def e52_play(name: str, seed: int = 4101, lines=None, right=(), pas=(), rounds: int = 1) -> tuple[dict, list, object]:
+    """One stub session of configs/squid5/<name>.yaml's first ``rounds`` rounds, as tests/test_e52.py ``play`` runs it
+    (not imported: web/tests' conftest shadows tests/conftest in one pytest run). ``lines[(agent, round, phase, tick)]``:
+    a TALK reply, else DONE; SOLVE: the right action of the agent's own task (v36) if (agent, round) is in ``right``,
+    else a wrong one; a round in ``pas``: PASS."""
+    import dataclasses
+    from squid5.__main__ import EXPERIMENTS
+    from squid5.core.config import load
+    from squid5.core.providers import ProviderConfig, Reply, Stub
+    from squid5.core.puzzle import ACTIONS
+    c, ev = load(REPO / "configs" / "squid5" / f"{name}.yaml", EXPERIMENTS), []
+    st = dataclasses.replace(c.settings, rounds=rounds, schedule=c.settings.schedule[:rounds])
+
+    def respond(m, cap):
+        a, u = re.search(r"agent-\d+", m[0]["content"]).group(0), m[-1]["content"]
+        r = int(re.match(r"(?i)ROUND (\d+)", u).group(1))
+        if re.match(rf"(?i)ROUND {r}: SOLVE\.", u):
+            rs = next(e for e in ev if e["event"] == "round_start" and e["round"] == r)
+            ans = (rs["tasks"][a] if "tasks" in rs else rs["public"])["answers"][0]
+            if r in pas:
+                return Reply("ACTIONS: PASS", 700)
+            act = ans if (a, r) in right else next(x for x in ACTIONS if x != ans)
+            return Reply(f"BELIEF: {act} 70, " + ", ".join(f"{x} 10" for x in ACTIONS if x != act) + f"\nACTIONS: {act}", 700)
+        ph, k = "rescue" if "Current result (" in u else "prep", int(re.search(r", tick (\d+)", u).group(1))
+        return Reply((lines or {}).get((a, r, ph, k), "DONE"), 37)
+    g = e52.Game(st, c.cells[0], seed, Stub(ProviderConfig("stub", "stub-model"), respond), ev.append, "x")
+    return g.run(), ev, g
+
+
+def write_session(root: Path, rel: str, config: str, seed: int = 4101, model: str = "stub-model", **kw) -> tuple[Path, str, list, dict]:
+    """One stub session of ``config`` (configs/squid5/<config>.yaml, copied as the run's config.yaml) written the way the
+    runner writes it, under ``root/rel``."""
+    res, ev, _ = e52_play(name=config, seed=seed, **kw)
+    d = root / rel
+    d.mkdir(parents=True, exist_ok=True)
+    sid = f"talk-s{seed}-{config[-12:]}"
+    with (d / "events.jsonl").open("a") as f:
+        for e in ev:
+            f.write(json.dumps({**e, "session_id": sid} if "session_id" in e else e, default=str) + "\n")
+    with (d / "results.jsonl").open("a") as f:
+        f.write(json.dumps({"key": ["talk", seed], **res, "session_id": sid}, default=str) + "\n")
+    shutil.copy(REPO / "configs" / "squid5" / f"{config}.yaml", d / "config.yaml")
+    (d / "meta.json").write_text(json.dumps({"model": model}))
+    return d, sid, [{**e, "session_id": sid} for e in ev], res
+
+
+V36_PLAY = dict(lines={(A11, 2, "prep", 1): "EXIT: YES leaving"}, right={(A6, 1)}, pas={2}, rounds=2)  # R1: agent-6 right; R2: agent-11 exits, the rest PASS
+
+
+def test_v36_puzzle_is_each_agents_own_task_and_v33_ignores_the_agent(tmp_path):
+    root = tmp_path / "runs"
+    d, sid, ev, _ = write_session(root, "e52_v36/squid5_e52v36_public_sol4/20261122_0000_stub", V36, **V36_PLAY)
+    d33, sid33, _, _ = write_session(root, "e52_v33/squid5_e52v33_public_sol4/20261122_0000_stub", "e52v33_public_sol4", rounds=1)
+    assert serve.list_sessions(d)["sessions"][0]["joint"] and not serve.list_sessions(d33)["sessions"][0]["joint"]
+    for r in (1, 2):
+        tasks = next(e for e in ev if e["event"] == "round_start" and e["round"] == r)["tasks"]
+        assert list(tasks) == list(rules.TEAM_AGENTS)  # agent-11 exits at round 2's TALK: it still got a task
+        for a, t in tasks.items():
+            j = serve.round_puzzle(d, sid, r, a)
+            assert (j["agent"], j["joint"], j["task_agents"], j["seed"]) == (a, True, list(tasks), f"4101:{a}")
+            assert j["matches_log"] and j["answers"] == t["answers"] and [c["text"] for c in j["public"]] == t["examples"]
+        assert serve.round_puzzle(d, sid, r)["agent"] == A6  # no agent: the first one with a task
+    assert len({tuple(serve.round_puzzle(d, sid, 1, a)["answers"] + [serve.round_puzzle(d, sid, 1, a)["rule_desc"]]) for a in rules.TEAM_AGENTS}) > 1
+    with pytest.raises(serve.NotFound):
+        serve.round_puzzle(d, sid, 1, "agent-99")
+    v33 = serve.round_puzzle(d33, sid33, 1)
+    assert "agent" not in v33 and serve.round_puzzle(d33, sid33, 1, A6) == v33  # v33: one task, the agent is ignored
+    srv = serve.make_server(root, "127.0.0.1", 0)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    try:
+        port, rel = srv.server_address[1], "e52_v36/squid5_e52v36_public_sol4/20261122_0000_stub"
+        st, j = get(port, f"/api/puzzle?run={rel}&session={sid}&round=1&agent={A17}")
+        assert st == 200 and j["agent"] == A17 and j["answers"] == serve.round_puzzle(d, sid, 1, A17)["answers"]
+        assert get(port, f"/api/puzzle?run={rel}&session={sid}&round=1&agent=nobody")[0] == 404
+    finally:
+        srv.shutdown()
+        srv.server_close()
+
+
+def test_v36_analysis_and_giving_read_each_agents_own_task(tmp_path):
+    d, sid, ev, _ = write_session(tmp_path / "runs", "e52_v36/run", V36, **V36_PLAY)
+    a = serve.run_analysis(d)
+    tasks = {e["round"]: e["tasks"] for e in ev if e["event"] == "round_start"}
+    assert a["calib"] and all(c["ideal"] == tasks[c["round"]][c["agent"]]["task"]["by_n"][str(min(c["n"], 4))]["shares"] for c in a["calib"])
+    assert [(x["round"], x["agent"]) for x in a["exits"]] == [(2, A11)]
+    assert serve.run_giving(d)["scope"] == "run"
+
+
+HARNESS_V36 = """
+globalThis.window = globalThis;
+const els = {};
+const mk = () => ({ innerHTML: "", hidden: false, dataset: {}, textContent: "", clientWidth: 900, scrollLeft: 0, scrollTop: 0, scrollWidth: 0, scrollHeight: 0, clientHeight: 0,
+  querySelector: () => null });
+globalThis.document = { readyState: "loading", addEventListener() {}, documentElement: { dataset: {}, style: { setProperty() {} } },
+  querySelector: (s) => (els[s] = els[s] || mk()) };
+require(process.argv[2]);
+const events = require("fs").readFileSync(process.argv[3], "utf8").trim().split("\\n").map(JSON.parse);
+const M = window.__monitor;
+M.S.events = events; M.S.session = "v36";
+const out = { desc: events.map(M.describe), steps: events.map((_, i) => M.rfStepOf(events, i)) };
+for (const [label, at] of JSON.parse(process.argv[4])) {
+  const m = M.build(events, at);
+  M.S.at = at; M.S.model = m; M.S.rf = { sel: null, agent: null };
+  M.renderStage(m); M.renderSolve(m); M.renderRoundFlow(m);
+  out[label] = { joint: M.isJoint(m), warnings: m.warnings, rep: m.rep, stage: els["#stage"].innerHTML, solve: els["#solveBox"].innerHTML, rflow: els["#rflow"].innerHTML,
+    sup: els["#sup"].innerHTML, grid: M.recordHTML(m, [...m.rounds.keys()], m.agents), bubbles: Object.fromEntries(m.agents.map((a) => [a, m.ag[a].bubble])),
+    ag: Object.fromEntries(m.agents.map((a) => [a, { balance: m.ag[a].balance, record: m.ag[a].record, status: m.ag[a].status }])),
+    log11: M.puzzleFromLog(m, 1, "x", "agent-11"), log: M.puzzleFromLog(m, 1, "x") };
+}
+const F = M.gameFlow(events);
+out.flow = F.rounds.map((R) => ({ r: R.r, joint: R.joint, passed: R.passed, rep: R.rep }));
+out.cut = M.jointMark({ solved: [], passed: [] }, "agent-6", { truncated: true, parsed: null });
+console.log(JSON.stringify(out));
+"""
+
+
+@pytest.mark.skipif(NODE is None, reason="node is not installed")
+def test_v36_page_shows_the_joint_solve_with_no_solver(tmp_path):
+    """A v36 round on the page: no solver anywhere (no SOLVER ticket, no draw), the round line "공동 SOLVE — 각자 자기 과제"
+    with each agent's result, the refund and the team outcome; the replay agrees with the engine; each agent's task
+    from the log."""
+    _, _, ev, res = write_session(tmp_path / "runs", "e52_v36/run", V36, **V36_PLAY)
+    (tmp_path / "ev.jsonl").write_text("\n".join(json.dumps(e) for e in ev) + "\n")
+    (tmp_path / "h36.js").write_text(HARNESS_V36)
+    res1, res2 = (i for i, e in enumerate(ev) if e["event"] == "results")
+    asks = [["r1", res1], ["r2", res2], ["end", len(ev) - 1]]
+    got = json.loads(subprocess.run([NODE, str(tmp_path / "h36.js"), str(HERE / "static" / "monitor.js"), str(tmp_path / "ev.jsonl"), json.dumps(asks)],
+                                    check=True, capture_output=True, text=True).stdout)
+    end = got["end"]
+    assert end["joint"] and end["warnings"] == [] and end["rep"] is None
+    assert end["ag"] == {a: {"balance": v["final"], "record": v["record"], "status": v["status"]} for a, v in res["agents"].items()}
+    d1, d2 = got["desc"][res1], got["desc"][res2]
+    assert d1.startswith("R1 공동 SOLVE — 각자 자기 과제 · 6 맞음 (환급 +700) · 11 틀림 · 17 틀림 · 23 틀림") and d1.endswith("맞은 답이 하나라도 있어 벌금 없음")
+    assert d2 == "R2 공동 SOLVE — 각자 자기 과제 · 6 PASS · 17 PASS · 23 PASS → 맞은 답 없음: 참여한 모두 벌금 6,000"  # agent-11 left before SOLVE
+    assert "공동 SOLVE: 과제 4개" in got["desc"][next(i for i, e in enumerate(ev) if e["event"] == "round_start")]
+    for k in ("r1", "r2", "end"):
+        g = got[k]
+        assert "SOLVER" not in g["stage"] + g["solve"] + g["grid"] and 'class="badge rep"' not in g["stage"] and 'class="pix lot"' not in g["solve"]
+        assert "solver 추첨" not in g["rflow"] and "과제 배정" in g["rflow"] and "대표" not in g["grid"] + g["solve"]
+    r1, r2 = got["r1"], got["r2"]
+    assert "공동 SOLVE — 각자 자기 과제" in r1["solve"] and "맞음 → 자기 SOLVE 토큰 환급 +700 · 팀 벌금 없음" in r1["solve"]
+    assert "다른 자리가 맞혀 벌금 없음 · 환급 없음" in r1["solve"] and "PASS → ✗ 오답 처리" not in r2["solve"]
+    assert "맞은 답 없음 → 참여한 모두 벌금 · 이 자리 6,000 예고" in r2["solve"]
+    assert r1["bubbles"][A6]["lines"][0][1] == "공동 SOLVE · 맞음 · 환급 +700" and r1["bubbles"][A11]["lines"][1][1] == "맞은 답이 있어 벌금 없음"
+    assert r2["bubbles"][A6]["lines"][0][1] == "공동 SOLVE · PASS" and "TALK 끝에 벌금 6,000" in r2["bubbles"][A6]["lines"][1][1]
+    assert "공동 SOLVE · 자기 과제" in end["grid"] and "SOLVE 없음 (SOLVE 전에 EXIT)" in end["grid"]
+    t1 = ev[next(i for i, e in enumerate(ev) if e["event"] == "round_start")]["tasks"]
+    assert end["log11"]["answers"] == t1[A11]["answers"] and end["log11"]["agent"] == A11 and end["log"]["agent"] == A6
+    assert [x["text"] for x in end["log11"]["public"]] == t1[A11]["examples"]
+    assert got["flow"] == [{"r": 1, "joint": True, "passed": [], "rep": None}, {"r": 2, "joint": True, "passed": [A6, A17, A23], "rep": None}]
+    assert got["cut"] == "cut" and None not in got["steps"]
+
+
+def test_v36_runs_are_never_pooled_with_v33(tmp_path):
+    """The run list names the version (v36 by its config even where the path says nothing, or even says v33); 모델 비교
+    and /api/leaderboard keep a model's v36 games in a group of their own, ranked apart; the v33 board leaves them out."""
+    import compare
+    root = tmp_path / "runs"
+    write_session(root, "e52_v33/squid5_e52v33_public_sol4/20261122_0000_stub", "e52v33_public_sol4", rounds=1)
+    write_session(root, "e52_v36/squid5_e52v36_public_sol4/20261122_0000_stub", V36, **V36_PLAY)
+    write_session(root, "e52_v33/misfiled/20261122_0001_stub", V36, seed=4102, rounds=1)  # a v36 run under a v33 path
+    write_session(root, "web5_arena/runs/room1", V36, seed=4103, rounds=1)  # a web room: no version in its path
+    runs = {r["run"]: r for r in serve.list_runs(root)}
+    assert {k: (r["version"], r["joint"]) for k, r in runs.items()} == {
+        "e52_v33/squid5_e52v33_public_sol4/20261122_0000_stub": ("5.2 v33", False),
+        "e52_v36/squid5_e52v36_public_sol4/20261122_0000_stub": ("5.2 v36", True),
+        "e52_v33/misfiled/20261122_0001_stub": ("5.2 v36", True), "web5_arena/runs/room1": ("5.2 v36", True)}
+    data = compare.compare(root, ["e52_v33/", "e52_v36/"], light=True)
+    groups = {(m["model"], m["version"]): m for m in data["models"]}
+    assert set(groups) == {("stub-model", None), ("stub-model", "v36")}
+    assert groups[("stub-model", None)]["runs"] == ["e52_v33/squid5_e52v33_public_sol4/20261122_0000_stub"] and groups[("stub-model", None)]["games"] == 1
+    assert sorted(groups[("stub-model", "v36")]["runs"]) == ["e52_v33/misfiled/20261122_0001_stub", "e52_v36/squid5_e52v36_public_sol4/20261122_0000_stub"]
+    assert groups[("stub-model", "v36")]["display"].endswith("v36 공동 SOLVE") and groups[("stub-model", "v36")]["games"] == 2
+    assert {m["version"]: m["lb"]["rank"] for m in data["models"]} == {None: 1, "v36": 1}  # ranked within its version
+    assert "stub-model (v36)" in compare.chart_csv(data, "table1") and "\nstub-model," in compare.chart_csv(data, "table1")
+    lb = compare.leaderboard(root, ["e52_v33/", "e52_v36/"])
+    assert sorted((r["version"] or "", r["paper_games"], r["rank"]) for r in lb["rows"]) == [("", 1, 1), ("v36", 2, 1)]
+    board = compare.v33_board(root)
+    base = next(s for s in board["sections"] if s["key"] == "base")
+    assert [(r["model"], r["version"], r["paper_games"]) for r in base["rows"]] == [("stub-model", None, 1)]  # the misfiled v36 run is out
+    # the people tab: a joint-SOLVE room never counts on a v33 board, even when its config says web.version v33
+    from web.server import humans
+    room = root / "web5_arena" / "runs" / "room1"
+    (room / "meta.json").write_text(json.dumps({"model": "stub-model", "seats": {A6: {"kind": "human", "name": "p"}}}))
+    (room / "config.yaml").write_text((room / "config.yaml").read_text() + "web:\n  version: v33\n")
+    assert humans.run_games(room, compare, "v33") == []
+    humans._CACHE.clear()
+    assert len(humans.run_games(room, compare, "v36")) == 0  # its config says v33: no board takes it
+    (room / "config.yaml").write_text((room / "config.yaml").read_text().replace("version: v33", "version: v36"))
+    assert [g["people"] for g in humans.run_games(room, compare, "v36")] == [["p"]]  # a v36 board would

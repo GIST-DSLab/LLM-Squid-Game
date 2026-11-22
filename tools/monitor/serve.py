@@ -18,7 +18,8 @@ Routes
                                       with the giver's balance just before it (``giving``); v14b runs on
   /api/system?run=REL                 10-19: each agent's SYSTEM prompt (not logged; rebuilt from config.yaml) and
                                       its Korean copy (squid5/prompts/ko/e52_<version>.md, when its English matches)
-  /api/puzzle?run=REL&session=SID&round=N
+  /api/puzzle?run=REL&session=SID&round=N[&agent=A]
+                                      v36 (joint SOLVE): every agent has its own task; ``agent`` picks whose.
                                       that round's task rebuilt from the engine. v9..v13 (the logs do not hold it): the
                                       public examples, the queries, each agent's own examples (``secrets``; ``secret``
                                       is the first, or null), and per query the actions that the public examples
@@ -131,6 +132,7 @@ class RunIndex:
         self.profiles: dict[str, dict[int, str]] = {}  # session id -> round -> task profile from round_start
         self.taking: dict[str, dict[int, list]] = {}  # session id -> round -> agents taking part from round_start
         self.public: dict[str, dict[int, dict]] = {}  # session id -> round -> round_start.public (v14)
+        self.tasks: dict[str, dict[int, dict]] = {}  # v36 joint SOLVE: session id -> round -> round_start.tasks (agent -> task)
 
     def update(self) -> int:
         """Scan the complete lines added since the last call; returns the file size."""
@@ -161,7 +163,8 @@ class RunIndex:
                                   "agents": e.get("agents") or [], "seats": e.get("seats") or {},
                                   "rounds": (e.get("settings") or {}).get("rounds"), "offset": offset,
                                   "order": len(self.sessions), "round": 0, "rounds_done": 0, "events": 0,
-                                  "calls": 0, "error": None}
+                                  "calls": 0, "error": None,
+                                  "joint": bool((e.get("settings") or {}).get("joint_solve"))}
             self.latest_by_key[key] = sid
         if kind == "unit_error":
             key = e.get("key") or [None, None]
@@ -183,6 +186,8 @@ class RunIndex:
                 self.taking.setdefault(sid, {})[int(e.get("round") or 0)] = list(e["taking_part"])
             if isinstance(e.get("public"), dict):
                 self.public.setdefault(sid, {})[int(e.get("round") or 0)] = e["public"]
+            if isinstance(e.get("tasks"), dict):
+                self.tasks.setdefault(sid, {})[int(e.get("round") or 0)] = e["tasks"]
         elif kind == "round":
             s["rounds_done"] = max(s["rounds_done"], int(e.get("round") or 0))
         elif kind == "call":
@@ -264,6 +269,16 @@ def run_think(run_dir: Path) -> str:
     return " · ".join(out)
 
 
+JOINT_RE = re.compile(r"^\s*joint_solve:\s*true\b", re.M)
+
+
+def run_joint(run_dir: Path) -> bool:
+    """11-22: a 5.2 v36 run (the joint SOLVE: no solver, every agent answers its own task) by its config.yaml
+    (``joint_solve: true``, a plain-text read). Its games are never pooled with v33's (compare.py)."""
+    p = run_dir / "config.yaml"
+    return p.exists() and bool(JOINT_RE.search(p.read_text(encoding="utf-8", errors="replace")))
+
+
 def read_meta(run_dir: Path) -> dict:
     try:
         return json.loads((run_dir / "meta.json").read_text(encoding="utf-8"))
@@ -288,13 +303,14 @@ def run_seeds(ev: Path) -> list[int]:
     return sorted(seeds)
 
 
-def run_labels(rel: str, mtime: float) -> dict:
+def run_labels(rel: str, mtime: float, joint: bool = False) -> dict:
     """The run list's filter fields: date (YYYY-MM-DD, from the run folder name or the file time) and the setting
-    version (e.g. '5.2 v22' from 'squid5_e52v22_public_luna4/...' or 'e52_v21/...')."""
+    version (e.g. '5.2 v22' from 'squid5_e52v22_public_luna4/...' or 'e52_v21/...'; '5.2 v36' for a joint-SOLVE run
+    whatever its path says, e.g. a web room)."""
     d = re.search(r"(20\d\d)(\d\d)(\d\d)_\d{4}", rel)
     date = "-".join(d.groups()) if d else time.strftime("%Y-%m-%d", time.localtime(mtime))
     v = re.search(r"e5(\d)_?v(\d+[a-z]?)", rel)
-    return {"date": date, "version": f"5.{v.group(1)} v{v.group(2)}" if v else rel.split("/")[0]}
+    return {"date": date, "version": "5.2 v36" if joint else f"5.{v.group(1)} v{v.group(2)}" if v else rel.split("/")[0]}
 
 
 def list_runs(root: Path) -> list[dict]:
@@ -313,11 +329,12 @@ def list_runs(root: Path) -> list[dict]:
         expected = expected_units(d)
         finished = sum(1 for r in results if r.get("session_id"))
         meta = read_meta(d)
-        out.append({"run": d.relative_to(root).as_posix(), "mtime": mtime, "size": st.st_size,
+        joint = run_joint(d)
+        out.append({"run": d.relative_to(root).as_posix(), "mtime": mtime, "size": st.st_size, "joint": joint,
                     "model": meta.get("model"), "mode": meta.get("mode"), "finished": finished,
                     "expected": expected, "done": expected is not None and finished >= expected,
                     "live": time.time() - st.st_mtime < LIVE_SECONDS, "seeds": run_seeds(ev), "harness": run_harness(d), "think": run_think(d),
-                    **run_labels(d.relative_to(root).as_posix(), mtime)})
+                    **run_labels(d.relative_to(root).as_posix(), mtime, joint)})
     out.sort(key=lambda r: r["mtime"], reverse=True)
     return out
 
@@ -793,7 +810,8 @@ def analysis_points(events: list[dict]) -> dict:
     agent had solved, and whether it was the last agent taking part. ``deaths``: the round an agent reached zero, at its
     balance when the round started. ``calib`` (v14d BELIEF): per seat-round, the belief p and the logged ideal shares s
     (round_start.public.task.by_n[N]), CE = -sum s ln max(p, .01), H(s), KL = CE - H(s), the round row's log loss,
-    Brier and argmax, the split p, at the seat's balance when SOLVE was called."""
+    Brier and argmax, the split p, at the seat's balance when SOLVE was called. v36 (joint SOLVE): each agent's own task
+    (round_start.tasks[agent]) in place of the round's one ``public``."""
     start, starts, full, exits, deaths, calib = None, {}, None, [], [], []
     rstart, solve_bal, solved, refill = {}, {}, {}, {}
     for e in events:
@@ -810,9 +828,9 @@ def analysis_points(events: list[dict]) -> dict:
         elif kind == "round":
             r, rs = e.get("round"), rstart.get(e.get("round")) or {}
             taking = rs.get("taking_part") or list((e.get("agents") or {}))
-            pub = rs.get("public") or {}
-            ideal = ((pub.get("task") or {}).get("by_n") or {}).get(str(min(len(taking), 4)), {}).get("shares")
             for a, row in (e.get("agents") or {}).items():
+                pub = (rs.get("tasks") or {}).get(a) or rs.get("public") or {}
+                ideal = ((pub.get("task") or {}).get("by_n") or {}).get(str(min(len(taking), 4)), {}).get("shares")
                 own = starts.get(a) or start
                 if row.get("exit"):
                     f = refill.get((r, a))
@@ -965,7 +983,7 @@ CLUE_TEXT = re.compile(r"^(\w+) (\w+) with number (\d+) -> (\w+)$")
 
 
 @functools.lru_cache(maxsize=512)
-def _public_puzzle(seed: int, round_no: int, spec_items: tuple, per_agent: int, n: int, logged: tuple,
+def _public_puzzle(seed: int | str, round_no: int, spec_items: tuple, per_agent: int, n: int, logged: tuple,
                    logged_rule: str | None) -> dict:
     """v14: the examples the agents saw (``logged``, from round_start) and what they leave open. The round is rebuilt
     with ``public_round`` (the puzzle may be a redraw when k >= 1); ``matches_log`` says whether the rebuild shows the
@@ -1060,8 +1078,10 @@ def run_system(run_dir: Path) -> dict:
         return {"version": None, "en": None, "ko": None, "note": f"SYSTEM 프롬프트를 다시 만들지 못함: {err!r}"[:300]}
 
 
-def round_puzzle(run_dir: Path, sid: str, round_no) -> dict:
-    """The task of one round of one session, as /api/puzzle returns it."""
+def round_puzzle(run_dir: Path, sid: str, round_no, agent: str | None = None) -> dict:
+    """The task of one round of one session, as /api/puzzle returns it. v36 (joint SOLVE): every agent taking part has
+    its own task (round_start.tasks, drawn by the seed "<seed>:<agent>"); ``agent`` picks whose (default: the first),
+    and the answer names it (``agent``) and every agent that got one (``task_agents``). Older runs ignore ``agent``."""
     try:
         r = int(round_no)
     except (TypeError, ValueError):
@@ -1081,12 +1101,22 @@ def round_puzzle(run_dir: Path, sid: str, round_no) -> dict:
         raise NotFound(f"no profile for round {r}")
     if s.get("seed") is None:
         raise NotFound("the session has no seed")
-    pub = idx.public.get(sid, {}).get(r)
+    tasks = idx.tasks.get(sid, {}).get(r)
+    joint = {}
+    if tasks is not None:  # v36: one task per agent, the engine's seed key "<seed>:<agent>"
+        a = agent or next(iter(tasks), None)
+        if a not in tasks:
+            raise NotFound(f"{a} got no task in round {r}")
+        pub, key, joint = tasks[a], f"{s['seed']}:{a}", {"agent": a, "joint": True, "task_agents": list(tasks)}
+    else:
+        if s.get("joint"):
+            raise NotFound(f"round {r} has not started (each agent's task is in its round_start)")
+        pub, key = idx.public.get(sid, {}).get(r), int(s["seed"])
     if pub is not None or game.get("public_per_agent"):  # v14: public examples only, recorded in round_start
         if pub is None:
             raise NotFound(f"round {r} has not started (its public examples are in its round_start)")
         drawn = "generator_rule" in pub  # v15: the round is scored by a rule drawn among the consistent ones
-        out = _public_puzzle(int(s["seed"]), r, _hashable(spec), int(pub["per_agent"]), int(pub["n"]),
+        out = _public_puzzle(key, r, _hashable(spec), int(pub["per_agent"]), int(pub["n"]),
                              tuple(pub.get("examples") or ()), pub.get("generator_rule") if drawn else pub.get("rule"))
         if drawn:  # the examples come from generator_rule; the answers and the rule shown are the drawn (scored) ones
             out = {**out, "answers": list(pub.get("answers") or out["answers"]), "rule_text": pub["rule"], "rule_desc": pub["rule"],
@@ -1094,7 +1124,7 @@ def round_puzzle(run_dir: Path, sid: str, round_no) -> dict:
         logged = {k: pub[k] for k in ("split", "truth_major", "pool", "pool_full", "truth_share") if k in pub}
         if pub.get("task"):  # v14b: the round's task statistics as logged (preferred to the rebuild)
             out = {**out, "task": pub["task"], "task_source": "log"}
-        return {**out, "session": sid, "profile": profile, "taking_part": idx.taking.get(sid, {}).get(r),
+        return {**out, "session": sid, "profile": profile, "taking_part": idx.taking.get(sid, {}).get(r), **joint,
                 **({"target": {**(out.get("target") or {}), **logged}} if logged else {})}
     holders = None
     if game.get("deal_present"):
@@ -1188,7 +1218,7 @@ class Handler(BaseHTTPRequestHandler):
                     raise BadRequest("round is required")
                 run_dir = run_dir_of(self.root, q.get("run", ""))
                 try:
-                    return self._json(round_puzzle(run_dir, sid, q["round"]))
+                    return self._json(round_puzzle(run_dir, sid, q["round"], q.get("agent") or None))
                 except (BadRequest, NotFound, BrokenPipeError, ConnectionResetError):
                     raise
                 except Exception as err:  # noqa: BLE001 - the engine or config failed; tell the page why

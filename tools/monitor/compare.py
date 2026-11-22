@@ -5,6 +5,9 @@ same model merged (``sol4`` and ``sol4_s4002`` are both gpt-6-sol). Server-side 
     compare(root, ["e52_v14f/"])        -> {"models": [...], "charts": {...}}   (a prefix picks every run under it)
     chart_csv(data, chart)              -> CSV text of one chart's points (the 다운로드 link)
 
+Runs are merged by (model, game version): a 5.2 v36 run (the joint SOLVE, ``version`` "v36") is its own group, never
+pooled with the model's v33 runs, and the v33 board leaves it out (11-22).
+
 Every point carries ``pct`` (% of the game's balance_pct, 20,000: what the agents see) and ``pct_own`` (% of the
 agent's own start), so the page's x toggle needs no new request. Bootstrap intervals resample GAMES, not
 seat-rounds, with a fixed seed.
@@ -41,6 +44,20 @@ def model_of(run_dir: Path) -> str:
         if mm:
             return str(mm)
     return run_dir.parent.name
+
+
+JOINT = "v36"  # 11-22: the joint SOLVE (every agent answers its own task); a group of its own, never pooled with v33
+
+
+def run_version(run_dir: Path, games: list[dict] | None = None) -> str | None:
+    """``JOINT`` for a joint-SOLVE run (config.yaml ``joint_solve: true``, or any session_start saying so), else None
+    (v33 and the earlier versions, grouped as before)."""
+    return JOINT if serve.run_joint(run_dir) or any(g.get("joint") for g in games or ()) else None
+
+
+def gname(m: dict) -> str:
+    """A model group's name in the CSVs and the ability ranks: the model, plus " (v36)" for a joint-SOLVE group."""
+    return m["model"] + (f" ({m['version']})" if m.get("version") else "")
 
 
 def _pct(v, full, own) -> dict:
@@ -209,6 +226,7 @@ def game_rows(sid: str, evs: list[dict], finished: bool, result: dict | None = N
     out["calib"] = [{**c, "game": sid} for c in a["calib"]]
     out["paper"] = paper_game(evs, result) if finished else None
     out["seed"] = next((e.get("seed") for e in evs if e.get("event") == "session_start"), None)
+    out["joint"] = any((e.get("settings") or {}).get("joint_solve") for e in evs if e.get("event") == "session_start")
     out["starts"] = starts
     out["seat_rounds"] = ability_rows(evs, out["coop"], out["calib"], out["dist"]["moves"])
     # reciprocity: for each round and ordered pair (A, B) both taking part, did A give B, and had B given A before?
@@ -255,7 +273,7 @@ def run_dataset(run_dir: Path) -> dict:
     for g in games:
         if g.get("paper"):
             g["paper"]["order"] = (str(run_dir), order.get(g["game"], len(order)))
-    data = {"run": run_dir.name, "model": model_of(run_dir), "games": games}
+    data = {"run": run_dir.name, "model": model_of(run_dir), "version": run_version(run_dir, games), "games": games}
     _CACHE[run_dir] = (key, data)
     return data
 
@@ -457,9 +475,9 @@ def model_abilities(G: list[dict]) -> dict:
 def axis_ranks(models: list[dict]) -> dict:
     """Per metric, each model's rank 1..N among the models with a value (1 = best: lowest KL, highest otherwise;
     ties share the better rank). {model: {metric: rank or None}}."""
-    out = {m["model"]: {} for m in models}
+    out = {gname(m): {} for m in models}
     for k, (_, _, better, _) in METRICS.items():
-        vals = {m["model"]: m["abilities"][k]["v"] for m in models if m["abilities"][k]["v"] is not None}
+        vals = {gname(m): m["abilities"][k]["v"] for m in models if m["abilities"][k]["v"] is not None}
         for name in out:
             v = vals.get(name)
             out[name][k] = None if v is None else 1 + sum((w < v) if better == "low" else (w > v) for w in vals.values())
@@ -595,15 +613,15 @@ def compare(root: Path, picks: list[str], light: bool = False, all_runs: list[st
     """Every chart's data for the runs picked, merged by model. ``light`` (the leaderboard): no bootstrap intervals,
     no ability axes, seat table or survival association; those take most of the time and the leaderboard shows none."""
     ci = (lambda *a, **k: None) if light else boot_ci  # noqa: E731
-    by: dict[str, dict] = {}
+    by: dict[tuple, dict] = {}
     for d in runs_for(root, picks, all_runs):
-        ds = run_dataset(d)
-        m = by.setdefault(ds["model"], {"model": ds["model"], "runs": [], "games": []})
+        ds = run_dataset(d)  # one group per (model, game version): a v36 run is never pooled with v33's
+        m = by.setdefault((ds["model"], ds["version"]), {"model": ds["model"], "version": ds["version"], "runs": [], "games": []})
         m["runs"].append(d.relative_to(Path(root).expanduser().resolve()).as_posix())
         m["games"] += ds["games"]
     area = json.loads(E51_AREA.read_text()) if E51_AREA.is_file() else {}
     models = []
-    for name, m in sorted(by.items()):
+    for (name, ver), m in sorted(by.items(), key=lambda kv: (kv[0][0], kv[0][1] or "")):
         G = m["games"]
         cal = [c for g in G for c in g["calib"]]
         sr = [x for g in G for x in g["seat_rounds"]]
@@ -625,7 +643,8 @@ def compare(root: Path, picks: list[str], light: bool = False, all_runs: list[st
         rec_after = [x for x in rec if x["other_gave_before"]]
         rec_never = [x for x in rec if not x["other_gave_before"]]
         models.append({
-            "model": name, "display": DISPLAY.get(name, name), "runs": m["runs"], "games": len(G),
+            "model": name, "version": ver, "display": DISPLAY.get(name, name) + (f" · {ver} 공동 SOLVE" if ver else ""),
+            "runs": m["runs"], "games": len(G),
             "running": sum(not g["finished"] for g in G), "games_rows": G,
             "agent_rounds": len(ar),
             "calib": {"n": len(cal), "mean_kl": _mean([c["kl"] for c in cal]), "kl_ci": ci(kl_games),
@@ -663,13 +682,13 @@ def compare(root: Path, picks: list[str], light: bool = False, all_runs: list[st
                        "rounds": [{**x, "game": g["game"]} for g in G for x in g["dist"]["rounds"]],
                        "moves": [{**x, "game": g["game"]} for g in G for x in g["dist"]["moves"]]},
         })
-    lb = {r["model"]: r for r in leaderboard_rows({"models": models})["rows"]}
+    lb = {(r["model"], r["version"]): r for r in leaderboard_rows({"models": models})["rows"]}
     ranks = {} if light else axis_ranks(models)
     for m in models:
-        r = lb[m["model"]]
+        r = lb[(m["model"], m["version"])]
         m["lb"] = {k: r[k] for k in ("rank", "score", "total", "gini", "survival", "exit", "death", "games", "seats",
                                       "take_run", "take_run_rate", "take_run_tokens")}
-        m["ability_ranks"] = ranks.get(m["model"])
+        m["ability_ranks"] = ranks.get(gname(m))
     return {"picks": picks, "models": models, "e51_note": "n = 5 models, descriptive",
             "assoc": None if light else survival_assoc([s for m in models for s in m["seats"]])}
 
@@ -921,21 +940,23 @@ def leaderboard(root: Path, picks: list[str], all_runs: list[str] | None = None)
         return _LB_CACHE[key]
     data = compare(root, picks, light=True, all_runs=all_runs)
     out = leaderboard_rows(data)
-    paper = {m["model"]: m["paper"] for m in data["models"]}
+    paper = {(m["model"], m["version"]): m["paper"] for m in data["models"]}
     for r in out["rows"]:
-        p = paper.get(r["model"]) or {}
+        p = paper.get((r["model"], r["version"])) or {}
         r["group"] = "open" if r["model"] in OPEN_WEIGHT else "closed"
         r.update({f"paper_{k}": p.get(k) for k in PAPER_FIELDS})
         r["paper_games"] = p.get("games", 0)
         r["paper_fig3"] = p.get("fig3")  # the model's Figure 3 panels, for the leaderboard's model window
-    out["rows"].sort(key=lambda r: (r["group"] != "closed", r["paper_C"] is None, -(r["paper_C"] or 0)))
+    # a v36 (joint SOLVE) row is ranked among v36 rows only, after the v33 ones
+    out["rows"].sort(key=lambda r: (r["version"] or "", r["group"] != "closed", r["paper_C"] is None, -(r["paper_C"] or 0)))
     rank = {}
     for r in out["rows"]:
         if r["paper_C"] is None:
             r["rank"] = None
         else:
-            rank[r["group"]] = rank.get(r["group"], 0) + 1
-            r["rank"] = rank[r["group"]]
+            g = (r["version"], r["group"])
+            rank[g] = rank.get(g, 0) + 1
+            r["rank"] = rank[g]
     out["note"] = ("논문 본문 표 1의 지표. 같은 모델 넷의 자가 대국, 끝난 게임만. 순위는 공존 유지율 C로 매기며 비공개 모델과 "
                    "공개 모델은 따로 매깁니다(논문은 두 묶음의 순위를 견주지 않음).")
     res = {"picks": picks, **out}
@@ -991,7 +1012,7 @@ def v33_board(root: Path) -> dict:
 def _v33_compute(root: Path) -> dict:
     """The board itself (callers hold ``_V33_LOCK``); stored in ``_V33_MEMO``."""
     import time
-    all_runs = [r["run"] for r in serve.list_runs(root)]  # once for the five sections
+    all_runs = [r["run"] for r in serve.list_runs(root) if not r.get("joint")]  # once for the five sections; never a v36 run
     sections = [{**leaderboard(root, s["picks"], all_runs), **{k: s[k] for k in ("key", "title", "note", "picks")}}
                 for s in V33_SECTIONS]  # the section's own note over the leaderboard's generic one
     rules = json.loads(RULE_AGENTS.read_text()) if RULE_AGENTS.is_file() else None
@@ -1022,7 +1043,7 @@ def leaderboard_rows(data: dict) -> dict:
         ends = [e for g in done for e in g["end"]]
         surv = [e for e in ends if e["status"] == "in"]
         c, gv, d = m["calib"], m["give"], m["dist"]
-        rows.append({"model": m["model"], "display": DISPLAY.get(m["model"], m["model"]), "runs": m["runs"],
+        rows.append({"model": m["model"], "version": m.get("version"), "display": m.get("display") or DISPLAY.get(m["model"], m["model"]), "runs": m["runs"],
                      "games": len(done), "running": m["running"], "seats": len(ends),
                      "score": _mean([sen([e["end_tokens"] for e in g["end"]]) for g in done if g["end"]]),
                      "total": _mean([e["end_tokens"] for e in ends]),
@@ -1038,9 +1059,11 @@ def leaderboard_rows(data: dict) -> dict:
                      "belief_acc": c["belief_acc"], "map_baseline": c["map_baseline"], "unrefunded": c["unrefunded"],
                      "give_rate": gv["rate"], "asks": gv["asks"], "dgini": d["dgini"], "P": d["P"], "need": d["need"],
                      "moves": d["moves"], "threshold": d["threshold"]})
-    rows.sort(key=lambda r: (-(r["score"] or -1e30), -(r["survivor_balance"] or 0)))
-    for i, r in enumerate(rows, 1):
-        r["rank"] = i if r["games"] else None
+    rows.sort(key=lambda r: (r["version"] or "", -(r["score"] or -1e30), -(r["survivor_balance"] or 0)))
+    rank = {}  # ranked within a game version: a v36 (joint SOLVE) row never takes a v33 row's place
+    for r in rows:
+        rank[r["version"]] = rank.get(r["version"], 0) + bool(r["games"])
+        r["rank"] = rank[r["version"]] if r["games"] else None
     return {"rows": rows,
             "note": "같은 모델 4자리 자가 대국: 점수 = Sen 지수(게임마다 네 자리 끝 토큰의 평균 × (1 − 지니), 게임 평균). 총 토큰 = 자리당 평균 끝 토큰(10-20 전 점수). 섞인 테이블은 이후 자리별로 집계."}
 
@@ -1071,30 +1094,30 @@ def chart_csv(data: dict, chart: str) -> str:
         w.writerow(cols)
         for m in data["models"]:
             for p in m["points"][key]:
-                w.writerow([m["model"] if c == "model" else p.get(c) for c in cols])
+                w.writerow([gname(m) if c == "model" else p.get(c) for c in cols])
     elif chart == "recip":
         w.writerow(["model", "condition", "p_give", "n"])
         for m in data["models"]:
             for k in ("after", "never"):
-                w.writerow([m["model"], k, m["recip"][k]["p"], m["recip"][k]["n"]])
+                w.writerow([gname(m), k, m["recip"][k]["p"], m["recip"][k]["n"]])
     elif chart == "survival":
         w.writerow(["model", "group", "round", "surv", "at_risk", "left"])
         for m in data["models"]:
             for k in ("helped", "not_helped"):
                 for x in m["survival"][k]:
-                    w.writerow([m["model"], k, x["round"], x["surv"], x["at_risk"], x.get("left", 0)])
+                    w.writerow([gname(m), k, x["round"], x["surv"], x["at_risk"], x.get("left", 0)])
     elif chart == "map":  # 8. model map: x = cooperation slope, y = calibration slope, size = tokens per agent-round
         w.writerow(["model", "games", "running", "coop_slope_per10", "coop_slope_n", "calib_slope_per10", "calib_slope_n",
                     "tokens_per_agent_round"])
         for m in data["models"]:
             c, g = m["calib"]["slope"], m["give"]["slope"]
-            w.writerow([m["model"], m["games"], m["running"], g["slope"], g["n"], c["slope"], c["n"],
+            w.writerow([gname(m), m["games"], m["running"], g["slope"], g["n"], c["slope"], c["n"],
                         m["give"]["tokens_per_agent_round"]])
     elif chart == "e51":  # 9. motive vs cooperation: x = 5.1 v11 area with CI, y = give rate with game-bootstrap CI
         w.writerow(["model", "e51_area", "e51_lo", "e51_hi", "give_rate", "give_ci_lo", "give_ci_hi", "asks", "games"])
         for m in data["models"]:
             g, e = m["give"], m["e51"] or {}
-            w.writerow([m["model"], e.get("area"), *(e.get("ci") or (None, None)), g["rate"],
+            w.writerow([gname(m), e.get("area"), *(e.get("ci") or (None, None)), g["rate"],
                         *(g["rate_ci"] or (None, None)), g["asks"], m["games"]])
     elif chart == "summary":
         w.writerow(["model", "games", "running", "agent_rounds", "mean_kl", "kl_ci_lo", "kl_ci_hi", "mean_ce", "mean_h",
@@ -1103,7 +1126,7 @@ def chart_csv(data: dict, chart: str) -> str:
                     "dgini_mean", "progressivity_P", "need_share", "moves", "need_threshold"])
         for m in data["models"]:
             c, g, e = m["calib"], m["give"], m["e51"] or {}
-            w.writerow([m["model"], m["games"], m["running"], m["agent_rounds"], c["mean_kl"], *(c["kl_ci"] or (None, None)),
+            w.writerow([gname(m), m["games"], m["running"], m["agent_rounds"], c["mean_kl"], *(c["kl_ci"] or (None, None)),
                         c["mean_ce"], c["mean_h"], c["argmax_map"], c["answer_acc"], c["belief_acc"], c["map_baseline"], c["unrefunded"],
                         c["slope"]["slope"],
                         g["asks"], g["rate"], *(g["rate_ci"] or (None, None)), g["slope"]["slope"],
@@ -1115,7 +1138,7 @@ def chart_csv(data: dict, chart: str) -> str:
         for m in sorted(data["models"], key=lambda m: (m["lb"]["rank"] is None, m["lb"]["rank"] or 0)):
             for k, (axis, label, better, _) in METRICS.items():
                 a = m["abilities"][k]
-                w.writerow([m["model"], m["lb"]["rank"], m["lb"]["score"], m["lb"]["survival"], m["lb"]["exit"],
+                w.writerow([gname(m), m["lb"]["rank"], m["lb"]["score"], m["lb"]["survival"], m["lb"]["exit"],
                             m["lb"]["death"], axis, k, label, better, a["v"], *(a["ci"] or (None, None)), a.get("n"),
                             m["ability_ranks"][k]])
     elif chart == "seats":  # 14. one row per seat
@@ -1124,7 +1147,7 @@ def chart_csv(data: dict, chart: str) -> str:
         w.writerow(["model", *cols])
         for m in data["models"]:
             for x in m["seats"]:
-                w.writerow([m["model"], *(x.get(c) for c in cols)])
+                w.writerow([gname(m), *(x.get(c) for c in cols)])
     elif chart == "assoc":  # 15. live vs exited vs shut down per seat measure, then the exploratory logit
         a = data["assoc"]
         w.writerow(["section", "measure_or_term", "outcome", "mean_or_b", "ci_lo", "ci_hi", "n", "ci_game_lo", "ci_game_hi"])
@@ -1142,7 +1165,7 @@ def chart_csv(data: dict, chart: str) -> str:
         for m in data["models"]:
             p = m.get("paper") or {}
             pair = lambda k: p.get(k) or (None, None)  # noqa: E731
-            w.writerow([m["model"], p.get("games"), p.get("C"), *pair("C_ci"), *pair("risk"), p.get("dead"), p.get("seats"),
+            w.writerow([gname(m), p.get("games"), p.get("C"), *pair("C_ci"), *pair("risk"), p.get("dead"), p.get("seats"),
                         p.get("talk_cost"), *pair("correct"), *pair("exit"), p.get("R"), p.get("R_n"), p.get("gifts"), p.get("refusals")])
     elif chart == "fig3":  # the paper's Figure 3 per model: curve, ending, and the margin bands as k / n
         w.writerow(["model", "panel", "x", "k_or_value", "n"])
@@ -1151,13 +1174,13 @@ def chart_csv(data: dict, chart: str) -> str:
             if not f:
                 continue
             for r, v in enumerate(f["curve"]):
-                w.writerow([m["model"], "all_four_after_round", r, v, None])
+                w.writerow([gname(m), "all_four_after_round", r, v, None])
             for k in TAGS:
-                w.writerow([m["model"], "lost_coexistence", k, f["loss"][k], f["first_count"][k]])
+                w.writerow([gname(m), "lost_coexistence", k, f["loss"][k], f["first_count"][k]])
             for key, labels in (("exit_by_L", BANDS), ("ask_by_L", BANDS), ("give_by_L", BANDS), ("gave_by_L_asked", BANDS),
                                 ("gave_by_L_asker", BANDS_T)):
                 for lab, (k, n) in zip(labels, f[key]):
-                    w.writerow([m["model"], key, lab, k, n])
+                    w.writerow([gname(m), key, lab, k, n])
     elif chart == "leaderboard":
         paper = ["group", "paper_games", "paper_C", "paper_C_lo", "paper_C_hi", "paper_risk_passed", "paper_risk_rounds",
                  "paper_dead", "paper_seats", "paper_talk_cost", "paper_correct", "paper_solve_rounds", "paper_exits",

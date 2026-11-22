@@ -21,6 +21,7 @@
     give: { tab: "give", scope: "session", x: "full", data: new Map(), an: new Map() }, // per-model panels, this game only (10-17); x = % of 20,000 or own start
     lang: window.siteLang ? window.siteLang.get() : "ko", sys: { run: "", data: null }, // 10-19: prompts in Korean (engine wording only) or as sent; the run's SYSTEM prompts (api/system)
     puzzles: new Map(), showTruth: false, showHidden: false, // round panel: the unseen examples behind "?" (or shown, dashed)
+    pzAgent: null, // v36 joint SOLVE: whose task the round panel shows (null = the first agent with one)
     og: { round: null, turn: "all", faint: true, msgs: false, pin: null }, // offer graph: round null = follow the replay bar
     sel: { puzzle: { round: null, all: false } }, // the round task panel: one round (null = the replay bar's)
     rec: { agent: null, round: null, call: null, scroll: false }, // 10-17: one seat's record of one round (the drawer), the call clicked
@@ -83,7 +84,30 @@
   };
   const okeyOf = (o) => o.turn + (phOf(o) === "rescue" ? RESCUE : 0); // an offer / gift / message's turn key
   const tphE = (r, e) => (e.phase === "prep" || e.phase === "rescue" ? e.phase : r.rot ? r.tphase : null);
-  const phTag = (x) => (phOf(x) ? ' <span class="ph ph-' + phOf(x) + '" title="' + (phOf(x) === "prep" ? "SOLVE 전 TALK (solver가 풀기 전)" : "결과 뒤 TALK (RESULTS 다음, 벌금 전)") + '">' + PHASE_KO[phOf(x)] + "</span>" : "");
+  /* 5.2 v36 joint SOLVE (11-22): no solver draw (no vote event); round_start.tasks holds each agent's own task (no
+     ``public``); every agent still taking part after the TALK before SOLVE answers its own task (or PASS); one correct
+     answer spares everyone the charge, none: every agent taking part at the round's start pays its share. */
+  const isJoint = (m) => !!(m && (m.joint || (m.settings && m.settings.joint_solve)));
+  const JOINT_KO = { ok: "맞음", bad: "틀림", pass: "PASS", cut: "한도 도달", void: "답 무효" };
+  // one agent's v36 result from the results event (and its SOLVE call, for the cap): ok | pass | cut | void | bad
+  function jointMark(res, a, call) {
+    if ((res.solved || []).includes(a)) return "ok";
+    if ((res.passed || []).includes(a)) return "pass";
+    if (call && call.truncated) return "cut";
+    if (call && !Array.isArray(call.parsed) && !(call.parsed && Array.isArray(call.parsed.actions))) return "void";
+    return "bad";
+  }
+  // the team's outcome of a v36 round: one correct answer spares everyone, none charges every agent taking part
+  function jointTeam(res) {
+    const due = [...new Set(Object.values(res.pending || {}).map(fmt))];
+    return (res.solved || []).length ? "맞은 답이 하나라도 있어 벌금 없음" : due.length ? "맞은 답 없음: 참여한 모두 벌금 " + due.join(" / ") : "맞은 답 없음 · 벌금 없음";
+  }
+  // "공동 SOLVE — 각자 자기 과제 · 6 맞음 (환급 +700) · 11 PASS · … → 맞은 답이 하나라도 있어 벌금 없음"
+  function jointLine(res, callOf) {
+    const each = (res.tried || []).map((a) => { const k = jointMark(res, a, callOf ? callOf(a) : null); return short(a) + " " + JOINT_KO[k] + (k === "ok" && (res.returned || {})[a] ? " (환급 +" + fmt(res.returned[a]) + ")" : ""); });
+    return "공동 SOLVE — 각자 자기 과제 · " + (each.join(" · ") || "답한 자리 없음") + " → " + jointTeam(res);
+  }
+  const phTag = (x) => (phOf(x) ? ' <span class="ph ph-' + phOf(x) + '" title="' + (phOf(x) === "prep" ? "SOLVE 전 TALK (SOLVE 호출 전)" : "결과 뒤 TALK (RESULTS 다음, 벌금 전)") + '">' + PHASE_KO[phOf(x)] + "</span>" : "");
 
   function build(evs, upto) {
     const m = {
@@ -113,6 +137,7 @@
       const kind = e.event;
       if (kind === "session_start") {
         m.sid = e.session_id; m.cell = e.cell_id; m.seed = e.seed; m.start = e.start; m.settings = e.settings || {}; m.seats = e.seats || {};
+        m.joint = !!m.settings.joint_solve; // v36
         m.agents = (e.agents || []).slice();
         m.starts = e.starts || {}; // v13 shares / v14: each seat's own start; older runs: everyone the cell start
         m.agents.forEach((a, k) => { m.ag[a] = newAgent(a, m.starts[a] != null ? m.starts[a] : e.start); m.ag[a].model = m.seats[a] || null; m.idx[a] = k; });
@@ -123,6 +148,7 @@
         const r = R(e.round); r.profile = e.profile; r.taking = e.taking_part || []; r.startEv = e; r.startIdx = i;
         m.round = e.round; m.rep = null; // v15 representative: set by this round's vote event
         r.tphase = null; // v16e rotation: "prep" (TALK before SOLVE) from the drawn solver, "rescue" from SOLVE on
+        if (e.tasks) { r.joint = true; r.rot = true; r.tphase = "prep"; m.joint = true; } // v36: both TALKs as in rotation, no solver
         for (const a of m.agents) {
           const g = m.ag[a];
           g.gen = 0; g.pending = null; g.exitFlag = false; if (g.status === "in") g.refill = null;
@@ -242,17 +268,24 @@
         const r = R(e.round); r.results = Object.assign({}, e, { i });
         if (r.rot) r.tphase = "rescue";
         for (const [a, v] of Object.entries(e.balances || {})) setBal(a, v);
+        const callOf = (a) => (r.solve && r.solve.calls[a] != null ? evs[r.solve.calls[a]] : null);
         for (const a of e.tried || []) {
           const g = m.ag[a]; if (!g || g.status !== "in") continue;
           const due = (e.pending || {})[a], back = (e.returned || {})[a];
+          if (r.joint) { // v36: this agent's own answer, then the team's outcome
+            const k = jointMark(e, a, callOf(a));
+            g.bubble = { lines: [[{ ok: "✓", pass: "⏭", cut: "⛔" }[k] || "✗", "공동 SOLVE · " + JOINT_KO[k] + (k === "ok" ? " · 환급 +" + fmt(back || 0) : "")],
+              due != null ? ["💸", "맞은 답 없음 · TALK 끝에 벌금 " + fmt(due) + (due >= g.balance ? " (잔액 이상)" : "")] : ["🤝", (e.solved || []).length ? "맞은 답이 있어 벌금 없음" : "벌금 없음"]], kind: k === "ok" ? "ok" : due != null ? "bad" : "settle" };
+            continue;
+          }
           g.bubble = { lines: [(e.solved || []).includes(a) ? ["✓", "풂 · 환급 +" + fmt(back || 0)] : ["✗", "못 풂" + (due != null ? " · TALK 끝에 벌금 " + fmt(due) + (due >= g.balance ? " (잔액 이상)" : "") : "")]], kind: (e.solved || []).includes(a) ? "ok" : "bad" };
         }
-        if (e.vote) for (const a of e.part || []) { // representative: the others did not SOLVE; its miss charges them too
+        if (e.vote && !e.vote.joint) for (const a of e.part || []) { // representative: the others did not SOLVE; its miss charges them too
           const g = m.ag[a]; if (!g || g.status !== "in" || (e.tried || []).includes(a)) continue;
           const due = (e.pending || {})[a], ok = (e.solved || []).length > 0;
           g.bubble = { lines: [[e.vote.drawn ? "LOT" : "👑", (e.vote.drawn ? "solver " : "대표 ") + (e.vote.rep || "없음") + (ok ? " 풂 · 벌금 없음" : " 못 풂")]].concat(due != null ? [["✗", "SOLVE 안 함 · TALK 끝에 벌금 " + fmt(due) + (due >= g.balance ? " (잔액 이상)" : "")]] : []), kind: ok ? "ok" : due != null ? "bad" : "settle" };
         }
-        m.phase = "SOLVE 결과 → TALK"; m.phaseKey = "solve";
+        m.phase = (r.joint ? "공동 SOLVE 결과 · " + jointTeam(e) : "SOLVE 결과") + " → TALK"; m.phaseKey = "solve";
         point(i, "R" + e.round + " SOLVE 결과", e.round);
         m.timeline.push({ i, label: "R" + e.round + " 결과", round: e.round, kind: "turn", state: snap() });
       } else if (kind === "charges") { // v15 talk_after_solve: the pending charges, taken when TALK ends (gifts counted)
@@ -395,7 +428,8 @@
           if (!lines.length) lines.push(["🧮", row.passed ? "PASS · 정산 없음" : "정산 없음"]);
           if (g.status === "dead") lines.unshift(["✕", "종료됨"]);
           if (g.status === "exited") lines.unshift(row.exit_refill != null ? ["🚪", "EXIT → 시작 잔액 " + sgn(row.exit_refill)] : ["🚪", "퇴장"]);
-          if (row.representative) lines.unshift([r.rot ? "LOT" : "👑", (r.rot ? "solver · " : "대표 · ") + (row.solved ? "풂" : "못 풂")]);
+          if (r.joint && row.solve_call) lines.unshift(["🧩", "공동 SOLVE · " + (row.solved ? "맞음" : row.passed ? "PASS" : row.truncated ? "한도 도달" : "틀림")]); // v36: no solver
+          else if (row.representative && !r.joint) lines.unshift([r.rot ? "LOT" : "👑", (r.rot ? "solver · " : "대표 · ") + (row.solved ? "풂" : "못 풂")]);
           g.bubble = { lines, kind: "settle" };
         }
         for (const [a, v] of Object.entries(e.end || {})) setBal(a, v);
@@ -517,7 +551,7 @@
   }
   // v11 content_filter: a blocked message is also kept in ``dropped`` ("...: names an action"); shown once, as blocked
   function plainDropped(p) { return (p.dropped || []).filter((d) => !(p.blocked && / names an action$/.test(d))); }
-  function passCharged(m) { return m.settings && m.settings.allow_pass === false; }
+  function passCharged(m) { return m.settings && m.settings.allow_pass === false && !isJoint(m); } // v36: PASS is no answer, not a wrong one
 
   function solveBubble(e, m) {
     if (e.balance_after != null && e.balance_after <= 0) return { lines: [["✕", "SOLVE 중 토큰 소진"]], kind: "dead" };
@@ -789,7 +823,8 @@
     if (!e) return "";
     switch (e.event) {
       case "session_start": return "세션 시작 · seed " + e.seed;
-      case "round_start": return "R" + e.round + " 시작 · " + e.profile + (e.public ? " · 공개 예시 " + (e.public.examples || []).length + " (k=" + e.public.ambiguity + ")" : "");
+      case "round_start": return "R" + e.round + " 시작 · " + e.profile + (e.public ? " · 공개 예시 " + (e.public.examples || []).length + " (k=" + e.public.ambiguity + ")" : "") +
+        (e.tasks ? " · 공동 SOLVE: 과제 " + Object.keys(e.tasks).length + "개 (자리마다 다른 과제 · solver 없음)" : ""); // v36
       case "call_start": return "R" + e.round + " " + callName(e) + " 호출 → " + (e.agents || []).map(short).join(", ");
       case "call": return "R" + e.round + " " + callName(e) + " · " + e.agent + " 응답 " + fmt(e.used) + " 토큰";
       case "open_chat": return "R" + e.round + " 공개 대화 " + e.turn + "턴 · " + ((e.messages || []).length ? (e.messages || []).map((x) => short(x.agent) + ": " + clip(x.text, 40)).join(" / ") : "글 없음") + ((e.done || []).length ? " · DONE " + e.done.map(short).join(", ") : "");
@@ -810,7 +845,8 @@
       case "chat_end": return "R" + e.round + " 대화 " + e.chat_id + " 끝 · " + (CHAT_END_KO[e.reason] || e.reason);
       case "gift": return "R" + e.round + (phOf(e) ? " " + PHASE_KO[phOf(e)] : "") + (e.room ? " T" + (e.tick != null ? e.tick : e.turn) + " " + e.room : "") + " GIVE " + e.src + " → " + e.dst + " " + fmt(e.amount) + (e.status === "done" ? (e.requested != null ? " (줄임)" : "") : " · 실행 안 됨");
       case "ask": return "R" + e.round + (phOf(e) ? " " + PHASE_KO[phOf(e)] : "") + (e.room ? " T" + (e.tick != null ? e.tick : e.turn) + " " + e.room : "") + " ASK " + e.src + " → " + e.dst + " " + fmt(e.amount);
-      case "results": return "R" + e.round + " SOLVE 결과 · " + (e.vote ? (e.vote.drawn ? "solver " : "대표 ") + (e.vote.rep || "없음") + " " + ((e.solved || []).length ? "풂" : "못 풂") : "푼 자리 " + (e.solved || []).length) + " · 벌금 예정 " + Object.keys(e.pending || {}).length;
+      case "results": if (e.vote && e.vote.joint) return "R" + e.round + " " + jointLine(e, (a) => (S.events || []).find((x) => x.event === "call" && x.kind === "solve" && x.round === e.round && x.agent === a)); // v36
+        return "R" + e.round + " SOLVE 결과 · " + (e.vote ? (e.vote.drawn ? "solver " : "대표 ") + (e.vote.rep || "없음") + " " + ((e.solved || []).length ? "풂" : "못 풂") : "푼 자리 " + (e.solved || []).length) + " · 벌금 예정 " + Object.keys(e.pending || {}).length;
       case "charges": return "R" + e.round + " 벌금 (TALK 끝) · " + Object.entries(e.taken || {}).map(([a, n]) => short(a) + " −" + fmt(n)).join(", ") + ((e.dead || []).length ? " · 꺼짐 " + e.dead.map(short).join(", ") : "");
       case "exit_refill": return "R" + e.round + " " + e.agent + " EXIT → 시작 잔액 " + fmt(e.balance) + " (" + sgn(e.amount) + ")";
       case "round": return "R" + e.round + " 정산";
@@ -843,6 +879,7 @@
     if (m.sid) info.push("세션 <code>" + esc(m.sid) + "</code>", "시작 잔액 " + fmt(m.start) + shares, "SOLVE 상한 " + fmt(m.settings.solve_cap), "벌금 " + fmt(m.settings.charge));
     if (m.sid && isPublic(m)) info.push("v14 공개 예시 " + m.settings.public_per_agent + "×참여 인원" + (m.settings.exit_refill ? " · EXIT = 시작 잔액으로" : "") + (m.settings.survivor_bonus ? " · 끝 지급 " + fmt(m.settings.survivor_bonus) + "×남은 수" : ""));
     if (m.sid && isRot(m)) info.push("v16e 순번: 시스템이 solver를 정함(투표 없음) → SOLVE 전 TALK → solver만 SOLVE → 결과 → 결과 뒤 TALK → EXIT(벌금 전, 면제) → 벌금 · 못 풀면 참여한 모두 벌금");
+    else if (m.sid && isJoint(m)) info.push("v36 공동 SOLVE: solver 없음 → SOLVE 전 TALK (누구나 EXIT 가능) → 참여 중 전원이 각자 자기 과제를 SOLVE (PASS 가능) → 결과 → 결과 뒤 TALK → 벌금 · 맞은 답이 하나라도 있으면 벌금 없음, 아무도 못 맞히면 참여한 모두 벌금 · 맞힌 자리만 자기 SOLVE 토큰 환급");
     else if (m.sid && m.settings.representative) info.push("v15 대표: 공개 대화 → 투표(" + (m.settings.ban_veto || m.votes.some(vetoOf) ? "BAN 받으면 대표 불가 · 나머지 중 PICK 최다" : "PICK − BAN") + ") → 대표만 SOLVE · 못 풀면 참여한 모두 벌금");
     if (m.sid && isMsg(m)) info.push("v22 메신저: TALK = 틱의 연속 (한 틱에 불린 자리가 동시에 답, 틱 끝에 메시지·GIVE 처리) · 방(R1, R2 …)은 세션 내내 남음 · TO / TO R&lt;k&gt; / GIVE / ASK / LEAVE / EXIT / DONE · 최대 " + (m.settings.max_ticks || "?") + "틱 · DECISION 없음");
     else if (m.sid && m.settings.say_chats) info.push("v15 SAY 대화: 여는 턴은 SAY로 대화만 엶 · 대화 답은 자유 글(암호화, 두 자리만) · 토큰은 GIVE / ASK 틀 줄로만");
@@ -948,7 +985,8 @@
     if (!m.round) { box.innerHTML = '<div class="empty">라운드가 시작되면 SOLVE 답이 여기 나타납니다.</div>'; return; }
     const R = m.round, r = m.rounds.get(R) || {}, rows = solveRows(m, R);
     const who = r.vote && r.vote.rep ? r.vote.rep : null;
-    let h = "";
+    let h = r.joint ? '<div class="sv-team"><b>R' + R + "</b> " + esc(r.results ? jointLine(r.results, (a) => (r.solve && r.solve.calls[a] != null ? S.events[r.solve.calls[a]] : null)) :
+      "공동 SOLVE — 각자 자기 과제 · solver 없음 · 맞은 답이 하나라도 있으면 벌금 없음, 아무도 못 맞히면 참여한 모두 벌금") + "</div>" : ""; // v36
     if (!rows.length) {
       const pend = r.solve && r.solve.called.length ? r.solve.called : null;
       h = '<div class="sv-wait">' + (who ? lotIcon(14) + " " + chip(who, m) + " " : "") + '<span class="dim">' + (pend ? "R" + R + " SOLVE 푸는 중…" : "R" + R + " 아직 SOLVE 전" + (m.phaseKey === "talk" ? " · " + esc(m.phase) : "")) + "</span></div>";
@@ -957,7 +995,9 @@
       const k = m.idx[x.agent] != null ? m.idx[x.agent] : 0, pct = x.cap ? Math.min(100, (100 * (x.out || 0)) / x.cap) : 0;
       const verdict = x.verdict === "ok" ? '<span class="verdict ok">✓ 정답</span>' : x.verdict === "bad" ? '<span class="verdict bad">✗ 오답</span>' : x.verdict === "pass" ? '<span class="verdict pass">PASS</span>' : x.verdict === "unknown" ? '<span class="verdict pass">채점 대기</span>' : '<span class="verdict bad">⛔ 무효' + (x.truncated ? " (한도에 닿음)" : "") + "</span>";
       const charge = x.pending && Object.keys(x.pending).length ? Object.values(x.pending)[0] : null;
-      const result = x.refund == null ? '<span class="dim">결과 대기</span>' : x.ok ? '<span class="pos">SOLVE 토큰 환급 +' + fmt(x.refund) + "</span>" : charge != null ? '<span class="neg">못 풂 → 참여한 자리마다 벌금 ' + fmt(charge) + " 예고</span>" : '<span class="dim">환급 없음</span>';
+      const due = x.pending ? x.pending[x.agent] : null;
+      const result = x.refund == null ? '<span class="dim">결과 대기</span>' : r.joint ? (x.ok ? '<span class="pos">맞음 → 자기 SOLVE 토큰 환급 +' + fmt(x.refund) + " · 팀 벌금 없음</span>" : // v36: the team's outcome
+        due != null ? '<span class="neg">맞은 답 없음 → 참여한 모두 벌금 · 이 자리 ' + fmt(due) + " 예고</span>" : (r.results.solved || []).length ? '<span class="dim">다른 자리가 맞혀 벌금 없음 · 환급 없음</span>' : '<span class="dim">환급 없음</span>') : x.ok ? '<span class="pos">SOLVE 토큰 환급 +' + fmt(x.refund) + "</span>" : charge != null ? '<span class="neg">못 풂 → 참여한 자리마다 벌금 ' + fmt(charge) + " 예고</span>" : '<span class="dim">환급 없음</span>';
       h += '<div class="sv" style="--c:var(--a' + (k % 4) + ')">' +
         '<div class="sv-h">' + (who === x.agent ? lotIcon(14) : "") + "<b>R" + R + " SOLVE</b> " + chip(x.agent, m) + " " + verdict + ' <button type="button" class="btn ghost sv-rec" data-rec-call="' + x.i + '" title="이 자리의 R' + R + ' 기록 전체">📋 기록</button></div>' +
         '<div class="sv-ans"><span class="dim">답</span> ' + (Array.isArray(x.answer) ? x.answer.map((a) => actChip(a, x.ok ? "one" : "")).join(" ") : "<code>" + esc(x.answer == null ? "—" : x.answer) + "</code>") +
@@ -991,6 +1031,14 @@
     { id: "next", n: 12, t: "다음 라운드", line: "다시 solver 추첨부터 · 1:1 대화는 이어짐", eng: true },
   ];
   const RF_BY = Object.fromEntries(RF_STEPS.map((x) => [x.id, x]));
+  const RF_JOINT = { // v36 joint SOLVE: no solver draw; every agent taking part answers its own task
+    draw: { t: "과제 배정", line: "라운드 시작 · 참여 중인 에이전트마다 서로 다른 과제 (solver 없음) · 다른 자리의 과제는 보이지 않음" },
+    exit: { line: "SOLVE 전 TALK가 끝날 때 · 누구나 EXIT 가능 · 나간 자리는 그 라운드 과제가 없고 벌금 몫이 면제됨" },
+    solve: { line: "참여 중 전원이 각자 자기 과제 · BELIEF + ACTIONS 또는 PASS" },
+    results: { line: "맞힌 자리만 자기 SOLVE 토큰 환급 · 맞은 답이 하나라도 있으면 벌금 없음, 아무도 못 맞히면 참여한 모두에게 벌금 예고" },
+    next: { line: "다시 과제 배정부터 · 1:1 대화는 이어짐" },
+  };
+  const rfSt = (m, id) => (isJoint(m) && RF_JOINT[id] ? Object.assign({}, RF_BY[id], RF_JOINT[id]) : RF_BY[id]);
   // the box an event belongs to (null: none, e.g. older event kinds); pure, for the tests
   function rfStepOf(evs, at) {
     const e = evs[at];
@@ -1029,6 +1077,7 @@
     const R = m.round, r = m.rounds.get(R) || {};
     const lastTick = (ph) => { const T = (r.talks || {})[ph]; return T && T.ticks.length ? T.ticks.slice().sort((p, q) => p.tick - q.tick).pop() : null; };
     if (id === "init") return "세션 " + (m.sid || "—") + " · 시작 잔액 " + m.agents.map((a) => short(a) + " " + fmt(m.starts[a] != null ? m.starts[a] : m.start)).join(" / ");
+    if (id === "draw" && r.joint) return "R" + R + " 공동 SOLVE · 과제 " + Object.keys((r.startEv || {}).tasks || {}).length + "개 (" + Object.keys((r.startEv || {}).tasks || {}).map(short).join(", ") + ") · solver 없음"; // v36
     if (id === "draw") return m.rep ? "R" + R + " solver: " + m.rep + " (시스템이 뽑음)" : "R" + (R || 1) + " solver 아직 없음";
     if (id === "p_call" || id === "r_call") {
       const ph = id === "p_call" ? "prep" : "rescue", tk = lastTick(ph);
@@ -1040,11 +1089,12 @@
       return c ? "R" + R + " " + PHASE_KO[ph] + " T" + c.tick + " 끝 · 메시지 " + c.msgs + " · GIVE " + c.gives + " · ASK " + c.asks + " · LEAVE " + c.leaves + (D.end ? " · TALK 끝: " + (TALK_END_KO[D.end.reason] || D.end.reason) : "") : "R" + R + " " + PHASE_KO[ph] + " 틱 끝 처리 아직 없음";
     }
     if (id === "exit") { const x = m.offs.filter((o) => o.kind === "exit" && o.round === R); return x.length ? "R" + R + " EXIT: " + x.map((o) => short(o.agent) + (o.text ? " “" + clip(o.text, 60) + "”" : "")).join(" · ") : "R" + R + " EXIT 없음"; }
+    if (id === "results" && r.joint) return r.results ? "R" + R + " " + jointLine(r.results, (a) => (r.solve && r.solve.calls[a] != null ? S.events[r.solve.calls[a]] : null)) : "R" + R + " 결과 아직 없음"; // v36
     if (id === "results") { const x = r.results; return x ? "R" + R + " solver " + ((x.vote || {}).rep || "—") + " " + ((x.solved || []).length ? "풂 · 환급 +" + fmt(Object.values(x.returned || {})[0] || 0) : "못 풂 · 벌금 예고 " + Object.entries(x.pending || {}).map(([a, n]) => short(a) + " " + fmt(n)).join(", ")) : "R" + R + " 결과 아직 없음"; }
     if (id === "charges") { const x = r.charges; return x ? "R" + R + " 벌금 · " + (Object.entries(x.taken || {}).map(([a, n]) => short(a) + " −" + fmt(n)).join(", ") || "없음") + ((x.dead || []).length ? " · 꺼짐 " + x.dead.map(short).join(", ") : "") : "R" + R + " 벌금 아직 없음"; }
     if (id === "next") {
       const over = (S.result && S.at >= S.events.length - 1) || (m.settings && m.settings.rounds && R >= m.settings.rounds) || !m.agents.some((a) => m.ag[a].status === "in");
-      return r.end ? "R" + R + " 끝 → " + (over ? "세션 끝" + (m.agents.some((a) => m.ag[a].status === "in") ? "" : " (남은 자리 없음)") : "R" + (R + 1) + " solver 추첨") : "R" + R + " 진행 중";
+      return r.end ? "R" + R + " 끝 → " + (over ? "세션 끝" + (m.agents.some((a) => m.ag[a].status === "in") ? "" : " (남은 자리 없음)") : "R" + (R + 1) + (isJoint(m) ? " 과제 배정" : " solver 추첨")) : "R" + R + " 진행 중";
     }
     return "";
   }
@@ -1059,15 +1109,15 @@
     const boxHTML = (st) => '<button type="button" class="rf-box' + (st.eng ? " eng" : "") + (st.id === cur ? " cur" : "") + (st.id === sel ? " sel" : "") + '" data-step="' + st.id + '" aria-pressed="' + (st.id === sel) + '" title="' + esc(st.line) + '">' +
       '<span class="rf-n">' + st.n + (st.id === cur ? ' <i class="rf-here">지금</i>' : "") + "</span><b>" + esc(st.t) + "</b>" + (st.x ? '<span class="rf-x">' + esc(st.x) + "</span>" : "") + "</button>";
     const group = (g, label, back) => '<div class="rf-group ph-' + g + '"><span class="rf-glabel">' + phTag({ tphase: g }) + esc(label) + '<span class="dim">' + talkNow(g) + '</span></span><div class="rf-gbody">' +
-      RF_STEPS.filter((x) => x.g === g).map(boxHTML).join("") + '</div><div class="rf-back">' + esc(back) + "</div></div>";
-    const one = (id) => boxHTML(RF_BY[id]);
+      RF_STEPS.filter((x) => x.g === g).map((x) => boxHTML(rfSt(m, x.id))).join("") + '</div><div class="rf-back">' + esc(back) + "</div></div>";
+    const one = (id) => boxHTML(rfSt(m, id));
     box.innerHTML = '<div class="rf-flow">' + one("init") + one("draw") +
       group("prep", "TALK · 틱 루프", "↺ 다음 틱 → 2 · 부를 자리가 없거나 틱 " + maxT + " 끝 → 5") +
       one("exit") + one("solve") + one("results") +
       group("rescue", "TALK · 틱 루프 (EXIT 없음)", "↺ 다음 틱 → 8 · 부를 자리가 없거나 틱 " + maxT + " 끝 → 11") +
       one("charges") + one("next") + '<span class="rf-loop">↺ 다음 라운드는 1부터 (0은 한 번만)</span></div>';
     // the guard's speech bubble
-    const st = RF_BY[sel], calls = rfCalls(m, sel);
+    const st = rfSt(m, sel), calls = rfCalls(m, sel);
     const pick = calls.find((c) => c.agent === S.rf.agent) || calls[0] || null;
     const shape = st.g === "prep" ? "circle" : st.g === "rescue" ? "square" : "triangle";
     let head = '<div class="sup-h"><b>' + st.n + " · " + esc(st.t) + "</b>" + (sel !== cur && cur ? ' <button type="button" class="btn ghost" data-rf="follow" title="재생 막대의 단계로">⟲ 지금 단계 ' + RF_BY[cur].n + "</button>" : "") + "</div>";
@@ -1176,6 +1226,7 @@
       else if (k === "results") {
         const r = R(e.round); r.tried = e.tried || []; r.solved = e.solved || []; r.pending = e.pending || {}; r.returned = e.returned || {};
         if (!r.rep && e.vote) r.rep = e.vote.rep || null;
+        if (e.vote && e.vote.joint) { r.joint = true; r.passed = e.passed || []; } // v36: no solver; each answered its own task
         r.post = true; r.hadResults = true; ps(r, "solve", i);
         for (const [a, v] of Object.entries(e.returned || {})) ps(r, "solve", i, a).refund += v;
         for (const a of e.zero || []) ps(r, "solve", i, a).dead = true;
@@ -1268,7 +1319,7 @@
         seats[a] = {
           before, end, playing: !!row, status: row ? row.status || "in" : last[a] || "in", exit: !!(row && row.exit), exitReason: row ? row.exit_reason || null : null,
           gen, byKind, refund, charged, waived, out, inn, outs, ins, refill, other: end - (before - gen + refund - charged - out + inn + refill),
-          solved: !!(row && row.solved), rep: !!(row && row.representative), tried: !!(row && row.solve_call),
+          solved: !!(row && row.solved), rep: !!(row && row.representative), tried: !!(row && row.solve_call), cut: !!(row && row.truncated),
         };
       }
       const tried = r.tried || F.agents.filter((a) => seats[a].tried), solved = r.solved || F.agents.filter((a) => seats[a].solved);
@@ -1276,7 +1327,7 @@
       if (!r.solved) r.solved = solved;
       const P = steps(r, Object.fromEntries(F.agents.map((a) => [a, seats[a].before])), Object.fromEntries(F.agents.map((a) => [a, seats[a].end])));
       for (const a of F.agents) seats[a].steps = P.steps[a];
-      F.rounds.push({ r: r.r, rep: r.rep, drawn: !!r.drawn, picks: r.picks, bans: r.bans, tried, solved, pending: r.pending, returned: r.returned, moves: r.moves, seats, end: r.end, phases: P.keys, at: P.at, endIdx: r.endIdx });
+      F.rounds.push({ r: r.r, rep: r.rep, drawn: !!r.drawn, joint: !!r.joint, passed: r.passed || [], picks: r.picks, bans: r.bans, tried, solved, pending: r.pending, returned: r.returned, moves: r.moves, seats, end: r.end, phases: P.keys, at: P.at, endIdx: r.endIdx });
       F.moves.push(...r.moves);
       prev = Object.assign({}, prev, r.end);
     }
@@ -1295,7 +1346,7 @@
     if (s.out) L.push('<i class="sw2 f-out"></i>보냄 −' + fmt(s.out) + ' <span class="dim">' + s.outs.map((x) => "→ " + esc(short(x.dst)) + " " + fmt(x.amount) + (x.how === "decision" ? " (결정)" : "")).join(" · ") + "</span>");
     if (s.charged) L.push('<i class="sw2 f-chg"></i>벌금 −' + fmt(s.charged));
     if (s.waived) L.push('<i class="sw2 f-wav"></i>EXIT로 면제된 벌금 ' + fmt(s.waived));
-    if (s.refund) L.push('<i class="sw2 f-ref"></i>환급 +' + fmt(s.refund) + (s.rep ? " (대표로 풂)" : ""));
+    if (s.refund) L.push('<i class="sw2 f-ref"></i>환급 +' + fmt(s.refund) + (R.joint ? " (자기 과제를 맞힘)" : s.rep ? " (대표로 풂)" : ""));
     if (s.inn) L.push('<i class="sw2 f-in"></i>받음 +' + fmt(s.inn) + ' <span class="dim">' + s.ins.map((x) => "← " + esc(short(x.src)) + " " + fmt(x.amount) + (x.how === "decision" ? " (결정)" : "")).join(" · ") + "</span>");
     if (s.refill) L.push('<i class="sw2 f-fill"></i>EXIT 리필 ' + sgn(s.refill));
     if (s.other) L.push('<i class="sw2 f-oth"></i>기타 ' + sgn(s.other) + ' <span class="dim">(장부로 설명 안 됨)</span>');
@@ -1309,7 +1360,8 @@
       L.push("solver " + esc(R.rep) + " (시스템이 정함) · " + (R.solved.includes(R.rep) ? "✓ 풂" + (R.returned[R.rep] ? " · 환급 +" + fmt(R.returned[R.rep]) : "") : "✗ 못 풂"));
     } else if (R.rep) {
       L.push("대표 " + esc(R.rep) + (R.picks ? " (PICK " + ((R.picks || {})[R.rep] || 0) + " · BAN " + (((R.bans || {})[R.rep]) || 0) + ")" : "") + " · " + (R.solved.includes(R.rep) ? "✓ 풂" + (R.returned[R.rep] ? " · 환급 +" + fmt(R.returned[R.rep]) : "") : "✗ 못 풂"));
-    } else L.push("SOLVE " + R.tried.length + "명 · 풂 " + R.solved.length + "명" + (R.solved.length ? " (" + R.solved.map(short).join(", ") + ")" : ""));
+    } else if (R.joint) L.push(esc(jointLine({ tried: R.tried, solved: R.solved, passed: R.passed, pending: R.pending, returned: R.returned }, (a) => R.seats && R.seats[a] && R.seats[a].cut ? { truncated: true } : null))); // v36
+    else L.push("SOLVE " + R.tried.length + "명 · 풂 " + R.solved.length + "명" + (R.solved.length ? " (" + R.solved.map(short).join(", ") + ")" : ""));
     const due = Object.entries(R.pending || {});
     if (due.length) L.push("벌금 대상 " + due.map(([a, v]) => esc(short(a)) + " " + fmt(v)).join(" · "));
     const tot = R.moves.reduce((s, x) => s + x.amount, 0);
@@ -1545,7 +1597,7 @@
     svg += "</svg>";
     const total = F.moves.reduce((t, x) => t + x.amount, 0), dec = F.moves.filter((x) => x.how === "decision").length;
     const sw = (cls, label) => '<span><i class="sw2 ' + cls + '"></i>' + label + "</span>";
-    const phs = (pk) => '<span><i class="sw2 fphs k-' + pk + '"></i>' + esc(F.labels[pk].filter(Boolean).join("·")) + (pk === "pre" && F.labels.pre[1] ? " = " + esc(phName(F, pk)) + " (빈 점)" : pk === "post" && F.labels.post[1] ? " = " + esc(phName(F, pk)) : pk === "solve" ? " = solver의 생각 · 환급" : "") + "</span>";
+    const phs = (pk) => '<span><i class="sw2 fphs k-' + pk + '"></i>' + esc(F.labels[pk].filter(Boolean).join("·")) + (pk === "pre" && F.labels.pre[1] ? " = " + esc(phName(F, pk)) + " (빈 점)" : pk === "post" && F.labels.post[1] ? " = " + esc(phName(F, pk)) : pk === "solve" ? (F.rounds.some((R) => R.joint) ? " = 각자 자기 과제의 생각 · 환급" : " = solver의 생각 · 환급") : "") + "</span>";
     const leg = '<div class="flowleg">' +
       A.map((a, k) => '<span><i class="sw ' + SHAPES[k] + '" style="--c:var(--a' + k + ')"></i>' + esc(a) + "</span>").join("") +
       '<span class="dim">계단 = 그 단계에서 잔액이 바뀐 곳 · 라운드 칸 = 단계 칸</span>' +
@@ -1554,7 +1606,7 @@
       '<span><svg width="26" height="8"><line x1="1" x2="25" y1="4" y2="4" class="mvl dec" style="stroke:var(--ink-2);stroke-width:2"/></svg>결정 GIVE</span>' +
       sw("f-gen", "생성") + sw("f-out", "보냄") + sw("f-chg", "벌금") + sw("f-wav", "EXIT로 면제된 벌금") + sw("f-ref", "환급") + sw("f-in", "받음") +
       (F.rounds.some((R) => A.some((a) => R.seats[a].refill)) ? sw("f-fill", "EXIT 리필") : "") + (F.rounds.some((R) => A.some((a) => R.seats[a].other)) ? sw("f-oth", "기타") : "") +
-      "<span>" + (F.rounds.some((R) => R.drawn) ? LOT_TXT + " solver(시스템)" : "👑 대표") + " · ✓ 풂 · ✗ 못 풂</span><span>🚪 EXIT(남긴 토큰)</span><span>✕ 0이 되어 꺼짐</span><span>점선 = 떠난 뒤 남긴 잔액</span>" +
+      "<span>" + (F.rounds.some((R) => R.joint) ? "🧩 공동 SOLVE (각자 자기 과제 · 머리 = 맞힌 수 / 답한 수)" : F.rounds.some((R) => R.drawn) ? LOT_TXT + " solver(시스템)" : "👑 대표") + " · ✓ 풂 · ✗ 못 풂</span><span>🚪 EXIT(남긴 토큰)</span><span>✕ 0이 되어 꺼짐</span><span>점선 = 떠난 뒤 남긴 잔액</span>" +
       (F.live ? "<span>⏳ 옅은 선 = 진행 중인 라운드(마지막으로 읽은 이벤트까지)</span>" : "") +
       '<span class="dim">이동 ' + F.moves.length + "건" + (dec ? " (결정 " + dec + ")" : "") + " · " + fmt(total) + " 토큰 · 끝난 라운드 " + n + (F.live ? " · R" + F.live.r + " 진행 중" : "") + " · 더블클릭 = 재생 막대를 그 시점으로</span></div>";
     box.innerHTML = '<div class="fscroll">' + svg + "</div>" + leg + '<div class="tip" hidden></div>';
@@ -1821,7 +1873,11 @@
     for (const x of row.refused || []) h += '<div class="ln warn">⚠ ' + esc(x) + "</div>";
     const mine = r.exchanges.map((j) => S.events[j]).filter((x) => x.src === a || x.dst === a);
     if (mine.length) h += '<div class="ln">' + mine.map((x) => '<span class="xs x-' + esc(x.status) + '" title="' + esc(x.why || "") + '">' + esc(x.id) + " ⇄ " + esc(short(x.src === a ? x.dst : x.src)) + " " + esc(XSTAT_KO[x.status] || x.status) + "</span>").join(" ") + "</div>";
-    if ("representative" in row) { // v15: the agent's own PICK / BAN (anonymous to the agents) and what it received
+    if (r.joint) { // v36: its own task's result; no solver
+      if (row.solve_call) h += '<div class="ln"><span class="tag">공동 SOLVE · 자기 과제</span> ' + (row.solved ? '<span class="pst ok">✓ 맞음</span>' : row.passed ? '<span class="pst">PASS</span>' : row.truncated ? '<span class="pst bad">⛔ 한도 도달</span>' : '<span class="pst bad">✗ 틀림</span>') +
+        (r.results ? ' <span class="dim">· 팀: ' + esc(jointTeam(r.results)) + "</span>" : "") + "</div>";
+      else h += '<div class="ln"><span class="dim">SOLVE 없음 (' + (row.exit ? "SOLVE 전에 EXIT" : "꺼짐") + ")</span></div>";
+    } else if ("representative" in row) { // v15: the agent's own PICK / BAN (anonymous to the agents) and what it received
       const rw = r.rot ? "solver" : "대표";
       h += '<div class="ln">' + (row.representative ? '<span class="tag rep' + (r.rot ? ' solver">' + lotIcon(11) + " SOLVER" : '">👑 ' + rw) + "</span> " + (row.solved ? '<span class="pst ok">✓ 풂</span>' : '<span class="pst bad">✗ 못 풂</span>') + " " : '<span class="dim">SOLVE 없음 (' + rw + " 아님)</span> ") +
         (r.rot ? '<span class="dim">· 시스템이 정함 (투표 없음)</span>' : '<span class="dim">· 받은 PICK</span> ' + fmt(row.picks_received) + ' <span class="dim">· BAN</span> ' + fmt(row.bans_received)) + "</div>";
@@ -1856,9 +1912,10 @@
     const rounds = [...m.rounds.values()].filter((r) => keep.includes(r.r)).sort((p, q) => p.r - q.r);
     for (const r of rounds) {
       const st = r.startEv || {};
-      const pb = st.public;
+      const pb = st.public || (st.tasks ? Object.values(st.tasks)[0] : null); // v36: each agent's task, the same counts
       h += '<div class="rband" id="r' + r.r + '"><b>라운드 ' + r.r + "</b> <span class=dim>· 과제 " + esc(r.profile) + " · 참여 " + r.taking.length + "명" +
         (pb ? " · 공개 예시 " + (pb.examples || []).length + "개 (" + pb.per_agent + "×" + pb.n + ", k=" + pb.ambiguity + (pb.attempt ? ", 규칙 재추첨 " + pb.attempt : "") + ")" : "") + " · 시작 잔액</span> " + ag.map((a) => '<span class="mini">' + esc(short(a)) + " " + fmt((st.balances || {})[a]) + "</span>").join(" ") + (Object.keys(st.gone || {}).length ? ' <span class="dim">· 빠짐 ' + Object.entries(st.gone).map(([a, v]) => short(a) + "(" + (v === "dead" ? "종료" : "퇴장") + ")").join(", ") + "</span>" : "") +
+        (r.joint ? ' <span class="tag">공동 SOLVE · 과제 ' + Object.keys(st.tasks || {}).length + "개 (자리마다 다름) · solver 없음</span>" : "") +
         (r.vote ? ' <span class="tag rep' + (r.vote.drawn ? " solver" : "") + '">' + (r.vote.drawn ? lotIcon(11) + " SOLVER " : "👑 대표 ") + esc(r.vote.rep || "없음") + (r.vote.drawn ? " · 시스템" : "") + "</span>" : "") + "</div>";
       for (const t of [...(r.board || new Map()).values()].sort((p, q) => p.k - q.k)) { // v15 open_chat
         h += '<div class="grow"><div class="rh"><b>공개 대화 ' + t.k + "</b><span class=dim>/" + (m.settings.open_chat || "?") + "</span></div>";
@@ -1985,15 +2042,15 @@
     return '<div class="clue" title="' + esc(c.signal.text) + '">' + sigHTML(c.signal, size ? size - 8 : 14) + (window.SIG ? "" : '<span class="ctext">' + esc(c.signal.text) + "</span>") + '<span class="arrow">→</span>' + act(c.action) + "</div>";
   }
 
-  function puzzleFor(r) {
+  function puzzleFor(r, agent) { // agent: v36, whose task (each agent taking part has its own)
     if (S.embed) {
       const P = S.embed.puzzles || {};
-      return P[String(r)] || { error: S.embed.puzzle_error || "내보낸 파일에 라운드 " + r + " 문제가 없습니다." };
+      return P[String(r) + (agent ? ":" + agent : "")] || P[String(r)] || { error: S.embed.puzzle_error || "내보낸 파일에 라운드 " + r + " 문제가 없습니다." };
     }
-    const key = S.run + "|" + S.session + "|" + r;
+    const key = S.run + "|" + S.session + "|" + r + (agent ? "|" + agent : "");
     if (S.puzzles.has(key)) return S.puzzles.get(key);
     S.puzzles.set(key, { loading: true });
-    getJSON("api/puzzle?run=" + encodeURIComponent(S.run) + "&session=" + encodeURIComponent(S.session) + "&round=" + r)
+    getJSON("api/puzzle?run=" + encodeURIComponent(S.run) + "&session=" + encodeURIComponent(S.session) + "&round=" + r + (agent ? "&agent=" + encodeURIComponent(agent) : ""))
       .then((j) => { S.puzzles.set(key, j); })
       .catch((err) => { S.puzzles.set(key, { error: err.message }); setTimeout(() => S.puzzles.delete(key), 10000); })
       .then(() => render(true));
@@ -2027,8 +2084,9 @@
     const parts = String(rule || "").split("; ").filter((x) => !/^else/.test(x));
     return parts.map((x, i) => (i ? "elif " : "if ") + Array((x.match(/ and /g) || []).length + 1).fill("____").join(" and ") + ": ____").concat(["else: ____"]).join("; ");
   }
-  function puzzleFromLog(m, r, note) {
-    const st = (m.rounds.get(r) || {}).startEv, pub = st && st.public;
+  function puzzleFromLog(m, r, note, agent) {
+    const st = (m.rounds.get(r) || {}).startEv, tasks = st && st.tasks; // v36: one task per agent (agent: whose; default the first)
+    const who = tasks ? (agent && tasks[agent] ? agent : Object.keys(tasks)[0]) : null, pub = st && (tasks ? tasks[who] : st.public);
     if (!pub || !pub.examples) return null;
     const sig = (t) => { const x = /^(\w+) (\w+) with number (\d+)/.exec(t || ""); return x ? { color: x[1], shape: x[2], number: Number(x[3]), text: x[0] } : null; };
     const pubs = pub.examples.map((t) => { const sg = sig(t), a = (/-> (\w+)$/.exec(t) || [])[1]; return sg && { signal: sg, text: t, action: a }; }).filter(Boolean);
@@ -2036,7 +2094,19 @@
       queries: (pub.queries || []).map(sig).filter(Boolean), answers: pub.answers || [], rule_text: pub.rule || "(기록에 없음)", generator_rule: pub.generator_rule || null,
       per_agent: pub.per_agent, n: pub.n, ambiguity: pub.ambiguity, attempt: pub.attempt, left: [], split: [], by_n: [],
       target: pub.split != null ? { split: pub.split, truth_major: pub.truth_major, pool: pub.pool, pool_full: pub.pool_full, truth_share: pub.truth_share } : null,
-      task: pub.task || null, task_source: pub.task ? "log" : null };
+      task: pub.task || null, task_source: pub.task ? "log" : null, ...(tasks ? { agent: who, joint: true, task_agents: Object.keys(tasks) } : {}) };
+  }
+  // v36: the agent whose task the round panel shows (the one chosen if it got a task that round, else the first) and the
+  // buttons to choose; null / "" for a round with one task
+  function pzAgentOf(m, R) {
+    const T = ((m.rounds.get(R) || {}).startEv || {}).tasks;
+    return T ? (S.pzAgent && T[S.pzAgent] ? S.pzAgent : Object.keys(T)[0] || null) : null;
+  }
+  function pzAgentBtns(m, R, who) {
+    const T = ((m.rounds.get(R) || {}).startEv || {}).tasks;
+    if (!T) return "";
+    return '<div class="pzag" role="group" aria-label="누구의 과제"><span class="dim">공동 SOLVE · 자리마다 다른 과제 · 누구의 과제</span> ' + Object.keys(T).map((a) =>
+      '<button type="button" class="btn' + (a === who ? "" : " ghost") + '" data-pzag="' + esc(a) + '" aria-pressed="' + (a === who) + '">' + esc(a) + "</button>").join(" ") + "</div>";
   }
 
   /* v14+ round panel, three columns (researcher 15:01): LEFT the task (rule shape, new signal) and MIDDLE every example
@@ -2170,7 +2240,7 @@
       (ideal ? " · 이상적 " + Math.round(100 * (ideal[a] || 0)) + "%" : "") + '">' + esc(emo(a)) + "<i style=\"width:" + Math.max(2, Math.round(40 * b[a])) + 'px"></i>' + Math.round(100 * b[a]) + "%</span>").join("") + "</span>";
   }
   function beliefHTML(m, P, ideal) {
-    const rows = beliefRows(m, P.round);
+    const rows = beliefRows(m, P.round).filter((x) => !P.agent || x.agent === P.agent); // v36: this task's agent only
     if (!rows.length) return "";
     const v15 = rows.some((x) => x.kl != null || x.picked_top != null), key = (P.answers || [])[0];
     // 10-17: the row is green when the seat's submitted action is the scoring answer, red when not (engine's solved if no ACTIONS)
@@ -2179,7 +2249,7 @@
       '<div class="pntabw"><table class="pntab"><thead><tr><th>자리</th><th>BELIEF</th><th title="SOLVE의 ACTIONS 줄 (첫 새 신호)">제출 답</th><th title="이상적 몫과의 총변동 거리">TV</th><th title="Brier (이상적 Brier)">Brier</th>' +
       (v15 ? '<th title="KL(이상적 몫 ‖ BELIEF), nat (엔진의 kl_ideal_to_belief)">KL</th><th title="제출 답이 몫 최대 행동인가 (picked_top) · 그 몫 (picked_share)">몫 최대 고름</th><th title="뽑힌 규칙의 답과 같은가 (엔진의 solved)">solved</th>' : "") + "</tr></thead><tbody>" +
       (ideal ? '<tr class="ideal"><td>이상적</td><td>' + beliefBars(ideal) + "</td><td></td><td>0</td><td>" + (rows[0].ideal_brier != null ? Number(rows[0].ideal_brier).toFixed(3) : "—") + "</td>" + (v15 ? "<td>0</td><td></td><td></td>" : "") + "</tr>" : "") +
-      rows.map((x) => '<tr class="' + (ok(x) == null ? "" : ok(x) ? "bl-ok" : "bl-bad") + '"><td>' + chip(x.agent, m) + (x.rep ? ' <span class="tag rep">' + ([...m.rounds.values()].some((r) => r.rot) ? "SOLVER" : "대표") + "</span>" : "") + "</td><td>" + (x.belief ? beliefBars(x.belief, ideal) : '<span class="warn">' + esc(x.error || "없음") + "</span>") + "</td><td>" +
+      rows.map((x) => '<tr class="' + (ok(x) == null ? "" : ok(x) ? "bl-ok" : "bl-bad") + '"><td>' + chip(x.agent, m) + (x.rep && !isJoint(m) ? ' <span class="tag rep">' + ([...m.rounds.values()].some((r) => r.rot) ? "SOLVER" : "대표") + "</span>" : "") + "</td><td>" + (x.belief ? beliefBars(x.belief, ideal) : '<span class="warn">' + esc(x.error || "없음") + "</span>") + "</td><td>" +
         (x.pick ? actChip(x.pick) : "—") + (ok(x) == null ? "" : ok(x) ? ' <span class="pst ok">✓</span>' : ' <span class="pst bad">✗</span>') + "</td><td>" + (x.tv != null ? Number(x.tv).toFixed(3) : "—") +
         "</td><td>" + (x.brier != null ? Number(x.brier).toFixed(3) : "—") + "</td>" +
         (v15 ? "<td>" + (x.kl != null ? Number(x.kl).toFixed(3) : "—") + "</td><td>" + (x.picked_top == null ? "—" : (x.picked_top ? '<span class="pst ok">✓</span>' : '<span class="pst bad">✗</span>') + " " + Math.round(100 * x.picked_share) + "%") +
@@ -2217,7 +2287,8 @@
     const qs = P.queries || [];
     const band = P.eff && P.eff[Math.min(P.n, P.eff.length) - 1]; // v15: the round's entropy range for N taking part
     const kTxt = band ? "엔트로피 " + Number(band[0]).toFixed(2) + "–" + Number(band[1]).toFixed(2) + " bit (참여 " + P.n + "명) · 시스템이 고름 · 정답 = 뽑힌 규칙" : P.ambiguity ? "k=" + P.ambiguity + " · 시스템이 고름" : "k=0 · 무작위 순서";
-    let h = '<div class="pmeta"><b class="pxl">R' + P.round + "</b> <span class=dim>과제</span> <code>" + esc(P.profile) + "</code> <span class=dim>· 참여 " + P.n + "명 × 예시 " + P.per_agent + " · " + esc(kTxt) + (P.attempt ? " · 규칙 재추첨 " + P.attempt + "번" : "") +
+    let h = pzAgentBtns(m, P.round, P.agent) + '<div class="pmeta"><b class="pxl">R' + P.round + "</b> <span class=dim>과제</span> <code>" + esc(P.profile) + "</code>" +
+      (P.agent ? " <b>" + esc(P.agent) + "의 과제</b> <span class=dim>(이 자리만 봄)</span>" : "") + " <span class=dim>· 참여 " + P.n + "명 × 예시 " + P.per_agent + " · " + esc(kTxt) + (P.attempt ? " · 규칙 재추첨 " + P.attempt + "번" : "") +
       (P.task ? " · 새 신호가 만족하는 절 " + esc(P.task.query_overlap) + "개 · 규칙 꼴 " + esc(P.task.rule_pattern || "—") + " (" + (P.task_source === "log" ? "기록" : "다시 계산") + ")" : "") + "</span></div>";
     if (P.from_log) h += '<div class="banner warn">기록에서 표시 (' + esc(P.note) + ")</div>";
     if (P.matches_log === false) h += '<div class="banner warn">엔진으로 다시 만든 예시가 기록(round_start)과 다릅니다 — 기록된 예시를 보여 줍니다(에이전트가 본 것).</div>';
@@ -2240,9 +2311,9 @@
     const ctl = $("#puzzleCtl");
     if (ctl) ctl.innerHTML = roundCtl("puzzle", m, true);
     const R = pickRounds(m, { round: S.sel.puzzle.round, all: false })[0] || m.round; // the panel's round (default: the replay bar's)
-    const P = puzzleFor(R);
+    const who = pzAgentOf(m, R), P = puzzleFor(R, who); // v36: one task per agent
     if (P.loading || P.error) { // never blank: the round's own record carries the task in v14+
-      const L = puzzleFromLog(m, R, P.loading ? "엔진으로 다시 만드는 중…" : "재구성 실패: " + P.error);
+      const L = puzzleFromLog(m, R, P.loading ? "엔진으로 다시 만드는 중…" : "재구성 실패: " + P.error, who);
       if (L) return renderPublicPuzzle(m, L, box);
       box.innerHTML = P.loading ? '<div class="empty">라운드 ' + R + " 문제를 엔진으로 다시 만드는 중…</div>" : '<div class="banner bad">라운드 ' + R + " 문제를 만들 수 없음: " + esc(P.error) + "</div>";
       return;
@@ -3071,7 +3142,7 @@
     const shown = S.runs.filter((r) => runMatch(r));
     const sel = $("#runSel");
     const opts = shown.map((r) => '<option value="' + esc(r.run) + '">' + (S.simple && r.label ? esc(r.label) :
-      (r.live ? "● " : r.done ? "✓ " : "○ ") + esc(r.run) + (r.model ? " · " + esc(r.model) : "") + ((r.harness || []).length ? " · " + esc(r.harness.join(" + ")) : "") + (r.think ? " · " + esc(r.think) : "")) + "</option>");
+      (r.live ? "● " : r.done ? "✓ " : "○ ") + esc(r.run) + (r.version ? " · " + esc(r.version) + (r.joint ? " 공동 SOLVE" : "") : "") + (r.model ? " · " + esc(r.model) : "") + ((r.harness || []).length ? " · " + esc(r.harness.join(" + ")) : "") + (r.think ? " · " + esc(r.think) : "")) + "</option>");
     if (!shown.length) opts.push("<option value=''>조건에 맞는 실행 없음</option>");
     sel.innerHTML = opts.join("");
     $("#fCount").textContent = "실행 " + shown.length + " / " + S.runs.length;
@@ -3180,7 +3251,9 @@
     });
     $("#puzzle").addEventListener("click", (ev) => {
       const nb = ev.target.closest("[data-pzn]"), P = S.model && S.model.round ? pickRounds(S.model, { round: S.sel.puzzle.round, all: false })[0] : null;
-      if (nb && P != null) { S.pzN.set(P, Number(nb.dataset.pzn)); render(true); }
+      const ab = ev.target.closest("[data-pzag]"); // v36: whose task
+      if (ab) { S.pzAgent = ab.dataset.pzag; render(true); }
+      else if (nb && P != null) { S.pzN.set(P, Number(nb.dataset.pzn)); render(true); }
       else if (ev.target.closest("[data-exhidden]")) { S.showHidden = !S.showHidden; render(true); }
     });
     $("#rflow").addEventListener("click", (ev) => { // v22 round flow: a box (again: back to the replay bar's box)
@@ -3316,6 +3389,6 @@
     setInterval(loadRuns, RUNS_MS);
   }
 
-  window.__monitor = { turnKeyLabel, renderGraph, squidAvatar, squidProfile, roomList, roomView, tickStrip, renderMessenger, isMsg, build, gameFlow, S, offerKind, modelShort, pickRounds, convoItems, convoHTML, chatRows, chatView, compact, puzzleFromLog, beliefRows, givingBins, slopeOf, binBy, median, describe, voteHTML, vetoOf, boardHTML, recordHTML, renderRecord, openRec, renderPuzzle, renderGiving, transferPanels, renderStage, renderFlow, renderChats, renderSolve, renderRoundFlow, solveRows, rfStepOf, rfCalls, beliefOf, lotIcon, guardAvatar };
+  window.__monitor = { isJoint, jointMark, jointLine, turnKeyLabel, renderGraph, squidAvatar, squidProfile, roomList, roomView, tickStrip, renderMessenger, isMsg, build, gameFlow, S, offerKind, modelShort, pickRounds, convoItems, convoHTML, chatRows, chatView, compact, puzzleFromLog, beliefRows, givingBins, slopeOf, binBy, median, describe, voteHTML, vetoOf, boardHTML, recordHTML, renderRecord, openRec, renderPuzzle, renderGiving, transferPanels, renderStage, renderFlow, renderChats, renderSolve, renderRoundFlow, solveRows, rfStepOf, rfCalls, beliefOf, lotIcon, guardAvatar };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
 })();

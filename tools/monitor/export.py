@@ -72,12 +72,15 @@ def build_page(payload: dict) -> str:
 
 
 def session_puzzles(run_dir: Path, sid: str, events: list[dict]) -> tuple[dict, str | None]:
-    """{round: puzzle} for every round the session started; an error string instead when the task cannot be rebuilt."""
-    rounds = sorted({int(e["round"]) for e in events if e.get("event") == "round_start" and e.get("round")})
+    """{round: puzzle} for every round the session started; an error string instead when the task cannot be rebuilt.
+    v36 (joint SOLVE): also {"round:agent": that agent's own task} ("round" = the first agent's)."""
+    starts = {int(e["round"]): e for e in events if e.get("event") == "round_start" and e.get("round")}
     out = {}
     try:
-        for r in rounds:
+        for r in sorted(starts):
             out[str(r)] = serve.round_puzzle(run_dir, sid, r)
+            for a in starts[r].get("tasks") or {}:
+                out[f"{r}:{a}"] = serve.round_puzzle(run_dir, sid, r, a)
     except Exception as err:  # noqa: BLE001 - the page still works without the panel's data
         return out, f"puzzle rebuild failed: {err}"
     return out, None
