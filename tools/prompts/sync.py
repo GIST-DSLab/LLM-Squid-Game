@@ -23,7 +23,8 @@ EN, KO = ROOT / "squid5/prompts/en", ROOT / "squid5/prompts/ko"
 SNAPSHOTS = {"e52_v33ab_flat5m.md": "configs/squid5/e52v33ab_flat5m_docker_sol4.yaml",
              "e52_v33.md": "configs/squid5/e52v33_public_sol4.yaml",  # the engine runs v33 rules; older e52_v*.md are frozen
              "e52_v33ab_split600k.md": "configs/squid5/e52v33ab_split600k_docker_sol4.yaml",  # 11-03 = v33, 600,000 split
-             "e52_v33ab_flat150k.md": "configs/squid5/e52v33ab_flat150k_docker_sol4.yaml"}  # 11-03 = v33, 150,000 to each
+             "e52_v33ab_flat150k.md": "configs/squid5/e52v33ab_flat150k_docker_sol4.yaml",  # 11-03 = v33, 150,000 to each
+             "e52_v33so_stayon.md": "configs/squid5/e52v33so_stayon_docker_sol4.yaml"}  # 11-08 = v33, zero worded as no shutdown
 # records of their versions (tag e52-v32-final; v34 / v35 configs: tag archive/configs-v34-v35-tokctl), still checked for their ko copies
 HEADER = "<!-- ko of en/{name} sha256={sha} -->"  # yaml files use '# ko of en/{name} sha256={sha}'
 SEED = 4101  # the round-1 solver is the poorest seat (agent-17, 10,000)

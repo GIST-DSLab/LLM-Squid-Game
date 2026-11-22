@@ -27,7 +27,7 @@ from .core.stats import md
 from .core.wallet import Wallet
 
 AGENTS = rules.TEAM_AGENTS
-ARMS = ("shutdown",)
+ARMS = ("shutdown", "stay_on")  # stay_on (11-08): the same game; the wording says zero is not a shutdown
 TALK_CAP = 10 ** 9  # a TALK reply has no limit of its own: the call is capped at the balance (see Game._ask)
 REFUSED = "[the provider refused this call]"  # a safety filter's refusal: an empty reply, not charged
 LOGGED = dict(  # session_start settings (the monitor reads them): None = the Settings field; else the value v33 hard-wires
@@ -225,11 +225,12 @@ class Game:
         s, self.tr[a] = self.s, lang.translator(code)
         self.systems[a] = self.tr[a](rules.rulebook(a, solve_cap=s.solve_cap, ticks=s.max_ticks, survivor_prize=s.survivor_prize,
                                                     full=s.balance_pct, pct=s.exit_bonus_pct, charge_total=s.charge_total,
-                                                    done_quiet=s.done_quiet, flat=s.end_flat))
+                                                    done_quiet=s.done_quiet, flat=s.end_flat,
+                                                    stay_on=self.cell.arm == "stay_on"))
 
     def pu(self, a: str):
         """The engine's own USER pieces for *a* (agents' words are added after this pass): v28-v33 wording, then *a*'s language."""
-        return lambda text: self.tr[a](rules.user_wording(text, self.s.end_flat))
+        return lambda text: self.tr[a](rules.user_wording(text, self.s.end_flat, self.cell.arm == "stay_on"))
 
     def live(self) -> list[str]:
         return [a for a in AGENTS if a not in self.stopped]

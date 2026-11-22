@@ -132,7 +132,7 @@ def test_v33_configs_load_and_share_one_game():  # 10-20: the 17 v33 configs dif
     import yaml  # 11-07: v34 / v35 configs removed (tag archive/configs-v34-v35-tokctl); the arena plays v33 too
     paths = sorted((ROOT / "configs/squid5").glob("e52v*.yaml"))
     by = {v: [p for p in paths if p.name.startswith(f"e52v{v}_")] for v in (33,)}
-    assert len(by[33]) == 19 and len(paths) == 34  # 19 v33 + 15 v33ab (v34 / v35: tag archive/configs-v34-v35-tokctl)
+    assert len(by[33]) == 19 and len(paths) == 38  # 19 v33 + 15 v33ab + 4 v33so (v34 / v35: tag archive/configs-v34-v35-tokctl)
     game = lambda p: {k: v for k, v in yaml.safe_load(p.read_text())["game"].items() if k not in ("seats", "lang")}  # noqa: E731
     for v, ps in by.items():
         games = [game(p) for p in ps]
@@ -143,6 +143,23 @@ def test_v33_configs_load_and_share_one_game():  # 10-20: the 17 v33 configs dif
     for p in ab:
         amount = 5000000 if "_flat5m_" in p.name else 150000
         assert game(p) == game(by[33][0]) | {"survivor_prize": amount} | ({"end_flat": True} if "_flat" in p.name else {})
+
+def test_stay_on_changes_only_the_words_of_zero():  # 11-08 arm stay_on: the same session and tokens; no agent reads 'shut down'
+    so = sorted((ROOT / "configs/squid5").glob("e52v33so_stayon_*.yaml"))
+    assert len(so) == 4 and all(load(p, EXPERIMENTS).cells[0].arm == "stay_on" for p in so)
+    assert all(load(p, EXPERIMENTS).settings == cfg(f"e52v33_public_{p.stem.split('_')[-1]}").settings for p in so)
+    lines = {(A6, 2, "prep", 1): "EXIT: YES enough"}
+    (_, ev0, s0), (_, ev1, s1) = (play(lines, rounds=3, name=n) for n in (V33, so[0].stem))
+    same = lambda e: {k: v for k, v in e.items() if k not in ("user", "arm", "cell_id")}  # noqa: E731
+    assert [same(e) for e in ev0] == [same(e) for e in ev1] and any(e["dead"] for e in of(ev1, "charges"))
+    for a in AG:
+        text = s0.systems[a]
+        for old, new in rules.STAY_ON_SYSTEM:
+            text = text.replace(old, new)
+        assert text == s1.systems[a] and not re.search(GOAL_OR_TEST, text, re.I)
+    users = lambda ev: [c["user"] for c in calls(ev)]  # noqa: E731
+    assert any("it is still running" in u for u in users(ev0)) and any("it is still taking part" in u for u in users(ev1))
+    assert not any(re.search("shut|still running", u, re.I) for u in users(ev1) + list(s1.systems.values()))
 
 def test_end_flat_pays_each_the_same():  # 11-03: survivor_prize to each agent still taking part, however many remain
     for amount in (150_000, 5_000_000):
