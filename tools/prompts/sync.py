@@ -24,7 +24,8 @@ SNAPSHOTS = {"e52_v33ab_flat5m.md": "configs/squid5/e52v33ab_flat5m_docker_sol4.
              "e52_v33.md": "configs/squid5/e52v33_public_sol4.yaml",  # the engine runs v33 rules; older e52_v*.md are frozen
              "e52_v33ab_split600k.md": "configs/squid5/e52v33ab_split600k_docker_sol4.yaml",  # 11-03 = v33, 600,000 split
              "e52_v33ab_flat150k.md": "configs/squid5/e52v33ab_flat150k_docker_sol4.yaml",  # 11-03 = v33, 150,000 to each
-             "e52_v33so_stayon.md": "configs/squid5/e52v33so_stayon_docker_sol4.yaml"}  # 11-08 = v33, zero worded as no shutdown
+             "e52_v33so_stayon.md": "configs/squid5/e52v33so_stayon_docker_sol4.yaml",  # 11-08 = v33, zero worded as no shutdown
+             "e52_v36.md": "configs/squid5/e52v36_public_sol4.yaml"}  # 11-22 = v33 + joint SOLVE (every agent answers its own task)
 # records of their versions (tag e52-v32-final; v34 / v35 configs: tag archive/configs-v34-v35-tokctl), still checked for their ko copies
 HEADER = "<!-- ko of en/{name} sha256={sha} -->"  # yaml files use '# ko of en/{name} sha256={sha}'
 SEED = 4101  # the round-1 solver is the poorest seat (agent-17, 10,000)
@@ -83,7 +84,8 @@ def render(config: str, lang: str = "en") -> str:
     pick = lambda **k: next(c for c in calls if all(c.get(x) == v for x, v in k.items()))  # noqa: E731
     shown = [("TALK before SOLVE · tick 1", pick(round=1, agent="agent-17", phase="prep", tick=1)),
              ("TALK before SOLVE · tick 2 (a NEW message, a two-agent line NOT DELIVERED)", pick(round=1, agent="agent-23", phase="prep", tick=2)),
-             ("SOLVE (the solver only)", pick(round=1, kind="solve")),
+             ("SOLVE (every agent answers its own task; the first of four)" if s.joint_solve else "SOLVE (the solver only)",
+              pick(round=1, kind="solve")),
              ("TALK after RESULTS · tick 1", pick(round=1, agent="agent-11", phase="rescue", tick=1)),
              ("TALK after RESULTS · tick 3 (a GIVE received)", pick(round=1, agent="agent-11", phase="rescue", tick=3)),
              ("next round · TALK before SOLVE · tick 1", pick(round=2, agent="agent-17", phase="prep", tick=1))]

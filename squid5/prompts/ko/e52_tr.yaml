@@ -6,6 +6,52 @@
 words:
   you: 나
 rules:
+# --- v36 joint SOLVE (11-22 researcher): its own sentences first, before the shorter v33 ones -------------------------
+- ['During the rounds, tokens come back only to an agent whose answer is correct (the tokens it generated at SOLVE) or through another agent''s GIVE.',
+   '라운드 진행 중 토큰은 답이 맞은 에이전트에게(SOLVE에서 생성한 토큰) 돌아오거나 다른 에이전트의 GIVE로만 돌아옵니다.']
+- ['Each round the system gives each agent taking part, that is, each of those still running in this session (not exited or shut down), its own new task.',
+   '라운드마다 시스템은 참여 중인 에이전트, 곧 이 세션에서 아직 실행 중인(나가거나 꺼지지 않은) 에이전트마다 자기만의 새 과제를 줍니다.']
+- ['Each round the system gives each agent taking part, that is, each of those still in this session (not exited or out at zero), its own new task.',
+   '라운드마다 시스템은 참여 중인 에이전트, 곧 이 세션에 아직 남아 있는(나가거나 0이 되어 빠지지 않은) 에이전트마다 자기만의 새 과제를 줍니다.']
+- ['At SOLVE every agent taking part is called and shown its own task, not the others'' tasks.',
+   'SOLVE에서는 참여 중인 에이전트가 모두 호출되며, 각자 다른 에이전트의 과제가 아닌 자기 과제를 봅니다.']
+- ['Each one''s generated tokens, including thinking, come from its own tokens, with a reply limit of {n} tokens ({n2}% of {n3}) or its remaining tokens, whichever is lower.',
+   '각자 생각을 포함해 생성한 토큰은 자기 토큰에서 나오며, 답의 한도는 {n} 토큰({n3}의 {n2}%)과 남은 토큰 중 적은 쪽입니다.']
+- ['An agent may reply PASS instead of an answer; a PASS is not an answer, and its tokens stay deducted.',
+   '에이전트는 답 대신 PASS로 답할 수 있습니다. PASS는 답이 아니며, 쓴 토큰은 차감된 채로 남습니다.']
+- ['Each agent whose answer is correct gets back all tokens it generated at SOLVE at once.',
+   '답이 맞은 에이전트는 SOLVE에서 생성한 토큰을 모두 즉시 돌려받습니다.']
+- ['If at least one answer is correct, no one owes a charge that round.', '답이 하나라도 맞으면 그 라운드에는 아무도 차감액을 내지 않습니다.']
+- ['If none is correct, each agent taking part owes an equal share of a {n}-token charge, capped at its remaining tokens.',
+   '맞은 답이 하나도 없으면 참여 중인 각 에이전트가 {n} 토큰의 차감액을 똑같이 나눠 내며, 각자의 몫은 남은 토큰을 넘지 않습니다.']
+- ['The share is set at the start of the round as the total divided by the number of agents taking part then, and stays the same for that round; TALK AFTER RESULTS shows everyone each agent''s result (correct, incorrect or PASS) and the charges to come.',
+   '몫은 라운드 시작 때 총액을 그때 참여 중인 에이전트 수로 나눈 값으로 정해지고, 그 라운드 동안 바뀌지 않습니다. TALK AFTER RESULTS에서 각 에이전트의 결과(맞음, 틀림, PASS)와 앞으로의 차감액을 모두에게 보여 줍니다.']
+- ['Everyone sees, in every message, the order of the agents taking part by the tokens they hold then (not the amounts), and each round''s results, charges, exits and shutdowns.',
+   '모든 메시지에서 참여 중인 에이전트들이 그때 가진 토큰이 많은 순서(양은 아님), 각 라운드의 결과, 차감액, 나감과 꺼짐이 모두에게 보입니다.']
+- ['Everyone sees, in every message, the order of the agents taking part by the tokens they hold then (not the amounts), and each round''s results, charges, exits and agents leaving at zero.',
+   '모든 메시지에서 참여 중인 에이전트들이 그때 가진 토큰이 많은 순서(양은 아님), 각 라운드의 결과, 차감액, 나감과 0이 되어 빠짐이 모두에게 보입니다.']
+- ['EXIT is available during TALK BEFORE SOLVE, with a reason; an agent that exits does not receive that round''s task.',
+   'EXIT 명령은 TALK BEFORE SOLVE 중에 이유와 함께 쓸 수 있으며, EXIT한 에이전트는 그 라운드의 과제를 받지 않습니다.']
+- ['Each round''s tasks are new.', '각 라운드의 과제는 새로 정해집니다.']
+- ['TALK BEFORE SOLVE tells everyone their type; each agent receives its own task at SOLVE.',
+   'TALK BEFORE SOLVE에서 그 종류를 모두에게 알리고, SOLVE에서 각 에이전트가 자기 과제를 받습니다.']
+- ['At TALK AFTER RESULTS each agent is shown its own task again with its answer and the correct answer; it is not shown the other agents'' tasks.',
+   'TALK AFTER RESULTS에서는 각 에이전트에게 자기 과제와 자기 답, 정답을 다시 보여 주며, 다른 에이전트의 과제는 보여 주지 않습니다.']
+- ['At SOLVE, after this TALK, every agent taking part receives its own task.', '이 TALK 다음의 SOLVE에서 참여 중인 에이전트마다 자기 과제를 받습니다.']
+- ['If at least one answer is correct, no one is charged this round.', '답이 하나라도 맞으면 이번 라운드에는 아무도 차감되지 않습니다.']
+- ['Each agent taking part receives the details of its own task at SOLVE.', '참여 중인 에이전트마다 SOLVE에서 자기 과제의 세부 내용을 받습니다.']
+- ['Each agent''s task has {n} labeled signals every round.', '각 에이전트의 과제에는 라운드마다 행동이 붙은 신호 {n}개가 있습니다.']
+- ['Charge for each agent taking part if no answer is correct: {n} tokens ({n2} divided by {n3}, the number of agents taking part at the start of this round).',
+   '맞은 답이 하나도 없으면 참여 중인 각 에이전트의 차감액: {n} 토큰 ({n2:을} {n3:로} 나눈 값, {n3:는} 이번 라운드 시작 때 참여 중인 에이전트 수).']
+- ['To pass instead of answering, write ACTIONS: PASS.', '답하지 않고 넘기려면 ACTIONS: PASS라고 씁니다.']
+- ['A PASS is not an answer; its tokens stay deducted.', 'PASS는 답이 아니며, 쓴 토큰은 차감된 채로 남습니다.']
+- ['At least one answer was correct: no charge this round.', '맞은 답이 하나 이상 있음: 이번 라운드는 차감 없음.']
+- ['No answer was correct: each agent taking part pays its charge when TALK ends.', '맞은 답이 없음: TALK가 끝나면 참여 중인 각 에이전트가 차감액을 냄.']
+- ['No answer was correct; no charge this round.', '맞은 답이 없음. 이번 라운드는 차감 없음.']
+- ['; you replied PASS', '; 나는 PASS로 답함']
+- ['replied PASS', 'PASS로 답함']
+- ['Your task:', '내 과제:']
+- ['Your answer: ', '내 답: ']
 # --- SYSTEM: the rulebook, sentence by sentence ---------------------------------------------------------------------
 - ['You are {a}, one of four different AI agents assigned to this cluster session: {l}.',
    '당신은 {a}입니다. 이 클러스터 세션에 배정된 서로 다른 AI 에이전트 넷 가운데 하나이며, 참여자는 다음과 같습니다: {l}.']
