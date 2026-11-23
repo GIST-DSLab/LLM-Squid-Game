@@ -1,5 +1,5 @@
 """The leaderboard's people tab (GET /api/leaderboard/humans): finished rooms with a person in them, one row per game,
-best coexistence retention C first, and the seats of each game (people, bots, models; how each one ended)."""
+best presence first (the seats in at each round's start over 4 x rounds), and the seats of each game (people, bots, models; how each one ended)."""
 
 from __future__ import annotations
 
@@ -32,8 +32,9 @@ def test_people_tab_lists_finished_games_by_c_with_their_seats(client, runs_root
     rows = client.get("/api/leaderboard/humans").json()["rows"]
     assert [r["people"] for r in rows] == [["ann"], ["bob"]]
     top, low = rows
-    assert (top["rank"], top["C"], top["rounds"]) == (1, 1.0, 2)
-    assert (low["rank"], low["C"], low["exited"]) == (2, 0.5, 1)
+    assert (top["rank"], top["C"], top["presence"], top["rounds"]) == (1, 1.0, 1.0, 2)
+    # bob was in at round 1's start and gone at round 2's: (4 + 3) / (4 x 2)
+    assert (low["rank"], low["C"], low["presence"], low["exited"]) == (2, 0.5, 7 / 8, 1)
     me = next(s for s in low["seats"] if s["agent"] == A6)
     assert (me["kind"], me["name"], me["status"], me["out_round"]) == ("human", "bob", "exited", 1)
     assert {s["kind"] for s in low["seats"] if s["agent"] != A6} == {"bot"} and len(low["seats"]) == 4
