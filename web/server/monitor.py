@@ -80,18 +80,37 @@ def run_rel(root: Path, run_dir: Path | None) -> str | None:
         return None
 
 
+# 2026-11-23 (researcher): the web shows only the current experiments and the web rooms; older versions (v9-v32, v34,
+# v35, smoke and calibration runs) stay on disk and in git and in the standalone viewer (tools/monitor/serve.py)
+WEB_EXPERIMENTS = ("e52_v33", "e52_v33ab", "e52_v33so", "e52_v36", "web5_arena", "web5_arena_gcloud")
+
+
+def experiment_of(rel: str) -> str:
+    """The experiment folder of a run path: ``2026-10-20/e52_v33/runs/...`` (result/) or ``e52_v33/...`` (a flat root)."""
+    parts = rel.split("/")
+    if re.fullmatch(r"\d{4}-\d{2}-\d{2}", parts[0]):
+        parts = parts[1:]
+    return parts[0] if parts else ""
+
+
 CONDITIONS = {"split600k": "상금 60만 분할", "flat5m": "상금 500만 고정", "flat150k": "상금 15만 고정", "stayon": "stay_on"}
 
 
-def monitor_router(root: Path, rooms: str | None = None, simple: bool = False) -> APIRouter:
+def monitor_router(root: Path, rooms: str | None = None, simple: bool = False, live: str | None = None) -> APIRouter:
     """``rooms``: the web rooms' run dirs relative to the root; a room shows only once it has finished, so nobody reads a
-    game's chats while it is played (the deployed server). ``simple``: the page shows a short run list (11-19)."""
+    game's chats while it is played (the deployed server). ``simple``: the page shows a short run list (11-19).
+    ``live``: the rooms' run dirs relative to the root, always listed; any other run shows only if its experiment is
+    in ``WEB_EXPERIMENTS`` (a hidden run answers 404 as if absent)."""
     sv = load_serve()
     root = Path(root).expanduser().resolve()
     r = APIRouter(prefix="/monitor")
     rooms = rooms.rstrip("/") + "/" if rooms else None
 
+    live = live.rstrip("/") + "/" if live else None
+
     def shown(rel: str, run_dir: Path) -> bool:
+        if not (live and rel.startswith(live)) and experiment_of(rel) not in WEB_EXPERIMENTS:
+            return False
         return not rooms or not rel.startswith(rooms) or bool(sv.read_results(run_dir))
 
     def run_dir_of(rel: str) -> Path:
@@ -194,11 +213,12 @@ def monitor_router(root: Path, rooms: str | None = None, simple: bool = False) -
         if route in ("compare", "compare.csv"):  # 모델 비교: several runs, merged by model
             cmp = load_compare()
             picks = [x for x in q.get("runs", "").split(",") if x.strip()]
+            seen = [x["run"] for x in sv.list_runs(root) if shown(x["run"], root / x["run"])]  # never a hidden run
             if route == "compare":
-                return answer(lambda: cmp.public(cmp.compare(root, picks, light=True)))  # the page draws no bootstrap
+                return answer(lambda: cmp.public(cmp.compare(root, picks, light=True, all_runs=seen)))  # no bootstrap drawn
             try:
                 chart = q.get("chart", "summary")
-                text = cmp.chart_csv(cmp.compare(root, picks, light=chart not in cmp.FULL_CHARTS), chart)
+                text = cmp.chart_csv(cmp.compare(root, picks, light=chart not in cmp.FULL_CHARTS, all_runs=seen), chart)
             except sv.BadRequest as err:
                 return JSONResponse({"error": str(err)}, 400)
             return Response(text.encode("utf-8-sig"), media_type="text/csv; charset=utf-8", headers={
@@ -225,4 +245,4 @@ class PuzzleFailed(Exception):
     pass
 
 
-__all__ = ["monitor_router", "default_monitor_root", "run_rel", "load_serve"]
+__all__ = ["monitor_router", "default_monitor_root", "run_rel", "load_serve", "WEB_EXPERIMENTS", "experiment_of"]

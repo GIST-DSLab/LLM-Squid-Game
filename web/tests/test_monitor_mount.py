@@ -162,3 +162,21 @@ def test_a_v36_run_names_its_version_and_serves_each_agents_task(tmp_path, monke
         assert c.get("/monitor/api/puzzle", params={"run": rel, "session": "s36", "round": 1}).json()["agent"] == TEAM_AGENTS[0]
         assert c.get("/monitor/api/puzzle", params={"run": rel, "session": "s36", "round": 1, "agent": "x"}).status_code == 404
     assert any(e["event"] == "call" and e["kind"] == "solve" and e["parsed"] == "PASS" for e in ev)  # every agent answered PASS
+
+
+def test_the_web_lists_only_the_current_experiments_and_its_rooms(tmp_path):
+    """11-23 (researcher): older versions stay on disk but the web neither lists nor serves them; the rooms' own runs
+    and the current experiments (WEB_EXPERIMENTS) show, under result/'s dated layout too."""
+    root = tmp_path / "monitor"
+    rels = ["2026-10-20/e52_v33/runs/squid5_e52v33_public_sol4/20261020_s4101_sol",
+            "2026-10-16/e52_v22/runs/squid5_e52v22_public_sol4/20261016_s4101_sol",
+            "e52_v36/squid5_e52v36_public_sol4/20261122_0000_stub",
+            "e52_v6_smoke/x/20260920_old", "web/20261123_room"]
+    for rel in rels:
+        (root / rel).mkdir(parents=True)
+        (root / rel / "events.jsonl").write_text("")
+    with TestClient(make_app(Store(tmp_path / "a.db"), export_root=tmp_path / "x", runs_root=root / "web", monitor_root=root)) as c:
+        listed = {x["run"] for x in c.get("/monitor/api/runs").json()["runs"]}
+        assert listed == {rels[0], rels[2], rels[4]}
+        assert c.get("/monitor/api/sessions", params={"run": rels[1]}).status_code == 404
+        assert c.get("/monitor/api/sessions", params={"run": rels[0]}).status_code == 200

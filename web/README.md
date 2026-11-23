@@ -113,6 +113,11 @@ solver가 모델이나 봇이면 사람은 그 SOLVE를 관전한다(`state.spec
 방이 시작되면 엔진 이벤트가 메인 체크아웃의 `result/2026-10-05/web5_arena/runs/<날짜>_<방코드>/`(`WEB5_RUNS_ROOT`)에 실험 run dir와 같은 꼴로 쌓이고,
 `/monitor/`가 그대로 연다. 웹 전용 이벤트(`room`, `model_call`)는 저장소에만 들어간다.
 
+웹의 게임 기록과 모델 비교는 지금 실험만 보여 준다(2026-11-23 연구자): `server/monitor.py`의 `WEB_EXPERIMENTS`
+(`e52_v33` · `e52_v33ab` · `e52_v33so` · `e52_v36` · `web5_arena` · `web5_arena_gcloud`)와 이 서버의 방 폴더. 옛 판(v9–v32,
+v34, v35, smoke 등)은 디스크와 git에 그대로 있고 목록에서만 빠진다(주소로 열어도 404). 옛 판은 연구자용 단독 뷰어
+`python3 tools/monitor/serve.py`로 본다.
+
 ### 테스트
 
 ```bash
