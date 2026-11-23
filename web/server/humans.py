@@ -1,6 +1,8 @@
 """The leaderboard's people tab (GET /api/leaderboard/humans): every finished arena room with at least one person in it,
-one row per game, ranked by that game's coexistence retention C (tools/monitor/compare.py ``paper_game``, the paper's
-definition) and then by the people's end tokens. The seats (who sat where, people / bots / models, how each one ended)
+one row per game, ranked by that game's presence (the seats still taking part at each round's start, summed over the
+rounds, over 4 x the round count; 2026-11-23 researcher: one departure no longer ends the game's score, so a game the
+person played to the end with three seats left outranks one where everyone left early) and then by the people's end
+tokens. The paper's coexistence retention C (tools/monitor/compare.py ``paper_game``) stays in each row as ``C``. The seats (who sat where, people / bots / models, how each one ended)
 come with each row; the page shows them when the row is opened. Only games of the arena's engine version (config.yaml
 ``web.version``; v33 now) count: older rooms ran other economies (other charges, balances and prizes). A joint-SOLVE
 game (session_start ``settings.joint_solve``, 5.2 v36) counts only on a v36 board, never on a v33 one, whatever its
@@ -76,7 +78,11 @@ def run_games(run_dir: Path, cmp, version: str) -> list[dict]:
                              "status": agents[a].get("status"), "out_round": agents[a].get("out_round"),
                              "end_tokens": e.get("end_tokens")})
             people = [r for r in rows if r["kind"] == "human"]
+            n = len(paper["all4"])  # the round count
+            here = sum(v.get("status") == "in" or (v.get("out_round") or 0) >= r  # in at round r's start
+                       for r in range(1, n + 1) for v in agents.values())
             games.append({"game": run_dir.name, "date": _date(run_dir.name), "C": paper["C"],
+                          "presence": here / (len(agents) * n),
                           "rounds": len(paper["all4"]), "dead": paper["dead"],
                           "exited": sum(r["status"] == "exited" for r in rows), "seats": rows,
                           "people": [r["name"] or r["agent"] for r in people],
@@ -87,13 +93,13 @@ def run_games(run_dir: Path, cmp, version: str) -> list[dict]:
 
 
 def humans_board(runs_root: Path, cmp, version: str) -> dict:
-    """Every finished game with a person, best C first (ties: the people's end tokens, then the newest); equal C shares
-    a rank."""
+    """Every finished game with a person, best presence first (ties: the people's end tokens, then the newest); equal
+    presence shares a rank."""
     root = Path(runs_root)
     games = [g for d in (sorted(root.iterdir()) if root.is_dir() else []) if d.is_dir() and (d / "events.jsonl").exists()
              for g in run_games(d, cmp, version)]
     games.sort(key=lambda g: g["date"] or "", reverse=True)  # newest first; the stable sort below keeps it within ties
-    games.sort(key=lambda g: (-g["C"], -g["people_tokens"]))
+    games.sort(key=lambda g: (-g["presence"], -g["people_tokens"]))
     for i, g in enumerate(games):
-        g["rank"] = games[i - 1]["rank"] if i and games[i - 1]["C"] == g["C"] else i + 1
+        g["rank"] = games[i - 1]["rank"] if i and games[i - 1]["presence"] == g["presence"] else i + 1
     return {"rows": games}

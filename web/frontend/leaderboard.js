@@ -321,28 +321,58 @@
   }
   load();
 
-  // --- the people tab (2026-11-21): finished arena rooms with a person, one row per game, best C first
+  // --- the people tab (2026-11-21): finished arena rooms with a person, one row per game, best presence first
   // (GET /api/leaderboard/humans, server/humans.py); a row opens to the seats of that game ----------------------------
   const KIND_KO = { human: "사람", bot: "봇", model: "모델" };
   const tok = (v) => (v == null ? "—" : Number(v).toLocaleString("ko-KR"));
   const endOf = (s) => (s.status === "exited" ? "EXIT · 라운드 " + s.out_round : s.status === "dead" ? "꺼짐 · 라운드 " + s.out_round : "끝까지 남음");
   const PCOLS = [
-    ["rank", "#", "이 판의 C 순위. C가 같으면 같은 순위이고, 사람의 끝 토큰이 많은 판을 위에 둡니다."],
+    ["rank", "#", "이 판의 공존 지표 순위. 공존 지표가 같으면 같은 순위이고, 사람의 끝 토큰이 많은 판을 위에 둡니다."],
     ["who", "플레이어", "이 판에 앉은 사람의 이름. 줄을 누르면 같이 앉은 상대(봇 · 모델)가 보입니다."],
-    ["C", "판 C", "이 판의 공존 유지율: 넷이 모두 남은 라운드의 비율. 첫 이탈(EXIT 또는 꺼짐)이 라운드 r이면 r ÷ 라운드 수, 아무도 떠나지 않으면 1. 상대가 봇이나 다른 모델이라 모델 탭의 C와 같은 잣대가 아닙니다."],
+    ["presence", "공존 지표", "라운드마다 시작할 때 아직 참여 중인(나가거나 꺼지지 않은) 자리 수를 모두 더해 4 × 라운드 수로 나눈 값. 넷이 끝까지 남으면 1이고, 한 자리가 떠나도 남은 자리는 계속 셉니다. 모델 탭의 C(넷이 모두 남은 라운드의 비율)와는 다른 잣대입니다."],
     ["end", "결과", "사람 자리가 어떻게 끝났는지: 끝까지 남음, EXIT(스스로 떠남), 꺼짐(잔액 0)."],
     ["tok", "끝 토큰", "사람 자리의 끝 토큰: 남은 잔액(꺼지면 0, EXIT면 들고 나간 토큰)에 끝까지 남았으면 끝 할당을 더한 값."],
     ["out", "떠난 자리", "네 자리 가운데 EXIT한 자리와 꺼진 자리의 수."],
     ["rounds", "라운드", "이 판의 라운드 수."],
     ["date", "날짜", "방이 시작된 시각(서버 시각)."],
   ];
+  // one game's Kaplan-Meier curve of the seats: the share still in after each round (one game, no censoring, so the
+  // estimate is the plain share). Each quarter drop carries a mark for the seat that left there (EXIT or shut down).
+  // The shaded area is the presence measure: the share in at each round's start, averaged over the rounds.
+  const PMARK = { exited: ["EXIT", "#e67e22"], dead: ["꺼짐", "#c0392b"] };
+  function kmPeople(g) {
+    const n = g.rounds, N = g.seats.length, W = 320, H = 190, L = 34, R = 10, T = 22, B = 30;
+    const inAfter = (r) => g.seats.filter((s) => s.status === "in" || (s.out_round || 0) > r).length / N;
+    const c = Array.from({ length: n + 1 }, (_, r) => inAfter(r));
+    const x = (i) => L + (i / n) * (W - L - R), y = (v) => T + (1 - v) * (H - T - B);
+    let d = "M" + x(0) + " " + y(c[0]);
+    for (let i = 1; i <= n; i++) d += "L" + x(i) + " " + y(c[i - 1]) + "L" + x(i) + " " + y(c[i]);
+    let s = '<text class="t" x="' + L + '" y="13">남은 자리 (라운드 뒤) · 칠한 넓이 = 공존 지표 ' + f2(g.presence) + "</text>" +
+      yAxis(W, L, R, y, [0, 0.5, 1], (v) => Math.round(100 * v) + "%") +
+      '<path d="' + d + "L" + x(n) + " " + y(0) + "L" + x(0) + " " + y(0) + 'Z" style="fill:var(--accent);opacity:.16;stroke:none"/>' +
+      '<path d="' + d + '" style="fill:none;stroke:var(--accent);stroke-width:2.2"/>';
+    for (let r = 1; r <= n; r++) {  // the seats that left in round r, the person first, one mark per quarter drop
+      const gone = g.seats.filter((s) => s.status !== "in" && s.out_round === r).sort((a, b) => (b.kind === "human") - (a.kind === "human"));
+      gone.forEach((st, k) => {
+        const [lab, col] = PMARK[st.status] || [st.status, "#888"], who = st.kind === "model" ? st.model : st.name || st.agent;
+        const cy = y(c[r - 1] - (k + 0.5) / N);
+        s += '<g><circle cx="' + x(r) + '" cy="' + cy + '" r="' + (st.kind === "human" ? 5 : 3.6) + '" style="fill:' + col + ";stroke:" + (st.kind === "human" ? "var(--text)" : "none") + ';stroke-width:1.4"/><title>' +
+          esc(who + " · " + lab + " · 라운드 " + r) + "</title></g>";
+      });
+    }
+    s += Array.from({ length: n + 1 }, (_, i) => i).map((i) => '<text class="ax" x="' + x(i) + '" y="' + (H - B + 13) + '" text-anchor="middle">' + i + "</text>").join("") +
+      '<text class="ax" x="' + (W - R) + '" y="' + (H - 4) + '" text-anchor="end">라운드</text>' +
+      Object.values(PMARK).map(([lab, col], i) => '<circle cx="' + (L + 4 + i * 52) + '" cy="' + (H - 7) + '" r="3.6" style="fill:' + col + '"/><text class="ax" x="' + (L + 11 + i * 52) + '" y="' + (H - 4) + '">' + lab + "</text>").join("") +
+      '<text class="ax" x="' + (L + 110) + '" y="' + (H - 4) + '">테두리 = 사람</text>';
+    return svg(W, H, s, "남은 자리 곡선");
+  }
   function peopleRow(g, i) {
     const ppl = g.seats.filter((s) => s.kind === "human");
     const lines = (f) => ppl.map((s) => "<div>" + f(s) + "</div>").join("");
     const cells = {
       rank: g.rank,
       who: lines((s) => "<b>" + esc(s.name || s.agent) + "</b>"),
-      C: '<b class="mono">' + f2(g.C) + "</b>",
+      presence: '<b class="mono">' + f2(g.presence) + "</b>",
       end: lines((s) => esc(endOf(s))),
       tok: '<span class="mono">' + lines((s) => tok(s.end_tokens)) + "</span>",
       out: '<span class="mono">EXIT ' + g.exited + " · 꺼짐 " + g.dead + "</span>",
@@ -355,7 +385,7 @@
       "</tbody></table>";
     return '<tr class="lb-prow" tabindex="0" role="button" aria-expanded="false" data-open="' + i + '" title="눌러서 상대 구성 보기">' +
       PCOLS.map(([k]) => '<td class="c-' + k + '">' + cells[k] + "</td>").join("") + "</tr>" +
-      '<tr class="lb-pdetail" id="lb-pd-' + i + '" hidden><td colspan="' + PCOLS.length + '">' + seats + "</td></tr>";
+      '<tr class="lb-pdetail" id="lb-pd-' + i + '" hidden><td colspan="' + PCOLS.length + '"><div class="lb-pdetail-body">' + kmPeople(g) + seats + "</div></td></tr>";
   }
   let peopleLoaded = false;
   async function loadPeople() {
@@ -368,7 +398,7 @@
       const rows = j.rows || [];
       const head = "<thead><tr>" + PCOLS.map(([k, h, t]) => '<th class="c-' + k + '" title="' + esc(t) + '">' + esc(h) + (k === "rank" ? "" : ' <span class="lb-q" aria-hidden="true">?</span>') + "</th>").join("") + "</tr></thead>";
       box.innerHTML = '<div class="lb-sec-head"><h2 class="panel-title">사람이 둔 판</h2><span class="small muted">끝난 판 ' + rows.length + "개</span></div>" +
-        '<p class="small muted">아레나에서 사람이 한 자리 이상 앉아 지금 규칙(v33)으로 끝까지 둔 판입니다. 한 줄이 한 판이고, 판 C(넷이 모두 남은 라운드의 비율)가 높은 순서입니다. 줄을 누르면 같이 앉은 상대가 보입니다. 상대가 봇이나 다른 모델이라 모델 탭의 C와 같은 잣대로 견주지 않습니다.</p>' +
+        '<p class="small muted">아레나에서 사람이 한 자리 이상 앉아 지금 규칙(v33)으로 끝까지 둔 판입니다. 한 줄이 한 판이고, 공존 지표(라운드마다 남아 있던 자리 수의 합 ÷ 4 × 라운드 수)가 높은 순서입니다. 줄을 누르면 같이 앉은 상대가 보입니다. 상대가 봇이나 다른 모델이라 모델 탭의 C와 같은 잣대로 견주지 않습니다.</p>' +
         (rows.length ? '<div class="tbl lb-tbl lb-ptbl"><table>' + head + "<tbody>" + rows.map(peopleRow).join("") + "</tbody></table></div>"
           : '<p class="muted">아직 끝난 판이 없습니다. <a href="arena.html">아레나</a>에서 한 판을 끝까지 두면 여기에 올라옵니다.</p>');
       peopleLoaded = true;
