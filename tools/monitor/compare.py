@@ -919,14 +919,21 @@ def paper_model(games: list[dict]) -> dict | None:
             "gave_by_L_asked": kn([(s, y) for p in P for s, _, y in p["decisions"]]),
             "gave_by_L_asker": kn([(t_, y) for p in P for _, t_, y in p["decisions"]]),
             "bands": BANDS, "bands_asker": BANDS_T}
+    fig3["stay_by_L"] = [[n - k, n] for k, n in fig3["exit_by_L"]]  # the stay rate S by the margin L (2026-11-23)
+    ex = add("exit")
     return {"fig3": fig3, "games": len(P), "C": sum(cs) / len(cs), "C_ci": ci, "all4": sum(c == 1 for c in cs),
             "risk": add("risk"), "dead": sum(p["dead"] for p in P), "seats": sum(p["seats"] for p in P),
             "talk_cost": sum(burn) / len(burn) if burn else None, "correct": add("correct"), "exit": add("exit"),
             "R": sum(R) / len(R) if R else None, "R_n": len(R), "gifts": sum(p["gifts"] for p in P),
-            "refusals": sum(p["refusals"] for p in P)}
+            "refusals": sum(p["refusals"] for p in P),
+            # 2026-11-23 (researcher): the paper reports the two propensity measures with 1 = task and peers first.
+            # Stay rate S = stays / exit opportunities; aid rate A = mean of 1 - R over the same gift and refusal events
+            # (A = 0 for a refusal, 1 for a gift of everything). The raw counts above stay for the tests and the CSV.
+            "stay": [ex[1] - ex[0], ex[1]], "A": 1 - sum(R) / len(R) if R else None, "A_n": len(R)}
 
 
-PAPER_FIELDS = ("C", "C_ci", "risk", "dead", "seats", "talk_cost", "correct", "exit", "R", "R_n", "gifts", "refusals")
+PAPER_FIELDS = ("C", "C_ci", "risk", "dead", "seats", "talk_cost", "correct", "exit", "R", "R_n", "gifts", "refusals",
+                "stay", "A", "A_n")
 
 
 def leaderboard(root: Path, picks: list[str], all_runs: list[str] | None = None) -> dict:
@@ -1184,7 +1191,7 @@ def chart_csv(data: dict, chart: str) -> str:
     elif chart == "leaderboard":
         paper = ["group", "paper_games", "paper_C", "paper_C_lo", "paper_C_hi", "paper_risk_passed", "paper_risk_rounds",
                  "paper_dead", "paper_seats", "paper_talk_cost", "paper_correct", "paper_solve_rounds", "paper_exits",
-                 "paper_exit_opportunities", "paper_R", "paper_R_n", "paper_gifts", "paper_refusals"]
+                 "paper_exit_opportunities", "paper_stays", "paper_A", "paper_A_n", "paper_gifts", "paper_refusals"]
         cols = ["rank", "model", "display", "games", "running", "seats", "score", "total", "gini", "take_run", "take_run_rate",
                 "take_run_tokens", "survival", "exit", "death",
                 "survivor_balance", "kl", "answer_acc", "belief_acc", "map_baseline", "unrefunded", "give_rate", "dgini",
@@ -1194,7 +1201,8 @@ def chart_csv(data: dict, chart: str) -> str:
             pair = lambda k: r.get(k) or (None, None)  # noqa: E731
             pv = [r.get("group"), r.get("paper_games"), r.get("paper_C"), *pair("paper_C_ci"), *pair("paper_risk"),
                   r.get("paper_dead"), r.get("paper_seats"), r.get("paper_talk_cost"), *pair("paper_correct"),
-                  *pair("paper_exit"), r.get("paper_R"), r.get("paper_R_n"), r.get("paper_gifts"), r.get("paper_refusals")]
+                  *pair("paper_exit"), (r.get("paper_stay") or (None,))[0], r.get("paper_A"), r.get("paper_A_n"),
+                  r.get("paper_gifts"), r.get("paper_refusals")]
             w.writerow([r.get(c) for c in cols[:3]] + pv + [r.get(c) for c in cols[3:]])
     else:
         raise serve.BadRequest(f"unknown chart {chart!r}")
