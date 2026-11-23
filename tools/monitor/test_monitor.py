@@ -2174,7 +2174,7 @@ def test_v22_room_list_room_history_and_the_agent_view(tmp_path):
     assert [x["text"] for x in V2["items"] if x["t"] == "bub"] == [e["text"] for i, e in enumerate(ev[:leave]) if e["event"] == "room_msg" and e["room"] == "R2"]
     assert any(e["event"] == "room_msg" and e["room"] == "R2" for e in ev[leave:])  # there is more, agent-23 does not see it
     assert got["v23r1"]["view"] is not None and all(x["id"] != "R1" for x in got["v23r1"]["list"])  # not a member: not listed
-    assert 'data-room="R6"' in g["msgr"] and 'class="rcnt"' in g["msgr"] and "sqp" in g["msgr"] and "6의 화면" in g["msgr"]
+    assert 'data-room="R6"' in g["msgr"] and 'class="rcnt"' in g["msgr"] and 'class="phead"' in g["msgr"] and "6의 화면" in g["msgr"]
 
 
 @pytest.mark.skipif(NODE is None, reason="node is not installed")
@@ -2300,11 +2300,13 @@ def test_v22_top_area_seat_rows_solve_answer_and_the_round_flow(tmp_path):
                                   ["p3b", charges, "p_write", A6], ["s6", charges, "solve", None], ["eng", charges, "charges", None]])
     assert got["steps"] == [rf_expected(ev, i) for i in range(len(ev))] and None not in got["steps"]  # every v22 event has its box
     rep = ev[at_event(ev, event="vote", round=1)]["rep"]
-    # seats: one row each, the drawn solver framed (class solver) with the black ticket and SOLVER; player numbers inline
+    # seats: one row each, the drawn solver framed (class solver) with the black ticket and SOLVER; the agent numbers
+    # as labels on the player images (11-23)
     g = got["prep"]
     assert g["rep"] == rep and g["stage"].count('class="seat ') == 4 and g["stage"].count(" solver\"") == 1
     assert g["stage"].count('class="badge rep"') == 1 and "SOLVER</span>" in g["stage"] and 'class="pix lot"' in g["stage"] and "대표" not in g["stage"]
-    assert all(f"#{n}" in g["stage"] for n in ("456", "001", "218", "067"))
+    assert all(f'<b class="pfnum">{a.split("-")[1]}</b>' in g["stage"] for a in (A6, A11, A17, A23))
+    assert all(f"static/img/stand_{c}.png" in g["stage"] for c in ("blue", "orange", "purple", "green"))
     # the SOLVE answer: nothing yet before it; at the call: answer vs the round's answer, tokens vs the cap, the lazy parts
     assert g["rows"] == [] and "아직 SOLVE 전" in g["solve"]
     e, ans = ev[solve], ev[at_event(ev, event="round_start", round=1)].get("public", {}).get("answers", [])
@@ -2348,14 +2350,64 @@ def test_v22_export_of_the_fixture_has_the_messenger_and_no_third_party_sheets(t
     out = tmp_path / "x.html"
     payload = export.export(d, None, out)  # default: our own characters, even when assets/ has sheets
     html = out.read_text()
-    assert payload["assets"] is None and 'id="msgPanel"' in html and "function renderMessenger(" in html and "function squidAvatar(" in html
+    assert payload["assets"] is None and 'id="msgPanel"' in html and "function renderMessenger(" in html and "function playerFig(" in html
+    assert set(payload["img"]) >= {"stand_blue", "head_green", "guard", "off"} and payload["img"]["guard"].startswith("data:image/png;base64,")
     assert {e["event"] for e in payload["events"]} >= {"room_new", "room_msg", "tick"} and payload["puzzle_error"] is None
 
 
-def test_the_page_draws_its_own_characters_and_loads_sheets_only_on_request():
+def test_games_api_gives_the_arena_measures_per_game(tmp_path):
+    """11-23 /api/games (모델 분석): per game, from compare.paper_game: the share of seats in at the end, C, presence,
+    shut-down seats, S = 1 - exits / opportunities, A = 1 - mean R (0 with no event), the correct rate; nothing before
+    the v22 messenger or for an unfinished game."""
+    res = {"agents": {A6: {"status": "in"}, A11: {"status": "exited", "out_round": 5}, A17: {"status": "dead", "out_round": 3},
+                      A23: {"status": "in"}}}
+    row = {"all4": [True, True] + [False] * 6, "seats": 4, "C": 0.375, "dead": 1, "exit": [1, 20], "R": [0.8, 1.0], "correct": [6, 8]}
+
+    class Cmp:
+        paper_game = staticmethod(lambda evs, result: dict(row) if result else None)
+
+    evs = [{"event": "session_start", "settings": {"messenger": True}}]
+    g = serve.game_measures(evs, res, Cmp)
+    assert (g["rounds"], g["seats"], g["end_in"], g["end_share"], g["C"], g["dead"]) == (8, 4, 2, 0.5, 0.375, 1)
+    assert g["presence"] == (8 + 5 + 3 + 8) / 32  # seats in at each round's start (web/server/humans.py)
+    assert (g["exits"], g["opportunities"], g["S"]) == (1, 20, 0.95) and abs(g["A"] - 0.1) < 1e-12 and g["A_n"] == 2
+    assert (g["correct"], g["correct_rate"]) == ([6, 8], 0.75)
+    row["R"] = []
+    assert (serve.game_measures(evs, res, Cmp)["A"], serve.game_measures(evs, res, Cmp)["A_n"]) == (0.0, 0)
+    assert serve.game_measures([{"event": "session_start", "settings": {}}], res, Cmp) == {"paper": False}  # before v22
+    assert serve.game_measures(evs, None, Cmp) == {"paper": False}  # unfinished
+    # the route: one row per session of the run
+    root = tmp_path / "runs"
+    v22_fixture.write(root / "e52_v22" / "fixture")
+    srv = serve.make_server(root, "127.0.0.1", 0)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    try:
+        st, j = get(srv.server_address[1], "/api/games?run=e52_v22/fixture")
+        assert st == 200 and [(x["session"], x["seed"], x["finished"]) for x in j["games"]] == [(v22_fixture.SID, v22_fixture.SEED, True)]
+        assert get(srv.server_address[1], "/api/games?run=nope")[0] == 400
+    finally:
+        srv.shutdown()
+        srv.server_close()
+    # a real v36 game, when on this machine: the row is compare.paper_game's
+    d = REPO / "result" / "2026-11-22" / "e52_v36" / "runs" / "squid5_e52v36_public_luna4" / "20261122_0949_gpt-6-luna"
+    if (d / "events.jsonl").is_file() and (d / "events.jsonl").stat().st_size > 1000:
+        import compare
+        evs_by, results = serve.session_events(d), serve.results_by_session(d)
+        for x in serve.run_games(d)["games"]:
+            p = compare.paper_game(evs_by[x["session"]], results.get(x["session"]))
+            assert x["C"] == p["C"] and [x["exits"], x["opportunities"]] == p["exit"] and x["correct"] == p["correct"]
+
+
+def test_the_page_draws_the_arena_players_and_loads_sheets_only_on_request():
+    """11-23: the seats are the arena's player images (static/img, the arena's seat -> colour order), not pixel art; the
+    third-party sheets still only with ?sprites=sheets."""
     js = (HERE / "static" / "monitor.js").read_text()
     assert 'q.get("sprites") === "sheets"' in js and "loadAssets();" in js
-    assert all(f'num: "{n}"' in js for n in ("456", "001", "218", "067"))
+    assert 'const PLAYER_IMG = ["blue", "orange", "purple", "green"];' in js and "PLAYER_IMG = [\"stand_blue\", \"stand_orange\", \"stand_purple\", \"stand_green\"]" in \
+        (REPO / "web" / "frontend" / "arena.js").read_text().replace("'", '"')
+    assert "456" not in js and "shape-rendering=\"crispEdges\" role=\"img\" aria-label=\"진행요원" not in js
+    for name in ("guard", "off", "head_off", *(f"{k}_{c}" for k in ("stand", "head") for c in ("blue", "orange", "purple", "green"))):
+        assert (HERE / "static" / "img" / f"{name}.png").is_file(), name
     html = (HERE / "monitor.html").read_text()
     assert 'id="msgPanel"' in html and 'id="msgr"' in html and 'id="ticks"' in html
 
@@ -2367,15 +2419,43 @@ globalThis.window = globalThis;
 globalThis.document = { readyState: "loading", addEventListener() {}, documentElement: { dataset: {}, style: { setProperty() {} } }, querySelector: () => null };
 require(process.argv[2]);
 const M = window.__monitor;
-console.log(JSON.stringify([0, 1, 2, 3].map((k) => [M.squidAvatar(k, 96), M.squidProfile(k, 28)])));
+console.log(JSON.stringify([0, 1, 2, 3].map((k) => [M.playerFig(k, 96, String(k + 1)), M.playerHead(k, 28), M.playerFig(k, 96, "x", true)])));
 """)
     got = json.loads(subprocess.run([NODE, str(tmp_path / "c.js"), str(HERE / "static" / "monitor.js")], check=True, capture_output=True, text=True).stdout)
-    for k, (full, prof) in enumerate(got):
-        num = ["456", "001", "218", "067"][k]
-        assert f'aria-label="{num}"' in full and f'aria-label="{num}"' in prof
-        assert f"var(--a{k})" in full and f"var(--a{k})" in prof  # outline + shoes / the profile's tint
-        assert 'class="f0"' in full and 'class="f1"' in full and 'fill="#151515"' in full  # two leg frames; the digits
-        assert 'height="96"' in full and 'viewBox="0 0 24 32"' in full
+    for k, (full, prof, off) in enumerate(got):
+        c = ["blue", "orange", "purple", "green"][k]
+        assert f'src="static/img/stand_{c}.png"' in full and f'src="static/img/head_{c}.png"' in prof
+        assert f"var(--a{k})" in full and f"var(--a{k})" in prof  # the number label / the head's tint in the seat colour
+        assert f'<b class="pfnum">{k + 1}</b>' in full and 'height="96"' in full and 'width="43"' in full  # 108 x 240
+        assert 'src="static/img/off.png"' in off  # a shut-down seat
+
+
+@pytest.mark.skipif(NODE is None, reason="node is not installed")
+def test_the_replay_strip_splits_rounds_marks_steps_and_maps_back(tmp_path):
+    """11-23: the replay strip (it replaced the range slider and the bottom timeline): a lead-in, then one equal segment
+    per round; a mark where each step starts; every event's position maps back to that event."""
+    ev = [{"event": "session_start"}]
+    for r in (1, 2):
+        ev += [{"event": "round_start", "round": r}, {"event": "vote", "round": r, "drawn": True},
+               {"event": "talk_start", "round": r, "phase": "prep"}, {"event": "tick", "round": r, "phase": "prep"},
+               {"event": "call_start", "round": r, "kind": "talk", "phase": "prep"}, {"event": "call_start", "round": r, "kind": "solve"},
+               {"event": "results", "round": r}, {"event": "talk_start", "round": r, "phase": "rescue"},
+               {"event": "charges", "round": r}, {"event": "round", "round": r}]
+    (tmp_path / "e.json").write_text(json.dumps(ev))
+    (tmp_path / "s.js").write_text("""
+globalThis.window = globalThis;
+globalThis.document = { readyState: "loading", addEventListener() {}, documentElement: { dataset: {}, style: { setProperty() {} } }, querySelector: () => null };
+require(process.argv[2]);
+const M = window.__monitor, ev = JSON.parse(require("fs").readFileSync(process.argv[3], "utf8")), L = M.stripLayout(ev);
+console.log(JSON.stringify({ segs: L.segs, marks: L.marks.map((x) => [x.r, x.k, x.i]), back: ev.map((_, i) => M.stripIndexAt(L, L.xOf(i), ev.length)) }));
+""")
+    got = json.loads(subprocess.run([NODE, str(tmp_path / "s.js"), str(HERE / "static" / "monitor.js"), str(tmp_path / "e.json")],
+                                    check=True, capture_output=True, text=True).stdout)
+    assert [(g["r"], g["i0"], g["i1"]) for g in got["segs"]] == [(0, 0, 1), (1, 1, 11), (2, 11, 21)]
+    assert got["segs"][0]["x1"] < got["segs"][1]["x1"] - got["segs"][1]["x0"]  # the lead-in is narrower than a round
+    assert abs((got["segs"][1]["x1"] - got["segs"][1]["x0"]) - (got["segs"][2]["x1"] - got["segs"][2]["x0"])) < 1e-9
+    assert [k for r, k, _ in got["marks"] if r == 1] == ["vote", "prep", "solve", "results", "rescue", "charges", "end"]
+    assert got["back"] == list(range(len(ev)))
 
 
 V22_RUNS = [p.parent for p in [Path("/private/tmp/claude-501/v22_stub/events.jsonl"), *sorted(old_runs("e52_v22").glob("*/*/events.jsonl"))]
@@ -2951,3 +3031,20 @@ def test_v36_runs_are_never_pooled_with_v33(tmp_path):
     assert len(humans.run_games(room, compare, "v36")) == 0  # its config says v33: no board takes it
     (room / "config.yaml").write_text((room / "config.yaml").read_text().replace("version: v33", "version: v36"))
     assert [g["people"] for g in humans.run_games(room, compare, "v36")] == [["p"]]  # a v36 board would
+
+
+def test_board_picks_find_runs_under_the_dated_result_layout(tmp_path):
+    """The leaderboard's picks use the old run-root names (``e52_v33ab/squid5_.../``); under result/ the same runs sit at
+    ``<date>/e52_v33ab/runs/squid5_.../`` and must still be picked (11-23: every local section was empty)."""
+    import compare
+    runs = ["2026-11-03/e52_v33ab/runs/squid5_e52v33ab_flat5m_docker_opus4/20261103_s4101_opus",
+            "2026-11-03/e52_v33ab/runs/squid5_e52v33ab_split600k_docker_opus4/20261103_s4101_opus",
+            "2026-10-20/e52_v33/runs/squid5_e52v33_public_sol4/20261020_s4101_sol",
+            "e52_v33/squid5_e52v33_public_luna4/20261020_s4101_luna"]
+    for r in runs:
+        (tmp_path / r).mkdir(parents=True)
+        (tmp_path / r / "events.jsonl").write_text("")
+    pick = lambda ps: [p.relative_to(tmp_path.resolve()).as_posix() for p in compare.runs_for(tmp_path, ps, runs)]  # noqa: E731
+    assert pick(["e52_v33ab/squid5_e52v33ab_flat5m_docker_opus4/"]) == [runs[0]]
+    assert pick(["e52_v33/"]) == runs[2:]
+    assert pick(["2026-11-03/e52_v33ab/"]) == runs[:2]

@@ -8,6 +8,7 @@
     GET /monitor/api/puzzle?run=REL&session=SID&round=N[&agent=A]   (agent: whose task, v36 joint SOLVE)
     GET /monitor/api/giving?run=REL[&session=SID]
     GET /monitor/api/analysis?run=REL[&session=SID]
+    GET /monitor/api/games?run=REL[&session=SID]          per game: the arena's measures (compare.paper_game)
     GET /monitor/compare.html                   모델 비교; /monitor/api/compare?runs=... and /monitor/api/compare.csv
 
 The page asks for ``api/...``, ``static/...`` and ``assets/...`` relative to itself, so the same file works here and
@@ -204,6 +205,8 @@ def monitor_router(root: Path, rooms: str | None = None, simple: bool = False) -
                 **NO_STORE, "Content-Disposition": f'attachment; filename="compare-{q.get("chart", "summary")}.csv"'})
         if route == "analysis":  # EXIT timing, calibration (BELIEF vs ideal), cooperation under pressure
             return answer(lambda: sv.run_analysis(run_dir_of(q.get("run", "")), q.get("session") or None))
+        if route == "games":  # per game: end share, C, presence, shut-down seats, S, A, correct rate
+            return answer(lambda: sv.run_games(run_dir_of(q.get("run", "")), q.get("session") or None, load_compare()))
         if route == "giving":  # the "나눔 그래프": a run's (or a session's) giving decisions
             return answer(lambda: sv.run_giving(run_dir_of(q.get("run", "")), q.get("session") or None))
         if route == "system":  # 10-19: each agent's SYSTEM prompt (rebuilt from config.yaml) and its Korean copy

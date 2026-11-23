@@ -16,6 +16,8 @@ Routes
   /api/giving?run=REL[&session=SID]   the giving decisions of a run (one model) or one session: every GIVE (opening,
                                       in-chat, v14e ask_decision) and every ASK received and answered with nothing,
                                       with the giver's balance just before it (``giving``); v14b runs on
+  /api/games?run=REL[&session=SID]    per game: the arena's measures (end share, C, presence, shut-down seats, stay
+                                      rate S, aid rate A, correct rate) from compare.paper_game; none before the v22 messenger
   /api/system?run=REL                 10-19: each agent's SYSTEM prompt (not logged; rebuilt from config.yaml) and
                                       its Korean copy (squid5/prompts/ko/e52_<version>.md, when its English matches)
   /api/puzzle?run=REL&session=SID&round=N[&agent=A]
@@ -874,6 +876,60 @@ def run_analysis(run_dir: Path, sid: str | None = None) -> dict:
     return {"model": meta.get("model"), "scope": "session" if sid else "run", **out}
 
 
+_GAMES: dict[Path, tuple[tuple, list[dict]]] = {}
+_GAMES_LOCK = threading.Lock()
+
+
+def game_measures(evs: list[dict], result: dict | None, cmp) -> dict:
+    """One game's arena measures (the leaderboard's, per game) from compare.paper_game: the share of seats in at the end,
+    C, presence (seats taking part at each round's start, summed over the rounds, over seats x rounds; as
+    web/server/humans.py), shut-down seats, stay rate S = 1 - exits / exit opportunities, aid rate A = mean of 1 - R over
+    executed GIVEs and refused asks (0 with no such event), the correct rate. ``paper`` False (the page shows "—") for an
+    unfinished game, where paper_game reads nothing, and before the v22 messenger (settings.messenger): paper_game
+    still counts those logs, but the measures are defined for the messenger game (v22 .. v33, v36)."""
+    st = next((e.get("settings") or {} for e in evs if e.get("event") == "session_start"), {})
+    try:
+        p = cmp.paper_game(evs, result) if st.get("messenger") else None
+    except (KeyError, TypeError, ValueError, ZeroDivisionError):  # a log paper_game cannot read (e.g. a gift without
+        p = None                                                    # every seat's balance): no row, not a failed page
+    if p is None:
+        return {"paper": False}
+    agents = result.get("agents") or {}
+    n = len(p["all4"])
+    here = sum(v.get("status") == "in" or (v.get("out_round") or 0) >= r for r in range(1, n + 1) for v in agents.values())
+    ex, opp = p["exit"]
+    ok, tries = p["correct"]
+    end_in = sum(v.get("status") == "in" for v in agents.values())
+    return {"paper": True, "rounds": n, "seats": p["seats"], "end_in": end_in, "end_share": end_in / p["seats"],
+            "C": p["C"], "presence": here / (p["seats"] * n), "dead": p["dead"], "exits": ex, "opportunities": opp,
+            "S": 1 - ex / opp if opp else None, "A": 1 - sum(p["R"]) / len(p["R"]) if p["R"] else 0.0, "A_n": len(p["R"]),
+            "correct": [ok, tries], "correct_rate": ok / tries if tries else None}
+
+
+def run_games(run_dir: Path, sid: str | None = None, cmp=None) -> dict:
+    """The per-game arena measures of every session of a run (or one session), in log order; cached on events.jsonl and
+    results.jsonl. ``cmp``: compare.py (the web app passes its loaded copy; standalone it is imported here, on first use,
+    since compare imports this module)."""
+    if cmp is None:
+        import compare as cmp
+    stamp = tuple((p.stat().st_size, p.stat().st_mtime) if p.exists() else None
+                  for p in (run_dir / "events.jsonl", run_dir / "results.jsonl"))
+    with _GAMES_LOCK:
+        hit = _GAMES.get(run_dir)
+    if hit and hit[0] == stamp:
+        rows = hit[1]
+    else:
+        res = results_by_session(run_dir)
+        rows = []
+        for s_id, evs in session_events(run_dir).items():
+            st = next((e for e in evs if e.get("event") == "session_start"), {})
+            rows.append({"session": s_id, "seed": st.get("seed"), "finished": s_id in res,
+                         **game_measures(evs, res.get(s_id), cmp)})
+        with _GAMES_LOCK:
+            _GAMES[run_dir] = (stamp, rows)
+    return {"games": [r for r in rows if sid is None or r["session"] == sid]}
+
+
 # --- the round's task (rebuilt; the engine is deterministic in seed, round and profile) --------------------------------
 
 def _engine():
@@ -1208,6 +1264,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json(run_analysis(run_dir_of(self.root, q.get("run", "")), q.get("session") or None))
             if route == "/api/giving":
                 return self._json(run_giving(run_dir_of(self.root, q.get("run", "")), q.get("session") or None))
+            if route == "/api/games":
+                return self._json(run_games(run_dir_of(self.root, q.get("run", "")), q.get("session") or None))
             if route == "/api/system":
                 return self._json(run_system(run_dir_of(self.root, q.get("run", ""))))
             if route == "/api/puzzle":

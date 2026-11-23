@@ -69,6 +69,8 @@ def test_api_reads_a_finished_room(client, runs_root):
     assert ev["events"][0]["event"] == "session_start" and ev["result"]["rounds_played"] == 2
     pz = client.get("/monitor/api/puzzle", params={"run": rel, "session": sid, "round": 1}).json()
     assert pz["answers"] == answers_for(5, 1)
+    g = client.get("/monitor/api/games", params={"run": rel}).json()["games"]  # 11-23: the arena's per-game measures
+    assert [x["session"] for x in g] == [sid] and g[0]["paper"] and (g[0]["seats"], g[0]["rounds"]) == (4, 2)
     assert client.get("/monitor/api/events", params={"run": rel}).status_code == 400  # session is required
     assert client.get("/monitor/api/events", params={"run": rel, "session": sid, "offset": "x"}).status_code == 400
     assert client.get("/monitor/api/puzzle", params={"run": rel, "session": "nope", "round": 1}).status_code == 404

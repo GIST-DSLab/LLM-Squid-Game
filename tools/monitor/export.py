@@ -5,9 +5,9 @@
 The page code is the monitor's own (monitor.html + static/{site-theme,monitor}.css + static/monitor.js, inlined,
 with the arena's shared web/frontend/signal_ui.js); the session's events go into a
 <script type="application/json" id="monitor-data"> block that the page detects, with every played round's task rebuilt
-from the engine (``puzzles``, as /api/puzzle returns it) so the round panel works offline. The seat characters are
-the page's own pixel art (inline SVG in monitor.js), so the export looks the same as the local and the web-arena
-monitor. ``--sheets`` embeds the third-party Survival-Games sheets from tools/monitor/assets/ instead (opt-in, local
+from the engine (``puzzles``, as /api/puzzle returns it) so the round panel works offline. The seat characters and
+the guard (static/img/*.png) go in as data URIs (``img``), and the per-game measures as ``games`` (/api/games), so the
+export looks the same as the local and the web-arena monitor. ``--sheets`` embeds the third-party Survival-Games sheets from tools/monitor/assets/ instead (opt-in, local
 only: that art may not leave the lab).
 """
 
@@ -45,6 +45,11 @@ def embedded_assets(assets: Path = serve.ASSETS) -> dict | None:
                       "profile": data_uri(prof) if prof and prof.exists() else None})
     bubble = assets / m["bubble"] if m.get("bubble") else None
     return {**m, "characters": chars, "bubble": data_uri(bubble) if bubble and bubble.exists() else None}
+
+
+def page_images(folder: Path = serve.STATIC / "img") -> dict:
+    """static/img/*.png (players, heads, the guard) as {name: data URI}; the page reads ``img`` before static/img/."""
+    return {p.stem: data_uri(p) for p in sorted(folder.glob("*.png"))}
 
 
 def script_json(obj) -> str:
@@ -105,6 +110,7 @@ def export(run_dir: Path, session: str | None, out: Path, with_assets: bool = Fa
                # the per-model panels read this game only (10-17: the run-wide scope is gone)
                "giving": {"session": serve.run_giving(run_dir, sid)}, "analysis": {"session": serve.run_analysis(run_dir, sid)},
                "system": serve.run_system(run_dir),  # 10-19: the speaker's SYSTEM prompts (en, ko)
+               "games": serve.run_games(run_dir, sid), "img": page_images(),
                "exported_at": time.strftime("%Y-%m-%d %H:%M:%S"),
                "assets": embedded_assets() if with_assets else None}
     out = Path(out)
