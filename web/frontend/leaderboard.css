@@ -129,6 +129,8 @@ body.lb-noscroll { overflow: hidden; }
 .lb-tbl tr.lb-prow td.c-rank::after { content: "▸"; display: block; font-size: 10px; color: var(--text-dim); }
 .lb-tbl tr.lb-prow[aria-expanded="true"] td.c-rank::after { content: "▾"; }
 .lb-tbl tr.lb-pdetail > td { background: var(--panel-alt); padding: 4px 10px 12px 40px; }
+.lb-pdetail-body { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px 18px; }
+.lb-pdetail-body .lb-svg { flex: 0 1 320px; border: 1px solid rgba(255,255,255,.08); }
 .lb-seats { width: auto; min-width: 0 !important; font-size: 12.5px; }
 .lb-seats th { cursor: default; color: var(--text-dim); font-weight: 600; }
 .lb-seats tr.me td { font-weight: 600; color: var(--accent); }

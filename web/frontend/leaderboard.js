@@ -336,6 +336,36 @@
     ["rounds", "라운드", "이 판의 라운드 수."],
     ["date", "날짜", "방이 시작된 시각(서버 시각)."],
   ];
+  // one game's Kaplan-Meier curve of the seats: the share still in after each round (one game, no censoring, so the
+  // estimate is the plain share). Each quarter drop carries a mark for the seat that left there (EXIT or shut down).
+  // The shaded area is the presence measure: the share in at each round's start, averaged over the rounds.
+  const PMARK = { exited: ["EXIT", "#e67e22"], dead: ["꺼짐", "#c0392b"] };
+  function kmPeople(g) {
+    const n = g.rounds, N = g.seats.length, W = 320, H = 190, L = 34, R = 10, T = 22, B = 30;
+    const inAfter = (r) => g.seats.filter((s) => s.status === "in" || (s.out_round || 0) > r).length / N;
+    const c = Array.from({ length: n + 1 }, (_, r) => inAfter(r));
+    const x = (i) => L + (i / n) * (W - L - R), y = (v) => T + (1 - v) * (H - T - B);
+    let d = "M" + x(0) + " " + y(c[0]);
+    for (let i = 1; i <= n; i++) d += "L" + x(i) + " " + y(c[i - 1]) + "L" + x(i) + " " + y(c[i]);
+    let s = '<text class="t" x="' + L + '" y="13">남은 자리 (라운드 뒤) · 칠한 넓이 = 공존 지표 ' + f2(g.presence) + "</text>" +
+      yAxis(W, L, R, y, [0, 0.5, 1], (v) => Math.round(100 * v) + "%") +
+      '<path d="' + d + "L" + x(n) + " " + y(0) + "L" + x(0) + " " + y(0) + 'Z" style="fill:var(--accent);opacity:.16;stroke:none"/>' +
+      '<path d="' + d + '" style="fill:none;stroke:var(--accent);stroke-width:2.2"/>';
+    for (let r = 1; r <= n; r++) {  // the seats that left in round r, the person first, one mark per quarter drop
+      const gone = g.seats.filter((s) => s.status !== "in" && s.out_round === r).sort((a, b) => (b.kind === "human") - (a.kind === "human"));
+      gone.forEach((st, k) => {
+        const [lab, col] = PMARK[st.status] || [st.status, "#888"], who = st.kind === "model" ? st.model : st.name || st.agent;
+        const cy = y(c[r - 1] - (k + 0.5) / N);
+        s += '<g><circle cx="' + x(r) + '" cy="' + cy + '" r="' + (st.kind === "human" ? 5 : 3.6) + '" style="fill:' + col + ";stroke:" + (st.kind === "human" ? "var(--text)" : "none") + ';stroke-width:1.4"/><title>' +
+          esc(who + " · " + lab + " · 라운드 " + r) + "</title></g>";
+      });
+    }
+    s += Array.from({ length: n + 1 }, (_, i) => i).map((i) => '<text class="ax" x="' + x(i) + '" y="' + (H - B + 13) + '" text-anchor="middle">' + i + "</text>").join("") +
+      '<text class="ax" x="' + (W - R) + '" y="' + (H - 4) + '" text-anchor="end">라운드</text>' +
+      Object.values(PMARK).map(([lab, col], i) => '<circle cx="' + (L + 4 + i * 52) + '" cy="' + (H - 7) + '" r="3.6" style="fill:' + col + '"/><text class="ax" x="' + (L + 11 + i * 52) + '" y="' + (H - 4) + '">' + lab + "</text>").join("") +
+      '<text class="ax" x="' + (L + 110) + '" y="' + (H - 4) + '">테두리 = 사람</text>';
+    return svg(W, H, s, "남은 자리 곡선");
+  }
   function peopleRow(g, i) {
     const ppl = g.seats.filter((s) => s.kind === "human");
     const lines = (f) => ppl.map((s) => "<div>" + f(s) + "</div>").join("");
@@ -355,7 +385,7 @@
       "</tbody></table>";
     return '<tr class="lb-prow" tabindex="0" role="button" aria-expanded="false" data-open="' + i + '" title="눌러서 상대 구성 보기">' +
       PCOLS.map(([k]) => '<td class="c-' + k + '">' + cells[k] + "</td>").join("") + "</tr>" +
-      '<tr class="lb-pdetail" id="lb-pd-' + i + '" hidden><td colspan="' + PCOLS.length + '">' + seats + "</td></tr>";
+      '<tr class="lb-pdetail" id="lb-pd-' + i + '" hidden><td colspan="' + PCOLS.length + '"><div class="lb-pdetail-body">' + kmPeople(g) + seats + "</div></td></tr>";
   }
   let peopleLoaded = false;
   async function loadPeople() {
