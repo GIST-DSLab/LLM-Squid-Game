@@ -19,6 +19,7 @@ import csv
 import io
 import json
 import random
+import re
 import threading
 from pathlib import Path
 
@@ -325,12 +326,15 @@ def runs_for(root: Path, picks: list[str], all_runs: list[str] | None = None) ->
     if all_runs is None:
         all_runs = [r["run"] for r in serve.list_runs(root)]
     chosen = []
+    # a pick names a run in the old run-root layout (``e52_v33ab/squid5_.../...``); under result/ the same run is
+    # ``<date>/e52_v33ab/runs/squid5_.../...`` (2026-11-11 move), so a run also answers to that old name
+    old = {r: re.sub(r"^\d{4}-\d{2}-\d{2}/([^/]+)/runs/", r"\1/", r) for r in all_runs}
     for p in picks:
         p = p.strip()
         if not p:
             continue
-        chosen += [r for r in all_runs if (r == p or (p.endswith("/") and r.startswith(p)) or r.startswith(p.rstrip("/") + "/"))
-                   and r not in chosen]
+        chosen += [r for r in all_runs if any(n == p or (p.endswith("/") and n.startswith(p)) or n.startswith(p.rstrip("/") + "/")
+                                              for n in (r, old[r])) and r not in chosen]
     return [serve.run_dir_of(root, r) for r in chosen]
 
 
