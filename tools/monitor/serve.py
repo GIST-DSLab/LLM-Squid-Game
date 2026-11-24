@@ -66,6 +66,7 @@ COMPARE_PAGE = HERE / "compare.html"  # 모델 비교: several runs overlaid, me
 # page code shared with the web arena, served as static/<name> (one file, not a copy): the arena's signal glyphs,
 # example boxes and action chips (web/shared/signal_ui.js) draw the round's task in the puzzle panel
 SHARED = {"signal_ui.js": REPO / "web" / "shared" / "signal_ui.js",
+          "favicon.png": REPO / "web" / "shared" / "favicon.png",
           "site-lang.js": REPO / "web" / "shared" / "site-lang.js"}  # the site-wide KO / EN toggle
 CHUNK = 8 * 1024 * 1024  # bytes read per /api/events call; the client asks again while ``more`` is true
 LIVE_SECONDS = 90  # a run whose events.jsonl changed this recently is shown as live
