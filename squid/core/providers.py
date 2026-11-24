@@ -8,7 +8,7 @@ backend passes it to the model (``num_predict`` / ``max_completion_tokens`` /
 allowed itself, and ``truncated`` says the ceiling was hit.
 
 CLI seats (``claude_cli``, ``codex_cli``) can run inside a container (``sandbox: docker``): the image
-``squid5-agent-cli`` (docker/agent-cli.Dockerfile) holds pinned CLI versions; each call mounts only its own fresh
+``squid5-agent-cli`` (squid/docker/agent-cli.Dockerfile) holds pinned CLI versions; each call mounts only its own fresh
 directory, and the login reaches it by environment (CLAUDE_CODE_OAUTH_TOKEN; codex's auth.json copied under
 CODEX_HOME). Nothing of the host's ~/.claude, ~/.codex or ~/.agents is visible there.
 """

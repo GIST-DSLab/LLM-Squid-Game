@@ -2,7 +2,7 @@
 # host is copied in: the engine mounts one empty per-call directory and passes the login by environment
 # (CLAUDE_CODE_OAUTH_TOKEN for claude; a copied auth.json under CODEX_HOME for codex). Versions are pinned so the
 # harness the models see does not change between runs; bump them on purpose and record it.
-#   docker build -t squid5-agent-cli:latest -f docker/agent-cli.Dockerfile docker/
+#   docker build -t squid5-agent-cli:latest -f squid/docker/agent-cli.Dockerfile squid/docker/
 FROM node:22-slim
 ARG CLAUDE_CODE_VERSION=2.1.303
 ARG CODEX_VERSION=0.162.1

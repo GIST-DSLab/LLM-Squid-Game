@@ -26,5 +26,5 @@ build-backend = "hatchling.build"
 packages = ["squid"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
-pythonpath = [".", "tests"]
+testpaths = ["squid/tests"]
+pythonpath = [".", "squid/tests"]

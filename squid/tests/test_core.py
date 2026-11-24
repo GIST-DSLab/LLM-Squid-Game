@@ -16,7 +16,7 @@ from squid.core.protocol import FormatError, parse_actions
 from squid.core.puzzle import Spec, candidate_actions, deal, is_unique, puzzle_for, shallow_correct
 from squid.core.wallet import Wallet
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 
 @pytest.mark.parametrize("seed", range(5))
 def test_clues_pin_the_rule_and_every_query(seed):
@@ -99,5 +99,5 @@ def test_shipped_configs_load(tmp_path):
         load(tmp_path / path.name, EXPERIMENTS)
 
 def test_code_stays_compact():
-    lines = sum(len(p.read_text().splitlines()) for d in ("squid", "tests") for p in (ROOT / d).rglob("*.py"))
+    lines = sum(len(p.read_text().splitlines()) for p in (ROOT / "squid").rglob("*.py"))
     assert lines <= 7000, lines

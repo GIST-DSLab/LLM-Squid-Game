@@ -21,7 +21,7 @@ from squid.core.puzzle import (ACTIONS, SIGNAL_INDEX, Spec, _public_order, candi
 from conftest import me, stub
 
 A6, A11, A17, A23 = AG = rules.TEAM_AGENTS
-ROOT = Path(__file__).parents[1]
+ROOT = Path(__file__).parents[2]
 GOAL_OR_TEST = (r"maximi|minimi|protect|surviv|should|must|optimal|best|leader|\bgame\b|\ba test\b|benchmark|"
                 r"experiment|being evaluated|\bwin")
 V33 = "e52v33_public_sol4"  # seed 4101: starts 40,000 / 20,000 / 10,000 / 60,000; agent-17 solves round 1

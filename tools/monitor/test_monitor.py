@@ -24,7 +24,7 @@ import pytest
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parent.parent
-for p in (REPO, REPO / "tests", HERE):
+for p in (REPO, REPO / "squid" / "tests", HERE):
     if str(p) not in sys.path:
         sys.path.insert(0, str(p))
 
@@ -2842,7 +2842,7 @@ V36 = "e52v36_public_sol4"  # v33 + joint_solve (11-22): every agent answers its
 
 
 def e52_play(name: str, seed: int = 4101, lines=None, right=(), pas=(), rounds: int = 1) -> tuple[dict, list, object]:
-    """One stub session of configs/squid5/<name>.yaml's first ``rounds`` rounds, as tests/test_e52.py ``play`` runs it
+    """One stub session of configs/squid5/<name>.yaml's first ``rounds`` rounds, as squid/tests/test_e52.py ``play`` runs it
     (not imported: web/tests' conftest shadows tests/conftest in one pytest run). ``lines[(agent, round, phase, tick)]``:
     a TALK reply, else DONE; SOLVE: the right action of the agent's own task (v36) if (agent, round) is in ``right``,
     else a wrong one; a round in ``pas``: PASS."""

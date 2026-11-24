@@ -24,8 +24,8 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Engine suite (squid5)
-        run: uv run --extra dev python -m pytest -q tests
+      - name: Engine suite (squid/tests)
+        run: uv run --extra dev python -m pytest -q squid/tests
 
       # Separate run: web/tests has its own conftest module, which would shadow tests/conftest
       # (`from conftest import stub`) in a shared session. `python -m` so the --with packages are on the path.

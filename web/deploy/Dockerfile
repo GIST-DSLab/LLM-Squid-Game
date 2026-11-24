@@ -3,7 +3,7 @@ FROM python:3.12-slim
 WORKDIR /app
 RUN pip install --no-cache-dir fastapi "uvicorn[standard]" httpx pyyaml numpy matplotlib "psycopg[binary]" google-cloud-storage
 # the researchers' experiment seats (WEB5_SEATS, behind WEB5_SEAT_CODE): Claude Code and Codex at the versions the
-# experiment's CLI image pins (docker/agent-cli.Dockerfile), node from the official image; the relay that drops the
+# experiment's CLI image pins (squid/docker/agent-cli.Dockerfile), node from the official image; the relay that drops the
 # Claude CLI's own token note (the claude seats' base_url http://127.0.0.1:18781) runs beside the app
 COPY --from=node:22-slim /usr/local/bin/node /usr/local/bin/node
 COPY --from=node:22-slim /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/npm
