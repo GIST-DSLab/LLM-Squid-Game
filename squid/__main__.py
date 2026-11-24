@@ -31,12 +31,15 @@ def experiments(root: Path = EXPERIMENTS_DIR) -> dict:
     """{MODE: package} for every side experiment under ``experiments/`` (one package per folder, importable as
     ``experiments.<folder>``, whose ``MODE`` is the config ``mode`` it runs). No folder is named here, so deleting
     ``experiments/<folder>`` removes that mode and nothing else."""
-    # TODO(you): a working minimum for now. Decide the failure policy here (5-10 lines):
-    #  - an experiment whose import raises (a missing library, a syntax error): stop every CLI command (now), or
-    #    warn and skip it so `run <game config>` still works?
-    #  - two experiments claiming the same MODE, or one claiming "game": silently overwrite (now), or raise?
-    mods = [importlib.import_module(f"experiments.{p.parent.name}") for p in sorted(root.glob("*/__init__.py"))]
-    return {m.MODE: m for m in mods}
+    # 11-24 researcher: fail loudly. An experiment that does not import stops every command (fix it or delete its
+    # folder); a mode taken twice, or "game", is an error rather than one experiment silently replacing another.
+    found = {}
+    for p in sorted(root.glob("*/__init__.py")):
+        mod = importlib.import_module(f"{root.name}.{p.parent.name}")
+        if mod.MODE == "game" or mod.MODE in found:
+            raise ValueError(f"{root.name}/{p.parent.name}: mode {mod.MODE!r} is already taken")
+        found[mod.MODE] = mod
+    return found
 
 EXPERIMENTS = {"game": game, **experiments()}
 

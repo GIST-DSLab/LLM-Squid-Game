@@ -111,3 +111,12 @@ def test_engine_never_names_an_experiment():
             names = ([a.name for a in node.names] if isinstance(node, ast.Import)
                      else [node.module or ""] if isinstance(node, ast.ImportFrom) and not node.level else [])
             assert not any(n.split(".")[0] == "experiments" for n in names), f"{p.relative_to(ROOT)} imports {names}"
+
+def test_an_experiment_mode_taken_twice_is_an_error(tmp_path, monkeypatch):
+    from squid.__main__ import experiments
+    for name, mode in (("a", "x"), ("b", "x")):
+        (tmp_path / "exps" / name).mkdir(parents=True)
+        (tmp_path / "exps" / name / "__init__.py").write_text(f"MODE = {mode!r}\n")
+    monkeypatch.syspath_prepend(str(tmp_path))
+    with pytest.raises(ValueError, match="exps/b: mode 'x' is already taken"):
+        experiments(tmp_path / "exps")
