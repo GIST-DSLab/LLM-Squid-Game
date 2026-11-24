@@ -78,3 +78,13 @@ html[data-site-lang="ko"] nav.tabs a .nav-ko { margin-left: 0; font-size: inheri
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mount);
   else mount();
 })();
+
+// Links to a page that can come and go (web/pages/<page>/static, e.g. probe.html) carry data-optional:
+// when the page is not there (its folder was deleted), the link is hidden.
+document.addEventListener("DOMContentLoaded", function () {
+  document.querySelectorAll("a[data-optional]").forEach(function (a) {
+    fetch(a.getAttribute("href"), { method: "HEAD" })
+      .then(function (r) { if (!r.ok) a.style.display = "none"; })  // not .hidden: .btn sets its own display
+      .catch(function () { /* offline or file://: leave the link */ });
+  });
+});

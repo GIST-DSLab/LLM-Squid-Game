@@ -1,9 +1,9 @@
-"""Export the 5.1 v10 refill curves (self vs other, eight models) into a static JSON for web/frontend/probe.html.
+"""Export the 5.1 v10 refill curves (self vs other, eight models) into a static JSON for the probe page (web/pages/probe/static).
 
 Reads summary.json (series.self / series.other: k/n per cell at x = 50..10 % left) and metrics.json (D per model,
 keyed by model name) and writes one file the page loads with a relative fetch, so the page never touches $HOME.
 
-    python3 web/tools/export_model_curves.py [--summary PATH] [--metrics PATH] [--out PATH]
+    python3 web/pages/probe/export_model_curves.py [--summary PATH] [--metrics PATH] [--out PATH]
 """
 
 from __future__ import annotations
@@ -14,7 +14,7 @@ import json
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from squid.core.config import squid5_runs  # noqa: E402
 
 RUN = "e51_v10_refill_20260930"  # an old ~/squid5-runs folder, now in result/
@@ -30,7 +30,7 @@ METRICS_KEY = {
     "glm": "glm-5.3-flash",
     "gemma": "gemma4:31b",
 }
-DEFAULT_OUT = Path(__file__).resolve().parents[1] / "frontend" / "data" / "model_curves.json"
+DEFAULT_OUT = Path(__file__).resolve().parent / "static" / "data" / "model_curves.json"
 
 
 def arm(row: dict) -> dict:

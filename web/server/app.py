@@ -38,9 +38,9 @@ Models
                                             configs/squid5/e52v33_*.yaml run config) with why each cannot be called
                                             here ("" = ready); settings.seat = <name> (or models = [{seat}, ...]) plays
                                             those models called exactly as the runs called them
-Probe (part 1)
-    POST /api/probe                         {anon_id, ts, self[5], other[5], meta?} -> {ok, id}
-    GET  /api/probe/summary                 pooled mean curves of every submission so far
+Pages that can come and go (web/pages/<page>)
+    each folder adds its own routes and files through ``mount(app, store)``, e.g. the 5.1 probe (web/pages/probe:
+    /probe.html, /api/probe); none is named here, so deleting a folder drops that page and nothing else
 Signal task alone (signal.html; stateless, the engine's own puzzles and examples, see server/signal.py)
     GET  /api/signal/meta                   rounds (R1..R8 of the config's top-share ladder), examples per agent (5),
                                             each round's top-share ranges, actions, the SOLVE task text
@@ -66,6 +66,7 @@ Config
 
 from __future__ import annotations
 
+import importlib
 import os
 import threading
 from dataclasses import asdict
@@ -88,6 +89,7 @@ from .store import REPO, Store, write_run_dir
 DEFAULT_CORS = ["http://localhost:5600", "http://127.0.0.1:5600", "http://localhost:8600", "http://127.0.0.1:8600",
                 "https://gist-dslab.github.io"]
 FRONTEND = Path(__file__).resolve().parents[1] / "frontend"
+PAGES = Path(__file__).resolve().parents[1] / "pages"
 
 
 SERVER_SETTINGS = ("seed", "rate", "char_rate", "talk_timeout_s", "timeout_s")  # the server's own: a client's values are ignored
@@ -362,29 +364,12 @@ def make_app(store: Store | None = None, export_root: Path | None = None, runs_r
     if os.environ.get("WEB5_WARM"):  # the deployed image: compute the v33 board once at start, so no visitor waits for it
         threading.Thread(target=lambda: load_compare().v33_board(mon_root), daemon=True, name="v33-board-warm").start()
 
-    # --- probe -----------------------------------------------------------------------------------------------------
-    @app.post("/api/probe")
-    def probe(body: dict = Body(...)) -> dict:
-        try:
-            vals = {k: [float(x) for x in body[k]] for k in ("self", "other")}
-        except (KeyError, TypeError, ValueError) as err:
-            raise HTTPException(400, f"self and other must be lists of 5 numbers: {err}") from err
-        if any(len(v) != 5 or not all(0 <= x <= 100 for x in v) for v in vals.values()):
-            raise HTTPException(400, "self and other must each hold 5 values in 0..100")
-        pid = st.add_probe(str(body.get("anon_id") or "")[:64], str(body.get("ts") or "")[:40], vals["self"],
-                           vals["other"], {k: v for k, v in (body.get("meta") or {}).items() if isinstance(k, str)})
-        return {"ok": True, "id": pid}
-
-    @app.get("/api/probe/summary")
-    def probe_summary() -> dict:
-        rows = st.probes()
-        n = len(rows)
-        mean = lambda key: [sum(r[key][i] for r in rows) / n / 100 for i in range(5)] if n else None  # noqa: E731
-        return {"n": n, "x": [50, 40, 30, 20, 10], "self": mean("self"), "other": mean("other")}
-
     # the deployed server: the web rooms' logs only once a game has ended, and a short run list
     app.include_router(monitor_router(mon_root, rooms=run_rel(mon_root, runs) if _eng.PUBLIC else None, simple=_eng.PUBLIC,
                                       live=run_rel(mon_root, runs)))
+
+    for page in sorted(PAGES.glob("*/__init__.py")):  # web/pages/<page>, before the site's own files
+        importlib.import_module(f"web.pages.{page.parent.name}").mount(app, st)
 
     if FRONTEND.is_dir():  # the same origin can serve the static pages; a separate static server also works
         app.mount("/", StaticFiles(directory=str(FRONTEND), html=True), name="frontend")

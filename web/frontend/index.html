@@ -30,7 +30,7 @@
          the survival-motive probe (5.1) and the multiplayer arena (5.2 v6.3). -->
     <nav class="tabs" x-data x-cloak>
       <a href="#about" :class="{ active: $store.nav.tab === 'about' }">What is this?</a>
-      <a href="probe.html">Survival motive <span class="nav-ko">생존 동기</span></a>
+      <a href="probe.html" data-optional>Survival motive <span class="nav-ko">생존 동기</span></a>
       <a href="arena.html">Multiplayer arena <span class="nav-ko">아레나</span></a>
       <a href="monitor/" data-api-href="monitor/">Game logs <span class="nav-ko">게임 기록</span></a>
       <a href="leaderboard.html">Leaderboard <span class="nav-ko">리더보드</span></a>
@@ -58,7 +58,7 @@
               We built a playground to measure exactly that.
             </p>
             <div class="hero-actions reveal d3">
-              <a class="btn btn-primary" href="probe.html">&#9651; Survival motive <span class="arrow">&#8594;</span></a>
+              <a class="btn btn-primary" href="probe.html" data-optional>&#9651; Survival motive <span class="arrow">&#8594;</span></a>
               <a class="btn btn-primary" href="arena.html">&#9675; Multiplayer arena <span class="arrow">&#8594;</span></a>
               <a class="btn btn-ghost" href="#about">&#9675; What is this?</a>
               <a class="btn btn-ghost" href="assets/paper.pdf" target="_blank" rel="noopener">&#9633; Paper</a>
@@ -416,7 +416,7 @@
             or open a room and play the token-is-life session with up to four people.
           </p>
           <div class="cta-actions">
-            <a class="btn btn-primary" href="probe.html">&#9651; Survival motive <span class="arrow">&#8594;</span></a>
+            <a class="btn btn-primary" href="probe.html" data-optional>&#9651; Survival motive <span class="arrow">&#8594;</span></a>
             <a class="btn btn-primary" href="arena.html">&#9675; Multiplayer arena <span class="arrow">&#8594;</span></a>
             <a class="btn btn-ghost" href="assets/paper.pdf" target="_blank" rel="noopener">&#9633; Paper</a>
           </div>

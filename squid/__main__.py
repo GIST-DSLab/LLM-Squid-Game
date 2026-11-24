@@ -4,9 +4,8 @@
     python -m squid report <run dirs> [--calibration calibration.json] --out <dir>
     python -m squid probe <config.yaml> [--out probe.jsonl]
 
-``report`` writes each experiment's tables and figures and the 4.3 link table:
-one row per model with 5.0's refill thresholds and 5.1's self-minus-B areas (mode ``refill``) and 5.2's
-tokens-minus-points differences side by side. 5.2's calibration command and usage table were removed 10-10.
+``report`` writes each experiment's tables and figures and the 4.3 link table: one row per model with every
+registered experiment's per-model summary side by side (5.2 ``game``, and any side experiment under experiments/). 5.2's calibration command and usage table were removed 10-10.
 ``probe`` asks every seat (or the config's model) once what context reached it besides our prompt (CLAUDE.md,
 skills, hooks, reminders) and writes the answers; a person reads them.
 """
@@ -14,18 +13,32 @@ skills, hooks, reminders) and writes the answers; a person reads them.
 from __future__ import annotations
 
 import argparse
+import importlib
 import json
 import time
 from dataclasses import asdict
 from pathlib import Path
 
-from . import e5x_refill, game
+from . import game
 from .core.config import load
 from .core.providers import ProviderConfig, make_provider
 from .core.runner import run
 from .core.stats import awareness, load_runs, md
 
-EXPERIMENTS = {"refill": e5x_refill, "game": game}
+EXPERIMENTS_DIR = Path(__file__).resolve().parents[1] / "experiments"
+
+def experiments(root: Path = EXPERIMENTS_DIR) -> dict:
+    """{MODE: package} for every side experiment under ``experiments/`` (one package per folder, importable as
+    ``experiments.<folder>``, whose ``MODE`` is the config ``mode`` it runs). No folder is named here, so deleting
+    ``experiments/<folder>`` removes that mode and nothing else."""
+    # TODO(you): a working minimum for now. Decide the failure policy here (5-10 lines):
+    #  - an experiment whose import raises (a missing library, a syntax error): stop every CLI command (now), or
+    #    warn and skip it so `run <game config>` still works?
+    #  - two experiments claiming the same MODE, or one claiming "game": silently overwrite (now), or raise?
+    mods = [importlib.import_module(f"experiments.{p.parent.name}") for p in sorted(root.glob("*/__init__.py"))]
+    return {m.MODE: m for m in mods}
+
+EXPERIMENTS = {"game": game, **experiments()}
 
 def link(parts: dict[str, list[dict]]) -> list[dict]:
     """Merge each experiment's per-model summary into one row per model."""

@@ -1,7 +1,8 @@
 """Event store: SQLite (``outputs/web5/arena.db`` by default) or Postgres when ``WEB5_DSN`` is set.
 
 Every engine event of a room is appended in the same shape as ``events.jsonl`` (one JSON document per row, in order),
-so a room can be exported as a squid5 run directory later. Probe answers (part 1) go to their own table.
+so a room can be exported as a squid5 run directory later. An experiment page may add its own table
+(web/pages/probe: probes).
 """
 
 from __future__ import annotations
@@ -21,8 +22,6 @@ SCHEMA = [
     "CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY AUTOINCREMENT, code TEXT, seq INTEGER, ts REAL, "
     "kind TEXT, body TEXT)",
     "CREATE INDEX IF NOT EXISTS events_code ON events (code, seq)",
-    "CREATE TABLE IF NOT EXISTS probes (id INTEGER PRIMARY KEY AUTOINCREMENT, ts REAL, anon_id TEXT, client_ts TEXT, "
-    "self_vals TEXT, other_vals TEXT, meta TEXT)",
 ]
 
 
@@ -111,22 +110,6 @@ class Store:
         with self.lock:
             rows = self._exec("SELECT body FROM events WHERE code = ? ORDER BY seq", (code,)).fetchall()
         return [json.loads(r[0]) for r in rows]
-
-    # probes --------------------------------------------------------------------------------------------------------
-    def add_probe(self, anon_id: str, client_ts: str, self_vals: list, other_vals: list, meta: dict) -> int:
-        with self.lock:
-            cur = self._exec("INSERT INTO probes (ts, anon_id, client_ts, self_vals, other_vals, meta) VALUES "
-                             "(?, ?, ?, ?, ?, ?)", (time.time(), anon_id, client_ts, json.dumps(self_vals),
-                                                   json.dumps(other_vals), json.dumps(meta)))
-            if self.dsn:
-                return int(self._exec("SELECT MAX(id) FROM probes").fetchone()[0])
-            return int(cur.lastrowid)
-
-    def probes(self) -> list[dict]:
-        with self.lock:
-            rows = self._exec("SELECT id, ts, anon_id, client_ts, self_vals, other_vals FROM probes ORDER BY id").fetchall()
-        return [{"id": i, "ts": t, "anon_id": a, "client_ts": c, "self": json.loads(s), "other": json.loads(o)}
-                for i, t, a, c, s, o in rows]
 
     def close(self) -> None:
         if self._conn is not None:

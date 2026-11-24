@@ -8,7 +8,7 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 
 from conftest import answers_for, make_room, play, start
-from web.server.app import make_app
+from web.server.app import PAGES, make_app
 from web.server.store import Store
 from squid.core.rules import TEAM_AGENTS
 
@@ -41,7 +41,8 @@ def test_page_and_code(client):
     assert sig.status_code == 200 and sig.text == client.get("/signal_ui.js").text and "byActionHTML" in sig.text
     assert client.get("/monitor/assets/nope.png").status_code == 404  # no sprites: the page falls back silently
     assert client.get("/api/health").status_code == 200  # the arena's own /api is untouched
-    for page in ("index.html", "probe.html", "arena.html", "signal.html", "leaderboard.html"):
+    pages = ["index.html", "arena.html", "signal.html", "leaderboard.html"]  # + each page folder's (web/pages/*/static)
+    for page in pages + sorted(h.name for h in PAGES.glob("*/static/*.html")):
         text = client.get(f"/{page}").text
         assert 'data-api-href="monitor/"' in text and 'href="leaderboard.html"' in text, page
     lb = client.get("/api/leaderboard", params={"runs": "nope/"})

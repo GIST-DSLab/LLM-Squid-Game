@@ -17,6 +17,8 @@ COPY squid /app/squid
 COPY configs/squid5 /app/configs/squid5
 COPY web/server /app/web/server
 COPY web/frontend /app/web/frontend
+# pages that can come and go (web/pages/<page>: routes + static files), mounted by web/server/app.py
+COPY web/pages /app/web/pages
 COPY web/__init__.py /app/web/__init__.py
 # the game-log viewer and model comparison / leaderboard (mounted at /monitor/, /api/leaderboard) and a snapshot of
 # finished runs for them to read (the container has no checkout, so no result/)

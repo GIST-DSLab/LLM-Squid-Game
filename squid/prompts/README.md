@@ -6,16 +6,13 @@
 
 | 위치 | 내용 | 엔진이 읽나 |
 |---|---|---|
-| `en/refill.yaml` | 5.0 12차 · 5.1 v10/v11 원문 (실행 스크립트와 바이트 동일) | 예 (`e5x_refill.PROMPTS`) |
 | `en/trim_v19.yaml` | 5.2 규칙서 · 메시지를 줄이는 [옛 문장, 새 문장] 목록 (`trim_prompts`) | 예 (`rules._TRIM`) |
 | `en/e52_v21.md` | 5.2 현재 판(v21)의 규칙서와 메시지 종류별 USER 문장 — 코드(`rules.py`, `game.py`)가 조립하는 문장을 2라운드 스텁 세션에서 렌더한 스냅샷 | 아니오 (엔진 출력의 사본) |
 | `en/e52_v22.md` | 5.2 v22(메신저 TALK: 방과 틱)의 규칙서와 USER 문장 — 같은 방식의 스냅샷(`configs/squid5/e52v22_public_sol4.yaml`) | 아니오 (엔진 출력의 사본) |
-| `en/archive/` | 옛 버전 원문(5.0 1~11차, 5.1 v0~v9 등). 실행 기록이라 고치지 않는다 | 아니오 |
-| `ko/refill.yaml` | `en/refill.yaml`의 한국어판 (키 구조 동일) | 아직 아니오 |
 | `ko/e52_v21.md` | `en/e52_v21.md`의 한국어판 | 아직 아니오 |
 | `ko/e52_tr.yaml` | 5.2 v33 엔진 문장의 영어 → 한국어 템플릿 표(`squid/core/lang.py`). `game.lang: ko`와 웹 아레나의 한국어 보기가 이것 하나를 읽는다. 엔진의 한국어 렌더는 `ko/e52_v33.md`의 글과 같아야 한다(`sync.py check`) | 예 (`lang: ko`) |
 
-- `en/archive/`는 영어 실행 기록이라 한국어판을 두지 않는다. `en/trim_v19.yaml`은 영어 문장 편집 목록이고, 그 결과는 `e52_v21.md`에 이미 들어 있으므로 한국어판은 `ko/e52_v21.md`가 대신한다.
+- 5.0 · 5.1 문구(`refill.yaml`, 옛 원문 `en/archive/`)는 `experiments/refill/prompts/`에 있고 같은 규칙을 따른다(`sync.py check`가 함께 본다). `en/trim_v19.yaml`은 영어 문장 편집 목록이고, 그 결과는 `e52_v21.md`에 이미 들어 있으므로 한국어판은 `ko/e52_v21.md`가 대신한다.
 - 한국어판 첫 줄은 번역한 영어판의 해시다: md는 `<!-- ko of en/<file> sha256=<16자리> -->`, yaml은 `# ko of en/<file> sha256=<16자리>`.
 
 ## 동기화 순서

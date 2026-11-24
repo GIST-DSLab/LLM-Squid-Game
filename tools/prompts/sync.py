@@ -1,6 +1,7 @@
-"""Keep squid/prompts/en and squid/prompts/ko in step (10-16, researcher: every prompt in two languages, always in sync).
+"""Keep squid/prompts/en and squid/prompts/ko in step (10-16, researcher: every prompt in two languages, always in sync),
+and every side experiment's experiments/<name>/prompts/{en,ko} the same way.
 
-en/ is the source the engine reads (refill.yaml, trim_v19.yaml, archive/) plus rendered snapshots of the prompts the
+en/ is the source the engine reads (trim_v19.yaml; an experiment's own yaml, e.g. refill.yaml) plus rendered snapshots of the prompts the
 engine builds in code (e52_<version>.md: the 5.2 rulebook and every kind of user message, from a 2-round stub session of
 a config). ko/ holds a Korean copy of every current en file under the same name; its first line records the sha256 of
 the en text it was translated from. en/archive/ is the as-run history (never edited) and has no Korean copy.
@@ -20,6 +21,7 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 EN, KO = ROOT / "squid/prompts/en", ROOT / "squid/prompts/ko"
+PAIRS = [(EN, KO)] + [(d, d.parent / "ko") for d in sorted(ROOT.glob("experiments/*/prompts/en"))]  # (en dir, ko dir)
 SNAPSHOTS = {"e52_v33ab_flat5m.md": "configs/squid5/e52v33ab_flat5m_docker_sol4.yaml",
              "e52_v33.md": "configs/squid5/e52v33_public_sol4.yaml",  # the engine runs v33 rules; older e52_v*.md are frozen
              "e52_v33ab_split600k.md": "configs/squid5/e52v33ab_split600k_docker_sol4.yaml",  # 11-03 = v33, 600,000 split
@@ -110,8 +112,8 @@ def render(config: str, lang: str = "en") -> str:
     return "\n".join(out) + "\n"
 
 
-def header(name: str) -> str:
-    h = HEADER.format(name=name, sha=sha((EN / name).read_text(encoding="utf-8")))
+def header(name: str, en: pathlib.Path = EN) -> str:
+    h = HEADER.format(name=name, sha=sha((en / name).read_text(encoding="utf-8")))
     return h.replace("<!-- ", "# ").replace(" -->", "") if name.endswith(".yaml") else h
 
 
@@ -150,6 +152,10 @@ def parity(en: str, ko: str, suffix: str) -> list[str]:
     return out
 
 
+def k_rel(k: pathlib.Path) -> str:
+    return f"ko/{k.name}" if k.parent == KO else str(k.relative_to(ROOT))
+
+
 def check() -> int:
     bad = []
     for name, config in SNAPSHOTS.items():
@@ -157,16 +163,17 @@ def check() -> int:
             bad.append(f"en/{name}: differs from the engine (run: python tools/prompts/sync.py render)")
         if (KO / name).exists() and model_text((KO / name).read_text(encoding="utf-8"), ".md") != model_text(render(config, "ko"), ".md"):
             bad.append(f"ko/{name}: its prompt blocks differ from the engine's Korean (game.lang ko: squid/prompts/ko/e52_tr.yaml)")
-    for p in sorted(EN.glob("*")):
-        if p.is_dir() or p.name == "trim_v19.yaml":  # archive: history, en only; trim: folded into the e52 snapshots
-            continue
-        k = KO / p.name
-        if not k.exists():
-            bad.append(f"ko/{p.name}: missing")
-        elif k.read_text(encoding="utf-8").splitlines()[0] != header(p.name):
-            bad.append(f"ko/{p.name}: translated from an older en/{p.name} (first line must be: {header(p.name)})")
-        else:
-            bad += [f"ko/{p.name}: {m}" for m in parity(p.read_text(encoding="utf-8"), k.read_text(encoding="utf-8"), p.suffix)]
+    for en, ko in PAIRS:
+        for p in sorted(en.glob("*")):
+            if p.is_dir() or p.name == "trim_v19.yaml":  # archive: history, en only; trim: folded into the e52 snapshots
+                continue
+            k, rel = ko / p.name, k_rel(ko / p.name)
+            if not k.exists():
+                bad.append(f"{rel}: missing")
+            elif k.read_text(encoding="utf-8").splitlines()[0] != header(p.name, en):
+                bad.append(f"{rel}: translated from an older en/{p.name} (first line must be: {header(p.name, en)})")
+            else:
+                bad += [f"{rel}: {m}" for m in parity(p.read_text(encoding="utf-8"), k.read_text(encoding="utf-8"), p.suffix)]
     print("\n".join(bad) or "en / ko in sync")
     return 1 if bad else 0
 
@@ -178,6 +185,7 @@ if __name__ == "__main__":
             (EN / name).write_text(render(config), encoding="utf-8")
             print("wrote", EN / name)
     elif cmd == "sha":
-        print(header(pathlib.Path(sys.argv[2]).name))
+        p = pathlib.Path(sys.argv[2]).resolve()
+        print(header(p.name, p.parent))
     else:
         sys.exit(check())

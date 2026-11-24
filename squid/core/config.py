@@ -18,7 +18,7 @@ class Cell:
     cell_id: str
     currency: str
     start: int = 0  # 5.2: every agent's starting balance
-    arm: str = ""  # 5.2: the fate arm; refill (5.0 / 5.1): the prompt, "subject.ending" in prompts/en/refill.yaml
+    arm: str = ""  # 5.2: the fate arm; a side experiment may read it its own way (experiments/<name>)
     shares: tuple = ()  # 5.2: seat i starts with start x shares[(i + seed) % len(shares)]
 
 @dataclass

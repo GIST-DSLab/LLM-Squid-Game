@@ -28,9 +28,10 @@ from pathlib import Path
 import numpy as np
 import yaml
 
-from .core.protocol import FormatError
-from .core.stats import md
+from squid.core.protocol import FormatError
+from squid.core.stats import md
 
+MODE = "refill"  # a config's ``mode``; squid's CLI finds this package by it (experiments/README.md)
 PROMPTS = Path(__file__).parent / "prompts" / "en" / "refill.yaml"  # the Korean copy: prompts/ko/refill.yaml (kept in sync, not read)
 
 @cache

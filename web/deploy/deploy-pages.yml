@@ -1,9 +1,9 @@
-# GitHub Pages deploy of web/frontend only. Copy to .github/workflows/deploy-pages.yml.
+# GitHub Pages deploy of web/frontend plus each page folder's files (web/pages/*/static). Copy to .github/workflows/deploy-pages.yml.
 name: deploy-pages
 on:
   push:
     branches: [main]
-    paths: ["web/frontend/**"]
+    paths: ["web/frontend/**", "web/pages/*/static/**"]
   workflow_dispatch:
 permissions: {contents: read, pages: write, id-token: write}
 concurrency: {group: pages, cancel-in-progress: true}
@@ -15,10 +15,16 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-        with:  # the branch also holds the records (result/, docs/, ...); the site needs only this folder
-          sparse-checkout: web/frontend
+        with:  # the branch also holds the records (result/, docs/, ...); the site needs only these folders
+          sparse-checkout: |
+            web/frontend
+            web/pages
+      - name: Assemble the site (a page folder's files sit next to the site's own files, as the app serves them)
+        run: |
+          cp -R web/frontend _site
+          for d in web/pages/*/static; do [ -d "$d" ] && cp -R "$d"/. _site/; done
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
-        with: {path: web/frontend}
+        with: {path: _site}
       - id: deployment
         uses: actions/deploy-pages@v4

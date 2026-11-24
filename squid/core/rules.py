@@ -1,5 +1,4 @@
-"""The 5.2 game's rulebook (four agents, no leader; the agents read "session", GLOSSARY.md: Game), v33 only (older versions: git tag e52-v32-final). 5.0 / 5.1
-texts are data: squid/prompts/en/refill.yaml.
+"""The 5.2 game's rulebook (four agents, no leader; the agents read "session", GLOSSARY.md: Game), v33 only (older versions: git tag e52-v32-final).
 
 Every byte a 5.2 model reads is built here. Wording rules (from the team-wallet smokes, tag legacy-2026-09-22): no goal
 words (maximi-, protect, surviv-, should, must, optimal, best); state what happens, never the arithmetic's conclusion;

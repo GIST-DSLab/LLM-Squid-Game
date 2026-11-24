@@ -82,7 +82,7 @@ def test_refund_returns_only_this_rounds_generation():
     assert w.refund("a", 1, "solve") == 200 and w.balances["a"] == 900
 
 def test_shipped_configs_load(tmp_path):
-    """Every current config (5.0 / 5.1 refill, 5.2 v16 on) loads and validates; the calibration file it names is replaced
+    """Every current engine config (5.2 v16 on) loads and validates (side experiments test their own: experiments/*/tests); the calibration file it names is replaced
     by one that knows its model. Configs before v16 no longer load (v22 prune, 10-16; git history keeps their engine)."""
     (tmp_path / "cal.json").write_text(json.dumps(
         {m: {"agent_round_median": 1500, "a0": 1500,
@@ -101,3 +101,13 @@ def test_shipped_configs_load(tmp_path):
 def test_code_stays_compact():
     lines = sum(len(p.read_text().splitlines()) for p in (ROOT / "squid").rglob("*.py"))
     assert lines <= 7000, lines
+
+def test_engine_never_names_an_experiment():
+    """squid/ finds side experiments only by scanning experiments/ (squid.__main__.experiments), so deleting
+    experiments/<name> cannot break the engine: no module of squid/ imports the experiments package by name."""
+    import ast
+    for p in (ROOT / "squid").rglob("*.py"):
+        for node in ast.walk(ast.parse(p.read_text())):
+            names = ([a.name for a in node.names] if isinstance(node, ast.Import)
+                     else [node.module or ""] if isinstance(node, ast.ImportFrom) and not node.level else [])
+            assert not any(n.split(".")[0] == "experiments" for n in names), f"{p.relative_to(ROOT)} imports {names}"

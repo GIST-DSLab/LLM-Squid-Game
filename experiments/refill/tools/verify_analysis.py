@@ -4,9 +4,9 @@ import json, os, sys
 sys.path.insert(0, sys.argv[1])
 import numpy as np
 from scipy.stats import fisher_exact
-from squid import e5x_refill as R
+import experiments.refill as R
 from pathlib import Path
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from squid.core.config import squid5_runs  # noqa: E402  (~/squid5-runs now lives in result/)
 H = squid5_runs
 load = lambda p, **kw: [dict(r, **kw) for r in map(json.loads, open(p)) if r.get("action")]
