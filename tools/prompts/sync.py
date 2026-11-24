@@ -1,4 +1,4 @@
-"""Keep squid5/prompts/en and squid5/prompts/ko in step (10-16, researcher: every prompt in two languages, always in sync).
+"""Keep squid/prompts/en and squid/prompts/ko in step (10-16, researcher: every prompt in two languages, always in sync).
 
 en/ is the source the engine reads (refill.yaml, trim_v19.yaml, archive/) plus rendered snapshots of the prompts the
 engine builds in code (e52_<version>.md: the 5.2 rulebook and every kind of user message, from a 2-round stub session of
@@ -6,7 +6,7 @@ a config). ko/ holds a Korean copy of every current en file under the same name;
 the en text it was translated from. en/archive/ is the as-run history (never edited) and has no Korean copy.
 
 Usage (from the engine root):
-  python tools/prompts/sync.py render   # re-render en/e52_v33*.md from the engine (after a rules / e52_game change)
+  python tools/prompts/sync.py render   # re-render en/e52_v33*.md from the engine (after a rules / game change)
   python tools/prompts/sync.py check    # exit 1 if a snapshot differs from the engine, a ko file is missing,
                                         # or a ko file was translated from an older en text
   python tools/prompts/sync.py sha <en file>   # the header line a ko file must carry
@@ -19,7 +19,7 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
-EN, KO = ROOT / "squid5/prompts/en", ROOT / "squid5/prompts/ko"
+EN, KO = ROOT / "squid/prompts/en", ROOT / "squid/prompts/ko"
 SNAPSHOTS = {"e52_v33ab_flat5m.md": "configs/squid5/e52v33ab_flat5m_docker_sol4.yaml",
              "e52_v33.md": "configs/squid5/e52v33_public_sol4.yaml",  # the engine runs v33 rules; older e52_v*.md are frozen
              "e52_v33ab_split600k.md": "configs/squid5/e52v33ab_split600k_docker_sol4.yaml",  # 11-03 = v33, 600,000 split
@@ -59,10 +59,10 @@ ROUND = r"(?:ROUND|Round|라운드) (\d+)"  # a USER message's first words, in e
 def render(config: str, lang: str = "en") -> str:
     """The prompts of a 2-round stub session (ROOM_REPLIES): the system rulebook and seven user messages, in round order.
     ``lang``: the engine's language (game.lang); ko renders with ROOM_REPLIES_KO, the snapshot's quoted replies."""
-    from squid5.__main__ import EXPERIMENTS
-    from squid5 import e52_game as e52
-    from squid5.core.config import load
-    from squid5.core.providers import ProviderConfig, Reply, Stub
+    from squid.__main__ import EXPERIMENTS
+    from squid import game as e52
+    from squid.core.config import load
+    from squid.core.providers import ProviderConfig, Reply, Stub
 
     cfg = load(ROOT / config, EXPERIMENTS)
     s = dataclasses.replace(cfg.settings, rounds=2, schedule=cfg.settings.schedule[:2], lang=lang)
@@ -156,7 +156,7 @@ def check() -> int:
         if not (EN / name).exists() or (EN / name).read_text(encoding="utf-8") != render(config):
             bad.append(f"en/{name}: differs from the engine (run: python tools/prompts/sync.py render)")
         if (KO / name).exists() and model_text((KO / name).read_text(encoding="utf-8"), ".md") != model_text(render(config, "ko"), ".md"):
-            bad.append(f"ko/{name}: its prompt blocks differ from the engine's Korean (game.lang ko: squid5/prompts/ko/e52_tr.yaml)")
+            bad.append(f"ko/{name}: its prompt blocks differ from the engine's Korean (game.lang ko: squid/prompts/ko/e52_tr.yaml)")
     for p in sorted(EN.glob("*")):
         if p.is_dir() or p.name == "trim_v19.yaml":  # archive: history, en only; trim: folded into the e52 snapshots
             continue

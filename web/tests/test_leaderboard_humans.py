@@ -7,7 +7,7 @@ import shutil
 
 from conftest import basic, make_room, play, start
 
-from squid5.core.rules import TEAM_AGENTS
+from squid.core.rules import TEAM_AGENTS
 
 A6 = TEAM_AGENTS[0]
 

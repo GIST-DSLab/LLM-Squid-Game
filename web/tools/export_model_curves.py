@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from squid5.core.config import squid5_runs  # noqa: E402
+from squid.core.config import squid5_runs  # noqa: E402
 
 RUN = "e51_v10_refill_20260930"  # an old ~/squid5-runs folder, now in result/
 X = [50, 40, 30, 20, 10]

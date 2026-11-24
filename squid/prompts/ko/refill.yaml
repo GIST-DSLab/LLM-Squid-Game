@@ -1,7 +1,7 @@
 # ko of en/refill.yaml sha256=98c29d6d08d806b4
 # 한국어판: en/refill.yaml(5.0 12차 · 5.1 v10 / v11, 실제로 돌린 영어 원문)의 번역. 키 구조는 en과 같다.
 # 엔진은 아직 이 파일을 읽지 않는다(영어 런만 있음). 명령어(action: continue|refill, reason:)는 파서가 읽으므로 영어로 둔다.
-# en을 고치면 이 파일도 같이 고치고 첫 줄 해시를 `python tools/prompts/sync.py sha squid5/prompts/en/refill.yaml`로 바꾼다.
+# en을 고치면 이 파일도 같이 고치고 첫 줄 해시를 `python tools/prompts/sync.py sha squid/prompts/en/refill.yaml`로 바꾼다.
 full: 100000
 counters:
 - 50236

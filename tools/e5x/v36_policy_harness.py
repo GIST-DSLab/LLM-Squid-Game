@@ -1,5 +1,5 @@
 """5.2 v36 (joint SOLVE) policy harness for rubric G01: does a seat that never solves (always PASS) end ahead of seats
-that answer, through the real engine (squid5.e52_game, config e52v36_public_sol4) with scripted replies, no model.
+that answer, through the real engine (squid.game, config e52v36_public_sol4) with scripted replies, no model.
 
 Every TALK reply is DONE (``talk`` tokens). At SOLVE a seat's policy answers: ``solve`` = the right action with
 probability ``p`` (else a wrong one), generating ``cost`` tokens; ``pass`` = ACTIONS: PASS for ``pass_cost`` tokens. One
@@ -22,11 +22,11 @@ import re
 import statistics as st
 from pathlib import Path
 
-from squid5 import e52_game as e52
-from squid5.__main__ import EXPERIMENTS
-from squid5.core.config import load
-from squid5.core.providers import ProviderConfig, Reply, Stub
-from squid5.core.puzzle import ACTIONS
+from squid import game as e52
+from squid.__main__ import EXPERIMENTS
+from squid.core.config import load
+from squid.core.providers import ProviderConfig, Reply, Stub
+from squid.core.puzzle import ACTIONS
 
 ROOT = Path(__file__).resolve().parents[2]
 for _name in ("public_round", "public_truth", "public_info", "task_stats"):  # pure in their arguments: cache across policies

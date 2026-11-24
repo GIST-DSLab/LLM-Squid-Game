@@ -122,7 +122,7 @@ def play(players: list[Player], policy, until_status=("finished", "error"), max_
 def puzzle(seed: int, round_no: int, n: int = 4):
     """The round's puzzle as a room builds it and the public examples shown when ``n`` agents take part (the puzzle may
     be a redraw, so it comes from ``public_round``)."""
-    from squid5.core.puzzle import Spec, public_round
+    from squid.core.puzzle import Spec, public_round
 
     from web.server.engine import GAME, PROFILES, SCHEDULE
 
@@ -142,7 +142,7 @@ def answers_for(seed: int, round_no: int, n: int = 4) -> list[str]:
 
 def answers_for_(seed: int, round_no: int, n: int = 4) -> list[str]:
     """The scored actions: those of the rule drawn among the rules that fit the examples ``n`` agents are shown."""
-    from squid5.core.puzzle import Spec, public_truth
+    from squid.core.puzzle import Spec, public_truth
 
     from web.server.engine import GAME, PROFILES, SCHEDULE
 
@@ -152,7 +152,7 @@ def answers_for_(seed: int, round_no: int, n: int = 4) -> list[str]:
 
 
 def wrong_for(seed: int, round_no: int, n: int = 4) -> list[str]:
-    from squid5.core.puzzle import ACTIONS
+    from squid.core.puzzle import ACTIONS
 
     ans = answers_for(seed, round_no, n)
     return [next(a for a in ACTIONS if a != ans[0])] + ans[1:]
@@ -162,7 +162,7 @@ def solver_of(seed: int, round_no: int = 1, taking_part=None) -> str:
     """The solver the engine draws in round 1 when nobody has left (``Game._rotate``)."""
     import random
 
-    from squid5.core.rules import TEAM_AGENTS
+    from squid.core.rules import TEAM_AGENTS
 
     left = list(taking_part or TEAM_AGENTS)
     return random.Random(f"{seed}:rot:{round_no}:0").sample(left, len(left))[0]

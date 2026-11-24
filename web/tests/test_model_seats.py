@@ -13,7 +13,7 @@ import httpx
 import pytest
 from conftest import SEEDS, Player, answers_for, basic, make_room, play, start
 
-from squid5.core import providers, rules
+from squid.core import providers, rules
 from web.server import engine
 
 A6, A11, A17, A23 = rules.TEAM_AGENTS

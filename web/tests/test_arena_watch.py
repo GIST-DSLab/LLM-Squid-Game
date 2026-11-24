@@ -10,7 +10,7 @@ import time
 import pytest
 from conftest import basic, make_room, start
 
-from squid5.core import rules
+from squid.core import rules
 from web.server.engine import RoomSettings
 
 A6, A11, A17, A23 = rules.TEAM_AGENTS

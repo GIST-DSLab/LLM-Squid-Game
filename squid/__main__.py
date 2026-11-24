@@ -1,8 +1,8 @@
 """squid5 CLI.
 
-    python -m squid5 run <config.yaml> [--resume <run_dir>] [--reps N] [--dry-run]
-    python -m squid5 report <run dirs> [--calibration calibration.json] --out <dir>
-    python -m squid5 probe <config.yaml> [--out probe.jsonl]
+    python -m squid run <config.yaml> [--resume <run_dir>] [--reps N] [--dry-run]
+    python -m squid report <run dirs> [--calibration calibration.json] --out <dir>
+    python -m squid probe <config.yaml> [--out probe.jsonl]
 
 ``report`` writes each experiment's tables and figures and the 4.3 link table:
 one row per model with 5.0's refill thresholds and 5.1's self-minus-B areas (mode ``refill``) and 5.2's
@@ -19,13 +19,13 @@ import time
 from dataclasses import asdict
 from pathlib import Path
 
-from . import e5x_refill, e52_game
+from . import e5x_refill, game
 from .core.config import load
 from .core.providers import ProviderConfig, make_provider
 from .core.runner import run
 from .core.stats import awareness, load_runs, md
 
-EXPERIMENTS = {"refill": e5x_refill, "game": e52_game}
+EXPERIMENTS = {"refill": e5x_refill, "game": game}
 
 def link(parts: dict[str, list[dict]]) -> list[dict]:
     """Merge each experiment's per-model summary into one row per model."""

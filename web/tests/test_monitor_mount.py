@@ -10,7 +10,7 @@ from fastapi.testclient import TestClient
 from conftest import answers_for, make_room, play, start
 from web.server.app import make_app
 from web.server.store import Store
-from squid5.core.rules import TEAM_AGENTS
+from squid.core.rules import TEAM_AGENTS
 
 A17 = TEAM_AGENTS[2]
 
@@ -131,10 +131,10 @@ def test_a_v36_run_names_its_version_and_serves_each_agents_task(tmp_path, monke
     import re
     import shutil
 
-    from squid5 import e52_game as e52
-    from squid5.__main__ import EXPERIMENTS
-    from squid5.core.config import load
-    from squid5.core.providers import ProviderConfig, Reply, Stub
+    from squid import game as e52
+    from squid.__main__ import EXPERIMENTS
+    from squid.core.config import load
+    from squid.core.providers import ProviderConfig, Reply, Stub
     from web.server import engine
 
     repo = Path(__file__).resolve().parents[2]

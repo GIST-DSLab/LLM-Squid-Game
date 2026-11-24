@@ -4,7 +4,7 @@
     python3 web/tools/runs_snapshot.py unpack web/data/runs        # the Dockerfile runs this at build time
 
 ``add`` copies every finished-or-not run dir (one that holds events.jsonl) under each named experiment's runs
-(result/<date>/<name>/runs of the main checkout, squid5.core.config.squid5_runs; ``--from DIR`` reads DIR/<name>),
+(result/<date>/<name>/runs of the main checkout, squid.core.config.squid5_runs; ``--from DIR`` reads DIR/<name>),
 skipping any path part that starts with ``_`` (``_failed``, ``_stopped``, ``_backups``: attempts moved out of the
 run roots, as in the earlier snapshots). Only config.yaml, meta.json and results.jsonl are copied as they are;
 events.jsonl is stored as events.jsonl.xz because the model prompts it logs (``call.user``) repeat from call to call
@@ -56,7 +56,7 @@ def pack(src: Path, dest: Path) -> int:
 def add(names: list[str], root: Path | None, snap: Path, workers: int) -> list[str]:
     if root is None:  # imported here: ``unpack`` runs in the API image, which has no checkout
         sys.path.insert(0, str(REPO))
-        from squid5.core.config import squid5_runs
+        from squid.core.config import squid5_runs
     jobs = []
     for name in names:
         top = root / name if root else squid5_runs(name)

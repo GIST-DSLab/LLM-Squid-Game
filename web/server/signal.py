@@ -2,7 +2,7 @@
 configs/squid5/e52v33_public_sol4.yaml), nothing else (no tokens, no talk). v33+ always shows the four-agent set (20
 examples, ``fixed_examples``); the page's 1..4 switch shows the nested smaller sets the older versions used.
 
-Every puzzle and every set of examples is the engine's own, made exactly as ``squid5.e52_game.Game`` makes round
+Every puzzle and every set of examples is the engine's own, made exactly as ``squid.game.Game`` makes round
 ``round`` of seed ``seed``: ``public_round(seed, round, Spec(profile), n, PER_AGENT)`` gives the round's puzzle and
 ``PER_AGENT`` (5) examples for each of the ``n`` agents taking part (1..4), shown to all and nested (the set for
 ``n - 1`` is the first ``5 x (n - 1)`` of the set for ``n``). The rounds follow the config's top-share ladder (profiles
@@ -26,8 +26,8 @@ from pathlib import Path
 
 import yaml
 
-from squid5.core import rules
-from squid5.core.puzzle import (ACTIONS, SIGNAL_INDEX, PuzzleError, Spec, candidate_actions, public_round, public_truth,
+from squid.core import rules
+from squid.core.puzzle import (ACTIONS, SIGNAL_INDEX, PuzzleError, Spec, candidate_actions, public_round, public_truth,
                                 space_bits)
 
 AGENTS = list(rules.TEAM_AGENTS)  # the experiment's four seats
@@ -82,7 +82,7 @@ def _shown(a: dict, n: int):
 
 
 def _drawn(a: dict, n: int):
-    """The rule the round is scored by when ``n`` take part (``e52_game.Game._round``: ``public_truth``)."""
+    """The rule the round is scored by when ``n`` take part (``game.Game._round``: ``public_truth``)."""
     return public_truth(a["seed"], a["round"], _spec(a), n, PER_AGENT)
 
 

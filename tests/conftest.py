@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 
-from squid5.core.providers import ProviderConfig, Stub
+from squid.core.providers import ProviderConfig, Stub
 
 def stub(respond) -> Stub:
     return Stub(ProviderConfig("stub", "stub-model"), respond)

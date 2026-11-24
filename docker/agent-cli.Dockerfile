@@ -1,4 +1,4 @@
-# CLI seats of squid5 run here when their config says `sandbox: docker` (squid5/core/providers.py). Nothing of the
+# CLI seats of squid5 run here when their config says `sandbox: docker` (squid/core/providers.py). Nothing of the
 # host is copied in: the engine mounts one empty per-call directory and passes the login by environment
 # (CLAUDE_CODE_OAUTH_TOKEN for claude; a copied auth.json under CODEX_HOME for codex). Versions are pinned so the
 # harness the models see does not change between runs; bump them on purpose and record it.

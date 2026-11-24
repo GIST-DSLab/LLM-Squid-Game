@@ -1,6 +1,6 @@
 """5.2 model-facing text in another language (``game.lang``; 10-20 researcher). The engine builds every sentence in
 English; a :class:`Translator` rewrites the engine's own pieces (never an agent's words) with the ordered template table
-``squid5/prompts/<lang>/e52_tr.yaml``, the one place the Korean wording lives (the arena shows a person the same text).
+``squid/prompts/<lang>/e52_tr.yaml``, the one place the Korean wording lives (the arena shows a person the same text).
 ``en`` is the identity, so English runs stay byte-identical. Commands, placeholders, phase, action and signal names stay
 English, so the parsers read a reply the same way in every language.
 

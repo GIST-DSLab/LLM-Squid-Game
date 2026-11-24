@@ -12,7 +12,7 @@ then encoded with ffmpeg (H.264, yuv420p, no audio). Scenes: title, tokens = lif
 scenes (the supervisor picks the solver; TALK with ASK / GIVE / EXIT and moving balances; SOLVE as hidden-rule inference
 over a shortened clue table; the results with the refund or the fixed fine and a GIVE after results; the charges), then
 the whole round (Figure 1) with the end prize. The sentences follow the arena's core rules (web/frontend/arena.html),
-the paper's section 2.1 and the engine (squid5/e52_game.py: the fine share is 24,000 // the agents taking part at the
+the paper's section 2.1 and the engine (squid/game.py: the fine share is 24,000 // the agents taking part at the
 round's start, paid by those still in).
 
     python web/tools/make_rules_video.py [--out web/frontend/assets/rules/arena_rules.mp4] [--fps 30] [--fig FIG1.png]

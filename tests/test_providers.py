@@ -9,8 +9,8 @@ import types
 import anthropic
 import pytest
 
-from squid5 import __main__ as cli
-from squid5.core import providers as P
+from squid import __main__ as cli
+from squid.core import providers as P
 
 NS = types.SimpleNamespace
 

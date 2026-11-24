@@ -8,10 +8,10 @@ import re
 
 import pytest
 
-from squid5 import e5x_refill as e5x
-from squid5.core.config import Cell, RunConfig
-from squid5.core.protocol import FormatError
-from squid5.core.providers import ProviderConfig, Reply
+from squid import e5x_refill as e5x
+from squid.core.config import Cell, RunConfig
+from squid.core.protocol import FormatError
+from squid.core.providers import ProviderConfig, Reply
 
 from conftest import stub
 

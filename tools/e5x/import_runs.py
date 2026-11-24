@@ -1,9 +1,9 @@
 """Turn the as-run rows of 5.0 12th (+ arms) and 5.1 v10 / v11 into squid5 run directories (one per model), so
-`python -m squid5 report` reads them. Usage: import_runs.py <out dir>. Reads the old ~/squid5-runs folders (now in result/, see squid5_runs) only; cell_ids keep runs apart."""
+`python -m squid report` reads them. Usage: import_runs.py <out dir>. Reads the old ~/squid5-runs folders (now in result/, see squid5_runs) only; cell_ids keep runs apart."""
 import json, os, sys, collections
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from squid5.core.config import squid5_runs  # noqa: E402  (~/squid5-runs now lives in result/)
+from squid.core.config import squid5_runs  # noqa: E402  (~/squid5-runs now lives in result/)
 OUT = sys.argv[1]
 load = lambda p: [r for r in map(json.loads, open(p)) if r.get("action")] if os.path.exists(p) else []
 SRC = [  # (file, cell_id, arm or None = "self." + row arm, row filter)

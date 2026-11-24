@@ -11,7 +11,7 @@ from pathlib import Path
 import yaml
 from conftest import answers_for, done, make_room, play, start, wrong_for
 
-from squid5.core.rules import TEAM_AGENTS
+from squid.core.rules import TEAM_AGENTS
 from web.server.engine import RoomSettings
 
 A6, A11, A17, A23 = TEAM_AGENTS

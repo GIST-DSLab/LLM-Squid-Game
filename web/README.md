@@ -1,7 +1,7 @@
 # web/ — 사람이 해 보는 squid5 (5.1 생존 동기 측정 + 5.2 아레나 · v33)
 
 옛 Web Arena(태그 `legacy-2026-09-22`)의 두 조각 배포 패턴(FastAPI 백엔드 + 정적 프런트엔드)을 그대로 두고, 엔진만
-현재 `squid5`로 바꾼 것이다. 아레나는 실험 엔진 `squid5.e52_game.Game`을 모델 실험과 **같은 게임**(5.2 v33, 논문의 기본 셋업 — 설정은
+현재 `squid5`로 바꾼 것이다. 아레나는 실험 엔진 `squid.game.Game`을 모델 실험과 **같은 게임**(5.2 v33, 논문의 기본 셋업 — 설정은
 `configs/squid5/e52v33_public_sol4.yaml`에서 그대로 읽음; v35(TALK 최대 4틱 + `done_quiet`)는 11-07에 내림, 태그 `archive/configs-v34-v35-tokctl`; 옛 v17b 1:1 대화 게임과 그 코드는 지웠다, 태그 `e52-v32-final`)으로
 **그대로** 돌린다. 이 폴더에는 줄 수 제한이 없다.
 
@@ -10,7 +10,7 @@
 | 경로 | 역할 |
 |---|---|
 | `server/app.py` | FastAPI 앱. 방(rooms)·언어(lang)·프로브 API, `web/frontend` 정적 서빙, CORS |
-| `server/engine.py` | 방 = 백그라운드 스레드에서 도는 `e52_game.Game`(설정 파일의 v33 게임 그대로; 방이 바꾸는 것은 자리·시계·라운드 수(숨김)·모델의 언어뿐). 호출이 TALK인지 SOLVE인지, 라운드·틱·단계는 엔진의 `call_start` 이벤트에서 읽는다(프롬프트 문구를 파싱하지 않으므로 한국어 프롬프트여도 같다). 사람 자리(`HumanSeat`)는 제출까지 블록하고 페이지가 메신저 문법으로 짠 답 TEXT를 돌려줌, 모델 자리(`ModelSeat`)는 squid5의 프로바이더(**실험 자리** = `e52v33_*.yaml`의 `model` 칸 그대로 · 또는 API 자리 = 프로바이더 kind + 모델 이름, 기본 Ollama Cloud API의 `gpt-oss:20b`; Ollama SOLVE는 관전용 스트리밍), 봇 자리(`BotSeat`)는 즉답(EXIT 안 함), 빈 자리는 1라운드 전에 꺼진 에이전트. 엔진 이벤트를 run dir에 실시간으로 쓴다(`RunWriter`) |
+| `server/engine.py` | 방 = 백그라운드 스레드에서 도는 `game.Game`(설정 파일의 v33 게임 그대로; 방이 바꾸는 것은 자리·시계·라운드 수(숨김)·모델의 언어뿐). 호출이 TALK인지 SOLVE인지, 라운드·틱·단계는 엔진의 `call_start` 이벤트에서 읽는다(프롬프트 문구를 파싱하지 않으므로 한국어 프롬프트여도 같다). 사람 자리(`HumanSeat`)는 제출까지 블록하고 페이지가 메신저 문법으로 짠 답 TEXT를 돌려줌, 모델 자리(`ModelSeat`)는 squid5의 프로바이더(**실험 자리** = `e52v33_*.yaml`의 `model` 칸 그대로 · 또는 API 자리 = 프로바이더 kind + 모델 이름, 기본 Ollama Cloud API의 `gpt-oss:20b`; Ollama SOLVE는 관전용 스트리밍), 봇 자리(`BotSeat`)는 즉답(EXIT 안 함), 빈 자리는 1라운드 전에 꺼진 에이전트. 엔진 이벤트를 run dir에 실시간으로 쓴다(`RunWriter`) |
 | `server/store.py` | 이벤트 저장소. 기본 SQLite `outputs/web5/arena.db`, `WEB5_DSN`이 있으면 Postgres(psycopg) |
 | `server/monitor.py` | 게임 기록 뷰어(`tools/monitor`)를 `/monitor/`에 붙인다 |
 | `server/humans.py` | 리더보드의 사람 탭(`GET /api/leaderboard/humans`): 방 run dir(`WEB5_RUNS_ROOT`) 가운데 사람이 앉아 끝난 v33 판(`config.yaml`의 `web.version`; 옛 경제의 방은 뺌)을 한 판 한 줄로, 판 C(논문 정의, `compare.paper_game`) 높은 순 · 같으면 사람의 끝 토큰 순. 각 줄에 네 자리(사람 · 봇 · 모델, 결과, 끝 토큰)를 담아 페이지가 줄을 누르면 보여 준다 |
@@ -36,7 +36,7 @@ cd "$HOME/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-
   모든 메시지(`pending.text`, `system_text`)가 그 언어로 만들어진다(`Session.set_lang`). 규칙서는 바로, 메시지는 다음 화면부터 바뀐다
   (지금 떠 있는 화면은 이미 만들어진 글). 규칙 창의 "나란히"는 영어 원문과 한국어판을 같이 보여 준다.
 - **모델(방 설정 `model_lang`)**: `en`(기본, 실험과 같음) 또는 `ko`. 엔진 설정 `game.lang`과 같은 스위치다.
-- 한국어 문장은 한 곳에만 있다: `squid5/prompts/ko/e52_tr.yaml`(엔진의 영어 문장 → 한국어 템플릿 표, `squid5/core/lang.py`가 적용).
+- 한국어 문장은 한 곳에만 있다: `squid/prompts/ko/e52_tr.yaml`(엔진의 영어 문장 → 한국어 템플릿 표, `squid/core/lang.py`가 적용).
   `ko/e52_v33.md`의 손번역과 글자 단위로 같고 `tools/prompts/sync.py check`가 이를 지킨다. 명령어(TO · GIVE · ASK · LEAVE · EXIT · DONE ·
   BELIEF · ACTIONS), 단계 이름, 행동 이름, 신호 값은 영어로 남으므로 답의 명령 줄은 언어와 상관없이 영어로 쓴다(페이지가 만들어 준다).
 
@@ -86,7 +86,7 @@ API로는 `settings.seat = "<이름>"`(세 자리 모두) 또는 `settings.model
 - 모델이 읽을 프롬프트는 기본으로 **내가 읽는 언어를 따라간다**(직접 고르면 그대로). 실험 원문과 같게 하려면 English.
 
 
-모델 자리는 **API로만** 부른다(로컬 모델 · 로컬 데몬 없음, `ollama pull` 불필요). 기본은 엔진의 `Ollama` 프로바이더(`squid5/core/providers.py`)로
+모델 자리는 **API로만** 부른다(로컬 모델 · 로컬 데몬 없음, `ollama pull` 불필요). 기본은 엔진의 `Ollama` 프로바이더(`squid/core/providers.py`)로
 **Ollama Cloud API** `https://ollama.com/api/chat`에 모델 `gpt-oss:20b`(API가 받는 이름; 10-20 1토큰 호출로 확인)를 보낸다.
 
 - **키**: 서버 프로세스의 환경변수 `OLLAMA_API_KEY`. 없으면 서버가 처음 필요할 때 엔진 워크트리의 `.env`(`.claude/worktrees/arena-code/.env`), 그다음 메인 저장소
@@ -101,7 +101,7 @@ API로는 `settings.seat = "<이름>"`(세 자리 모두) 또는 `settings.model
 - 모델 자리는 엔진이 만든 시스템·사용자 문장을 그대로 받는다. 차감은 API가 돌려준 생성 토큰(Ollama `eval_count`, 생각 포함) 그대로다.
 - 호출이 재시도(`model_retries`, 기본 2) 뒤에도 실패하면 빈 답(0토큰): TALK는 DONE, SOLVE는 틀린 답. 화면 위 "모델 자리 알림"에 뜬다.
 - 실험 설정도 있다: `configs/squid5/e52v33_ollama_gptoss4.yaml`(en) · `e52v33_ko_gptoss4.yaml`(`lang: ko`), 네 자리 모두 Ollama Cloud의
-  gpt-oss:20b(`kind: ollama`, `api_key_env: OLLAMA_API_KEY` — `python -m squid5 run`은 `.env`를 읽지 않으므로 그 셸의 환경에 키가 있어야 함).
+  gpt-oss:20b(`kind: ollama`, `api_key_env: OLLAMA_API_KEY` — `python -m squid run`은 `.env`를 읽지 않으므로 그 셸의 환경에 키가 있어야 함).
 
 ### LLM solver 관전
 

@@ -5,10 +5,10 @@ from dataclasses import fields
 
 from fastapi.testclient import TestClient
 
-from squid5 import e52_game as e52
-from squid5.core.config import Cell
-from squid5.core.providers import Reply
-from squid5.core.puzzle import ACTIONS, Spec, candidate_actions, public_round, public_truth
+from squid import game as e52
+from squid.core.config import Cell
+from squid.core.providers import Reply
+from squid.core.puzzle import ACTIONS, Spec, candidate_actions, public_round, public_truth
 from web.server import signal as sig
 from web.server.app import make_app
 from web.server.store import Store

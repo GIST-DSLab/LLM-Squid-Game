@@ -361,7 +361,7 @@ def t8(games):
 <h2>결과</h2>{table(cols, [dict(r, what=GROUP.get(r["group"], r["group"])) for r in keep], lambda r: "open" if r["open"] else "closed")}
 <div class="verdict{' warn' if note.get('warn') else ''}">{note['verdict']}</div>
 <h3>v34에서 바뀐 것</h3><ul class="note">
-<li>규칙: TALK 상한 8 → 4틱(규칙서의 숫자만; <code>squid5/prompts/en/e52_v34.md</code> · <code>ko/e52_v34.md</code>, <code>sync.py check</code> 통과).</li>
+<li>규칙: TALK 상한 8 → 4틱(규칙서의 숫자만; <code>squid/prompts/en/e52_v34.md</code> · <code>ko/e52_v34.md</code>, <code>sync.py check</code> 통과).</li>
 <li>오픈 모델 좌석: <code>e52v34_codex_glm4</code> <code>think: low</code> · <code>e52v34_codex_deepseek4</code> <code>think: none</code> · <code>e52v34_codex_gemma4</code>(새) <code>think: high, think_talk: none, think_fit: [[high, 11256], [none, 1092]]</code>.
 엔진 필드 <code>think_talk</code>·<code>think_fit</code>(provider), 모니터 런 목록에 표시.</li>
 <li>v34에 넣지 않은 것: Claude Code 하네스의 오픈 모델 좌석과 Kimi(보정하지 않음 — <code>calibrate.py &lt;seat&gt; --run</code> 후 추가).</li></ul>"""

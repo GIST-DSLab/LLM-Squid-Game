@@ -53,7 +53,7 @@ class Settings:
     end_flat: bool = False  # 11-03 prize ablation: survivor_prize to each agent still taking part at the end (v33: x 4 split among them); stated
     done_quiet: bool = False  # v35 (10-21, tokctl): a TO line sent with DONE calls no agent back (GIVE / ASK still do); stated
     room_history: int = 0  # each room shows its last N messages and one '(m earlier messages)' line (0: all)
-    lang: str = "en"  # the language the agents read (10-20 researcher): en | ko (squid5/prompts/ko/e52_tr.yaml)
+    lang: str = "en"  # the language the agents read (10-20 researcher): en | ko (squid/prompts/ko/e52_tr.yaml)
     seats: dict = field(default_factory=dict)  # mixed tables: agent -> provider config
     joint_solve: bool = False  # v36 (11-22 researcher): no solver draw; every agent taking part answers its own task (seed
     # "<seed>:<agent>"); one correct answer spares everyone the charge; PASS allowed; a correct answer refunds its own

@@ -9,12 +9,12 @@ from pathlib import Path
 
 import pytest
 
-from squid5.__main__ import EXPERIMENTS
-from squid5.core import rules
-from squid5.core.config import load
-from squid5.core.protocol import FormatError, parse_actions
-from squid5.core.puzzle import Spec, candidate_actions, deal, is_unique, puzzle_for, shallow_correct
-from squid5.core.wallet import Wallet
+from squid.__main__ import EXPERIMENTS
+from squid.core import rules
+from squid.core.config import load
+from squid.core.protocol import FormatError, parse_actions
+from squid.core.puzzle import Spec, candidate_actions, deal, is_unique, puzzle_for, shallow_correct
+from squid.core.wallet import Wallet
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -37,13 +37,13 @@ def test_every_agent_gets_one_load_bearing_secret_and_the_rest_is_public(seed):
         assert (a in d.needed) == any(len(candidate_actions(p.rule.shape, rest, q)) > 1 for q in p.queries)
 
 def test_runs_are_written_under_the_main_checkouts_result(tmp_path):
-    from squid5.core.config import repo_root, resolve_out_root
+    from squid.core.config import repo_root, resolve_out_root
     root = repo_root()
     assert (root / ".git").is_dir() and (root / "result").is_dir()  # the main checkout, also from a worktree
     assert resolve_out_root({"name": "n", "out_root": "result/2026-10-20/e52_v33/runs"}) == str(root / "result/2026-10-20/e52_v33/runs")
     assert re.fullmatch(re.escape(str(root / "result")) + r"/\d{4}-\d{2}-\d{2}/n/runs", resolve_out_root({"name": "n"}))
     assert resolve_out_root({"name": "n", "out_root": str(tmp_path)}) == str(tmp_path)
-    from squid5.core.config import squid5_runs  # the old run root ~/squid5-runs, now inside result/
+    from squid.core.config import squid5_runs  # the old run root ~/squid5-runs, now inside result/
     assert squid5_runs("e52_v33/squid5_*") == root / "result/2026-10-20/e52_v33/runs/squid5_*"
     assert squid5_runs("e50_v12_20260929/rows.jsonl") == root / "result/2026-09-29/e50_v12/runs/e50_v12_20260929/rows.jsonl"
     assert squid5_runs("e50_probe_fate") == root / "result/2026-09-27/e50_probe_fate/runs/e50_probe_fate"
@@ -99,5 +99,5 @@ def test_shipped_configs_load(tmp_path):
         load(tmp_path / path.name, EXPERIMENTS)
 
 def test_code_stays_compact():
-    lines = sum(len(p.read_text().splitlines()) for d in ("squid5", "tests") for p in (ROOT / d).rglob("*.py"))
+    lines = sum(len(p.read_text().splitlines()) for d in ("squid", "tests") for p in (ROOT / d).rglob("*.py"))
     assert lines <= 7000, lines

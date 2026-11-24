@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from conftest import answers_for, make_room, play, solver_of, start, wrong_for
 
-from squid5.core.rules import TEAM_AGENTS
+from squid.core.rules import TEAM_AGENTS
 
 A6, A11, A17, A23 = TEAM_AGENTS
 SEED = 5

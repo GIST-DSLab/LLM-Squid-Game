@@ -1,4 +1,4 @@
-# 5.2 v33 Korean: the engine's own English sentences -> Korean (squid5/core/lang.py; game.lang: ko and the arena's
+# 5.2 v33 Korean: the engine's own English sentences -> Korean (squid/core/lang.py; game.lang: ko and the arena's
 # ko view read this one table). Wording = ko/e52_v33.md (the hand translation); glossary and banned words: ../README.md.
 # [en template, ko] pairs, applied in order (longer and more specific first). Slots: {n..} number, {a..} agent or you,
 # {l..} list of agents, {w..} text to ';' or the line's end, {t..} text to the line's end, {r..} chat id; '^' = at a

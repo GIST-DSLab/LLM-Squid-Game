@@ -10,7 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 HIST = ROOT / "docs/history/e52-tokctl-2026-10-20"
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from squid5.core.config import squid5_runs  # noqa: E402  (~/squid5-runs now lives in result/)
+from squid.core.config import squid5_runs  # noqa: E402  (~/squid5-runs now lives in result/)
 SETS = [  # (group, label, open?, glob)
     *[(v, m, True, f"e52_tokctl/squid5_e52tc_{v}_{k}") for v in ("b0", "tl", "t4", "tlt4")
       for k, m in (("glm", "GLM-5.3-flash"), ("ds", "DeepSeek-v4.1-flash"), ("gemma", "Gemma4-31b"))],

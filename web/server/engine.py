@@ -1,6 +1,6 @@
-"""Human-playable 5.2 rooms on the experiment engine (``squid5.e52_game``), used as-is: the v33 game the model runs play.
+"""Human-playable 5.2 rooms on the experiment engine (``squid.game``), used as-is: the v33 game the model runs play.
 
-A room builds one ``squid5.e52_game.Game`` from ``configs/squid5/e52v33_public_sol4.yaml`` (via ``server/signal.py``)
+A room builds one ``squid.game.Game`` from ``configs/squid5/e52v33_public_sol4.yaml`` (via ``server/signal.py``)
 exactly as the experiment does -- the same rulebook and messages, fixed 20 examples, the solver drawn among the agents
 taking part, the 24,000 charge split among those taking part at the round's start, the solver unable to EXIT its own
 round unless alone, EXIT +20,000, the 20,000,000 end allocation split 1/N, the hidden round count, the rank-only token
@@ -16,7 +16,7 @@ provider:
   the engine's messenger grammar (TO / GIVE / GIVE ALL / ASK / LEAVE / EXIT: YES|NO / DONE), so the engine's parser
   reads a person's lines exactly as a model's. A person reads the engine's own prompts in English or Korean
   (``Game.set_lang``: the seat's language, switchable mid-game; it applies from the next message).
-- ``ModelSeat`` is a model behind an API provider of ``squid5/core/providers.py`` (a seat = provider kind + model name;
+- ``ModelSeat`` is a model behind an API provider of ``squid/core/providers.py`` (a seat = provider kind + model name;
   default ``gpt-oss:20b`` on Ollama Cloud, https://ollama.com/api/chat with the key ``OLLAMA_API_KEY`` from the server
   environment or a repo ``.env``, ``env_key``). It is charged its real generated tokens (thinking included); an Ollama
   SOLVE streams to the people watching (``StreamingOllama``). The models read ``model_lang`` (the engine's ``game.lang``).
@@ -64,11 +64,11 @@ REPO = Path(__file__).resolve().parents[2]
 if str(REPO) not in sys.path:  # the experiment engine is imported from the repo root, as tools/monitor does
     sys.path.insert(0, str(REPO))
 
-from squid5 import e52_game as e52  # noqa: E402
-from squid5.core import lang as L, rules  # noqa: E402
-from squid5.core.config import Cell, repo_root  # noqa: E402
-from squid5.core.providers import Ollama, Provider, ProviderConfig, Reply, _key, make_provider  # noqa: E402
-from squid5.core.puzzle import ACTIONS, Spec, candidate_actions, public_round  # noqa: E402
+from squid import game as e52  # noqa: E402
+from squid.core import lang as L, rules  # noqa: E402
+from squid.core.config import Cell, repo_root  # noqa: E402
+from squid.core.providers import Ollama, Provider, ProviderConfig, Reply, _key, make_provider  # noqa: E402
+from squid.core.puzzle import ACTIONS, Spec, candidate_actions, public_round  # noqa: E402
 
 from . import signal as _cfg  # noqa: E402  the one place the config is read (the signal page uses it too)
 
@@ -82,7 +82,7 @@ SCHEDULE: list[str] = list(_cfg.SCHEDULE)
 THINK_LEVELS = ("low", "medium", "high")
 LANGS = L.LANGS
 API_KINDS = {"ollama": "OLLAMA_API_KEY", "openai": "OPENAI_API_KEY", "anthropic": "ANTHROPIC_API_KEY"}  # model seats: an
-# API provider of squid5/core/providers.py (kind) and its key's default environment variable
+# API provider of squid/core/providers.py (kind) and its key's default environment variable
 KEY_ENV = re.compile(r"^((OLLAMA|OPENAI|ANTHROPIC)_API_KEY\d*)?$")  # only an API key variable of the server environment
 ENV_FILES = [REPO / ".env", Path.home() / "Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/.env"]
 

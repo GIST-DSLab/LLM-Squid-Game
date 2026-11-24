@@ -12,7 +12,7 @@ from pathlib import Path
 
 VER, SKIP = sys.argv[1], set(sys.argv[2:])
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from squid5.core.config import squid5_runs  # noqa: E402  (~/squid5-runs now lives in result/)
+from squid.core.config import squid5_runs  # noqa: E402  (~/squid5-runs now lives in result/)
 R = squid5_runs(f"e52_v{VER}")
 out = collections.defaultdict(lambda: collections.Counter())
 for res_path in sorted(glob.glob(str(R / "squid5_*" / "*" / "results.jsonl"))):

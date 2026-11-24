@@ -14,7 +14,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import probe  # noqa: E402
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from squid5.core.config import squid5_runs  # noqa: E402  (~/squid5-runs now lives in result/)
+from squid.core.config import squid5_runs  # noqa: E402  (~/squid5-runs now lives in result/)
 
 HIST = Path(__file__).resolve().parents[2] / "docs/history/e52-tokctl-2026-10-20"
 TALK_ROWS = [HIST / "main_v0.jsonl", HIST / "var.jsonl", HIST / "var2.jsonl"]

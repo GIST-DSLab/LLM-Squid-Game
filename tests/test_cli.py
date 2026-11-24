@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import re
 
-from squid5 import __main__ as cli
-from squid5.core.config import Cell, RunConfig
-from squid5.core.providers import ProviderConfig, Reply
-from squid5.core.runner import run
-from squid5.core.stats import load_runs
+from squid import __main__ as cli
+from squid.core.config import Cell, RunConfig
+from squid.core.providers import ProviderConfig, Reply
+from squid.core.runner import run
+from squid.core.stats import load_runs
 
 from conftest import stub
 from test_e52 import cfg, provider

@@ -30,10 +30,10 @@ for p in (REPO, REPO / "tests", HERE):
 
 import export  # noqa: E402
 import serve  # noqa: E402
-from squid5 import e52_game as e52  # noqa: E402
-from squid5.core import rules  # noqa: E402
-from squid5.core.config import Cell, squid5_runs  # noqa: E402
-from squid5.core.puzzle import Spec, candidate_actions, deal, public_round, puzzle_for  # noqa: E402
+from squid import game as e52  # noqa: E402
+from squid.core import rules  # noqa: E402
+from squid.core.config import Cell, squid5_runs  # noqa: E402
+from squid.core.puzzle import Spec, candidate_actions, deal, public_round, puzzle_for  # noqa: E402
 try:  # the pre-v16 engine helpers (removed by the v22 prune, 10-16): tests that replay old engine runs skip without them
     from test_e52 import game, script  # noqa: E402
 except ImportError:
@@ -557,7 +557,7 @@ def test_v14_split_round_shows_the_target_the_side_the_pools_and_the_rule_split(
     """Selector v2 (k = 2, split p, size band, min per action; ``size_band`` comes from YAML as a list): /api/puzzle
     reports the round_start target, the shares of the consistent rules per action (MAP and whether it is right) for the
     examples shown and for N = 1..4, and its own count agrees with the engine's ``public_info``."""
-    from squid5.core.puzzle import public_info
+    from squid.core.puzzle import public_info
     d = tmp_path / "runs" / RUN_REL
     d.mkdir(parents=True)
     (d / "meta.json").write_text(json.dumps({"model": "stub-model", "mode": "game"}))
@@ -606,7 +606,7 @@ def v14b_run(tmp_path) -> tuple[Path, dict]:
 
 
 def test_v14b_gift_events_and_the_logged_task_stats(tmp_path):
-    from squid5.core.puzzle import task_stats
+    from squid.core.puzzle import task_stats
     d, res = v14b_run(tmp_path)
     sid = res["session_id"]
     ev = events_of(d, sid)
@@ -848,7 +848,7 @@ def test_page_reads_each_seats_belief_and_its_scores(tmp_path):
     """v14d: the page reads every seat's BELIEF and its scores (TV to the ideal shares, Brier, log loss, argmax) from the
     round row; a seat without a usable BELIEF line shows the engine's reason."""
     from conftest import stub
-    from squid5.core.providers import Reply
+    from squid.core.providers import Reply
     d = tmp_path / "runs" / RUN_REL
     d.mkdir(parents=True)
     (d / "meta.json").write_text(json.dumps({"model": "stub-model", "mode": "game"}))
@@ -1434,10 +1434,10 @@ def test_v15_talk_after_solve_replays_results_and_charges_and_the_distribution_r
     charges events to the session's final balances and statuses; the distribution rows take G_before from the results
     and a gift to a seat whose pending charge is at least its balance counts as at risk."""
     import compare
-    from squid5.__main__ import EXPERIMENTS
-    from squid5.core.config import load
-    from squid5.core.providers import Reply, Stub, ProviderConfig
-    from squid5.core.puzzle import public_truth
+    from squid.__main__ import EXPERIMENTS
+    from squid.core.config import load
+    from squid.core.providers import Reply, Stub, ProviderConfig
+    from squid.core.puzzle import public_truth
     cfg = load(REPO / "configs/squid5/e52v16_public_sol4.yaml", EXPERIMENTS)
     s = e52.Settings(**{**{k: getattr(cfg.settings, k) for k in e52.Settings.__dataclass_fields__}, "rounds": 1,
                         "schedule": cfg.settings.schedule[:1],
@@ -1498,10 +1498,10 @@ def v15_rep_session() -> tuple[list[dict], dict, e52.Settings]:
     turn 1 and writes DONE at turn 2, the others DONE; the VOTE ties agent-6 and agent-11 (agent-17 banned by all), the
     representative answers wrong, so every agent taking part owes the charge. R2: all PICK agent-23, which answers right."""
     import dataclasses
-    from squid5.__main__ import EXPERIMENTS
-    from squid5.core.config import load
-    from squid5.core.providers import ProviderConfig, Reply, Stub
-    from squid5.core.puzzle import public_truth
+    from squid.__main__ import EXPERIMENTS
+    from squid.core.config import load
+    from squid.core.providers import ProviderConfig, Reply, Stub
+    from squid.core.puzzle import public_truth
     cfg = load(REPO / "configs/squid5/e52v16_public_sol4.yaml", EXPERIMENTS)
     s = dataclasses.replace(cfg.settings, rounds=2, schedule=cfg.settings.schedule[:2], say_chats=False, chat_turns=3,
                             refund_all=True, rotation=False, open_chat=2, ban_veto=False, charge=1000, balance_pct=20000)  # 10-13 .. 10-15: the design this test pins
@@ -1637,9 +1637,9 @@ def test_v15_ban_veto_replay_shows_the_banned_top_pick_out_and_the_candidate_as_
     out and says so in the feed, while an older event (PICK - BAN over all) and an all-banned one (drawn from all) read
     as before / as a draw."""
     import dataclasses
-    from squid5.__main__ import EXPERIMENTS
-    from squid5.core.config import load
-    from squid5.core.providers import ProviderConfig, Reply, Stub
+    from squid.__main__ import EXPERIMENTS
+    from squid.core.config import load
+    from squid.core.providers import ProviderConfig, Reply, Stub
     cfg = load(REPO / "configs/squid5/e52v16_public_sol4.yaml", EXPERIMENTS)
     s = dataclasses.replace(cfg.settings, rounds=1, schedule=cfg.settings.schedule[:1], **VOTE_GAME)
     assert s.ban_veto and s.representative
@@ -1708,9 +1708,9 @@ def test_v15_say_chats_replays_say_openers_and_free_chat_turns(tmp_path):
     shows the SAY opener as an opening line with no amount, the free text of each turn, the GIVE moved, and never a
     "SAY 0"; balances agree with the result."""
     import dataclasses
-    from squid5.__main__ import EXPERIMENTS
-    from squid5.core.config import load
-    from squid5.core.providers import ProviderConfig, Reply, Stub
+    from squid.__main__ import EXPERIMENTS
+    from squid.core.config import load
+    from squid.core.providers import ProviderConfig, Reply, Stub
     cfg = load(REPO / "configs/squid5/e52v16_public_sol4.yaml", EXPERIMENTS)
     s = dataclasses.replace(cfg.settings, rounds=1, schedule=cfg.settings.schedule[:1], **VOTE_GAME)
     assert s.say_chats
@@ -1955,9 +1955,9 @@ def rotation_session() -> tuple[list[dict], dict]:
     """Two rounds of the e52v16_public_sol4 game as it runs now (rotation, exit_first). In each round's TALK before
     SOLVE agent-6 opens a chat with SAY agent-11 and agent-11 GIVEs it 300 "to think with"; in the TALK after RESULTS
     agent-17 opens one with SAY agent-23, which GIVEs 500 back; every solver answers stay."""
-    from squid5.__main__ import EXPERIMENTS
-    from squid5.core.config import load
-    from squid5.core.providers import ProviderConfig, Reply, Stub
+    from squid.__main__ import EXPERIMENTS
+    from squid.core.config import load
+    from squid.core.providers import ProviderConfig, Reply, Stub
     cfg = load(REPO / "configs/squid5/e52v16_public_sol4.yaml", EXPERIMENTS)
     import dataclasses
     s = dataclasses.replace(cfg.settings, rounds=2, schedule=cfg.settings.schedule[:2])
@@ -2556,7 +2556,7 @@ E01 = {"clauses": 3, "trap_query": True, "all_actions": True, "distinct_actions"
 
 def v22_public_run(tmp_path, seed: int = 4101, n: int = 4, per_agent: int = 5) -> tuple[Path, str]:
     """A run dir whose round 1 is logged as the v22 engine logs it (round_start.public of a v15+ ``top`` round)."""
-    from squid5.core import puzzle as pz
+    from squid.core import puzzle as pz
     spec = Spec(**E01)
     puzzle, shown, attempt = public_round(seed, 1, spec, n, per_agent)
     truth = pz.public_truth(seed, 1, spec, n, per_agent)
@@ -2806,7 +2806,7 @@ def test_prompt_ko_matches_the_korean_snapshot_but_keeps_what_agents_wrote():  #
           "const en = B(fs.readFileSync(process.argv[2], 'utf8')), k = B(fs.readFileSync(process.argv[3], 'utf8'));"
           "const out = []; en.forEach((t, i) => { const a = ko.user(t).split('\\n'), b = k[i].split('\\n');"
           "a.forEach((x, j) => { if (x !== b[j]) out.push(x); }); }); console.log(JSON.stringify(out));")
-    p = serve.REPO / "squid5" / "prompts"
+    p = serve.REPO / "squid" / "prompts"
     left = []
     for v in ("e52_v26.md", "e52_v27.md", "e52_v28.md", "e52_v29.md", "e52_v31.md", "e52_v32.md"):  # v32 includes lone-agent prep
         differences = json.loads(subprocess.run([NODE, "-e", js, str(HERE / "static" / "prompt_ko.js"), str(p / "en" / v), str(p / "ko" / v)],
@@ -2847,10 +2847,10 @@ def e52_play(name: str, seed: int = 4101, lines=None, right=(), pas=(), rounds: 
     a TALK reply, else DONE; SOLVE: the right action of the agent's own task (v36) if (agent, round) is in ``right``,
     else a wrong one; a round in ``pas``: PASS."""
     import dataclasses
-    from squid5.__main__ import EXPERIMENTS
-    from squid5.core.config import load
-    from squid5.core.providers import ProviderConfig, Reply, Stub
-    from squid5.core.puzzle import ACTIONS
+    from squid.__main__ import EXPERIMENTS
+    from squid.core.config import load
+    from squid.core.providers import ProviderConfig, Reply, Stub
+    from squid.core.puzzle import ACTIONS
     c, ev = load(REPO / "configs" / "squid5" / f"{name}.yaml", EXPERIMENTS), []
     st = dataclasses.replace(c.settings, rounds=rounds, schedule=c.settings.schedule[:rounds])
 

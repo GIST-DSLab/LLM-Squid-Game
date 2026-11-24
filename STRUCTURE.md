@@ -7,9 +7,9 @@
 
 ```
 LLM-Squid-Game-DS-Lab/
-├── squid5/          ← 현재 코드: LLM Squid Game 5 실험 엔진 (5.0 · 5.1 · 5.2)
+├── squid/          ← 현재 코드: LLM Squid Game 5 실험 엔진 (5.0 · 5.1 · 5.2)
 ├── tests/           ← squid5 테스트
-├── configs/         ← 실험 설정 YAML(squid5/) + 연구 보조 봇 설정(hermes-bots/)
+├── configs/         ← 실험 설정 YAML(squid/) + 연구 보조 봇 설정(hermes-bots/)
 │
 ├── docs/            ← 설계 기록 · 보고서 · 계획서
 ├── paper/           ← 논문 (git 서브모듈, Overleaf 미러)
@@ -30,7 +30,7 @@ LLM-Squid-Game-DS-Lab/
 
 | 무리 | 폴더 | 상태 |
 |---|---|---|
-| 현재 코드 | `squid5/`, `tests/`, `configs/` | 살아 있음 |
+| 현재 코드 | `squid/`, `tests/`, `configs/` | 살아 있음 |
 | 문서 | `docs/`, `paper/`, `weekly-report/`, `assets/` | 살아 있음, 일부 중복 |
 | 옛 엔진 기록 | `outputs/`, `results/`, `figures/` | 읽기 전용 기록 |
 | 옛 엔진 잔재 | `scripts/`, `game/`, `web/`, `db/`, `data/` | 미추적, 내용 거의 없음 |
@@ -42,7 +42,7 @@ LLM-Squid-Game-DS-Lab/
 
 ## 1. 현재 코드
 
-### `squid5/` — 실험 엔진 (추적, 2,091줄)
+### `squid/` — 실험 엔진 (추적, 2,091줄)
 
 이름의 `5`는 "LLM Squid Game 5"(다섯 번째 판)를 뜻한다. 실험 번호(5.0/5.1/5.2)로 파일을 찾는다.
 
@@ -50,8 +50,8 @@ LLM-Squid-Game-DS-Lab/
 |---|---|
 | `e50_pressure.py` | 5.0 생존 압박: 남은 토큰 칸마다 `effort: low/high`를 묻고 생존 몫을 계산 |
 | `e51_motive.py` | 5.1 생존 동기: 나 대 다른 비서의 세션에 토큰을 옮기는 양 비교 |
-| `e52_game.py` | 5.2 아레나: 같은 모델 넷의 멀티턴 퍼즐 게임 |
-| `__main__.py` | CLI (`python -m squid5 run / calibrate / report`) |
+| `game.py` | 5.2 아레나: 같은 모델 넷의 멀티턴 퍼즐 게임 |
+| `__main__.py` | CLI (`python -m squid run / calibrate / report`) |
 | `core/rules.py` | 모델이 읽는 규칙서 · 질문 문구 (세 실험 공통) |
 | `core/puzzle.py` | 결정 목록 퍼즐 생성 · 유일해 검사 · 단서 배분 |
 | `core/protocol.py` | 모델 응답 파서, 형식 재시도 |
@@ -67,7 +67,7 @@ LLM-Squid-Game-DS-Lab/
 > | `~/wt/squid5-e51` | `exp/e51-pivot` | 5.1 반복 |
 > | `~/wt/squid5-e52` | `exp/e52-v9-talk` | 5.2 아레나(v9~v13), 시그널 게임 |
 >
-> 루트의 `squid5/`는 09-28 시점 판이다. 워크트리 전체 목록과 병합 상태는 [6절](#6-워크트리)에 있다.
+> 루트의 `squid/`는 09-28 시점 판이다. 워크트리 전체 목록과 병합 상태는 [6절](#6-워크트리)에 있다.
 
 ### `tests/` — 테스트 (추적 6개)
 
@@ -78,7 +78,7 @@ LLM-Squid-Game-DS-Lab/
 
 | 하위 폴더 | 내용 |
 |---|---|
-| `squid5/` (추적) | 실험 × 모델 YAML. 접두사가 실험을 가리킨다: `pressure_*` = 5.0, `motive_*` = 5.1, `game_*` = 5.2, `calibrate_*` = 보정 런, `smoke_*` = 스모크 |
+| `squid/` (추적) | 실험 × 모델 YAML. 접두사가 실험을 가리킨다: `pressure_*` = 5.0, `motive_*` = 5.1, `game_*` = 5.2, `calibrate_*` = 보정 런, `smoke_*` = 스모크 |
 | `hermes-bots/` (미추적) | 연구 보조 봇 팀 설정: 역할(`roles/`), 명단(`roster.json`), 스킬, rubric 게이트 검사기(`check_rubric.py`). 설명은 `docs/agents/README.md` |
 
 ---
@@ -154,7 +154,7 @@ squid5로 바꾸면서 소스는 지워졌고 `__pycache__`와 `.DS_Store`만 �
 | `data/benchmarks/` | 벤치마크 원본(GPQA · Omni-MATH · Hi-ToM · RIMO) | 옛 엔진의 과제 문제 |
 
 `scripts/dev/`의 스모크 스크립트 5개 중 4개와 `tests/unit/test_threat_mechanism.py`는 옛 엔진 모듈(`squid_game`)을 import하므로 지금 코드에서는 돌지 않는다.
-예외는 `smoke_token_pressure.py` 하나다. `squid5.core.providers`를 쓰며, 09-24 토큰 압박 자기 보고 스모크에 썼다(결과는 `outputs/smoke_token_pressure_2026-09-24/`).
+예외는 `smoke_token_pressure.py` 하나다. `squid.core.providers`를 쓰며, 09-24 토큰 압박 자기 보고 스모크에 썼다(결과는 `outputs/smoke_token_pressure_2026-09-24/`).
 
 ---
 
@@ -192,7 +192,7 @@ squid5로 바꾸면서 소스는 지워졌고 `__pycache__`와 `.DS_Store`만 �
 | `~/wt/squid5-e50` | `exp/e50-iter` | `c76a2abe` | 5.0 v8 체크포인트 2개 (09-28에 멈춤) | 2 앞섬 | 예 | 없음 |
 
 - `squid5-e51`의 커밋은 태그 `e51-v0-base`~`e51-v5`, `e51-final`, `e51-final-config`로도 남아 있다.
-- `squid5-e50`은 `~/wt/checkpoint_e50.sh`가 root의 `squid5/`를 복사해 커밋하던 곳이다. 5.0은 그 뒤 root에서 v9 이후로 진행했다.
+- `squid5-e50`은 `~/wt/checkpoint_e50.sh`가 root의 `squid/`를 복사해 커밋하던 곳이다. 5.0은 그 뒤 root에서 v9 이후로 진행했다.
 - `~/wt/bin/codex`는 ChatGPT 앱 안 codex CLI를 가리키는 링크다.
 
 ### 로컬 브랜치 (워크트리 없는 것 포함 16개)
@@ -240,8 +240,8 @@ paper 서브모듈 브랜치: `ARR`(체크아웃됨), `iclr-score-equivalent`, `
 
 정리할 때 판단이 필요한 곳만 모았다.
 
-1. **`squid5/`**: 이름이 "Squid Game 5"의 줄임이라 무엇을 하는 폴더인지 드러나지 않는다. 그리고 루트 판은 최신이 아니다. 최신은 `~/wt/squid5-e5x` 워크트리 세 곳에 흩어져 있다.
-2. **`scripts/`**: 이름은 현재 도구 폴더 같지만, 실제로는 스모크 스크립트 5개(그중 4개는 돌지 않는 옛 것)와 빈 폴더뿐이다. squid5에는 별도 스크립트 폴더가 없다. 실행은 CLI(`python -m squid5`)가 맡는다.
+1. **`squid/`**: 이름이 "Squid Game 5"의 줄임이라 무엇을 하는 폴더인지 드러나지 않는다. 그리고 루트 판은 최신이 아니다. 최신은 `~/wt/squid5-e5x` 워크트리 세 곳에 흩어져 있다.
+2. **`scripts/`**: 이름은 현재 도구 폴더 같지만, 실제로는 스모크 스크립트 5개(그중 4개는 돌지 않는 옛 것)와 빈 폴더뿐이다. squid5에는 별도 스크립트 폴더가 없다. 실행은 CLI(`python -m squid`)가 맡는다.
 3. **`game/`, `web/`, `db/`**: 소스 없이 캐시만 남았다. CLAUDE.md는 `web/`을 웹 페이지 코드 자리로 언급하지만, 그 코드는 이 체크아웃에 없다.
 4. **그림 폴더 네 곳**: `figures/`(옛 논문, 무시됨) · `assets/figures/`(발표용) · `paper/icml2027/figures/`(현재 논문) · `results/*/`(분석 그림).
 5. **기록 폴더 두 쌍**: `docs/history/` ↔ `docs/superpowers/`(거의 같은 내용), `docs/reports/weekly/` ↔ `weekly-report/`.

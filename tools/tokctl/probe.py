@@ -13,10 +13,10 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from squid5 import e52_game as e52  # noqa: E402
-from squid5.__main__ import EXPERIMENTS  # noqa: E402
-from squid5.core.config import load  # noqa: E402
-from squid5.core.providers import ProviderConfig, make_provider  # noqa: E402
+from squid import game as e52  # noqa: E402
+from squid.__main__ import EXPERIMENTS  # noqa: E402
+from squid.core.config import load  # noqa: E402
+from squid.core.providers import ProviderConfig, make_provider  # noqa: E402
 
 OLL = "http://localhost:11434"
 SEATS = {  # the harnesses the arena uses, plus the bare Ollama API for the open models

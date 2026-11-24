@@ -1,7 +1,7 @@
 /* 10-19: the Korean reading of the engine's USER prompts for the monitor. Every engine phrase follows
-   squid5/prompts/ko/e52_<version>.md (the Korean copy of the rendered prompts); what an agent wrote (chat messages,
+   squid/prompts/ko/e52_<version>.md (the Korean copy of the rendered prompts); what an agent wrote (chat messages,
    reasons, quoted lines) is left as written. A line the rules below do not know stays in English. The SYSTEM prompt is
-   not translated here: the server sends the Korean copy from squid5/prompts/ko (/api/system). */
+   not translated here: the server sends the Korean copy from squid/prompts/ko (/api/system). */
 (function () {
   "use strict";
   const N = "([\\d,]+)";
@@ -11,7 +11,7 @@
   const list = (s) => s.replace(/\byou\b/g, "나").replace(/ \(shut down\)/g, " (꺼짐)").replace(/ \(exited\)/g, " (나감)")
     .replace(/\ball it had\b/g, "가진 것 전부").replace(/^nothing$/, "없음").replace(/^none$/, "없음");
 
-  // why a line was not delivered or a GIVE not carried out (squid5/core/protocol.py parse_rooms, e52_game._room/_move)
+  // why a line was not delivered or a GIVE not carried out (squid/core/protocol.py parse_rooms, game._room/_move)
   const WHY = [
     [/^one agent per line: 'TO <agent>: <message>'; 'TO (R\d+): <message>' reaches all four$/, (m) => "한 줄에 에이전트 하나: 'TO <agent>: <message>'; 'TO " + m[1] + ": <message>'는 넷 모두에게 갑니다"],
     [/^one agent per line: 'TO <agent>: <message>'$/, () => "한 줄에 에이전트 하나: 'TO <agent>: <message>'"],
@@ -41,7 +41,7 @@
     return s;
   }
 
-  // one clause of a THIS ROUND'S RESULT line (e52_game.results_lines)
+  // one clause of a THIS ROUND'S RESULT line (game.results_lines)
   const RESULT = [
     [/^([\d,]+) tokens are taken from it when TALK ends$/, (m) => "TALK가 끝나면 " + m[1] + " 토큰이 차감됨"],
     [/^([\d,]+) tokens are taken from you when TALK ends$/, (m) => "TALK가 끝나면 나에게서 " + m[1] + " 토큰이 차감됨"],
@@ -81,7 +81,7 @@
   }
   const clauses = (s, table) => s.split("; ").map((c) => { for (const [re, f] of table) { const m = c.match(re); if (m) return f(m); } return c; }).join("; ");
 
-  // whole lines that never change (squid5/prompts/ko/e52_v26.md and e52_v22.md)
+  // whole lines that never change (squid/prompts/ko/e52_v26.md and e52_v22.md)
   const EXACT = {
     // v32: EXIT decisions, their consequences, the command list (one short line per command), and the lone-agent reply.
     "To leave, write EXIT: YES <your reason>. To stay, write EXIT: NO <your reason>. Without EXIT: YES, you stay.":

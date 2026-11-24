@@ -19,7 +19,7 @@ Routes
   /api/games?run=REL[&session=SID]    per game: the arena's measures (end share, C, presence, shut-down seats, stay
                                       rate S, aid rate A, correct rate) from compare.paper_game; none before the v22 messenger
   /api/system?run=REL                 10-19: each agent's SYSTEM prompt (not logged; rebuilt from config.yaml) and
-                                      its Korean copy (squid5/prompts/ko/e52_<version>.md, when its English matches)
+                                      its Korean copy (squid/prompts/ko/e52_<version>.md, when its English matches)
   /api/puzzle?run=REL&session=SID&round=N[&agent=A]
                                       v36 (joint SOLVE): every agent has its own task; ``agent`` picks whose.
                                       that round's task rebuilt from the engine. v9..v13 (the logs do not hold it): the
@@ -58,7 +58,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
 
 HERE = Path(__file__).resolve().parent
-REPO = HERE.parents[1]  # the repo root: squid5 is imported from there for /api/puzzle
+REPO = HERE.parents[1]  # the repo root: squid is imported from there for /api/puzzle
 STATIC = HERE / "static"
 ASSETS = HERE / "assets"
 PAGE = HERE / "monitor.html"
@@ -936,7 +936,7 @@ def _engine():
     """squid5's puzzle code, imported on first use so the rest of the monitor runs without the repo on the path."""
     if str(REPO) not in sys.path:
         sys.path.insert(0, str(REPO))
-    from squid5.core import puzzle, rules
+    from squid.core import puzzle, rules
     return puzzle, rules
 
 
@@ -1099,8 +1099,8 @@ def _public_puzzle(seed: int | str, round_no: int, spec_items: tuple, per_agent:
 
 
 def _snapshot_system(version: str, lang: str) -> str | None:
-    """The SYSTEM block of squid5/prompts/<lang>/e52_<version>.md (agent-17's copy), or None."""
-    p = REPO / "squid5" / "prompts" / lang / f"e52_{version}.md"
+    """The SYSTEM block of squid/prompts/<lang>/e52_<version>.md (agent-17's copy), or None."""
+    p = REPO / "squid" / "prompts" / lang / f"e52_{version}.md"
     m = re.search(r"^## [^\n]*\n\n```text\n(.*?)\n```", p.read_text(encoding="utf-8"), re.S | re.M) if p.exists() else None
     return m.group(1) if m else None
 
@@ -1108,9 +1108,9 @@ def _snapshot_system(version: str, lang: str) -> str | None:
 @functools.lru_cache(maxsize=64)
 def _run_system(config: str, mtime: float) -> dict:
     _engine()
-    from squid5 import e52_game as e52
-    from squid5.__main__ import EXPERIMENTS
-    from squid5.core.config import load
+    from squid import game as e52
+    from squid.__main__ import EXPERIMENTS
+    from squid.core.config import load
     c = load(config, EXPERIMENTS)
     en = e52.Game(c.settings, c.cells[0], 4101, None, list().append, "monitor").systems
     v = re.search(r"e52_?(v\d+[a-z]?)", config)
@@ -1118,12 +1118,12 @@ def _run_system(config: str, mtime: float) -> dict:
     if v and en.get("agent-17") == _snapshot_system(v.group(1), "en") and (ko17 := _snapshot_system(v.group(1), "ko")):
         ko = {a: ko17.replace("당신은 agent-17입니다.", f"당신은 {a}입니다.", 1) for a in en}
     return {"version": v.group(1) if v else None, "en": en, "ko": ko,
-            "note": None if ko else "한국어판 없음: squid5/prompts/ko에 이 설정의 SYSTEM과 같은 영어판이 없어 영어 원문만 보여 줌"}
+            "note": None if ko else "한국어판 없음: squid/prompts/ko에 이 설정의 SYSTEM과 같은 영어판이 없어 영어 원문만 보여 줌"}
 
 
 def run_system(run_dir: Path) -> dict:
     """10-19: the SYSTEM prompt of each agent of a 5.2 run (not logged; the engine rebuilds it from the run's
-    config.yaml, the same for every call of the session) and its Korean copy from squid5/prompts/ko/e52_<version>.md
+    config.yaml, the same for every call of the session) and its Korean copy from squid/prompts/ko/e52_<version>.md
     when the English snapshot there is the same text."""
     p = run_dir / "config.yaml"
     if not p.exists():
@@ -1298,10 +1298,10 @@ def make_server(root: Path, host: str = "127.0.0.1", port: int = 8765) -> Thread
 
 
 def _results_root() -> Path:
-    """result/ of the main checkout, where the engine writes runs (squid5.core.config.repo_root)."""
+    """result/ of the main checkout, where the engine writes runs (squid.core.config.repo_root)."""
     if str(REPO) not in sys.path:
         sys.path.insert(0, str(REPO))
-    from squid5.core.config import repo_root
+    from squid.core.config import repo_root
     return repo_root() / "result"
 
 

@@ -131,7 +131,7 @@ hermes -p beta-tester chat -c "Bot Chat" --create-if-missing
 
 ## 🔍 현재 기준과 한계
 
-로컬 `CLAUDE.md`, `squid5/e52_game.py`, `squid5/core/rules.py`를 확인했다. 현재 체크아웃은 PLAN→SOLVE 구조이며, 기존 설계 보고서의 v9 대화·합의 거래 설명과 동일한 구현이라고 가정하지 않는다. 공유 Claude artifact의 최신 5.2 본문은 미확인이다. 첫 실제 연구 작업은 코드·규칙·문서 버전 일치 확인이다. 기존 게임 엔진, 실험 결과, paper 서브모듈은 이번 봇 설치에서 변경하지 않는다.
+로컬 `CLAUDE.md`, `squid/game.py`, `squid/core/rules.py`를 확인했다. 현재 체크아웃은 PLAN→SOLVE 구조이며, 기존 설계 보고서의 v9 대화·합의 거래 설명과 동일한 구현이라고 가정하지 않는다. 공유 Claude artifact의 최신 5.2 본문은 미확인이다. 첫 실제 연구 작업은 코드·규칙·문서 버전 일치 확인이다. 기존 게임 엔진, 실험 결과, paper 서브모듈은 이번 봇 설치에서 변경하지 않는다.
 
 [^hermes]: Hermes 공식 문서, [Bot Mode](https://hermes-agent.nousresearch.com/docs/user-guide/bot-mode).
 [^profiles]: Hermes 공식 문서, [Profiles](https://hermes-agent.nousresearch.com/docs/user-guide/profiles).

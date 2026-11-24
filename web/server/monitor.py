@@ -65,7 +65,7 @@ def default_monitor_root(runs_root: Path) -> Path:
     env = os.environ.get("WEB5_MONITOR_ROOT")
     if env:
         return Path(env).expanduser()
-    from squid5.core.config import repo_root
+    from squid.core.config import repo_root
     result, runs = repo_root() / "result", Path(runs_root).expanduser()
     return result if result in runs.parents else runs.parent
 

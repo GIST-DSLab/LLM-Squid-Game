@@ -9,13 +9,13 @@ from pathlib import Path
 
 import pytest
 
-from squid5 import e52_game as e52
-from squid5.core import rules
-from squid5.__main__ import EXPERIMENTS
-from squid5.core.config import Cell, load
-from squid5.core.providers import Reply
-from squid5.core.protocol import ALL, FormatError, parse_actions, parse_belief, parse_rooms
-from squid5.core.puzzle import (ACTIONS, SIGNAL_INDEX, Spec, _public_order, candidate_actions, deal, public_truth,
+from squid import game as e52
+from squid.core import rules
+from squid.__main__ import EXPERIMENTS
+from squid.core.config import Cell, load
+from squid.core.providers import Reply
+from squid.core.protocol import ALL, FormatError, parse_actions, parse_belief, parse_rooms
+from squid.core.puzzle import (ACTIONS, SIGNAL_INDEX, Spec, _public_order, candidate_actions, deal, public_truth,
                                 puzzle_for, space_bits, task_stats)
 
 from conftest import me, stub
@@ -648,7 +648,7 @@ def test_a_refused_give_is_told_to_the_giver_alone():  # 10-17: its chat would s
     assert f"Not delivered from your last reply: GIVE {A11} 99,999: not carried out: you did not have 99,999 tokens" in calls(ev, "talk", A6)[1]["user"]
 
 def test_a_config_runs_end_to_end_with_the_event_schema(tmp_path):
-    from squid5.core.runner import run
+    from squid.core.runner import run
     c = cfg(rounds=1, schedule=["e01"])
     c.reps, c.workers = 1, 1
     lines = {(A17, 1, "prep", 1): f"TO {A23}: help", (A23, 1, "prep", 2): f"GIVE {A17} 300: here\nDONE"}

@@ -10,7 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 HIST = ROOT / "docs/history/e52-tokctl-2026-10-20"
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from squid5.core.config import squid5_runs  # noqa: E402  (~/squid5-runs now lives in result/)
+from squid.core.config import squid5_runs  # noqa: E402  (~/squid5-runs now lives in result/)
 MSG = re.compile(r"^\s*(TO|GIVE|ASK)\b", re.M)
 DONE = re.compile(r"^\s*DONE\b", re.M)
 OPEN = ("glm", "kimi", "deepseek", "gemma")

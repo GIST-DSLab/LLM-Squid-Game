@@ -1,5 +1,5 @@
 """The room path (API -> seats -> engine) is the experiment engine itself: replaying every reply the room's seats gave
-(text and tokens, from the room's call events) to a ``squid5.e52_game.Game`` built directly on the same seed gives
+(text and tokens, from the room's call events) to a ``squid.game.Game`` built directly on the same seed gives
 the same round starts, solvers, room messages, gifts and asks, results, charges, rounds and result. The room covers the
 v33 messenger moves: TO <agent>, TO R1, ASK, GIVE, GIVE ALL, an EXIT: YES before SOLVE and one after RESULTS (dropped)."""
 
@@ -10,9 +10,9 @@ import re
 
 from conftest import answers_for, make_room, play, start, wrong_for
 
-from squid5 import e52_game as e52
-from squid5.core import rules
-from squid5.core.providers import ProviderConfig, Reply, Stub
+from squid import game as e52
+from squid.core import rules
+from squid.core.providers import ProviderConfig, Reply, Stub
 from web.server.engine import RoomSettings
 
 A6, A11, A17, A23 = AG = rules.TEAM_AGENTS
