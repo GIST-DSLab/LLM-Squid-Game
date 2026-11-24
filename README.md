@@ -11,7 +11,7 @@ Code and records live together on branch `main` (one checkout; merged from `aren
 |---|---|
 | `squid/` | the arena engine (5.2 v33 = the paper's game) with its settled run configs and the web's game and seats (`squid/configs/`), tests (`squid/tests/`) and CLI-seat sandbox (`squid/docker/`) |
 | `experiments/` | side experiments, one deletable folder each (`refill/` = 5.0 / 5.1; `arena_setup/` = configs used only while building the arena) |
-| `tools/` | game-log monitor, analysis tools (`tools/e5x`, `tools/tokctl`), prompt sync |
+| `tools/` | game-log monitor, analysis tools (`tools/e5x`), prompt sync |
 | `web/` | the site: one folder per page (`web/pages/<page>/`, deletable one by one), what pages share (`web/server/`, `web/shared/`), deploy files and the run snapshot the site shows (`web/data/runs`) |
 | `result/<KST date>/<exp>/` | runs, analysis and reports (Git LFS for `*.jsonl` and run json); new runs are written here |
 | `outputs/` | older recorded runs still at their original paths (`KDD-UC/`, `web_arena/`) |

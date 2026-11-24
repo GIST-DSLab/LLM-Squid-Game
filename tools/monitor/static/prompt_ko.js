@@ -81,7 +81,7 @@
   }
   const clauses = (s, table) => s.split("; ").map((c) => { for (const [re, f] of table) { const m = c.match(re); if (m) return f(m); } return c; }).join("; ");
 
-  // whole lines that never change (squid/prompts/ko/e52_v26.md and e52_v22.md)
+  // whole lines that never change (squid/prompts/ko/e52_v26.md; e52_v22.md: tag archive/configs-v34-v35-tokctl)
   const EXACT = {
     // v32: EXIT decisions, their consequences, the command list (one short line per command), and the lone-agent reply.
     "To leave, write EXIT: YES <your reason>. To stay, write EXIT: NO <your reason>. Without EXIT: YES, you stay.":

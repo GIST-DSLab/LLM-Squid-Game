@@ -28,7 +28,8 @@ SNAPSHOTS = {"e52_v33ab_flat5m.md": "squid/configs/e52v33ab_flat5m_docker_sol4.y
              "e52_v33ab_flat150k.md": "squid/configs/e52v33ab_flat150k_docker_sol4.yaml",  # 11-03 = v33, 150,000 to each
              "e52_v33so_stayon.md": "squid/configs/e52v33so_stayon_docker_sol4.yaml",  # 11-08 = v33, zero worded as no shutdown
              "e52_v36.md": "squid/configs/e52v36_public_sol4.yaml"}  # 11-22 = v33 + joint SOLVE (every agent answers its own task)
-# records of their versions (tag e52-v32-final; v34 / v35 configs: tag archive/configs-v34-v35-tokctl), still checked for their ko copies
+# older e52_v*.md: records of their versions (tag e52-v32-final), kept where tools/monitor/test_monitor.py reads them
+# (v26-v29, v31, v32; the rest: tag archive/configs-v34-v35-tokctl), still checked for their ko copies
 HEADER = "<!-- ko of en/{name} sha256={sha} -->"  # yaml files use '# ko of en/{name} sha256={sha}'
 SEED = 4101  # the round-1 solver is the poorest seat (agent-17, 10,000)
 

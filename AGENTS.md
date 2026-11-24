@@ -28,7 +28,7 @@ LLM Squid Game 5 (`squid/`). 생성 토큰(생각 포함)이 곧 목숨인 세�
 |---|---|
 | `experiments/refill/__init__.py` | 5.0 · 5.1 (`MODE = "refill"`): 충전 팩 질문 한 번, 셀 = `subject.ending` 팔(self/other × A·B·C·D·E·G), 곡선 · 임계점 · Fisher 비교(`compare`) · 나 − B 면적과 판정(`pairs`), 그림. 곡선은 `cell_id`로 가른다 |
 | `experiments/refill/prompts/en/refill.yaml` | 5.0 12차 · 5.1 v10/v11 프롬프트 원문(실행 스크립트와 바이트 동일, 해시를 `experiments/refill/tests/test_refill.py`가 고정). 옛 버전 원문은 `experiments/refill/prompts/en/archive/`(5.0 1~11차 · 5.1 v0~v9 등, `index.yaml`) |
-| `squid/prompts/{en,ko}/` | **모든 프롬프트의 영어판과 한국어판**(10-16). en = 엔진이 읽는 원본 + 5.2 렌더 스냅샷(`e52_v21.md`), ko = 같은 이름의 한국어판. 규칙 · 용어집 · 순서는 `squid/prompts/README.md`, 검사는 `python tools/prompts/sync.py check` |
+| `squid/prompts/{en,ko}/` | **모든 프롬프트의 영어판과 한국어판**(10-16). en = 엔진이 읽는 원본 + 5.2 렌더 스냅샷(`e52_v33.md` 등), ko = 같은 이름의 한국어판. 규칙 · 용어집 · 순서는 `squid/prompts/README.md`, 검사는 `python tools/prompts/sync.py check` |
 | `squid/game.py` | 5.2 (v16 이후): 같은 모델 넷의 세션 — 순번 solver → SOLVE 전 TALK → SOLVE(BELIEF + ACTIONS) → 결과 뒤 TALK → 벌금, EXIT(SOLVE 전 TALK만), 끝 할당. TALK는 v16–v21 1:1 대화(SAY로 열고 슬롯 배정, GIVE/ASK, DECISION) 또는 **v22 메신저**(`messenger`: 틱 단위, 세션 내내 남는 방 R1…, TO/GIVE/ASK/LEAVE/EXIT/DONE, 모두 DONE이면 다음 단계; 명세 `docs/history/plans/2026-10-16-e52-v22-messenger.md`). v21 `private_balances` = 시작 토큰만 공개. v9–v15 경로(OFFER, deal, VOTE 등)는 10-16에 지움(git 기록에) |
 | `squid/__main__.py` | CLI `run` / `report` / `probe`, 4.3 연결표 (5.2 `calibrate`·사용량 표는 10-10에 지움; `report --calibration`은 옛 보정 파일만 읽음) |
 | `squid/core/rules.py` | 5.2가 읽는 규칙서(월렛 v2.2 과제 블록 포함)·상태·장면 (5.0 · 5.1 문구는 `experiments/refill/prompts/en/refill.yaml`) |
