@@ -8,10 +8,10 @@ from __future__ import annotations
 import time
 
 import pytest
-from conftest import basic, make_room, start
+from web.testing import basic, make_room, start
 
 from squid.core import rules
-from web.server.engine import RoomSettings
+from web.pages.arena.engine import RoomSettings
 
 A6, A11, A17, A23 = rules.TEAM_AGENTS
 SEED = 5  # agent-11 (a bot) solves round 1

@@ -28,6 +28,6 @@ jobs:
         run: uv run --extra dev python -m pytest -q squid/tests experiments
 
       # Separate run: web/tests has its own conftest module, which would shadow tests/conftest
-      # (`from conftest import stub`) in a shared session. `python -m` so the --with packages are on the path.
+      # (`from web.testing import stub`) in a shared session. `python -m` so the --with packages are on the path.
       - name: Web suite (web/)
         run: uv run --extra dev --with fastapi --with uvicorn python -m pytest -q web/tests web/pages

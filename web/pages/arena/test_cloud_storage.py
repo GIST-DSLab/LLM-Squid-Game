@@ -7,7 +7,7 @@ import types
 
 import pytest
 
-from web.server import archive
+from web.pages.arena import archive
 from web.server.store import Store
 
 

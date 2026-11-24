@@ -9,7 +9,7 @@
   - `app`: `web/deploy/Dockerfile` 이미지 그대로. 이벤트는 SQLite `/opt/arena/data/arena.db`, 진행 중 런 폴더는
     `/opt/arena/data/runs/`(모두 VM의 영구 디스크라 재시작해도 남음).
   - `caddy`: HTTPS. 주소는 `https://<IP를 -로 이은 것>.sslip.io` (연구실 도메인이 생기면 `SITE_HOST`만 바꾼다).
-- 끝난 판의 런 폴더는 버킷 `gs://<프로젝트>-arena-runs/runs/`에도 올라간다(`web/server/archive.py`, 버전 관리 켬).
+- 끝난 판의 런 폴더는 버킷 `gs://<프로젝트>-arena-runs/runs/`에도 올라간다(`web/pages/arena/archive.py`, 버전 관리 켬).
 - 디스크 스냅숏 매일(14일 보관, 정책 `arena-daily`).
 - Ollama 키는 Secret Manager `ollama-api-key`; VM이 시작할 때 읽어 `/opt/arena/.env`(권한 600)에만 둔다.
 
@@ -22,7 +22,7 @@ gcloud billing projects link <ID> --billing-account <결제계정> --account sun
 OLLAMA_API_KEY=... PROJECT=<ID> bash web/deploy/vm/deploy.sh setup
 PROJECT=<ID> bash web/deploy/vm/deploy.sh deploy      # 코드를 바꿀 때마다; 진행 중인 판은 끊기므로 빈 시간에
 curl "$(PROJECT=<ID> bash web/deploy/vm/deploy.sh url)/api/health"
-# 전환: web/frontend/config.js 의 WEB5_API 를 위 주소로 바꿔 main에 push(Pages), Render 서비스 정지
+# 전환: web/shared/config.js 의 WEB5_API 를 위 주소로 바꿔 main에 push(Pages), Render 서비스 정지
 ```
 
 ## 연구자 전용 Claude · GPT 자리 (2026-11-19)

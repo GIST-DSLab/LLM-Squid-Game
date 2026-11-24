@@ -621,7 +621,7 @@
 
   // ---------------------------------------------------------------------------------------------------- avatars
   /* The seat characters (11-23): the arena's player illustrations (static/img/stand_<colour>.png, 108 x 240; seat k % 4
-     -> blue / orange / purple / green, web/frontend/arena.js PLAYER_IMG) on the stage, their heads (head_<colour>.png,
+     -> blue / orange / purple / green, web/pages/arena/static/arena.js PLAYER_IMG) on the stage, their heads (head_<colour>.png,
      96 x 96) as the profile icons (messenger, records, offer graph); a shut-down seat shows off.png / head_off.png. The
      agent number is a small label in the seat colour. The export embeds the files as data URIs (S.embed.img). The
      third-party Survival-Games sheets (fetch_assets.py) are only used when asked for with ?sprites=sheets. */

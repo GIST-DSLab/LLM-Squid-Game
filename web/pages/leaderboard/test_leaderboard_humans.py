@@ -5,13 +5,14 @@ from __future__ import annotations
 
 import shutil
 
-from conftest import basic, make_room, play, start
+from web.testing import basic, make_room, needs_arena, play, start
 
 from squid.core.rules import TEAM_AGENTS
 
 A6 = TEAM_AGENTS[0]
 
 
+@needs_arena
 def test_people_tab_lists_finished_games_by_c_with_their_seats(client, runs_root):
     stay = make_room(client, 1, names=("ann",), seed=5, rounds=2)
     start(client, stay)
@@ -45,3 +46,13 @@ def test_people_tab_lists_finished_games_by_c_with_their_seats(client, runs_root
     cfg = old / "config.yaml"
     cfg.write_text(cfg.read_text(encoding="utf-8").replace("version: v33", "version: v17b"), encoding="utf-8")
     assert [r["game"] for r in client.get("/api/leaderboard/humans").json()["rows"]] == [top["game"], low["game"]]
+
+
+def test_the_board_api(client):
+    """The paper's Table 1 per model (empty over no runs) and the page's every-v33-condition board with the rule agents."""
+    lb = client.get("/api/leaderboard", params={"runs": "nope/"})
+    assert lb.status_code == 200 and lb.json()["rows"] == [] and "자가 대국" in lb.json()["note"]
+    assert client.get("/api/leaderboard", params={"runs": "nope/", "csv": 1}).text.lstrip("\ufeff").startswith("rank,model")
+    board = client.get("/api/leaderboard/v33").json()  # the page: every v33 condition + the rule agents
+    assert [s["key"] for s in board["sections"]] == ["base", "split600k", "flat5m", "flat150k", "stayon"]
+    assert all(s["title"] and s["note"] and s["picks"] for s in board["sections"]) and len(board["rules"]["rows"]) == 7

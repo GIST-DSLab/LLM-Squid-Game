@@ -4,7 +4,7 @@
 #
 #   PROJECT=<gcp project id> bash web/deploy/cloudrun/deploy.sh setup    # once: APIs, bucket, database, secrets, account
 #   PROJECT=<gcp project id> bash web/deploy/cloudrun/deploy.sh deploy   # build the image and (re)deploy the service
-#   PROJECT=<gcp project id> bash web/deploy/cloudrun/deploy.sh url      # the service URL (for web/frontend/config.js)
+#   PROJECT=<gcp project id> bash web/deploy/cloudrun/deploy.sh url      # the service URL (for web/shared/config.js)
 #
 # Run from the repo root. Keys are read from the environment only (OLLAMA_API_KEY); nothing is read from .env.
 set -euo pipefail

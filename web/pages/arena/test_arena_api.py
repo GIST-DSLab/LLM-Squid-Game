@@ -8,10 +8,10 @@ from __future__ import annotations
 
 import re
 
-from conftest import answers_for, basic, done, make_room, play, solver_of, start, wrong_for
+from web.testing import answers_for, basic, done, make_room, play, solver_of, start, wrong_for
 
 from squid.core.rules import TEAM_AGENTS
-from web.server.engine import RoomSettings
+from web.pages.arena.engine import RoomSettings
 
 A6, A11, A17, A23 = TEAM_AGENTS
 SEED = 5  # round 1's solver is agent-11 (a bot), round 2's agent-6 (ann)
@@ -234,7 +234,7 @@ def test_a_seat_that_is_out_can_stop_the_room_and_sees_its_chats(client):
 
 def test_a_seat_that_is_out_watches_every_room_in_full():
     from types import SimpleNamespace
-    from web.server.engine import rooms_of
+    from web.pages.arena.engine import rooms_of
 
     def msg(seq, src, text):
         return {"seq": seq, "round": 1, "phase": "prep", "tick": seq, "src": src, "kind": "say", "text": text, "amount": 0,
@@ -255,7 +255,7 @@ def test_the_server_draws_the_seed_and_keeps_its_own_clock(store, tmp_path):
     from fastapi.testclient import TestClient
 
     from web.server.app import make_app
-    from web.server.engine import GAME
+    from web.pages.arena.engine import GAME
 
     app = make_app(store, export_root=tmp_path / "x", runs_root=tmp_path / "live")
     with TestClient(app) as c:
@@ -278,7 +278,7 @@ def test_a_seat_plan_puts_each_person_in_the_seat_picked(client):
     j = client.post(f"/api/rooms/{d['code']}/join", json={"name": "bob"}).json()
     assert j["agent"] == A23
     assert client.post(f"/api/rooms/{d['code']}/join", json={"name": "cy"}).status_code == 409
-    from conftest import SEEDS, Player
+    from web.testing import SEEDS, Player
 
     SEEDS[d["code"]] = SEED
     ps = [Player(client, d["code"], d["token"], d["agent"], "ann"), Player(client, d["code"], j["token"], j["agent"], "bob")]

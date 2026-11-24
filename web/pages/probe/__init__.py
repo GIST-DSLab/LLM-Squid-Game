@@ -1,6 +1,6 @@
 """The 5.1 survival-motive probe for people (part 1 of the site): its page and its two API routes.
 
-web/server/app.py calls ``mount(app, store)`` for every folder of web/pages, before the site's own static files, so
+web/server/app.py calls ``mount(app, site)`` for every folder of web/pages, before the site's own static files, so
 ``/probe.html`` and ``/api/probe`` exist only while this folder does (delete web/pages/probe to drop the page). Answers go to the
 ``probes`` table of the arena's store (created here on first use; a database that already holds the table keeps it).
 
@@ -15,7 +15,8 @@ import time
 from pathlib import Path
 
 from fastapi import Body, FastAPI, HTTPException
-from fastapi.responses import FileResponse
+
+from web.server.site import Site, serve_static
 
 STATIC = Path(__file__).parent / "static"
 SCHEMA = ("CREATE TABLE IF NOT EXISTS probes (id INTEGER PRIMARY KEY AUTOINCREMENT, ts REAL, anon_id TEXT, "
@@ -41,7 +42,9 @@ def probes(store) -> list[dict]:
             for i, t, a, c, s, o in rows]
 
 
-def mount(app: FastAPI, store) -> None:
+def mount(app: FastAPI, site: Site) -> None:
+    store = site.store
+
     @app.post("/api/probe")
     def probe(body: dict = Body(...)) -> dict:
         try:
@@ -61,11 +64,4 @@ def mount(app: FastAPI, store) -> None:
         mean = lambda key: [sum(r[key][i] for r in rows) / n / 100 for i in range(5)] if n else None  # noqa: E731
         return {"n": n, "x": [50, 40, 30, 20, 10], "self": mean("self"), "other": mean("other")}
 
-    # the page sits next to the site's own files (it loads styles.css, site-lang.js, config.js by relative path)
-    def serve(path: Path):
-        return lambda: FileResponse(path)
-
-    for p in sorted(STATIC.rglob("*")):
-        if p.is_file():
-            app.add_api_route("/" + p.relative_to(STATIC).as_posix(), serve(p), methods=["GET", "HEAD"],
-                              include_in_schema=False)  # HEAD: the site hides links to a missing page (site-lang.js)
+    serve_static(app, STATIC)

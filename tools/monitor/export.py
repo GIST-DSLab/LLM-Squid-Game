@@ -3,7 +3,7 @@
     python3 tools/monitor/export.py RUN_DIR [--session SID] --out FILE.html
 
 The page code is the monitor's own (monitor.html + static/{site-theme,monitor}.css + static/monitor.js, inlined,
-with the arena's shared web/frontend/signal_ui.js); the session's events go into a
+with the arena's shared web/shared/signal_ui.js); the session's events go into a
 <script type="application/json" id="monitor-data"> block that the page detects, with every played round's task rebuilt
 from the engine (``puzzles``, as /api/puzzle returns it) so the round panel works offline. The seat characters and
 the guard (static/img/*.png) go in as data URIs (``img``), and the per-game measures as ``games`` (/api/games), so the

@@ -1,6 +1,6 @@
 """Human-playable 5.2 rooms on the experiment engine (``squid.game``), used as-is: the v33 game the model runs play.
 
-A room builds one ``squid.game.Game`` from ``squid/configs/e52v33_public_sol4.yaml`` (via ``server/signal.py``)
+A room builds one ``squid.game.Game`` from ``squid/configs/e52v33_public_sol4.yaml`` (via ``web/server/game.py``)
 exactly as the experiment does -- the same rulebook and messages, fixed 20 examples, the solver drawn among the agents
 taking part, the 24,000 charge split among those taking part at the round's start, the solver unable to EXIT its own
 round unless alone, EXIT +20,000, the 20,000,000 end allocation split 1/N, the hidden round count, the rank-only token
@@ -70,11 +70,11 @@ from squid.core.config import Cell, repo_root  # noqa: E402
 from squid.core.providers import Ollama, Provider, ProviderConfig, Reply, _key, make_provider  # noqa: E402
 from squid.core.puzzle import ACTIONS, Spec, candidate_actions, public_round  # noqa: E402
 
-from . import signal as _cfg  # noqa: E402  the one place the config is read (the signal page uses it too)
+from web.server import game as _cfg  # noqa: E402  the site's one game (the signal page reads it too)
+from web.server.runs import default_runs_root  # noqa: E402
 
 AGENTS = list(rules.TEAM_AGENTS)
-VERSION = "v33"  # the paper's default setup (11-07 researcher: the arena plays v33, not v35)
-VERSIONS = ("v33", "v36")  # RoomSettings.version: v36 = the joint SOLVE (11-22 researcher)
+VERSION, VERSIONS = _cfg.VERSION, _cfg.VERSIONS  # v33 (the paper's setup) and v36 (the joint SOLVE): web/server/game.py
 GAMES: dict[str, dict] = _cfg.GAMES  # version -> its config's game section
 GAME: dict = _cfg.GAME  # the config's game section
 PROFILES: dict[str, dict] = dict(_cfg.PROFILES)
@@ -236,11 +236,6 @@ PRIVATE = ("user", "text", "thinking", "parsed", "exit_reason", "dropped", "repl
 TOKENS = ("balances", "balance_before", "balance_after", "balance_pct_before", "end", "starts", "start", "taken",
           "balances_before", "generated", "returned", "charged", "used", "out_tokens", "cap", "agents")  # rank-only view
 PRIVATE_EVENTS = ("room_msg", "room_new", "room_leave", "gift", "ask", "call")  # chats and moves: their members only
-
-
-def default_runs_root() -> Path:
-    env = os.environ.get("WEB5_RUNS_ROOT")
-    return Path(env).expanduser() if env else repo_root() / "result" / "2026-10-05" / "web5_arena" / "runs"
 
 
 @dataclass

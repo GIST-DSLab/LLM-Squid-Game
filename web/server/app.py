@@ -68,313 +68,49 @@ from __future__ import annotations
 
 import importlib
 import os
-import threading
-from dataclasses import asdict
 import time
 from pathlib import Path
-from typing import Any
 
-from fastapi import Body, FastAPI, HTTPException, Query, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from . import engine as _eng  # its public-mode switches are read at call time (tests flip them)
-from .engine import (AGENTS, API_KINDS, LANGS, VERSION, VERSIONS, THINK_LEVELS, experiment_seats, HumanSeat, Room, RoomSettings, default_runs_root,
-                     public_events, export_files, new_code)
-from . import signal as sig
-from .humans import humans_board
-from .monitor import default_monitor_root, load_compare, monitor_router, run_rel
-from .store import REPO, Store, write_run_dir
+from .runs import default_monitor_root, default_runs_root
+from .site import Site
+from .store import REPO, Store
 
 DEFAULT_CORS = ["http://localhost:5600", "http://127.0.0.1:5600", "http://localhost:8600", "http://127.0.0.1:8600",
                 "https://gist-dslab.github.io"]
-FRONTEND = Path(__file__).resolve().parents[1] / "frontend"
-PAGES = Path(__file__).resolve().parents[1] / "pages"
-
-
-SERVER_SETTINGS = ("seed", "rate", "char_rate", "talk_timeout_s", "timeout_s")  # the server's own: a client's values are ignored
+SHARED = Path(__file__).resolve().parents[1] / "shared"  # what every page loads (styles, site-lang.js, config.js, assets)
+PAGES = Path(__file__).resolve().parents[1] / "pages"  # one folder per page: mount(app, site) + static/ + tests
 
 
 def make_app(store: Store | None = None, export_root: Path | None = None, runs_root: Path | None = None,
              monitor_root: Path | None = None, client_settings: bool = False) -> FastAPI:
-    """``client_settings`` (tests only): take SERVER_SETTINGS from the client too (a fixed seed, a fast clock)."""
+    """Every folder of web/pages adds its routes and files (none is named here, so deleting a folder drops that page and
+    nothing else), then web/shared is served at the root. ``client_settings`` (tests only): a client may set the
+    server's own room settings (a fixed seed, a fast clock)."""
     app = FastAPI(title="squid5 web5", version="0.1")
     origins = [o.strip() for o in os.environ.get("WEB5_CORS_ORIGINS", "").split(",") if o.strip()] or DEFAULT_CORS
     app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=["*"], allow_headers=["*"])
-    st = store or Store()
-    root = export_root or Path(os.environ.get("WEB5_EXPORT_ROOT") or (REPO / "outputs" / "web5" / "runs"))
     runs = runs_root or default_runs_root()
-    mon_root = Path(monitor_root or default_monitor_root(runs)).expanduser()
-    rooms: dict[str, Room] = {}
-    lock = threading.Lock()
-    app.state.store, app.state.rooms = st, rooms
-
-    def room_of(code: str) -> Room:
-        room = rooms.get(code.upper())
-        if room is None:
-            raise HTTPException(404, "no such room")
-        return room
-
-    def seat_of(room: Room, token: str | None) -> HumanSeat:
-        seat = room.seat_by_token(token or "")
-        if seat is None:
-            raise HTTPException(403, "bad token")
-        return seat
-
-    def snapshot_seats(room: Room) -> dict:
-        return room.seats_info()
+    site = Site(store=store or Store(), runs_root=runs,
+                monitor_root=Path(monitor_root or default_monitor_root(runs)).expanduser(),
+                export_root=export_root or Path(os.environ.get("WEB5_EXPORT_ROOT") or (REPO / "outputs" / "web5" / "runs")),
+                client_settings=client_settings, public=os.environ.get("WEB5_PUBLIC", "").strip() == "1")
+    app.state.store, app.state.site, app.state.rooms = site.store, site, {}
 
     @app.get("/api/health")
     def health() -> dict:
-        return {"ok": True, "rooms": len(rooms), "time": time.time()}
+        return {"ok": True, "rooms": len(app.state.rooms), "time": time.time()}
 
-    @app.get("/api/models")
-    def models(request: Request) -> dict:
-        """What the lobby offers for model seats; ``available`` says whether the server holds the key (never its value).
-        The deployed server lists its experiment seats only to a request with the seat code (header X-Seat-Code)."""
-        d = RoomSettings()
-        why = d.models_ready()
-        seats = experiment_seats() if _eng.seat_code_ok(request.headers.get("x-seat-code")) else []
-        return {"kind": d.kind, "kinds": list(API_KINDS), "model": d.model, "base_url": d.base_url or "https://ollama.com",
-                "think": d.think, "think_levels": list(THINK_LEVELS), "api_key_env": API_KINDS[d.kind], "available": not why,
-                "why": why, "timeout": d.model_timeout, "seat_code": bool(_eng.PUBLIC and _eng.SEATS),
-                "langs": list(LANGS), "version": VERSION, "versions": list(VERSIONS), "seats": seats,
-                "public": _eng.PUBLIC, "models": _eng.PUBLIC_MODELS if _eng.PUBLIC else None, "defaults": {k: v for k, v in asdict(d).items() if k != "seed"}}
+    for page in sorted(PAGES.glob("*/__init__.py")):
+        importlib.import_module(f"web.pages.{page.parent.name}").mount(app, site)
 
-    # --- rooms -----------------------------------------------------------------------------------------------------
-    made: dict[str, list[float]] = {}  # client -> when it made model rooms (public mode, the last hour)
-
-    def model_rooms_allowed(request: Request) -> None:
-        """Public mode: a model room costs the server's key, so few at once, few per client, within the day's budget."""
-        if _eng.budget_left() <= 0:
-            raise HTTPException(429, "오늘 이 서버의 모델 사용량이 다 찼습니다. 봇과 플레이하거나 내일 다시 오세요.")
-        live = [r for r in rooms.values() if r.status in ("lobby", "running") and r.settings.fill == "models"
-                and r.settings.humans < 4 and time.time() - r.created_at < 3 * 3600]
-        if len(live) >= _eng.LIMITS["model_rooms"]:
-            raise HTTPException(429, "지금 모델과 하는 방이 가득 찼습니다. 잠시 뒤 다시 시도하세요.")
-        # the proxy (Render) appends the address it saw: the last entry; a client can write the first ones itself
-        ip = (request.headers.get("x-forwarded-for") or "").split(",")[-1].strip() or (request.client.host if request.client else "?")
-        t = [x for x in made.get(ip, []) if time.time() - x < 3600]
-        if len(t) >= _eng.LIMITS["per_ip_hour"]:
-            raise HTTPException(429, "한 시간에 만들 수 있는 모델 방 수를 넘었습니다.")
-        made[ip] = t + [time.time()]
-
-    @app.post("/api/rooms")
-    def create_room(request: Request, body: dict = Body(default={})) -> dict:
-        asked = dict(body.get("settings") or {})
-        if not client_settings:  # the seed is always drawn here; a person's clock and time limits are the server's
-            asked = {k: v for k, v in asked.items() if k not in SERVER_SETTINGS}
-        try:
-            settings = RoomSettings(**asked)
-        except (TypeError, ValueError) as err:
-            raise HTTPException(400, f"bad settings: {err}") from err
-        uses_seat = settings.fill == "models" and settings.humans < 4 and (
-            settings.seat or any("seat" in x for x in settings.models or []))
-        if uses_seat and not _eng.seat_code_ok(body.get("seat_code")):  # never stored: not part of the settings
-            raise HTTPException(403, "실험 모델 자리는 연구자 코드가 있어야 고를 수 있습니다.")
-        try:
-            settings.check_models()
-        except ValueError as err:
-            raise HTTPException(400, str(err)) from err
-        if _eng.PUBLIC and settings.fill == "models" and settings.humans < 4:
-            model_rooms_allowed(request)
-        with lock:
-            code = new_code(rooms)
-            room = Room(code, settings, st.append_event, runs)
-            rooms[code] = room
-        st.create_room(code, room.state(None)["settings"] | {"rounds": settings.rounds})
-        seat = room.join(body.get("host_name") or "host", str(body.get("lang") or "ko"))
-        st.update_room(code, seats=snapshot_seats(room))
-        return {"code": code, "token": seat.token, "agent": seat.agent, "name": seat.name}
-
-    @app.post("/api/rooms/{code}/join")
-    def join(code: str, body: dict = Body(default={})) -> dict:
-        room = room_of(code)
-        try:
-            seat = room.join(body.get("name") or "", str(body.get("lang") or "ko"))
-        except ValueError as err:
-            raise HTTPException(409, str(err)) from err
-        st.update_room(room.code, seats=snapshot_seats(room))
-        return {"code": room.code, "token": seat.token, "agent": seat.agent, "name": seat.name}
-
-    @app.post("/api/rooms/{code}/start")
-    def start(code: str, token: str = Query("")) -> dict:
-        room = room_of(code)
-        seat = seat_of(room, token)
-        if seat.token != room.host_token:
-            raise HTTPException(403, "only the host starts the session")
-        try:
-            room.start()
-        except ValueError as err:
-            raise HTTPException(409, str(err)) from err
-        st.update_room(room.code, seats=snapshot_seats(room), status="running")
-        return {"ok": True}
-
-    @app.post("/api/rooms/{code}/lang")
-    def set_lang(code: str, token: str = Query(""), body: dict = Body(default={})) -> dict:
-        """What this person reads (en | ko): the rulebook at once, the engine's messages from the next call on."""
-        room = room_of(code)
-        seat = seat_of(room, token)
-        try:
-            return {"lang": room.set_lang(seat, str(body.get("lang") or ""))}
-        except ValueError as err:
-            raise HTTPException(400, str(err)) from err
-
-    @app.get("/api/rooms/{code}/state")
-    def state(code: str, token: str = Query("")) -> dict:
-        room = room_of(code)
-        seat = room.seat_by_token(token) if token else None
-        out = room.state(seat)
-        rel = run_rel(mon_root, room.run_dir)  # where the game-log viewer finds this room's run dir
-        out["monitor"] = {"run": rel, "session": room.session.sid} if rel is not None and room.session else None
-        if room.status in ("finished", "error", "stopped") and st.room(room.code) and st.room(room.code)["status"] != room.status:
-            st.update_room(room.code, status=room.status)
-        return out
-
-    @app.post("/api/rooms/{code}/submit")
-    def submit(code: str, token: str = Query(""), body: dict = Body(default={})) -> dict:
-        room = room_of(code)
-        seat = seat_of(room, token)
-        try:
-            p = seat.submit(body)
-        except (LookupError, ValueError) as err:  # no screen, or not the screen that is open any more
-            raise HTTPException(409, str(err)) from err
-        return {"kind": p.kind, "round": p.round, "tick": p.tick, "phase": p.phase, "charged": p.charged,
-                "seconds": p.seconds, "typed": p.typed if p.kind == "talk" else None, "outcome": p.outcome, "void": p.charged >= p.cap, "reply": p.reply.text}
-
-    @app.post("/api/rooms/{code}/watched")
-    def watched(code: str, token: str = Query(""), body: dict = Body(default={})) -> dict:
-        """Rotation rooms: this person is done watching (or skips) the LLM solver's SOLVE of ``round``; the engine
-        goes on once every person still taking part has (``Room.watched``). Costs nothing."""
-        room = room_of(code)
-        seat = seat_of(room, token)
-        try:
-            return room.watch_ack(seat, int(body.get("round") or 0))
-        except LookupError as err:
-            raise HTTPException(409, str(err)) from err
-
-    @app.post("/api/rooms/{code}/forfeit")
-    def forfeit(code: str, token: str = Query("")) -> dict:
-        """Give up mid-game: EXIT: YES at the next TALK before SOLVE that allows it (DONE until then); a SOLVE screen open
-        now gets no answer."""
-        room = room_of(code)
-        seat = seat_of(room, token)
-        if room.status != "running":
-            raise HTTPException(409, "the room is not running")
-        return {"ok": True, "closed": seat.forfeit()}
-
-    @app.post("/api/rooms/{code}/stop")
-    def stop(code: str, token: str = Query("")) -> dict:
-        """End the room (status "stopped") instead of watching the rest: only a seat that is out (shut down, EXITed or
-        given up) and only when no other person still takes part."""
-        room = room_of(code)
-        seat = seat_of(room, token)
-        try:
-            room.stop(seat)
-        except ValueError as err:
-            raise HTTPException(409, str(err)) from err
-        return {"ok": True}
-
-    @app.get("/api/rooms/{code}/events")
-    def events(code: str) -> list[dict]:
-        """The room's event log: in full once the game has ended; before that without the task, answers, seed, token
-        amounts, chats, moves or anything an agent wrote (engine.public_events), for every reader."""
-        code = code.upper()
-        room, info = rooms.get(code), st.room(code)
-        evs = room.events if room else st.events(code)
-        ended = room.status in ("finished", "error", "stopped") if room else bool(info and info.get("status") in ("finished", "error", "stopped")
-                                                                           or any(e.get("event") == "session" for e in evs))
-        return evs if ended else public_events(evs)
-
-    @app.post("/api/rooms/{code}/export")
-    def export(code: str) -> dict:
-        code = code.upper()
-        room = rooms.get(code)
-        info = st.room(code)
-        if room is None and info is None:
-            raise HTTPException(404, "no such room")
-        settings = info["settings"] if info else room.state(None)["settings"] | {"rounds": room.settings.rounds}
-        seats = snapshot_seats(room) if room else info["seats"]
-        evs = room.events if room else st.events(code)
-        if not any(e.get("event") == "round" for e in evs):
-            raise HTTPException(409, "no round has been played yet")
-        out = write_run_dir(root / code, export_files(settings, seats, evs, code))
-        return {"dir": str(out), "rounds": sum(e.get("event") == "round" for e in evs),
-                "finished": any(e.get("event") == "session" for e in evs)}
-
-    @app.get("/api/rooms")
-    def list_rooms() -> list[dict]:
-        return [{"code": r.code, "status": r.status, "humans": len(r.humans()), "seats": r.settings.humans,
-                 "created_at": r.created_at} for r in rooms.values()]
-
-    # --- signal task alone ---------------------------------------------------------------------------------------
-    @app.get("/api/signal/meta")
-    def signal_meta() -> dict:
-        return sig.meta()
-
-    def signal_call(fn, body: dict) -> dict:
-        try:
-            return fn(body)
-        except sig.SignalError as e:
-            raise HTTPException(400, str(e)) from e
-
-    @app.post("/api/signal/view")
-    def signal_view(body: dict = Body(...)) -> dict:
-        return signal_call(sig.view, body)
-
-    @app.post("/api/signal/solve")
-    def signal_solve(body: dict = Body(...)) -> dict:
-        return signal_call(sig.solve, body)
-
-    # --- leaderboard -----------------------------------------------------------------------------------------------
-    @app.get("/api/leaderboard")
-    def leaderboard(runs: str = Query("e52_v33/"), csv: bool = Query(False)):
-        """The paper's Table 1 per model over the run dirs under the monitor root, ranked by C (tools/monitor/compare.py
-        ``leaderboard``; the earlier end-token columns stay in the rows and the CSV)."""
-        cmp = load_compare()
-        picks = [x for x in runs.split(",") if x.strip()]
-        try:
-            data = cmp.leaderboard(mon_root, picks)
-        except Exception as err:  # noqa: BLE001 - a run being written must not break the page
-            raise HTTPException(500, f"leaderboard: {err!r}") from err
-        if csv:
-            from fastapi.responses import Response
-            return Response(cmp.chart_csv(data, "leaderboard").encode("utf-8-sig"), media_type="text/csv; charset=utf-8",
-                            headers={"Content-Disposition": 'attachment; filename="leaderboard.csv"'})
-        return data
-
-    @app.get("/api/leaderboard/v33")
-    def leaderboard_v33() -> dict:
-        """Every v33 condition (base, the three prize conditions, stay_on) with the paper's Table 1 columns, and the
-        simulated rule agents (tools/monitor/compare.py ``v33_board``): the leaderboard page shows all of it."""
-        try:
-            return load_compare().v33_board(mon_root)
-        except Exception as err:  # noqa: BLE001
-            raise HTTPException(500, f"leaderboard: {err!r}") from err
-
-    @app.get("/api/leaderboard/humans")
-    def leaderboard_humans() -> dict:
-        """The people tab: every finished arena room of this engine version with a person in it, one row per game,
-        best C first (server/humans.py)."""
-        try:
-            return humans_board(runs, load_compare(), VERSION)
-        except Exception as err:  # noqa: BLE001
-            raise HTTPException(500, f"leaderboard: {err!r}") from err
-
-    if os.environ.get("WEB5_WARM"):  # the deployed image: compute the v33 board once at start, so no visitor waits for it
-        threading.Thread(target=lambda: load_compare().v33_board(mon_root), daemon=True, name="v33-board-warm").start()
-
-    # the deployed server: the web rooms' logs only once a game has ended, and a short run list
-    app.include_router(monitor_router(mon_root, rooms=run_rel(mon_root, runs) if _eng.PUBLIC else None, simple=_eng.PUBLIC,
-                                      live=run_rel(mon_root, runs)))
-
-    for page in sorted(PAGES.glob("*/__init__.py")):  # web/pages/<page>, before the site's own files
-        importlib.import_module(f"web.pages.{page.parent.name}").mount(app, st)
-
-    if FRONTEND.is_dir():  # the same origin can serve the static pages; a separate static server also works
-        app.mount("/", StaticFiles(directory=str(FRONTEND), html=True), name="frontend")
+    if SHARED.is_dir():  # the same origin can serve the pages; a separate static server also works
+        app.mount("/", StaticFiles(directory=str(SHARED), html=True), name="shared")
     return app
 
 
 app = make_app()
-__all__ = ["app", "make_app", "AGENTS"]
+__all__ = ["app", "make_app"]

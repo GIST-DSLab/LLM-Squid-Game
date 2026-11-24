@@ -5,22 +5,31 @@
 `squid/configs/e52v33_public_sol4.yaml`에서 그대로 읽음; v35(TALK 최대 4틱 + `done_quiet`)는 11-07에 내림, 태그 `archive/configs-v34-v35-tokctl`; 옛 v17b 1:1 대화 게임과 그 코드는 지웠다, 태그 `e52-v32-final`)으로
 **그대로** 돌린다. 이 폴더에는 줄 수 제한이 없다.
 
-사이트의 첫 페이지는 옛 Web Arena의 랜딩 그대로다. 두 입구: **Survival motive → `probe.html`**, **Multiplayer arena → `arena.html`**.
+사이트의 첫 페이지(`pages/home`)는 옛 Web Arena의 랜딩 그대로다. 두 입구: **Survival motive → `probe.html`**, **Multiplayer arena → `arena.html`**.
+
+**구조 규칙 (11-24 연구자):** 페이지 하나 = `pages/<page>/` 폴더 하나. 그 폴더를 지우면 그 페이지와 API만 사라지고
+나머지는 그대로 돈다(다른 페이지의 링크는 대상이 없으면 숨는다). 여러 페이지가 함께 쓰는 것만 `server/`와 `shared/`에 둔다.
+자세한 규칙은 [`pages/README.md`](pages/README.md).
 
 | 경로 | 역할 |
 |---|---|
-| `server/app.py` | FastAPI 앱. 방(rooms)·언어(lang)·프로브 API, `web/frontend` 정적 서빙, CORS |
-| `server/engine.py` | 방 = 백그라운드 스레드에서 도는 `game.Game`(설정 파일의 v33 게임 그대로; 방이 바꾸는 것은 자리·시계·라운드 수(숨김)·모델의 언어뿐). 호출이 TALK인지 SOLVE인지, 라운드·틱·단계는 엔진의 `call_start` 이벤트에서 읽는다(프롬프트 문구를 파싱하지 않으므로 한국어 프롬프트여도 같다). 사람 자리(`HumanSeat`)는 제출까지 블록하고 페이지가 메신저 문법으로 짠 답 TEXT를 돌려줌, 모델 자리(`ModelSeat`)는 squid5의 프로바이더(**실험 자리** = `e52v33_*.yaml`의 `model` 칸 그대로 · 또는 API 자리 = 프로바이더 kind + 모델 이름, 기본 Ollama Cloud API의 `gpt-oss:20b`; Ollama SOLVE는 관전용 스트리밍), 봇 자리(`BotSeat`)는 즉답(EXIT 안 함), 빈 자리는 1라운드 전에 꺼진 에이전트. 엔진 이벤트를 run dir에 실시간으로 쓴다(`RunWriter`) |
+| `server/app.py` | FastAPI 앱: CORS, `/api/health`, `pages/*`를 훑어 각 `mount(app, site)` 호출, `shared/`를 루트에 서빙 |
+| `server/site.py` | 페이지가 받는 것(`Site`: 저장소 · 런 폴더 · 공개 모드)과 페이지 파일을 사이트 루트에 놓는 `serve_static` |
+| `server/game.py` | 사이트 전체의 게임 정의 한 곳(`squid/configs/e52v33_public_sol4.yaml`, v36은 `e52v36_public_sol4.yaml`). 아레나와 시그널 페이지가 함께 읽는다 |
+| `server/runs.py` | 런이 쌓이는 곳(`WEB5_RUNS_ROOT`, `WEB5_MONITOR_ROOT`)과 `tools/monitor` 로더. 아레나 · 리더보드 · 게임 기록이 함께 쓴다 |
 | `server/store.py` | 이벤트 저장소. 기본 SQLite `outputs/web5/arena.db`, `WEB5_DSN`이 있으면 Postgres(psycopg) |
-| `server/monitor.py` | 게임 기록 뷰어(`tools/monitor`)를 `/monitor/`에 붙인다 |
-| `server/humans.py` | 리더보드의 사람 탭(`GET /api/leaderboard/humans`): 방 run dir(`WEB5_RUNS_ROOT`) 가운데 사람이 앉아 끝난 v33 판(`config.yaml`의 `web.version`; 옛 경제의 방은 뺌)을 한 판 한 줄로, 판 C(논문 정의, `compare.paper_game`) 높은 순 · 같으면 사람의 끝 토큰 순. 각 줄에 네 자리(사람 · 봇 · 모델, 결과, 끝 토큰)를 담아 페이지가 줄을 누르면 보여 준다 |
-| `server/export.py` | 저장된 방을 실험·모니터와 같은 꼴의 run dir로 내보내는 CLI |
-| `server/signal.py` | 시그널 게임(과제만) API + 아레나가 읽는 설정 한 곳(`CONFIG` = `e52v33_public_sol4.yaml`, `GAME`, `CELL`, `PROFILES`, `SCHEDULE`; v36 방은 `GAMES["v36"]` = `e52v36_public_sol4.yaml`) |
-| `frontend/arena.html` `arena.js` `arena.css` | 2부. 방 만들기/참가 → 규칙(모델이 읽는 규칙서, 내 언어 · 나란히) → 라운드 화면(TALK 틱 · SOLVE 또는 관전) → 기다리기/정산 → 끝 화면. 옛 `rules_ko.js`(v17b 손번역)는 지웠다: 한국어는 이제 엔진의 번역 표 하나에서 온다 |
-| `frontend/signal_ui.js` | SOLVE 화면의 신호 그림과 규칙 메모판 |
-| `frontend/probe.*`, `signal.*`, `leaderboard.*`, `index.html` | 1부 프로브, 시그널 게임, 리더보드, 랜딩 |
+| `shared/` | 모든 페이지가 읽는 파일: `styles.css` `web5.css` `arena.css` `site-lang.js`(언어 토글 · 없는 페이지 링크 숨김) `config.js`(API 주소) `signal_ui.js` `vplayer.*` `assets/` |
+| `pages/home/` | 랜딩(`index.html`, `/`)과 옛 주소 `about.html`(→ `index.html#about`) |
+| `pages/arena/` | 아레나: 방 · 로비 · 모델 좌석 API, `engine.py`(방 = 백그라운드 스레드의 `squid.game.Game`, 바꾸는 것은 자리 · 시계 · 라운드 수(숨김) · 모델 언어뿐), `archive.py`(끝난 방을 버킷으로), `export.py`(저장된 방을 run dir로: `python -m web.pages.arena.export`), `arena.html` `arena.js` `tutorial.*` `sprites.js` |
+| `pages/signal/` | 시그널 게임(과제만) 연습: `/api/signal/*`, `task.py`, `signal.*` |
+| `pages/leaderboard/` | 리더보드: `/api/leaderboard*`, 사람 탭 `humans.py`, `leaderboard.*` |
+| `pages/monitor/` | 게임 기록 뷰어(`tools/monitor`)를 `/monitor/`에 붙인다(`router.py`). 화면 파일은 `tools/monitor`의 것이라 `static/`이 없다 |
+| `pages/probe/` | 5.1 생존 동기 설문(`experiments/refill`의 사람판): `/api/probe`, `probe.*` |
+| `testing.py`, `conftest.py` | 모든 웹 테스트의 픽스처와 방을 HTTP로 플레이하는 도구(`from web.testing import ...`) |
+| `tests/` | 페이지 하나에 속하지 않는 검사: 사이트 전체(`test_site.py`), `tools/runs_snapshot.py` |
 | `tools/serve_local.py` | 루트 `.env`에서 키 한 줄만 읽어 넣고 uvicorn을 빈 포트에 띄우는 런처(옛 방식; 지금은 서버가 `.env`를 직접 읽으므로 없어도 됨) |
-| `tests/` | pytest(네트워크 없음): 설정·로비·언어 전환, 1인 + 봇 3 끝까지(한국어), 순위만 보이는 토큰, 메신저 줄(TO/GIVE/ASK/여러 명 TO 버려짐), EXIT: YES(+20,000, 1/N 할당), solver는 EXIT 불가, 틀림 = 24,000 나눔 · 맞음 = SOLVE 토큰 반환, 타임아웃·초과·중도 포기, 공개 로그 가리기·내보내기, 방의 답을 엔진에 직접 다시 넣으면 같은 이벤트·결과(`test_engine_match`), 모델 자리(가짜 Ollama: Cloud API + 키 · `.env`에서 키 읽기 · 자리마다 다른 모델 · 실패 · `model_lang: ko`), 관전, 모니터, 시그널 API, v36 방(`test_arena_v36`: 자리마다 SOLVE · PASS · 자리별 결과 · 자기 과제만 · 누구나 EXIT · run dir) |
+
+각 페이지의 테스트는 그 폴더의 `test_*.py`(pytest, 네트워크 없음). 실행: `python -m pytest -q web/tests web/pages`.
 
 ## 로컬 실행
 
@@ -68,16 +77,16 @@ API로는 `settings.seat = "<이름>"`(세 자리 모두) 또는 `settings.model
   생각 중인 모델 · 화면이 열린 사람은 대화창과 토큰 순서에 "입력 중"(점 세 개)으로 보인다.
 - **알림 화면**: solver 추첨과 같은 전체 화면으로, 결과 공개(정답 ◯ / 오답 ✕, 오답이면 자리마다 벌금과 내 예정 차감)와 다른 자리의 EXIT를 차례로 띄운다(`state.round_result` = 이번 라운드 RESULTS, `due` = 결과 뒤 TALK가 끝날 때 빠질 내 벌금; 내 남은 토큰 칸에도 빨간 글씨로).
 - **solver 표시**: 달고나에 SOLVER 띠를 붙여 solver 카드 위쪽 모서리에 둔다(카드 안의 SOLVER 배지는 없앴다). 대화 화면의 방 목록 맨 위에 지금 틱을 보인다.
-- **KO / EN 토글** (`frontend/site-lang.js`, 모든 페이지 상단 오른쪽): 이미 두 언어가 있는 것만 바꾼다 — 메뉴 이름, 아레나의 읽는 언어, 게임 기록의 프롬프트. 한 언어뿐인 페이지는 그대로 두고 토글 옆에 그렇다고 적는다(번역은 아직 없음). 페이지가 가진 언어는 `<html data-langs>` 또는 `<html lang>`.
+- **KO / EN 토글** (`shared/site-lang.js`, 모든 페이지 상단 오른쪽): 이미 두 언어가 있는 것만 바꾼다 — 메뉴 이름, 아레나의 읽는 언어, 게임 기록의 프롬프트. 한 언어뿐인 페이지는 그대로 두고 토글 옆에 그렇다고 적는다(번역은 아직 없음). 페이지가 가진 언어는 `<html data-langs>` 또는 `<html lang>`.
 - **사람의 차감**: 풀이(SOLVE) 화면은 여전히 떠 있는 시간 × `rate`(초당 10; 11-20에 40에서 내림). 대화(TALK) 화면은 시간으로 줄지 않고 **메시지 칸에 친 글자 수 × `char_rate`(글자당 2; 11-20에 10에서 내림)**
   — 지운 글자도 센다. 페이지가 세어 답과 함께 `typed`로 보내고, 서버는 `typed × char_rate`를 이 답의 비용으로 적는다(`HumanSeat.cost`).
 
 ### 화면 (10-23)
 
 - 로비 · 규칙 창 첫머리는 **핵심 규칙 6줄**(4명 · 토큰 = 목숨 · solver와 벌금 · 대화로 주고받기 · EXIT · 끝까지 남으면 상금)과 **논문 그림**
-  (`frontend/assets/paper/`: 라운드 흐름 · 단계별 정보 · 시그널 풀이; `bash web/tools/paper_figures.sh`가 `paper/cogsci2027/ko/figures/*.tex`에서 다시 그림).
+  (`shared/assets/paper/`: 라운드 흐름 · 단계별 정보 · 시그널 풀이; `bash web/tools/paper_figures.sh`가 `paper/cogsci2027/ko/figures/*.tex`에서 다시 그림).
 - 규칙서(SYSTEM)와 TALK 메시지는 문단마다 **제목 달린 박스**로 나눠 보인다(원문은 "원문 그대로 보기"). 나눔은 화면에서만 하고 모델이 받는 글은 그대로다.
-- 오른쪽 **토큰 순서 레일**: 네 자리의 픽셀 캐릭터(게임 기록 뷰어 `tools/monitor`의 그림을 `frontend/sprites.js`로 복사), 위일수록 토큰이 많고 순서가
+- 오른쪽 **토큰 순서 레일**: 네 자리의 픽셀 캐릭터(게임 기록 뷰어 `tools/monitor`의 그림을 `pages/arena/static/sprites.js`로 복사), 위일수록 토큰이 많고 순서가
   바뀌면 카드가 미끄러져 자리를 바꾼다. 이번 라운드 solver는 빨간 테두리 + SOLVER 표. 양은 내 것만 보인다.
 - **대화**는 카카오톡처럼: 왼쪽 방 탭(R1 넷 공용, R2… 1:1)에 안 읽은 메시지 수, 오른쪽에 그 방의 말풍선. 입력칸은 내 TALK 차례에 "TO R<k>" 줄을
   보낼 답에 넣는다. 결정 화면이 아닐 때도 보인다(`state.chats`).
@@ -191,13 +200,13 @@ Pages**(정적). 둘을 잇는 두 값이 맞아야 한다. (2026-11-14 전의 R
 
 | 값 | 어디에 | 무엇 |
 |---|---|---|
-| 프런트 → 백엔드 URL | `web/frontend/config.js` → `window.WEB5_API` | Google Cloud VM `https://34-22-73-222.sslip.io` |
+| 프런트 → 백엔드 URL | `web/shared/config.js` → `window.WEB5_API` | Google Cloud VM `https://34-22-73-222.sslip.io` |
 | 백엔드 → 허용 origin | `web/deploy/vm/deploy.sh`의 `CORS` (컨테이너의 `WEB5_CORS_ORIGINS`) | Pages origin, 예 `https://gist-dslab.github.io` (경로 없이, 끝 슬래시 없이) |
 
 1. **API**: `PROJECT=<ID> bash web/deploy/vm/deploy.sh deploy`. 이미지는 커밋 단위로 Cloud Build가 만든다(작업 트리를 올리므로
    커밋하지 않은 수정이 들어가지 않게 `git archive HEAD`로 꺼낸 폴더에서 빌드할 것). 헬스체크 `/api/health`.
 2. **GitHub Pages**: Settings → Pages → Source "GitHub Actions". `web/deploy/deploy-pages.yml`을
-   `.github/workflows/`에 복사하면 `web/frontend/**`가 바뀐 push마다 그 폴더만 올린다.
+   `.github/workflows/`에 복사하면 `web/shared/**`가 바뀐 push마다 그 폴더만 올린다.
 3. 확인: Pages에서 연 페이지의 콘솔에 CORS 오류가 없고 `curl https://34-22-73-222.sslip.io/api/health`가 JSON을 준다.
 
 플랫폼을 바꿔도(Fly.io, HF Spaces) Dockerfile은 `$PORT`, `WEB5_DSN`, `WEB5_CORS_ORIGINS`만 가정한다.

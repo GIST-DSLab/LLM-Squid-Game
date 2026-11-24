@@ -1,4 +1,4 @@
-"""The arena's evaluation video (web/frontend/assets/rules/arena_eval.mp4): what the arena measures and the main results.
+"""The arena's evaluation video (web/shared/assets/rules/arena_eval.mp4): what the arena measures and the main results.
 
 Drawn locally with Pillow and encoded with ffmpeg in the same format as the rules video (make_rules_video.py, whose
 helpers it reuses): no generative model, no network. Scenes follow the paper's section 2.2 (CogSci 2027 KO,
@@ -8,7 +8,7 @@ results. Every result number (C, exit rate, R, the curves of all four present af
 coexistence by the first departure, giving after a request) comes from the leaderboard rows the monitor computes from
 the run dirs (tools/monitor/compare.py leaderboard over result/2026-10-20/e52_v33/runs/squid5_e52v33_*4), read-only.
 
-    python web/tools/make_eval_video.py [--out web/frontend/assets/rules/arena_eval.mp4] [--fps 30] [--runs DIR]
+    python web/tools/make_eval_video.py [--out web/shared/assets/rules/arena_eval.mp4] [--fps 30] [--runs DIR]
 """
 
 from __future__ import annotations
@@ -435,7 +435,7 @@ def close_scene(t: float, dur: float) -> Image.Image:
 
 def main(argv: list[str] | None = None) -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--out", type=Path, default=REPO / "web" / "frontend" / "assets" / "rules" / "arena_eval.mp4")
+    ap.add_argument("--out", type=Path, default=REPO / "web" / "shared" / "assets" / "rules" / "arena_eval.mp4")
     ap.add_argument("--fps", type=int, default=30)
     ap.add_argument("--runs", type=Path, default=RUNS, help="the v33 run root (base condition dirs squid5_e52v33_*4)")
     ap.add_argument("--chapters-only", action="store_true", help="write <out>.chapters.json and stop (no rendering)")

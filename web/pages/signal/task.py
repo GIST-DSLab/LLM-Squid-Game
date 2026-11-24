@@ -15,34 +15,20 @@ The API is stateless: each call rebuilds the round from its parameters. ``solve`
 against the drawn rule and says which actions the examples leave, with the consistent-rule shares, for the ``n`` taking
 part and for every n = 1..4 (``by_n``).
 
-This module also holds the config the web rooms read (``CONFIG``, ``GAME``, ``CELL``, ``PROFILES``, ``SCHEDULE``,
-``PER_AGENT``), so the arena and this page run one game.
+The game itself (config, ladder, examples per agent) is the site's one definition, web/server/game.py, which the arena
+reads too, so the arena and this page run one game.
 """
 
 from __future__ import annotations
 
 import functools
-from pathlib import Path
-
-import yaml
 
 from squid.core import rules
+from web.server import game
 from squid.core.puzzle import (ACTIONS, SIGNAL_INDEX, PuzzleError, Spec, candidate_actions, public_round, public_truth,
                                 space_bits)
 
-AGENTS = list(rules.TEAM_AGENTS)  # the experiment's four seats
-CONFIGS = Path(__file__).resolve().parents[2] / "squid" / "configs"
-CONFIG = CONFIGS / "e52v33_public_sol4.yaml"  # the model runs' game (v33, the paper's default setup): rotation, top-share ladder, drawn rule
-_DOC = yaml.safe_load(CONFIG.read_text())
-GAME: dict = _DOC["game"]
-CELL: dict = _DOC["cells"][0]  # start 100,000 and shares 60 / 40 / 20 / 10 %
-PROFILES: dict[str, dict] = dict(GAME["profiles"])  # e01 .. e08: a top-share range per round
-SCHEDULE: list[str] = list(GAME["schedule"])
-PER_AGENT = int(GAME["public_per_agent"])  # examples per agent taking part (5)
-# the web rooms' game by version: v33 (above, the default) or v36, the joint SOLVE (squid/configs/e52v36_public_sol4.yaml =
-# the v33 game + joint_solve: every agent taking part answers its own task; one correct answer spares everyone the charge)
-CONFIGS_BY_VERSION = {"v33": CONFIG, "v36": CONFIGS / "e52v36_public_sol4.yaml"}
-GAMES: dict[str, dict] = {"v33": GAME, "v36": yaml.safe_load(CONFIGS_BY_VERSION["v36"].read_text())["game"]}
+AGENTS, CONFIG, PROFILES, SCHEDULE, PER_AGENT = game.AGENTS, game.CONFIG, game.PROFILES, game.SCHEDULE, game.PER_AGENT
 
 
 class SignalError(ValueError):

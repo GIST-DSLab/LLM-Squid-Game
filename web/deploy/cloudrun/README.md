@@ -8,11 +8,11 @@
 |---|---|---|
 | API 서버 | Cloud Run 서비스 `squid5-arena` (인스턴스 1개, 항상 켜짐, CPU 상시 할당) | 방과 판 진행이 프로세스 메모리와 백그라운드 스레드에 있다(`web/server/app.py` `rooms`, `engine.Room` 스레드). 인스턴스가 둘이 되거나 0으로 줄거나 CPU가 요청 밖에서 멈추면 진행 중인 판이 깨진다 |
 | 게임 이벤트 | Cloud SQL Postgres 16 `arena-pg` / DB `arena` (`WEB5_DSN`) | 진행 중에도 한 줄씩 쌓임(`web/server/store.py`). 매일 백업 + 시점 복구(14일). 연결이 끊기면 한 번 다시 연다 |
-| 끝난 판의 런 폴더 | Cloud Storage `gs://<프로젝트>-arena-runs/runs/<날짜_시각_방코드>/` (`WEB5_GCS_BUCKET`) | 판이 끝나면(끝남·멈춤·오류) `config.yaml` `meta.json` `events.jsonl` `results.jsonl`을 올림(`web/server/archive.py`). 분석 도구가 읽는 형식 그대로. 버전 관리 켬 |
+| 끝난 판의 런 폴더 | Cloud Storage `gs://<프로젝트>-arena-runs/runs/<날짜_시각_방코드>/` (`WEB5_GCS_BUCKET`) | 판이 끝나면(끝남·멈춤·오류) `config.yaml` `meta.json` `events.jsonl` `results.jsonl`을 올림(`web/pages/arena/archive.py`). 분석 도구가 읽는 형식 그대로. 버전 관리 켬 |
 | 키 | Secret Manager `ollama-api-key`, `web5-dsn` | 이미지와 git에 키가 들어가지 않음 |
 | 이미지 | Artifact Registry `web5` (Cloud Build로 빌드) | `web/deploy/Dockerfile` 그대로 |
 
-프런트엔드는 GitHub Pages에 그대로 둔다. 전환할 때 `web/frontend/config.js`의 `WEB5_API`만 Cloud Run 주소로 바꾼다.
+프런트엔드는 GitHub Pages에 그대로 둔다. 전환할 때 `web/shared/config.js`의 `WEB5_API`만 Cloud Run 주소로 바꾼다.
 
 ## 순서
 
@@ -35,7 +35,7 @@ PROJECT=<프로젝트ID> bash web/deploy/cloudrun/deploy.sh deploy
 curl "$(PROJECT=<프로젝트ID> bash web/deploy/cloudrun/deploy.sh url)/api/health"
 gcloud storage ls gs://<프로젝트ID>-arena-runs/runs/
 
-# 5. 전환: web/frontend/config.js 의 WEB5_API 를 Cloud Run 주소로 바꿔 main에 push (Pages 재배포), Render 서비스 정지
+# 5. 전환: web/shared/config.js 의 WEB5_API 를 Cloud Run 주소로 바꿔 main에 push (Pages 재배포), Render 서비스 정지
 ```
 
 ## 데이터 내려받기

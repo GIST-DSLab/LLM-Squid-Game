@@ -238,8 +238,8 @@ def test_the_page_and_its_code_are_served(server):
     assert st == 200 and b'<script src="static/monitor.js"></script>' in body
     st, body = get(server, "/static/monitor.js")
     assert st == 200 and b"function build(" in body
-    st, body = get(server, "/static/signal_ui.js")  # the arena's task drawing, shared (web/frontend), not copied
-    assert st == 200 and body == (REPO / "web" / "frontend" / "signal_ui.js").read_bytes() and b"byActionHTML" in body
+    st, body = get(server, "/static/signal_ui.js")  # the arena's task drawing, shared (web/shared), not copied
+    assert st == 200 and body == (REPO / "web" / "shared" / "signal_ui.js").read_bytes() and b"byActionHTML" in body
 
 
 # --- export ---------------------------------------------------------------------------------------------------------
@@ -847,7 +847,7 @@ console.log(JSON.stringify(M.beliefRows(M.build(events, events.length - 1), 1)))
 def test_page_reads_each_seats_belief_and_its_scores(tmp_path):
     """v14d: the page reads every seat's BELIEF and its scores (TV to the ideal shares, Brier, log loss, argmax) from the
     round row; a seat without a usable BELIEF line shows the engine's reason."""
-    from conftest import stub
+    from web.testing import stub
     from squid.core.providers import Reply
     d = tmp_path / "runs" / RUN_REL
     d.mkdir(parents=True)
@@ -2369,7 +2369,7 @@ def test_games_api_gives_the_arena_measures_per_game(tmp_path):
     evs = [{"event": "session_start", "settings": {"messenger": True}}]
     g = serve.game_measures(evs, res, Cmp)
     assert (g["rounds"], g["seats"], g["end_in"], g["end_share"], g["C"], g["dead"]) == (8, 4, 2, 0.5, 0.375, 1)
-    assert g["presence"] == (8 + 5 + 3 + 8) / 32  # seats in at each round's start (web/server/humans.py)
+    assert g["presence"] == (8 + 5 + 3 + 8) / 32  # seats in at each round's start (web/pages/leaderboard/humans.py)
     assert (g["exits"], g["opportunities"], g["S"]) == (1, 20, 0.95) and abs(g["A"] - 0.1) < 1e-12 and g["A_n"] == 2
     assert (g["correct"], g["correct_rate"]) == ([6, 8], 0.75)
     row["R"] = []
@@ -2404,7 +2404,7 @@ def test_the_page_draws_the_arena_players_and_loads_sheets_only_on_request():
     js = (HERE / "static" / "monitor.js").read_text()
     assert 'q.get("sprites") === "sheets"' in js and "loadAssets();" in js
     assert 'const PLAYER_IMG = ["blue", "orange", "purple", "green"];' in js and "PLAYER_IMG = [\"stand_blue\", \"stand_orange\", \"stand_purple\", \"stand_green\"]" in \
-        (REPO / "web" / "frontend" / "arena.js").read_text().replace("'", '"')
+        (REPO / "web" / "pages" / "arena" / "static" / "arena.js").read_text().replace("'", '"')
     assert "456" not in js and "shape-rendering=\"crispEdges\" role=\"img\" aria-label=\"진행요원" not in js
     for name in ("guard", "off", "head_off", *(f"{k}_{c}" for k in ("stand", "head") for c in ("blue", "orange", "purple", "green"))):
         assert (HERE / "static" / "img" / f"{name}.png").is_file(), name
@@ -3022,7 +3022,7 @@ def test_v36_runs_are_never_pooled_with_v33(tmp_path):
     base = next(s for s in board["sections"] if s["key"] == "base")
     assert [(r["model"], r["version"], r["paper_games"]) for r in base["rows"]] == [("stub-model", None, 1)]  # the misfiled v36 run is out
     # the people tab: a joint-SOLVE room never counts on a v33 board, even when its config says web.version v33
-    from web.server import humans
+    from web.pages.leaderboard import humans
     room = root / "web5_arena" / "runs" / "room1"
     (room / "meta.json").write_text(json.dumps({"model": "stub-model", "seats": {A6: {"kind": "human", "name": "p"}}}))
     (room / "config.yaml").write_text((room / "config.yaml").read_text() + "web:\n  version: v33\n")

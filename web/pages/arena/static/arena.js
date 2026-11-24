@@ -1,4 +1,4 @@
-// Arena: one page for the 4-seat 5.2 room. The rooms play the model runs' game, 5.2 v33 (web/server/engine.py): the
+// Arena: one page for the 4-seat 5.2 room. The rooms play the model runs' game, 5.2 v33 (web/pages/arena/engine.py): the
 // system draws the round's solver -> TALK BEFORE SOLVE (the messenger: ticks, rooms R1 (all four) and 1:1 rooms;
 // TO / GIVE / GIVE ALL / ASK / LEAVE / EXIT: YES|NO / DONE; EXIT never by the round's solver unless alone) -> SOLVE (solver
 // only, BELIEF + ACTIONS; an LLM solver is watched live) -> RESULTS -> TALK AFTER RESULTS (the task and both answers

@@ -11,10 +11,10 @@ import re
 
 import httpx
 import pytest
-from conftest import SEEDS, Player, answers_for, basic, make_room, play, start
+from web.testing import SEEDS, Player, answers_for, basic, make_room, play, start
 
 from squid.core import providers, rules
-from web.server import engine
+from web.pages.arena import engine
 
 A6, A11, A17, A23 = rules.TEAM_AGENTS
 SEED = 5  # agent-11 (a model) is round 1's solver, agent-6 (ann) round 2's

@@ -5,7 +5,7 @@
 #
 #   PROJECT=<id> bash web/deploy/vm/deploy.sh setup    # once: APIs, image repo, bucket, key secret, account, IP, VM
 #   PROJECT=<id> bash web/deploy/vm/deploy.sh deploy   # build the image, copy the compose files, (re)start on the VM
-#   PROJECT=<id> bash web/deploy/vm/deploy.sh url      # the API address for web/frontend/config.js
+#   PROJECT=<id> bash web/deploy/vm/deploy.sh url      # the API address for web/shared/config.js
 #   PROJECT=<id> bash web/deploy/vm/deploy.sh ssh      # a shell on the VM
 #   CLAUDE_SETUP_TOKEN=... PROJECT=<id> bash web/deploy/vm/deploy.sh seats   # the researchers' Claude/GPT seats
 #   PROJECT=<id> bash web/deploy/vm/deploy.sh codex-login                    # codex's own login on the VM (once)

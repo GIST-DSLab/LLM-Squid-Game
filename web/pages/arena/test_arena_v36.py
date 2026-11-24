@@ -9,10 +9,10 @@ import json
 from pathlib import Path
 
 import yaml
-from conftest import answers_for, done, make_room, play, start, wrong_for
+from web.testing import answers_for, done, make_room, play, start, wrong_for
 
 from squid.core.rules import TEAM_AGENTS
-from web.server.engine import RoomSettings
+from web.pages.arena.engine import RoomSettings
 
 A6, A11, A17, A23 = TEAM_AGENTS
 SEED = 5

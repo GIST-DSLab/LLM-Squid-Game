@@ -1,6 +1,6 @@
 """Write a room's events from the store as a squid5 run directory.
 
-    python -m web.server.export <ROOMCODE> [--out DIR] [--db PATH]
+    python -m web.pages.arena.export <ROOMCODE> [--out DIR] [--db PATH]
 
 The directory holds config.yaml, meta.json, events.jsonl and results.jsonl, readable by
 ``python -m squid report <DIR> --out <report dir>`` and tools/monitor.

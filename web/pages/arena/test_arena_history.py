@@ -4,7 +4,7 @@ order of its next TALK (not after it is out), and the task's two answers from th
 
 from __future__ import annotations
 
-from conftest import answers_for, make_room, play, solver_of, start, wrong_for
+from web.testing import answers_for, make_room, play, solver_of, start, wrong_for
 
 from squid.core.rules import TEAM_AGENTS
 

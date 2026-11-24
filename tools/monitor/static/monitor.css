@@ -489,7 +489,7 @@ body.embedded .follow { display: none; }
 .nums { flex-wrap: wrap; }
 .nums .bigbal { font-size: 15px; overflow-wrap: anywhere; }
 .nums .cmp { flex-basis: 100%; font-size: 11.5px; color: var(--ink-2); }
-/* glyphs drawn by the arena's shared web/frontend/signal_ui.js (coloured shapes, as many as the number) */
+/* glyphs drawn by the arena's shared web/shared/signal_ui.js (coloured shapes, as many as the number) */
 .sg-glyphs { display: inline-flex; flex-wrap: wrap; gap: 1px; align-items: center; }
 .sg-glyphs .glyph { display: block; }
 .ptask-sig { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-2); }

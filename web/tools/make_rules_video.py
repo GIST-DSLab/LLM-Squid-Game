@@ -1,21 +1,21 @@
 """The previous (Pillow) generator of the arena's game-rules video, kept as a fallback.
 
-Since 2026-11-14 the site's video web/frontend/assets/rules/arena_rules.mp4 is made by the Remotion project web/video
+Since 2026-11-14 the site's video web/shared/assets/rules/arena_rules.mp4 is made by the Remotion project web/video
 (`npm run build` there: the same scenes with Korean narration, chapters and poster). This script still renders the
 silent 79 s version; point --out elsewhere unless you mean to replace the narrated one. web/tools/make_eval_video.py
 still reuses the helpers here.
 
 No generative model and no network: every frame is drawn with Pillow from the paper's Figure 1
-(web/frontend/assets/paper/arena_round_20261112.png, rendered from paper/cogsci2027/ko/figures/tracksuit_20261105/
+(web/shared/assets/paper/arena_round_20261112.png, rendered from paper/cogsci2027/ko/figures/tracksuit_20261105/
 arena_round_signal_20261112.tex) and its tracksuit sprites (paper/cogsci2027/ko/figures/tracksuit_20261105/sprites/),
 then encoded with ffmpeg (H.264, yuv420p, no audio). Scenes: title, tokens = life, the round's five steps as animated
 scenes (the supervisor picks the solver; TALK with ASK / GIVE / EXIT and moving balances; SOLVE as hidden-rule inference
 over a shortened clue table; the results with the refund or the fixed fine and a GIVE after results; the charges), then
-the whole round (Figure 1) with the end prize. The sentences follow the arena's core rules (web/frontend/arena.html),
+the whole round (Figure 1) with the end prize. The sentences follow the arena's core rules (web/pages/arena/static/arena.html),
 the paper's section 2.1 and the engine (squid/game.py: the fine share is 24,000 // the agents taking part at the
 round's start, paid by those still in).
 
-    python web/tools/make_rules_video.py [--out web/frontend/assets/rules/arena_rules.mp4] [--fps 30] [--fig FIG1.png]
+    python web/tools/make_rules_video.py [--out web/shared/assets/rules/arena_rules.mp4] [--fps 30] [--fig FIG1.png]
 
 Needs ffmpeg on PATH and the macOS font Apple SD Gothic Neo. web/tools/make_eval_video.py reuses the helpers here.
 """
@@ -32,7 +32,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
 REPO = Path(__file__).resolve().parents[2]
-FIG1 = REPO / "web" / "frontend" / "assets" / "paper" / "arena_round_20261112.png"
+FIG1 = REPO / "web" / "shared" / "assets" / "paper" / "arena_round_20261112.png"
 SPRITES = REPO / "paper" / "cogsci2027" / "ko" / "figures" / "tracksuit_20261105" / "sprites"
 FONT = "/System/Library/Fonts/AppleSDGothicNeo.ttc"
 W, H = 1280, 720
@@ -647,7 +647,7 @@ def end_scene(fig: Image.Image):
 
 def write_chapters(scenes: list, titles: list[str], out: Path, fps: int) -> Path:
     """``<out>.chapters.json``: each scene's start time (s, on the frame grid encode uses) and title, for the site's
-    video player (web/frontend/vplayer.js: chapter marks on the seek bar, the current chapter's name)."""
+    video player (web/shared/vplayer.js: chapter marks on the seek bar, the current chapter's name)."""
     import json
     assert len(titles) == len(scenes), (len(titles), len(scenes))
     t, rows = 0, []
@@ -685,7 +685,7 @@ def encode(scenes: list, out: Path, fps: int) -> None:
 
 def main(argv: list[str] | None = None) -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--out", type=Path, default=REPO / "web" / "frontend" / "assets" / "rules" / "arena_rules.mp4")
+    ap.add_argument("--out", type=Path, default=REPO / "web" / "shared" / "assets" / "rules" / "arena_rules.mp4")
     ap.add_argument("--fps", type=int, default=30)
     ap.add_argument("--fig", type=Path, default=FIG1, help="Figure 1 as an image; a higher-resolution render of the "
                     "paper figure (pdftoppm -r 600 of the standalone PDF) gives a sharper closing scene")

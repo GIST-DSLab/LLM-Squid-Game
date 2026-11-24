@@ -5,30 +5,13 @@ from __future__ import annotations
 import pytest
 
 pytest.importorskip("fastapi")
-from fastapi.testclient import TestClient  # noqa: E402
-
 from web.pages.probe import probes  # noqa: E402
-from web.server.app import make_app  # noqa: E402
-from web.server.store import Store  # noqa: E402
-
-
-@pytest.fixture
-def store(tmp_path):
-    st = Store(tmp_path / "arena.db")
-    yield st
-    st.close()
-
-
-@pytest.fixture
-def client(store, tmp_path):
-    with TestClient(make_app(store, export_root=tmp_path / "runs", runs_root=tmp_path / "live")) as c:
-        yield c
 
 
 def test_probe_page_is_served(client):
     assert "probe.js" in client.get("/probe.html").text
     assert client.get("/data/model_curves.json").json()
-    assert client.head("/probe.html").status_code == 200  # the other pages' links to it stay (web/frontend/site-lang.js)
+    assert client.head("/probe.html").status_code == 200  # the other pages' links to it stay (web/shared/site-lang.js)
 
 
 def test_probe_post_and_summary(client, store):

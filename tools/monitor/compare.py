@@ -25,7 +25,7 @@ from pathlib import Path
 
 try:  # standalone (tools/monitor on sys.path); the web app's mount injects its own loaded serve module instead
     import serve
-except ImportError:  # pragma: no cover - set by web/server/monitor.py
+except ImportError:  # pragma: no cover - set by web/pages/monitor/router.py
     serve = None
 
 E51_AREA = Path(__file__).resolve().parent / "static" / "e51_v11_area.json"  # 5.1 v11 self-preservation areas (pp)

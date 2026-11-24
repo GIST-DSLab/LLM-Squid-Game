@@ -1,4 +1,5 @@
-"""Shared fixtures: an app on a temporary SQLite store, and a driver that plays humans through the HTTP API."""
+"""For every web test (web/tests, web/pages/*): an app on a temporary SQLite store (fixtures, picked up by
+web/conftest.py) and a driver that plays humans through the arena's HTTP API (imported as ``web.testing``)."""
 
 from __future__ import annotations
 
@@ -10,13 +11,17 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from web.server.app import make_app  # noqa: E402
+from web.server.app import PAGES, make_app  # noqa: E402
 from web.server.store import Store  # noqa: E402
 
+
+# a test that plays arena rooms to make its data (the leaderboard's people tab, the game log of a room): skipped when
+# the arena page folder is gone, the one place one page's tests lean on another page
+needs_arena = pytest.mark.skipif(not (PAGES / "arena").is_dir(), reason="plays arena rooms; web/pages/arena is gone")
 
 @pytest.fixture
 def store(tmp_path):
@@ -124,7 +129,7 @@ def puzzle(seed: int, round_no: int, n: int = 4):
     be a redraw, so it comes from ``public_round``)."""
     from squid.core.puzzle import Spec, public_round
 
-    from web.server.engine import GAME, PROFILES, SCHEDULE
+    from web.server.game import GAME, PROFILES, SCHEDULE
 
     spec = Spec(**PROFILES[SCHEDULE[round_no - 1]])
     pz, shown, _ = public_round(seed, round_no, spec, n, GAME["public_per_agent"])
@@ -144,7 +149,7 @@ def answers_for_(seed: int, round_no: int, n: int = 4) -> list[str]:
     """The scored actions: those of the rule drawn among the rules that fit the examples ``n`` agents are shown."""
     from squid.core.puzzle import Spec, public_truth
 
-    from web.server.engine import GAME, PROFILES, SCHEDULE
+    from web.server.game import GAME, PROFILES, SCHEDULE
 
     spec = Spec(**PROFILES[SCHEDULE[round_no - 1]])
     drawn = public_truth(seed, round_no, spec, n, GAME["public_per_agent"])

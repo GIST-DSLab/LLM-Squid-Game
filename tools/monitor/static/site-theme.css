@@ -1,6 +1,6 @@
-/* site-theme.css: the web site's look (web/frontend styles.css + web5.css + leaderboard.css) for the game-log viewer
+/* site-theme.css: the web site's look (web/shared styles.css + web5.css + leaderboard.css) for the game-log viewer
    and the model comparison page. A copy of the site's tokens, so the monitor works standalone (serve.py) and exported
-   (export.py inlines this file) without web/frontend. Only neutral and brand tokens live here, under the site's names;
+   (export.py inlines this file) without web/shared. Only neutral and brand tokens live here, under the site's names;
    monitor.css maps its own tokens (--surface, --ink, --line ...) onto them and keeps its semantic colours.
    Light = the leaderboard's light variant; dark = the site's default. OS setting, or data-theme="light|dark" on <html>. */
 :root {

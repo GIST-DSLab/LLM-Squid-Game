@@ -79,12 +79,18 @@ html[data-site-lang="ko"] nav.tabs a .nav-ko { margin-left: 0; font-size: inheri
   else mount();
 })();
 
-// Links to a page that can come and go (web/pages/<page>/static, e.g. probe.html) carry data-optional:
-// when the page is not there (its folder was deleted), the link is hidden.
+// Every page can come and go (web/pages/<page>): a link to another page of the site (a relative .html address)
+// whose page is not there is hidden, so deleting a page folder needs no edit elsewhere. One HEAD request per address.
 document.addEventListener("DOMContentLoaded", function () {
-  document.querySelectorAll("a[data-optional]").forEach(function (a) {
-    fetch(a.getAttribute("href"), { method: "HEAD" })
-      .then(function (r) { if (!r.ok) a.style.display = "none"; })  // not .hidden: .btn sets its own display
-      .catch(function () { /* offline or file://: leave the link */ });
+  const links = {};
+  document.querySelectorAll('a[href$=".html"]').forEach(function (a) {
+    const href = a.getAttribute("href");
+    if (/^[a-z]+:|^\/\//i.test(href)) return;  // another site
+    (links[href] = links[href] || []).push(a);
+  });
+  Object.keys(links).forEach(function (href) {
+    fetch(href, { method: "HEAD" })
+      .then(function (r) { if (!r.ok) links[href].forEach(function (a) { a.style.display = "none"; }); })  // not .hidden: .btn sets its own display
+      .catch(function () { /* offline or file://: leave the links */ });
   });
 });

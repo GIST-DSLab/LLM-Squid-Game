@@ -7,8 +7,8 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-from conftest import answers_for, make_room, play, start
-from web.server.app import PAGES, make_app
+from web.testing import answers_for, make_room, needs_arena, play, start
+from web.server.app import make_app
 from web.server.store import Store
 from squid.core.rules import TEAM_AGENTS
 
@@ -40,19 +40,9 @@ def test_page_and_code(client):
     sig = client.get("/monitor/static/signal_ui.js")  # the arena's task drawing, shared with the viewer (one file)
     assert sig.status_code == 200 and sig.text == client.get("/signal_ui.js").text and "byActionHTML" in sig.text
     assert client.get("/monitor/assets/nope.png").status_code == 404  # no sprites: the page falls back silently
-    assert client.get("/api/health").status_code == 200  # the arena's own /api is untouched
-    pages = ["index.html", "arena.html", "signal.html", "leaderboard.html"]  # + each page folder's (web/pages/*/static)
-    for page in pages + sorted(h.name for h in PAGES.glob("*/static/*.html")):
-        text = client.get(f"/{page}").text
-        assert 'data-api-href="monitor/"' in text and 'href="leaderboard.html"' in text, page
-    lb = client.get("/api/leaderboard", params={"runs": "nope/"})
-    assert lb.status_code == 200 and lb.json()["rows"] == [] and "자가 대국" in lb.json()["note"]
-    assert client.get("/api/leaderboard", params={"runs": "nope/", "csv": 1}).text.lstrip("\ufeff").startswith("rank,model")
-    board = client.get("/api/leaderboard/v33").json()  # the page: every v33 condition + the rule agents
-    assert [s["key"] for s in board["sections"]] == ["base", "split600k", "flat5m", "flat150k", "stayon"]
-    assert all(s["title"] and s["note"] and s["picks"] for s in board["sections"]) and len(board["rules"]["rows"]) == 7
 
 
+@needs_arena
 def test_api_reads_a_finished_room(client, runs_root):
     ps = make_room(client, 1, rounds=2, seed=5)
     start(client, ps)
@@ -92,14 +82,16 @@ def test_paths_outside_the_root_are_refused(tmp_path):
         assert c.get("/monitor/static/..%2F..%2Fserve.py").status_code in (400, 404)
 
 
+@needs_arena
 def test_the_deployed_viewer_lists_short_labels_and_a_web_game_only_once_it_ends(tmp_path, monkeypatch):
     """WEB5_PUBLIC=1: runs named by a short label (실험 · model · condition · date / 웹 플레이 · date), and a web room's
     log is listed and served only once its game has finished (nobody reads a game's chats while it is played)."""
     import json
 
-    from web.server import engine
+    from web.pages.arena import engine
 
     monkeypatch.setattr(engine, "PUBLIC", True)
+    monkeypatch.setenv("WEB5_PUBLIC", "1")  # the site's switch (Site.public), read when the app is made
     root = tmp_path / "monitor"
     exp = root / "e52_v33ab" / "squid5_e52v33ab_flat5m_docker_opus4" / "20261105_robustness_claude-opus-5-5"
     exp.mkdir(parents=True)
@@ -124,6 +116,7 @@ def test_the_deployed_viewer_lists_short_labels_and_a_web_game_only_once_it_ends
             room.close()
 
 
+@needs_arena
 def test_a_v36_run_names_its_version_and_serves_each_agents_task(tmp_path, monkeypatch):
     """5.2 v36 (the joint SOLVE, 11-22): the short run list names it, and /monitor/api/puzzle takes ``agent`` (whose task:
     every agent taking part has its own)."""
@@ -136,9 +129,9 @@ def test_a_v36_run_names_its_version_and_serves_each_agents_task(tmp_path, monke
     from squid.__main__ import EXPERIMENTS
     from squid.core.config import load
     from squid.core.providers import ProviderConfig, Reply, Stub
-    from web.server import engine
+    from web.pages.arena import engine
 
-    repo = Path(__file__).resolve().parents[2]
+    repo = Path(__file__).resolve().parents[3]
     cfg = load(repo / "squid/configs/e52v36_public_sol4.yaml", EXPERIMENTS)
     ev = []
     respond = lambda m, cap: Reply("ACTIONS: PASS" if re.match(r"(?i)ROUND \d+: SOLVE\.", m[-1]["content"]) else "DONE", 20)  # noqa: E731
@@ -153,6 +146,7 @@ def test_a_v36_run_names_its_version_and_serves_each_agents_task(tmp_path, monke
     shutil.copy(repo / "squid/configs/e52v36_public_sol4.yaml", d / "config.yaml")
     tasks = next(e for e in ev if e["event"] == "round_start")["tasks"]
     monkeypatch.setattr(engine, "PUBLIC", True)
+    monkeypatch.setenv("WEB5_PUBLIC", "1")  # the site's switch (Site.public), read when the app is made
     with TestClient(make_app(Store(tmp_path / "a.db"), export_root=tmp_path / "x", runs_root=root / "web", monitor_root=root)) as c:
         (run,) = c.get("/monitor/api/runs").json()["runs"]
         assert run["joint"] and run["version"] == "5.2 v36" and run["label"] == "실험 · stub-model · v36 공동 SOLVE · 2026-11-22"

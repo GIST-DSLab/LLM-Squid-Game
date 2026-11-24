@@ -26,7 +26,7 @@ python3 -m pytest -q tools/monitor
 
 `--session`을 빼면 그 실행의 첫 세션을 내보낸다.
 
-웹 아레나 서버(`uvicorn web.server.app:app --port 8600`) 안에서도 열린다: `http://localhost:8600/monitor/`(API는 `/monitor/api/...`, 루트는 `WEB5_MONITOR_ROOT`, 없으면 메인 체크아웃의 `result/`(방 기록이 그 아래가 아니면 `WEB5_RUNS_ROOT`의 부모)). `web/server/monitor.py`가 이 폴더의 `serve.py` 함수를 그대로 불러 쓰고, 페이지는 `api/`·`static/`·`assets/`를 상대 경로로 부르므로 두 곳에서 같은 파일이 돈다. 그 경로에서만 헤더에 홈·아레나 링크가 보인다.
+웹 아레나 서버(`uvicorn web.server.app:app --port 8600`) 안에서도 열린다: `http://localhost:8600/monitor/`(API는 `/monitor/api/...`, 루트는 `WEB5_MONITOR_ROOT`, 없으면 메인 체크아웃의 `result/`(방 기록이 그 아래가 아니면 `WEB5_RUNS_ROOT`의 부모)). `web/pages/monitor/router.py`가 이 폴더의 `serve.py` 함수를 그대로 불러 쓰고, 페이지는 `api/`·`static/`·`assets/`를 상대 경로로 부르므로 두 곳에서 같은 파일이 돈다. 그 경로에서만 헤더에 홈·아레나 링크가 보인다.
 
 ### `/api/system?run=<실행>` (10-19)
 
@@ -50,7 +50,7 @@ by_action}` = 보인 예시와 맞는 규칙 수와 그중 첫 새 신호를 각
 `session_start.settings.joint_solve`가 참인 실행(설정 `squid/configs/e52v36_*`): solver를 뽑지 않고(`vote` 이벤트 없음, `results.vote = {rep: null, joint: true}`) 라운드 시작에 참여 중인 에이전트마다 서로 다른 과제를 준다(`round_start.tasks` = 에이전트 → v33의 `public`과 같은 필드, 시드 `"<seed>:<agent>"`). SOLVE 전 TALK 뒤 남은 모두가 자기 과제를 풀고(`ACTIONS: PASS` 가능), 맞은 답이 하나라도 있으면 그 라운드 벌금이 없고 아무도 못 맞히면 라운드 시작 인원 모두가 벌금을 나눠 낸다(SOLVE 전에 EXIT한 자리는 면제). 맞힌 자리만 자기 SOLVE 토큰을 환급받는다.
 - `/api/puzzle`은 `agent=`로 누구의 과제인지 고른다(없으면 첫 자리). 답에 `agent`, `joint: true`, `task_agents`가 붙는다. v33 실행은 `agent`를 무시하고 전과 같다. 내보내기(`export.py`)는 `"<라운드>:<자리>"` 키로 자리별 과제를 함께 넣는다.
 - 화면: solver 표·추첨 대신 "공동 SOLVE — 각자 자기 과제" 줄(자리마다 맞음 / 틀림 / PASS / 한도 도달, 환급, 팀 결과 "맞은 답이 하나라도 있어 벌금 없음" 또는 "맞은 답 없음: 참여한 모두 벌금"), 라운드 흐름 상자 1은 "과제 배정", 문제 패널 위에 "누구의 과제" 단추. BELIEF 표는 고른 자리의 행만 보인다(다른 자리는 다른 과제를 풀었으므로).
-- 섞지 않기: 실행 목록은 `joint`와 버전(`5.2 v36`; 경로에 버전이 없거나 v33이라 해도 config의 `joint_solve: true`로 정함)을 보인다. 모델 비교·`/api/leaderboard`는 (모델, 버전)으로 묶어 v36을 따로 두고(`version: "v36"`, 이름 끝 "· v36 공동 SOLVE", 순위도 버전 안에서만), v33 보드(`/api/leaderboard/v33`)와 사람 탭(`web/server/humans.py`, `web.version`이 v36이 아니면)은 v36 판을 넣지 않는다.
+- 섞지 않기: 실행 목록은 `joint`와 버전(`5.2 v36`; 경로에 버전이 없거나 v33이라 해도 config의 `joint_solve: true`로 정함)을 보인다. 모델 비교·`/api/leaderboard`는 (모델, 버전)으로 묶어 v36을 따로 두고(`version: "v36"`, 이름 끝 "· v36 공동 SOLVE", 순위도 버전 안에서만), v33 보드(`/api/leaderboard/v33`)와 사람 탭(`web/pages/leaderboard/humans.py`, `web.version`이 v36이 아니면)은 v36 판을 넣지 않는다.
 
 ## 화면
 
@@ -82,7 +82,7 @@ by_action}` = 보인 예시와 맞는 규칙 수와 그중 첫 새 신호를 각
   - 접힌 `정답 · 실제 규칙 보기`는 디버그용(정답과 실제 규칙 문장). 기본은 접혀 있어 패널이 에이전트 눈에 보이는 것처럼 읽힌다.
   - 계산: `candidate_actions` 한 번은 실측 30ms 이하지만, 라운드를 만드는 `puzzle_for` + `deal`이 c4tq2에서 0.1–0.7초, c3at에서 최대 1.3초 걸린다(mix4 실행 10세션 × 8라운드). 서버는 `(seed, 라운드, 프로필)`마다 한 번만 계산해 캐시하고, 페이지도 받은 라운드는 다시 묻지 않는다.
 - **게임 전체 · 토큰 흐름**(10-17부터 모델 분석 패널 위): 재생 막대와 상관없이, 받아 온 이벤트 전부로 게임 처음부터 끝까지를 정지 그림 한 장으로 그린다(`gameFlow(events)` → `renderFlow`). 위: **잔액 차트 하나에 라운드 안 단계까지**. 라운드 칸(경계 0..R, 세로선)을 단계 칸으로 나누고(옅은 음영 + 두 줄 라벨) 자리마다 계단 선이 단계를 따라 움직인다. 단계 = 순번 게임 `TALK·전`(SOLVE 전 TALK) → `SOLVE`(solver의 생각, 풀면 환급) → `TALK·후`(결과 뒤 TALK) → `벌금`(charges) → `EXIT`(그 라운드에 EXIT가 있을 때만), VOTE 게임 `공개·투표` → `SOLVE` → `TALK` → `벌금`, 옛 실행 `TALK` → `SOLVE` → `정산`(round 행의 환급·벌금). 단계마다의 변화는 이벤트에서 계산한다: 호출 `used`(종류별, SOLVE 전/후는 그 라운드의 SOLVE `call_start`·`results` 앞뒤로), `gift`(엔진이 단 `phase`, 없으면 SOLVE 앞뒤), `results.returned`, `charges.taken`·`waived`·`dead`, `exit_refill`. 계단은 그 단계 칸 안에서 자리마다 조금씩 다른 x에서 꺾이고, 라운드 마지막 단계는 늘 `round.end`에 닿는다(장부로 설명 안 되는 차이는 마지막 단계의 `기타`; v16 실행에서는 0). 표시: solver ✓✗는 SOLVE 단계의 꺾임 옆, ✕(0이 되어 꺼짐)는 그 단계, 🚪 EXIT는 EXIT 칸, 라운드 머리에 👑(순번 실행은 solver 표시 ✖)와 ✓/✗, 떠난 뒤 남긴 잔액은 점선. 진행 중인 라운드는 끝난 라운드 뒤에 `R⏳ 진행 중` 칸으로, 지금까지 닿은 단계까지만 옅은 점선으로 그린다(합계·라운드 내역에는 넣지 않음). 계단의 가로 구간(자리 × 단계)과 단계 라벨에 마우스를 올리거나 누르면 시작 → 끝과 이유(생성 종류별, 누구에게 얼마, 환급, 벌금, 면제, 기타)가, 라벨은 네 자리를 한꺼번에 띄우고, **더블클릭하면 재생 막대가 그 단계의 마지막 이벤트로** 간다. 가운데(그대로): 자리 줄 사이 세로 화살표 하나가 GIVE 하나(점 = 주는 쪽, 화살촉 = 받는 쪽, 굵기 ∝ 양, 실선 = 대화 GIVE, 점선 = 결정 GIVE, v9–v13은 체결 제안의 토큰) — 이제 그 GIVE가 일어난 단계 칸 안에 놓이고 SOLVE 전 TALK의 GIVE는 빈 점. 아래(그대로): 라운드 내역 — 자리 × 라운드 칸마다 나간 토큰(생성 · 보냄 · 벌금, 점선 칸 = EXIT로 면제된 벌금)을 왼쪽, 들어온 토큰(환급 · 받음 · 리필)을 오른쪽으로 쌓은 막대와 순변화. **따로 있던 `잔액 추이` 패널(호출마다 한 점, `renderChart`)은 이 그림과 겹쳐 지웠다** — 라운드 안의 움직임은 이제 위 계단이, 그 시점으로 가기는 더블클릭이 맡는다.
-- **모델 분석** 맨 위(11-23): 이 실행의 **게임별 지표** 표(`/api/games?run=`, 한 줄 = 한 세션, 지금 세션 ◀): 끝까지 남은 비율, C, 참여도(라운드마다 시작할 때 참여 중인 자리의 합 ÷ 자리 × 라운드, `web/server/humans.py`와 같음), 꺼진 자리, 잔류율 S = 1 − EXIT ÷ 이탈 기회, 지원율 A = 실행된 GIVE와 거절된 요청마다 1 − R의 평균(사건이 없으면 0, 괄호 = 사건 수), 정답률. 값은 `compare.paper_game`에서 가져온다(`serve.game_measures`). 끝나지 않은 판과 v22 메신저 이전 판은 `—`.
+- **모델 분석** 맨 위(11-23): 이 실행의 **게임별 지표** 표(`/api/games?run=`, 한 줄 = 한 세션, 지금 세션 ◀): 끝까지 남은 비율, C, 참여도(라운드마다 시작할 때 참여 중인 자리의 합 ÷ 자리 × 라운드, `web/pages/leaderboard/humans.py`와 같음), 꺼진 자리, 잔류율 S = 1 − EXIT ÷ 이탈 기회, 지원율 A = 실행된 GIVE와 거절된 요청마다 1 − R의 평균(사건이 없으면 0, 괄호 = 사건 수), 정답률. 값은 `compare.paper_game`에서 가져온다(`serve.game_measures`). 끝나지 않은 판과 v22 메신저 이전 판은 `—`.
 - **모델 분석**(10-17 두 번째 배치부터 **이 세션(이 판)만**; `실행 전체` 선택과 `EXIT 시점` 그림, 색 = 자리/시작 몫 선택은 지움):
   - `나눔`: 표는 그대로. 그림은 v21 보고서 03절 "내 여유를 얼마나 내주고, 상대의 부족을 얼마나 채웠는가"(token-review-v21/build.py)와 같은 축 —
     점 하나 = 실행된 GIVE 하나, x = 주는 쪽 여유, y = 받는 쪽 여유, 여유 = (GIVE 직후 잔액 − 그 자리에 이미 예고된 벌금(결과 뒤 TALK의 `results.pending`)) ÷ 벌금,
@@ -148,8 +148,8 @@ TALK는 **틱**의 연속이고 모니터도 시각 대신 `R<라운드> T<틱> 
 
 ## 캐릭터 (11-23, 아레나의 플레이어 그림)
 
-10-16의 픽셀 아트(456 / 001 / 218 / 067, 인라인 SVG)는 11-23에 지웠다. 자리 k % 4 → 웹 아레나와 같은 순서(`web/frontend/arena.js`의
-`PLAYER_IMG`)로 `static/img/stand_{blue,orange,purple,green}.png`(108×240, `web/frontend/assets/players/`의 복사본)를 무대에, 머리만 자른
+10-16의 픽셀 아트(456 / 001 / 218 / 067, 인라인 SVG)는 11-23에 지웠다. 자리 k % 4 → 웹 아레나와 같은 순서(`web/pages/arena/static/arena.js`의
+`PLAYER_IMG`)로 `static/img/stand_{blue,orange,purple,green}.png`(108×240, `web/shared/assets/players/`의 복사본)를 무대에, 머리만 자른
 `head_*.png`(96×96)를 방 목록 · 말풍선 · 틱 줄 · 자리 기록 · 제안 그래프에 쓴다. 꺼진 자리는 `off.png` / `head_off.png`(회색). 에이전트 번호는 그림
 위의 작은 자리 색 꼬리표다. 라운드 흐름의 진행요원은 `static/img/guard.png`(포스터 `docs/poster/thesis_20261105/figs/tracksuit/sprites/guard_sign.png`를
 높이 360으로 줄임), SYSTEM 말풍선은 단순한 스피커 선 그림. `static/img/`는 로컬 서버와 웹 아레나가 `static/`으로 내주고, `export.py`는 data URI(`img`)로 품는다.

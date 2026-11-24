@@ -8,12 +8,12 @@ from __future__ import annotations
 import random
 import re
 
-from conftest import answers_for, make_room, play, start, wrong_for
+from web.testing import answers_for, make_room, play, start, wrong_for
 
 from squid import game as e52
 from squid.core import rules
 from squid.core.providers import ProviderConfig, Reply, Stub
-from web.server.engine import RoomSettings
+from web.pages.arena.engine import RoomSettings
 
 A6, A11, A17, A23 = AG = rules.TEAM_AGENTS
 SEED = next(x for x in range(1, 500) if random.Random(f"{x}:rot:1:0").sample(AG, 4)[:2] == [A11, A6])

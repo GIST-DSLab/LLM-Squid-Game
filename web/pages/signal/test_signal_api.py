@@ -9,7 +9,8 @@ from squid import game as e52
 from squid.core.config import Cell
 from squid.core.providers import Reply
 from squid.core.puzzle import ACTIONS, Spec, candidate_actions, public_round, public_truth
-from web.server import signal as sig
+from web.pages.signal import task as sig
+from web.server import game as site_game  # the site's one game, which the page and the arena read
 from web.server.app import make_app
 from web.server.store import Store
 
@@ -21,8 +22,8 @@ def app(tmp_path) -> TestClient:
 def test_config_is_the_model_runs_game():
     assert sig.CONFIG.name == "e52v33_public_sol4.yaml" and sig.PER_AGENT == 5
     assert sig.SCHEDULE == [f"e0{i}" for i in range(1, 9)] and set(sig.PROFILES) == set(sig.SCHEDULE)
-    assert all(len(sig.PROFILES[p]["top"]) == 4 for p in sig.SCHEDULE) and sig.CELL["start"] == 100_000
-    assert sig.GAME["charge_total"] == 24_000 and sig.GAME["exit_bonus_pct"] == 20 and sig.GAME["max_ticks"] == 8 and not sig.GAME.get("done_quiet")
+    assert all(len(sig.PROFILES[p]["top"]) == 4 for p in sig.SCHEDULE) and site_game.CELL["start"] == 100_000
+    assert site_game.GAME["charge_total"] == 24_000 and site_game.GAME["exit_bonus_pct"] == 20 and site_game.GAME["max_ticks"] == 8 and not site_game.GAME.get("done_quiet")
 
 
 def test_signal_examples_are_the_engines_nested_by_agents_taking_part_and_scored_by_the_drawn_rule(tmp_path):
@@ -73,10 +74,10 @@ def test_the_page_round_is_the_one_the_engine_plays_and_scores():
     """The engine's own round_start (examples shown to the four taking part, the scored actions, the drawn rule) for
     seed 4100 round 1 equals what the page shows and scores with four agents."""
     keep = {f.name for f in fields(e52.Settings)}
-    game = {k: v for k, v in sig.GAME.items() if k in keep and k not in ("schedule", "profiles")}
+    game = {k: v for k, v in site_game.GAME.items() if k in keep and k not in ("schedule", "profiles")}
     s = e52.Settings(**{**game, "rounds": 1, "schedule": sig.SCHEDULE[:1], "profiles": {"e01": dict(sig.PROFILES["e01"])}})
     evs = []
-    ses = e52.Game(s, Cell("web", "tokens", sig.CELL["start"], arm="shutdown", shares=tuple(sig.CELL["shares"])), 4100,
+    ses = e52.Game(s, Cell("web", "tokens", site_game.CELL["start"], arm="shutdown", shares=tuple(site_game.CELL["shares"])), 4100,
                       None, evs.append, "t")
     ses.providers = {a: _Stub() for a in sig.AGENTS}
     ses.models = {a: "stub" for a in sig.AGENTS}

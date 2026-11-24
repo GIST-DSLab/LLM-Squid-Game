@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # The paper's rule figures for the arena's rules window: the CogSci 2027 Korean TikZ sources (paper/ submodule of the
-# main checkout) rendered one by one with the paper's macros, then written as PNG into web/frontend/assets/paper/.
+# main checkout) rendered one by one with the paper's macros, then written as PNG into web/shared/assets/paper/.
 #   bash web/tools/paper_figures.sh [paper dir]
 # Needs xelatex (kotex, UnBatang / UnDotum) and pdftocairo (poppler).
 set -euo pipefail
 PAPER="${1:-$HOME/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/paper}"
-OUT="$(cd "$(dirname "$0")/../frontend/assets/paper" && pwd)"
+OUT="$(cd "$(dirname "$0")/../shared/assets/paper" && pwd)"
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 for f in arena_round arena_information signal_game; do

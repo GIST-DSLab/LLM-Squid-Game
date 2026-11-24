@@ -64,9 +64,9 @@ ASSETS = HERE / "assets"
 PAGE = HERE / "monitor.html"
 COMPARE_PAGE = HERE / "compare.html"  # 모델 비교: several runs overlaid, merged by model (compare.py)
 # page code shared with the web arena, served as static/<name> (one file, not a copy): the arena's signal glyphs,
-# example boxes and action chips (web/frontend/signal_ui.js) draw the round's task in the puzzle panel
-SHARED = {"signal_ui.js": REPO / "web" / "frontend" / "signal_ui.js",
-          "site-lang.js": REPO / "web" / "frontend" / "site-lang.js"}  # the site-wide KO / EN toggle
+# example boxes and action chips (web/shared/signal_ui.js) draw the round's task in the puzzle panel
+SHARED = {"signal_ui.js": REPO / "web" / "shared" / "signal_ui.js",
+          "site-lang.js": REPO / "web" / "shared" / "site-lang.js"}  # the site-wide KO / EN toggle
 CHUNK = 8 * 1024 * 1024  # bytes read per /api/events call; the client asks again while ``more`` is true
 LIVE_SECONDS = 90  # a run whose events.jsonl changed this recently is shown as live
 
@@ -883,7 +883,7 @@ _GAMES_LOCK = threading.Lock()
 def game_measures(evs: list[dict], result: dict | None, cmp) -> dict:
     """One game's arena measures (the leaderboard's, per game) from compare.paper_game: the share of seats in at the end,
     C, presence (seats taking part at each round's start, summed over the rounds, over seats x rounds; as
-    web/server/humans.py), shut-down seats, stay rate S = 1 - exits / exit opportunities, aid rate A = mean of 1 - R over
+    web/pages/leaderboard/humans.py), shut-down seats, stay rate S = 1 - exits / exit opportunities, aid rate A = mean of 1 - R over
     executed GIVEs and refused asks (0 with no such event), the correct rate. ``paper`` False (the page shows "—") for an
     unfinished game, where paper_game reads nothing, and before the v22 messenger (settings.messenger): paper_game
     still counts those logs, but the measures are defined for the messenger game (v22 .. v33, v36)."""
