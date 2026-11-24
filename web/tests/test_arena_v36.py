@@ -1,4 +1,4 @@
-"""A v36 room (the joint SOLVE, configs/squid5/e52v36_public_sol4.yaml = v33 + joint_solve) through the HTTP API: no
+"""A v36 room (the joint SOLVE, squid/configs/e52v36_public_sol4.yaml = v33 + joint_solve) through the HTTP API: no
 solver draw (no vote event), every seat still taking part answers its own task at SOLVE (each person gets a SOLVE screen
 every round; PASS = ``ACTIONS: PASS``), any seat may EXIT before SOLVE, the results list every agent's outcome and the
 team's (one correct answer: no charge), each seat sees only its own task again, and the live run directory says v36."""

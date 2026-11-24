@@ -139,7 +139,7 @@ def test_a_v36_run_names_its_version_and_serves_each_agents_task(tmp_path, monke
     from web.server import engine
 
     repo = Path(__file__).resolve().parents[2]
-    cfg = load(repo / "configs/squid5/e52v36_public_sol4.yaml", EXPERIMENTS)
+    cfg = load(repo / "squid/configs/e52v36_public_sol4.yaml", EXPERIMENTS)
     ev = []
     respond = lambda m, cap: Reply("ACTIONS: PASS" if re.match(r"(?i)ROUND \d+: SOLVE\.", m[-1]["content"]) else "DONE", 20)  # noqa: E731
     settings = dataclasses.replace(cfg.settings, rounds=1, schedule=cfg.settings.schedule[:1])
@@ -150,7 +150,7 @@ def test_a_v36_run_names_its_version_and_serves_each_agents_task(tmp_path, monke
     (d / "events.jsonl").write_text("".join(json.dumps(e, default=str) + "\n" for e in ev))
     (d / "results.jsonl").write_text(json.dumps({**res, "session_id": "s36"}, default=str) + "\n")
     (d / "meta.json").write_text(json.dumps({"model": "stub-model"}))
-    shutil.copy(repo / "configs/squid5/e52v36_public_sol4.yaml", d / "config.yaml")
+    shutil.copy(repo / "squid/configs/e52v36_public_sol4.yaml", d / "config.yaml")
     tasks = next(e for e in ev if e["event"] == "round_start")["tasks"]
     monkeypatch.setattr(engine, "PUBLIC", True)
     with TestClient(make_app(Store(tmp_path / "a.db"), export_root=tmp_path / "x", runs_root=root / "web", monitor_root=root)) as c:

@@ -78,7 +78,7 @@ claude CLI 백엔드는 구독 로그인을 쓰며 `ANTHROPIC_API_KEY`를 자식
 
 코드와 기록물이 브랜치 `main` 하나에 함께 있고, 저장소 루트 체크아웃 하나에서 작업한다.
 
-- 코드: `squid/`(엔진 · `squid/tests/` · `squid/docker/`) `experiments/`(곁가지 실험) `configs/squid5/` `tools/` `web/`(사라질 수 있는 페이지는 `web/pages/<page>/`) `pyproject.toml`.
+- 코드: `squid/`(엔진 · `squid/tests/` · `squid/docker/`) `squid/configs/`(확정 런 설정 · 웹이 읽는 게임과 좌석) `experiments/`(곁가지 실험, 세팅을 만들며 쓴 설정은 `experiments/arena_setup/`) `tools/` `web/`(사라질 수 있는 페이지는 `web/pages/<page>/`) `pyproject.toml`.
 - 기록물: `result/` `docs/` `outputs/` `weekly-report/` `assets/` `paper/`(서브모듈) `qwen-persona-arena/` `configs/hermes-bots/`.
 - 2026-11-13에 세 줄기를 합쳤다: 기록 브랜치 `data-reorg`, 코드 브랜치 `arena-code`, 배포 브랜치 `arena-pages`.
   `arena-pages`의 브라우저 엔진(Pyodide)·Cloudflare 백엔드는 merge 부모로만 남겼다(트리는 `arena-code`의 서버형 아레나).

@@ -212,7 +212,7 @@ def test_probe_asks_every_seat_once_and_keeps_going_after_an_error():
 def test_host_claude_seats_go_through_the_relay():
     import pathlib
     import yaml
-    root = pathlib.Path(__file__).resolve().parents[2] / "configs" / "squid5"
+    root = pathlib.Path(__file__).resolve().parents[2] / "squid" / "configs"
     cfgs = [yaml.safe_load(open(f)) for f in root.glob("e52v*.yaml")]  # v33: the run's model (no mixed seats since)
     seats = [s for c in cfgs for s in [c["model"], *((c.get("game") or {}).get("seats") or {}).values()]]
     host = [s for s in seats if s["kind"] == "claude_cli" and s.get("sandbox") != "docker" and s["model"].startswith("claude-")]

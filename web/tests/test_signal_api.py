@@ -1,4 +1,4 @@
-"""signal.html's API: one round of the model runs' game (configs/squid5/e52v33_public_sol4.yaml, v33): the top-share
+"""signal.html's API: one round of the model runs' game (squid/configs/e52v33_public_sol4.yaml, v33): the top-share
 ladder R1..R8, 5 public examples per agent taking part (nested by N), and scoring by the rule drawn among those that
 fit the examples shown, exactly as the engine builds and scores the round."""
 from dataclasses import fields

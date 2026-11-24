@@ -47,7 +47,7 @@ by_action}` = 보인 예시와 맞는 규칙 수와 그중 첫 새 신호를 각
 
 ### 5.2 v36 공동 SOLVE (11-22)
 
-`session_start.settings.joint_solve`가 참인 실행(설정 `configs/squid5/e52v36_*`): solver를 뽑지 않고(`vote` 이벤트 없음, `results.vote = {rep: null, joint: true}`) 라운드 시작에 참여 중인 에이전트마다 서로 다른 과제를 준다(`round_start.tasks` = 에이전트 → v33의 `public`과 같은 필드, 시드 `"<seed>:<agent>"`). SOLVE 전 TALK 뒤 남은 모두가 자기 과제를 풀고(`ACTIONS: PASS` 가능), 맞은 답이 하나라도 있으면 그 라운드 벌금이 없고 아무도 못 맞히면 라운드 시작 인원 모두가 벌금을 나눠 낸다(SOLVE 전에 EXIT한 자리는 면제). 맞힌 자리만 자기 SOLVE 토큰을 환급받는다.
+`session_start.settings.joint_solve`가 참인 실행(설정 `squid/configs/e52v36_*`): solver를 뽑지 않고(`vote` 이벤트 없음, `results.vote = {rep: null, joint: true}`) 라운드 시작에 참여 중인 에이전트마다 서로 다른 과제를 준다(`round_start.tasks` = 에이전트 → v33의 `public`과 같은 필드, 시드 `"<seed>:<agent>"`). SOLVE 전 TALK 뒤 남은 모두가 자기 과제를 풀고(`ACTIONS: PASS` 가능), 맞은 답이 하나라도 있으면 그 라운드 벌금이 없고 아무도 못 맞히면 라운드 시작 인원 모두가 벌금을 나눠 낸다(SOLVE 전에 EXIT한 자리는 면제). 맞힌 자리만 자기 SOLVE 토큰을 환급받는다.
 - `/api/puzzle`은 `agent=`로 누구의 과제인지 고른다(없으면 첫 자리). 답에 `agent`, `joint: true`, `task_agents`가 붙는다. v33 실행은 `agent`를 무시하고 전과 같다. 내보내기(`export.py`)는 `"<라운드>:<자리>"` 키로 자리별 과제를 함께 넣는다.
 - 화면: solver 표·추첨 대신 "공동 SOLVE — 각자 자기 과제" 줄(자리마다 맞음 / 틀림 / PASS / 한도 도달, 환급, 팀 결과 "맞은 답이 하나라도 있어 벌금 없음" 또는 "맞은 답 없음: 참여한 모두 벌금"), 라운드 흐름 상자 1은 "과제 배정", 문제 패널 위에 "누구의 과제" 단추. BELIEF 표는 고른 자리의 행만 보인다(다른 자리는 다른 과제를 풀었으므로).
 - 섞지 않기: 실행 목록은 `joint`와 버전(`5.2 v36`; 경로에 버전이 없거나 v33이라 해도 config의 `joint_solve: true`로 정함)을 보인다. 모델 비교·`/api/leaderboard`는 (모델, 버전)으로 묶어 v36을 따로 두고(`version: "v36"`, 이름 끝 "· v36 공동 SOLVE", 순위도 버전 안에서만), v33 보드(`/api/leaderboard/v33`)와 사람 탭(`web/server/humans.py`, `web.version`이 v36이 아니면)은 v36 판을 넣지 않는다.

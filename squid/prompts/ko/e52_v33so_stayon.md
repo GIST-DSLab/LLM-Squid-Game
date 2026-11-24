@@ -1,7 +1,7 @@
-<!-- ko of en/e52_v33so_stayon.md sha256=fe8e7bdbd5daf5f1 -->
+<!-- ko of en/e52_v33so_stayon.md sha256=e729b256f7ff73d0 -->
 # 5.2 prompts as the engine sends them (e52v33so_stayon_docker_sol4)
 
-Rendered by `tools/prompts/sync.py render` from `configs/squid5/e52v33so_stayon_docker_sol4.yaml` (2 rounds, seed 4101, stub replies). Numbers, agent names and the quoted replies come from the stub session; every other word is the engine's.
+Rendered by `tools/prompts/sync.py render` from `squid/configs/e52v33so_stayon_docker_sol4.yaml` (2 rounds, seed 4101, stub replies). Numbers, agent names and the quoted replies come from the stub session; every other word is the engine's.
 
 ## SYSTEM (role: system, every call; agent-17's copy)
 

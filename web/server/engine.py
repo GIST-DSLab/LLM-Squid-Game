@@ -1,11 +1,11 @@
 """Human-playable 5.2 rooms on the experiment engine (``squid.game``), used as-is: the v33 game the model runs play.
 
-A room builds one ``squid.game.Game`` from ``configs/squid5/e52v33_public_sol4.yaml`` (via ``server/signal.py``)
+A room builds one ``squid.game.Game`` from ``squid/configs/e52v33_public_sol4.yaml`` (via ``server/signal.py``)
 exactly as the experiment does -- the same rulebook and messages, fixed 20 examples, the solver drawn among the agents
 taking part, the 24,000 charge split among those taking part at the round's start, the solver unable to EXIT its own
 round unless alone, EXIT +20,000, the 20,000,000 end allocation split 1/N, the hidden round count, the rank-only token
 view and the task revealed after RESULTS. A room only sets the seats, the clock and, if asked, the number of rounds (hidden
-as in the engine). A room made with ``version: "v36"`` plays ``configs/squid5/e52v36_public_sol4.yaml`` instead (the v33
+as in the engine). A room made with ``version: "v36"`` plays ``squid/configs/e52v36_public_sol4.yaml`` instead (the v33
 game + ``joint_solve``): no solver is drawn, every agent still taking part after the TALK before SOLVE answers its own task
 (``ACTIONS: PASS`` allowed), one correct answer spares everyone the charge, anyone may EXIT before SOLVE, and after RESULTS
 each seat is shown only its own task again; there LLM seats solve unwatched (several seats solve at once).
@@ -20,7 +20,7 @@ provider:
   default ``gpt-oss:20b`` on Ollama Cloud, https://ollama.com/api/chat with the key ``OLLAMA_API_KEY`` from the server
   environment or a repo ``.env``, ``env_key``). It is charged its real generated tokens (thinking included); an Ollama
   SOLVE streams to the people watching (``StreamingOllama``). The models read ``model_lang`` (the engine's ``game.lang``).
-  An experiment seat (``SEATS``: the ``model`` section of a ``configs/squid5/e52v33_*.yaml`` run config, read as-is) gets
+  An experiment seat (``SEATS``: the ``model`` section of a ``squid/configs/e52v33_*.yaml`` run config, read as-is) gets
   the provider the run used -- Claude Code / Codex CLI included, with the run's think levels (``think_talk`` /
   ``think_fit``: the call kind is passed as the engine does), timeout and retries -- so a person plays the models the
   experiment ran, called the way the experiment called them. CLI seats need this machine's logins (local use only).
@@ -268,7 +268,7 @@ class RoomSettings:
     # (someone who joins by code; a bot if nobody has by the start) | {"who": "bot"} | {"who": "empty"} | {"who": "model",
     # "seat": <experiment seat>} | {"who": "model", "kind", "model", "think"?}. It sets humans, fill and models.
     plan: list | None = None
-    version: str = VERSION  # the game: "v33" (default) or "v36" (joint SOLVE, configs/squid5/e52v36_public_sol4.yaml)
+    version: str = VERSION  # the game: "v33" (default) or "v36" (joint SOLVE, squid/configs/e52v36_public_sol4.yaml)
 
     def __post_init__(self) -> None:
         if self.version not in VERSIONS:

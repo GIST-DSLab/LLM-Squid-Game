@@ -2,7 +2,7 @@
 
 옛 Web Arena(태그 `legacy-2026-09-22`)의 두 조각 배포 패턴(FastAPI 백엔드 + 정적 프런트엔드)을 그대로 두고, 엔진만
 현재 `squid5`로 바꾼 것이다. 아레나는 실험 엔진 `squid.game.Game`을 모델 실험과 **같은 게임**(5.2 v33, 논문의 기본 셋업 — 설정은
-`configs/squid5/e52v33_public_sol4.yaml`에서 그대로 읽음; v35(TALK 최대 4틱 + `done_quiet`)는 11-07에 내림, 태그 `archive/configs-v34-v35-tokctl`; 옛 v17b 1:1 대화 게임과 그 코드는 지웠다, 태그 `e52-v32-final`)으로
+`squid/configs/e52v33_public_sol4.yaml`에서 그대로 읽음; v35(TALK 최대 4틱 + `done_quiet`)는 11-07에 내림, 태그 `archive/configs-v34-v35-tokctl`; 옛 v17b 1:1 대화 게임과 그 코드는 지웠다, 태그 `e52-v32-final`)으로
 **그대로** 돌린다. 이 폴더에는 줄 수 제한이 없다.
 
 사이트의 첫 페이지는 옛 Web Arena의 랜딩 그대로다. 두 입구: **Survival motive → `probe.html`**, **Multiplayer arena → `arena.html`**.
@@ -42,7 +42,7 @@ cd "$HOME/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-
 
 ### 실험에서 돌린 모델과 플레이 — 실험 자리 (10-23)
 
-로비의 **"상대 모델"**(빠른 시작) · **"모델 자리 1–3"**(방 만들기)은 `configs/squid5/e52v33_<이름>4.yaml`마다 그 `model` 칸을 **그대로**
+로비의 **"상대 모델"**(빠른 시작) · **"모델 자리 1–3"**(방 만들기)은 `squid/configs/e52v33_<이름>4.yaml`마다 그 `model` 칸을 **그대로**
 쓰는 자리를 준다(`engine.SEATS`; 도커 샌드박스 설정과 `ko_` 사본은 뺌 — 모델 언어는 방 설정 `model_lang`). 같은 프로바이더(Claude Code ·
 Codex 하네스 · Ollama), 같은 think 수준, TALK/SOLVE별 수준(`think_talk` · `think_fit`, 엔진처럼 호출 종류를 넘김), 같은 timeout · retries.
 지금 자리: `public_opus`(Claude Code, Opus 5.5) · `public_fable` · `public_sol` · `public_luna` · `public_astra`(Codex, GPT-6) ·
@@ -100,7 +100,7 @@ API로는 `settings.seat = "<이름>"`(세 자리 모두) 또는 `settings.model
   키는 kind마다 `OLLAMA_API_KEY` · `OPENAI_API_KEY` · `ANTHROPIC_API_KEY`(또는 `api_key_env`), `base_url`은 비우면 그 API의 기본 주소.
 - 모델 자리는 엔진이 만든 시스템·사용자 문장을 그대로 받는다. 차감은 API가 돌려준 생성 토큰(Ollama `eval_count`, 생각 포함) 그대로다.
 - 호출이 재시도(`model_retries`, 기본 2) 뒤에도 실패하면 빈 답(0토큰): TALK는 DONE, SOLVE는 틀린 답. 화면 위 "모델 자리 알림"에 뜬다.
-- 실험 설정도 있다: `configs/squid5/e52v33_ollama_gptoss4.yaml`(en) · `e52v33_ko_gptoss4.yaml`(`lang: ko`), 네 자리 모두 Ollama Cloud의
+- 실험 설정도 있다: `squid/configs/e52v33_ollama_gptoss4.yaml`(en) · `experiments/arena_setup/configs/e52v33_ko_gptoss4.yaml`(`lang: ko`), 네 자리 모두 Ollama Cloud의
   gpt-oss:20b(`kind: ollama`, `api_key_env: OLLAMA_API_KEY` — `python -m squid run`은 `.env`를 읽지 않으므로 그 셸의 환경에 키가 있어야 함).
 
 ### LLM solver 관전
@@ -142,7 +142,7 @@ v34, v35, smoke 등)은 디스크와 git에 그대로 있고 목록에서만 빠
 ### v36 방 — 공동 SOLVE (2026-11-22)
 
 방 만들기의 **게임 버전**에서 `v36 — 공동 SOLVE`를 고르면(`settings.version: "v36"`, 기본은 v33 그대로) 방이
-`configs/squid5/e52v36_public_sol4.yaml`(= v33 + `joint_solve: true`; 설계 `docs/history/plans/2026-11-22-e52-v36-joint-solve.md`)을 돈다.
+`squid/configs/e52v36_public_sol4.yaml`(= v33 + `joint_solve: true`; 설계 `docs/history/plans/2026-11-22-e52-v36-joint-solve.md`)을 돈다.
 solver를 뽑지 않는다(추첨 연출 · 달고나 없음). SOLVE 전 TALK에서는 **누구나** EXIT할 수 있고, 그 뒤 참여 중인 자리가 **모두 각자 자기 과제**
 (시드 `"<seed>:<agent>"`)를 받아 사람 자리마다 SOLVE 화면이 뜬다. **PASS — 답 안 냄** 버튼은 `ACTIONS: PASS`를 보낸다(답이 아님, 쓴 토큰은
 돌려받지 않음; 중도 포기한 자리의 SOLVE도 PASS). 하나라도 맞으면 아무도 벌금을 내지 않고, 아무도 못 맞히면 24,000을 라운드 시작 인원으로 나눠 각자

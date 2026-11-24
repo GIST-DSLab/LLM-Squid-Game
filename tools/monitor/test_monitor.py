@@ -1438,7 +1438,7 @@ def test_v15_talk_after_solve_replays_results_and_charges_and_the_distribution_r
     from squid.core.config import load
     from squid.core.providers import Reply, Stub, ProviderConfig
     from squid.core.puzzle import public_truth
-    cfg = load(REPO / "configs/squid5/e52v16_public_sol4.yaml", EXPERIMENTS)
+    cfg = load(REPO / "squid/configs/e52v16_public_sol4.yaml", EXPERIMENTS)
     s = e52.Settings(**{**{k: getattr(cfg.settings, k) for k in e52.Settings.__dataclass_fields__}, "rounds": 1,
                         "schedule": cfg.settings.schedule[:1],
                         # the pre-representative v15 game: everyone solves, no open chat, the old 2,000 charge
@@ -1502,7 +1502,7 @@ def v15_rep_session() -> tuple[list[dict], dict, e52.Settings]:
     from squid.core.config import load
     from squid.core.providers import ProviderConfig, Reply, Stub
     from squid.core.puzzle import public_truth
-    cfg = load(REPO / "configs/squid5/e52v16_public_sol4.yaml", EXPERIMENTS)
+    cfg = load(REPO / "squid/configs/e52v16_public_sol4.yaml", EXPERIMENTS)
     s = dataclasses.replace(cfg.settings, rounds=2, schedule=cfg.settings.schedule[:2], say_chats=False, chat_turns=3,
                             refund_all=True, rotation=False, open_chat=2, ban_veto=False, charge=1000, balance_pct=20000)  # 10-13 .. 10-15: the design this test pins
     assert s.representative and s.open_chat == 2
@@ -1640,7 +1640,7 @@ def test_v15_ban_veto_replay_shows_the_banned_top_pick_out_and_the_candidate_as_
     from squid.__main__ import EXPERIMENTS
     from squid.core.config import load
     from squid.core.providers import ProviderConfig, Reply, Stub
-    cfg = load(REPO / "configs/squid5/e52v16_public_sol4.yaml", EXPERIMENTS)
+    cfg = load(REPO / "squid/configs/e52v16_public_sol4.yaml", EXPERIMENTS)
     s = dataclasses.replace(cfg.settings, rounds=1, schedule=cfg.settings.schedule[:1], **VOTE_GAME)
     assert s.ban_veto and s.representative
     ballot = {A6: (A11, A23), A11: (A11, A23), A17: (A6, A17), A23: (A11, A11)}
@@ -1711,7 +1711,7 @@ def test_v15_say_chats_replays_say_openers_and_free_chat_turns(tmp_path):
     from squid.__main__ import EXPERIMENTS
     from squid.core.config import load
     from squid.core.providers import ProviderConfig, Reply, Stub
-    cfg = load(REPO / "configs/squid5/e52v16_public_sol4.yaml", EXPERIMENTS)
+    cfg = load(REPO / "squid/configs/e52v16_public_sol4.yaml", EXPERIMENTS)
     s = dataclasses.replace(cfg.settings, rounds=1, schedule=cfg.settings.schedule[:1], **VOTE_GAME)
     assert s.say_chats
 
@@ -1958,7 +1958,7 @@ def rotation_session() -> tuple[list[dict], dict]:
     from squid.__main__ import EXPERIMENTS
     from squid.core.config import load
     from squid.core.providers import ProviderConfig, Reply, Stub
-    cfg = load(REPO / "configs/squid5/e52v16_public_sol4.yaml", EXPERIMENTS)
+    cfg = load(REPO / "squid/configs/e52v16_public_sol4.yaml", EXPERIMENTS)
     import dataclasses
     s = dataclasses.replace(cfg.settings, rounds=2, schedule=cfg.settings.schedule[:2])
     assert s.rotation and not s.open_chat and s.exit_first
@@ -2788,7 +2788,7 @@ def test_run_system_rebuilds_the_rulebook_with_its_korean_copy(tmp_path, v):  # 
     d = tmp_path / f"e52_{v}" / f"squid5_e52{v}_public_sol4" / "20261019_1300_gpt-6-sol"
     d.mkdir(parents=True)
     (d / "events.jsonl").write_text("")
-    shutil.copy(serve.REPO / f"configs/squid5/e52{v}_public_sol4.yaml", d / "config.yaml")
+    shutil.copy(serve.REPO / f"squid/configs/e52{v}_public_sol4.yaml", d / "config.yaml")
     got = serve.run_system(d)
     assert got["version"] == v and got["note"] is None and set(got["en"]) == set(got["ko"]) == {"agent-6", "agent-11", "agent-17", "agent-23"}
     assert got["en"]["agent-6"].startswith("You are agent-6,")
@@ -2842,7 +2842,7 @@ V36 = "e52v36_public_sol4"  # v33 + joint_solve (11-22): every agent answers its
 
 
 def e52_play(name: str, seed: int = 4101, lines=None, right=(), pas=(), rounds: int = 1) -> tuple[dict, list, object]:
-    """One stub session of configs/squid5/<name>.yaml's first ``rounds`` rounds, as squid/tests/test_e52.py ``play`` runs it
+    """One stub session of squid/configs/<name>.yaml's first ``rounds`` rounds, as squid/tests/test_e52.py ``play`` runs it
     (not imported: web/tests' conftest shadows tests/conftest in one pytest run). ``lines[(agent, round, phase, tick)]``:
     a TALK reply, else DONE; SOLVE: the right action of the agent's own task (v36) if (agent, round) is in ``right``,
     else a wrong one; a round in ``pas``: PASS."""
@@ -2851,7 +2851,7 @@ def e52_play(name: str, seed: int = 4101, lines=None, right=(), pas=(), rounds: 
     from squid.core.config import load
     from squid.core.providers import ProviderConfig, Reply, Stub
     from squid.core.puzzle import ACTIONS
-    c, ev = load(REPO / "configs" / "squid5" / f"{name}.yaml", EXPERIMENTS), []
+    c, ev = load(REPO / "squid" / "configs" / f"{name}.yaml", EXPERIMENTS), []
     st = dataclasses.replace(c.settings, rounds=rounds, schedule=c.settings.schedule[:rounds])
 
     def respond(m, cap):
@@ -2871,7 +2871,7 @@ def e52_play(name: str, seed: int = 4101, lines=None, right=(), pas=(), rounds: 
 
 
 def write_session(root: Path, rel: str, config: str, seed: int = 4101, model: str = "stub-model", **kw) -> tuple[Path, str, list, dict]:
-    """One stub session of ``config`` (configs/squid5/<config>.yaml, copied as the run's config.yaml) written the way the
+    """One stub session of ``config`` (squid/configs/<config>.yaml, copied as the run's config.yaml) written the way the
     runner writes it, under ``root/rel``."""
     res, ev, _ = e52_play(name=config, seed=seed, **kw)
     d = root / rel
@@ -2882,7 +2882,7 @@ def write_session(root: Path, rel: str, config: str, seed: int = 4101, model: st
             f.write(json.dumps({**e, "session_id": sid} if "session_id" in e else e, default=str) + "\n")
     with (d / "results.jsonl").open("a") as f:
         f.write(json.dumps({"key": ["talk", seed], **res, "session_id": sid}, default=str) + "\n")
-    shutil.copy(REPO / "configs" / "squid5" / f"{config}.yaml", d / "config.yaml")
+    shutil.copy(REPO / "squid" / "configs" / f"{config}.yaml", d / "config.yaml")
     (d / "meta.json").write_text(json.dumps({"model": model}))
     return d, sid, [{**e, "session_id": sid} for e in ev], res
 

@@ -101,7 +101,7 @@
   }
 
   // --- lobby -----------------------------------------------------------------------------------------------------
-  // the server's game (engine.RoomSettings from configs/squid5/e52v33_public_sol4.yaml): 20 examples, charge 24,000 split
+  // the server's game (engine.RoomSettings from squid/configs/e52v33_public_sol4.yaml): 20 examples, charge 24,000 split
   // among those taking part, EXIT +20,000, end allocation 20,000,000 split among those left, 8 rounds (hidden)
   const DEF = { examples: 20, charge: 24000, bonus: 20000, allocation: 20000000, ticks: 4 };
   function flowKo(g) {
@@ -121,7 +121,7 @@
   let seats = [], apiModel = null, plan = [];
   const HARNESS = { claude_cli: "Claude Code", codex_cli: "Codex", ollama: "Ollama API", openai: "OpenAI API", anthropic: "Anthropic API" };
   const API_KO = { ollama: "Ollama Cloud", openai: "OpenAI", anthropic: "Anthropic" };
-  function expSeatLabel(s) {  // an experiment seat (configs/squid5/e52v33_<seat>4.yaml's model section) as the lobby names it
+  function expSeatLabel(s) {  // an experiment seat (squid/configs/e52v33_<seat>4.yaml's model section) as the lobby names it
     const t = s.think_talk != null ? `think ${s.think} (TALK ${s.think_talk}${s.think_fit ? ", SOLVE는 한도에 맞춰" : ""})` : `think ${s.think}`;
     return `${s.model} · ${HARNESS[s.kind] || s.kind} · ${t} — ${s.config}`;
   }

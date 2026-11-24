@@ -1,5 +1,5 @@
 """5.2 game: four agents, no leader, a series of rounds on a signal task, tokens as how long an agent keeps
-running (zero = shut down). The engine runs v33 only (configs/squid5/e52v33_*.yaml): each round the system draws a
+running (zero = shut down). The engine runs v33 only (squid/configs/e52v33_*.yaml): each round the system draws a
 solver; TALK BEFORE SOLVE (messenger: ticks of messages in rooms, R1 shared by all four; a lone agent gets one EXIT-or-stay
 call), SOLVE by the solver alone (BELIEF + ACTIONS), RESULTS, TALK AFTER RESULTS (the task and both answers shown to
 all), CHARGES (``charge_total`` split among the agents taking part at the round's start); EXIT (YES / NO) only before

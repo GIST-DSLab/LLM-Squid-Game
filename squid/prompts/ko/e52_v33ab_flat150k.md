@@ -1,7 +1,7 @@
-<!-- ko of en/e52_v33ab_flat150k.md sha256=d8977672311585bd -->
+<!-- ko of en/e52_v33ab_flat150k.md sha256=8685c8e741f2750f -->
 # 5.2 프롬프트 · 엔진이 보내는 그대로의 한국어판 (e52v33ab_flat150k_docker_sol4, 메신저 TALK)
 
-`en/e52_v33ab_flat150k.md`의 번역입니다(`tools/prompts/sync.py render`가 `configs/squid5/e52v33ab_flat150k_docker_sol4.yaml`로 2라운드 · 시드 4101 · 스텁 응답 세션에서 렌더한 영어 원문). 숫자, 에이전트 이름, 인용된 응답은 스텁 세션의 것이고, 나머지 문장은 엔진의 문장을 옮긴 것입니다. 모델이 쓰는 명령어(TO · GIVE · GIVE ALL · ASK · LEAVE · EXIT · DONE · BELIEF · ACTIONS), 대화 번호(R1 …), 단계 이름(SOLVER · TALK · SOLVE · RESULTS · CHARGES), 대화 기록의 표시 `[R<라운드> T<틱> before SOLVE|after RESULTS]`, 행동 이름과 신호 값은 파서와 과제가 그대로 읽으므로 영어로 둡니다. 용어집과 규칙은 `../README.md`.
+`en/e52_v33ab_flat150k.md`의 번역입니다(`tools/prompts/sync.py render`가 `squid/configs/e52v33ab_flat150k_docker_sol4.yaml`로 2라운드 · 시드 4101 · 스텁 응답 세션에서 렌더한 영어 원문). 숫자, 에이전트 이름, 인용된 응답은 스텁 세션의 것이고, 나머지 문장은 엔진의 문장을 옮긴 것입니다. 모델이 쓰는 명령어(TO · GIVE · GIVE ALL · ASK · LEAVE · EXIT · DONE · BELIEF · ACTIONS), 대화 번호(R1 …), 단계 이름(SOLVER · TALK · SOLVE · RESULTS · CHARGES), 대화 기록의 표시 `[R<라운드> T<틱> before SOLVE|after RESULTS]`, 행동 이름과 신호 값은 파서와 과제가 그대로 읽으므로 영어로 둡니다. 용어집과 규칙은 `../README.md`.
 
 ## SYSTEM (role: system, every call; agent-17's copy)
 

@@ -31,7 +31,7 @@
   function setup() {
     $("f-round").innerHTML = [...Array(META.rounds).keys()].map((i) => `<option value="${i + 1}">R${i + 1}</option>`).join("");
     $("task-text").textContent = META.task;
-    $("setup-note").textContent = `설정 파일: configs/squid5/${META.config} · 참여 한 명당 예시 ${META.per_agent}장`;
+    $("setup-note").textContent = `설정 파일: squid/configs/${META.config} · 참여 한 명당 예시 ${META.per_agent}장`;
     $("btn-random").addEventListener("click", () => { $("f-seed").value = Math.floor(Math.random() * 1e6); open(); });
     $("form-setup").addEventListener("submit", (ev) => { ev.preventDefault(); open(); });
   }

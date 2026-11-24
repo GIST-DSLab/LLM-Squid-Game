@@ -91,7 +91,7 @@ def test_shipped_configs_load(tmp_path):
                                                    "gemma4:31b", "claude-haiku-4-5-20251001",
                                                    "claude-sonnet-5", "claude-fable-5-1", "gpt-6-astra", "glm-5.3-flash",
                                                    "gpt-6-luna", "gpt-6-sol", "claude-opus-5-5")}))
-    paths = sorted(p for p in (ROOT / "configs" / "squid5").glob("*.yaml") if re.match(r"refill_|e52v(1[6-9]|[2-9]\d)", p.name))
+    paths = sorted(p for p in (ROOT / "squid" / "configs").glob("*.yaml") if re.match(r"refill_|e52v(1[6-9]|[2-9]\d)", p.name))
     assert len(paths) >= 10
     for path in paths:
         text = re.sub(r"calibration: \S+", f"calibration: {tmp_path / 'cal.json'}", path.read_text())

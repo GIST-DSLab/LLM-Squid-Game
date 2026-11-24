@@ -10,11 +10,9 @@ COPY --from=node:22-slim /usr/local/lib/node_modules/npm /usr/local/lib/node_mod
 RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
  && npm install -g @anthropic-ai/claude-code@2.1.303 @openai/codex@0.162.1 && npm cache clean --force
 COPY tools/relay.py /app/tools/relay.py
-# the arena runs the experiment engine itself (web/server/engine.py imports squid from the repo root = /app)
+# the arena runs the experiment engine itself (web/server/engine.py imports squid from the repo root = /app); its game
+# definitions and seats come from squid/configs (web/server/signal.py reads them at import time)
 COPY squid /app/squid
-# web/server/signal.py reads the experiment configs (configs/squid5/e52v14*.yaml) at import time; without them the app
-# does not start
-COPY configs/squid5 /app/configs/squid5
 COPY web/server /app/web/server
 COPY web/frontend /app/web/frontend
 # pages that can come and go (web/pages/<page>: routes + static files), mounted by web/server/app.py

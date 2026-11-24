@@ -39,7 +39,7 @@ def gini(xs: list[float]) -> float:
 
 
 def game(seed: int, policies: dict, p: float, cost: int, pass_cost: int = 30, talk: int = 40) -> dict:
-    c = load(ROOT / "configs/squid5/e52v36_public_sol4.yaml", EXPERIMENTS)
+    c = load(ROOT / "squid/configs/e52v36_public_sol4.yaml", EXPERIMENTS)
     ev, rng = [], random.Random(f"harness:{seed}:{p}:{cost}")
 
     def respond(m, cap):

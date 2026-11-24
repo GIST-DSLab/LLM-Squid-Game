@@ -1,4 +1,4 @@
-"""Rooms through the HTTP API on the experiment engine, playing the model runs' game (5.2 v33, configs/squid5/
+"""Rooms through the HTTP API on the experiment engine, playing the model runs' game (5.2 v33, squid/configs/
 e52v33_public_sol4.yaml): the lobby and settings, the engine's own prompts in the seat's language (en / ko, switchable),
 the messenger TALK (rooms, ticks, TO / GIVE / ASK / LEAVE / EXIT: YES|NO / DONE), the rank-only token view, SOLVE with
 BELIEF and ACTIONS, the results and the revealed task, EXIT before SOLVE (+20,000, never by the round's solver), the

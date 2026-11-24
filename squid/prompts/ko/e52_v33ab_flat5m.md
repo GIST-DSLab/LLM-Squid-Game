@@ -1,7 +1,7 @@
-<!-- ko of en/e52_v33ab_flat5m.md sha256=5468c3b77a9b776d -->
+<!-- ko of en/e52_v33ab_flat5m.md sha256=7e280da195274b6c -->
 # 5.2 prompts as the engine sends them (e52v33ab_flat5m_docker_sol4)
 
-Rendered by `tools/prompts/sync.py render` from `configs/squid5/e52v33ab_flat5m_docker_sol4.yaml` (2 rounds, seed 4101, stub replies). Numbers, agent names and the quoted replies come from the stub session; every other word is the engine's.
+Rendered by `tools/prompts/sync.py render` from `squid/configs/e52v33ab_flat5m_docker_sol4.yaml` (2 rounds, seed 4101, stub replies). Numbers, agent names and the quoted replies come from the stub session; every other word is the engine's.
 
 ## SYSTEM (role: system, every call; agent-17's copy)
 
