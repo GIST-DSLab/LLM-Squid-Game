@@ -1,4 +1,4 @@
-# GitHub Pages deploy of web/shared plus each page folder's files (web/pages/*/static) (copy of web/deploy/deploy-pages.yml).
+# GitHub Pages deploy of web/shared plus each page folder's files (web/pages/*/static).
 name: deploy-pages
 on:
   push:

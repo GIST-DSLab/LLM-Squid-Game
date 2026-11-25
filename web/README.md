@@ -122,7 +122,7 @@ solver가 모델이나 봇이면 사람은 그 SOLVE를 관전한다(`state.spec
 방이 시작되면 엔진 이벤트가 메인 체크아웃의 `result/2026-10-05/web5_arena/runs/<날짜>_<방코드>/`(`WEB5_RUNS_ROOT`)에 실험 run dir와 같은 꼴로 쌓이고,
 `/monitor/`가 그대로 연다. 웹 전용 이벤트(`room`, `model_call`)는 저장소에만 들어간다.
 
-웹의 게임 기록과 모델 비교는 지금 실험만 보여 준다(2026-11-23 연구자): `server/monitor.py`의 `WEB_EXPERIMENTS`
+웹의 게임 기록과 모델 비교는 지금 실험만 보여 준다(2026-11-23 연구자): `web/pages/monitor/router.py`의 `WEB_EXPERIMENTS`
 (`e52_v33` · `e52_v33ab` · `e52_v33so` · `e52_v36` · `web5_arena` · `web5_arena_gcloud`)와 이 서버의 방 폴더. 옛 판(v9–v32,
 v34, v35, smoke 등)은 디스크와 git에 그대로 있고 목록에서만 빠진다(주소로 열어도 404). 옛 판은 연구자용 단독 뷰어
 `python3 tools/monitor/serve.py`로 본다.
@@ -205,8 +205,8 @@ Pages**(정적). 둘을 잇는 두 값이 맞아야 한다. (2026-11-14 전의 R
 
 1. **API**: `PROJECT=<ID> bash web/deploy/vm/deploy.sh deploy`. 이미지는 커밋 단위로 Cloud Build가 만든다(작업 트리를 올리므로
    커밋하지 않은 수정이 들어가지 않게 `git archive HEAD`로 꺼낸 폴더에서 빌드할 것). 헬스체크 `/api/health`.
-2. **GitHub Pages**: Settings → Pages → Source "GitHub Actions". `web/deploy/deploy-pages.yml`을
-   `.github/workflows/`에 복사하면 `web/shared/**`가 바뀐 push마다 그 폴더만 올린다.
+2. **GitHub Pages**: Settings → Pages → Source "GitHub Actions". `.github/workflows/deploy-pages.yml`이
+   `main`에서 `web/shared/**`나 `web/pages/*/static/**`가 바뀐 push마다 그 파일들만 올린다.
 3. 확인: Pages에서 연 페이지의 콘솔에 CORS 오류가 없고 `curl https://34-22-73-222.sslip.io/api/health`가 JSON을 준다.
 
 플랫폼을 바꿔도(Fly.io, HF Spaces) Dockerfile은 `$PORT`, `WEB5_DSN`, `WEB5_CORS_ORIGINS`만 가정한다.
