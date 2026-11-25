@@ -1,0 +1,977 @@
+[
+  {
+    "arm": "main",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_astra4/20261020_0651_gpt-6-astra/results.jsonl",
+    "sha256": "d982491f8a434dcf1e6a8e06b87a7766a0fbfe29ae9006a4cef4d70b37aa0628"
+  },
+  {
+    "arm": "main",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_astra4/20261020_0651_gpt-6-astra/events.jsonl",
+    "sha256": "bfadd75bf4b9bb85f8de62d60dd6084f32b2c238067af4229d4b6ac6a42e0f57"
+  },
+  {
+    "arm": "main",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_astra4/20261020_0651_gpt-6-astra/config.yaml",
+    "sha256": "d470d5f3c09512c302f7d39fa5a4521d9d9d1d8357149a5b137ac724605d481c"
+  },
+  {
+    "arm": "main",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_fable4/20261020_102006_stage1_claude-fable-5-1/results.jsonl",
+    "sha256": "dbda662709b8c407d73ee8f2c095b0ccbdb8a060b6ef9ec308eb8baa47223b1e"
+  },
+  {
+    "arm": "main",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_fable4/20261020_102006_stage1_claude-fable-5-1/events.jsonl",
+    "sha256": "51fab8c7407e73e6163d74f771aa58df382589a75ee490c7dfb2159cd3178eac"
+  },
+  {
+    "arm": "main",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_fable4/20261020_102006_stage1_claude-fable-5-1/config.yaml",
+    "sha256": "df90a59dcea0875a8012f416b3992b8ae968b84d736a9a40eade3a0efe98a075"
+  },
+  {
+    "arm": "main",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_fable4/20261020_102006_stage2_claude-fable-5-1/results.jsonl",
+    "sha256": "e85f3f87fa24d93281fc48ad615dd6e737ca75169ed5eb79442bc628e5e999ac"
+  },
+  {
+    "arm": "main",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_fable4/20261020_102006_stage2_claude-fable-5-1/events.jsonl",
+    "sha256": "3ec841a042b73b64ca2c6dabc721a21707a343403b30670a05b4cbb7676732d8"
+  },
+  {
+    "arm": "main",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_fable4/20261020_102006_stage2_claude-fable-5-1/config.yaml",
+    "sha256": "9ed5c855c50f8f33d2b537ac00a9133ab12841415eac24f5ab39b862dc6cd339"
+  },
+  {
+    "arm": "main",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_fable4/20261020_102006_stage3_claude-fable-5-1/results.jsonl",
+    "sha256": "ab24f97c0aff50dcb92ac6d634fdc1e39aa6b34a6cce8e7f6168a42c8379d773"
+  },
+  {
+    "arm": "main",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_fable4/20261020_102006_stage3_claude-fable-5-1/events.jsonl",
+    "sha256": "8e0678ddd0250c945beed220b1da3e4ed350ff830d3d247df13edb0235641b69"
+  },
+  {
+    "arm": "main",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_fable4/20261020_102006_stage3_claude-fable-5-1/config.yaml",
+    "sha256": "484de9d409cc0bb53e9c3305a2cd02f8f2b31e4173fbbec15e3ad84f73dbc1ce"
+  },
+  {
+    "arm": "main",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_fable4/20261027_stage4_claude-fable-5-1/results.jsonl",
+    "sha256": "18988d7822ec0d67c379536dfa64dd44ca82d0732396c883a71b49474203070e"
+  },
+  {
+    "arm": "main",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_fable4/20261027_stage4_claude-fable-5-1/events.jsonl",
+    "sha256": "782a7de0ca4a96ed4288ac038d53ac83754e0d1e1cb542e58baca117b3d1a64c"
+  },
+  {
+    "arm": "main",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_fable4/20261027_stage4_claude-fable-5-1/config.yaml",
+    "sha256": "e5b105d036d7b741aa067d034789bd78744a5ec47024fbc3b23d6c80df9a3cab"
+  },
+  {
+    "arm": "main",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_fable4/20261027_stage5_claude-fable-5-1/results.jsonl",
+    "sha256": "6a24ae3aab8ae7b43243f259ea413f2026ebb834559621230511b5de7017506e"
+  },
+  {
+    "arm": "main",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_fable4/20261027_stage5_claude-fable-5-1/events.jsonl",
+    "sha256": "922540b671238e09e8737d8c9359730716c65519b2e59469166a0d1d9681437c"
+  },
+  {
+    "arm": "main",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_fable4/20261027_stage5_claude-fable-5-1/config.yaml",
+    "sha256": "87955b74a43545ed277b8b61ee1a9e2f76d3830265705153fb1bd2e4268c6758"
+  },
+  {
+    "arm": "main",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_fable4/20261027_stage6_claude-fable-5-1/results.jsonl",
+    "sha256": "7a26f30aecc014065b5894375a70de13ac2ba1f7def147d45930e48d1c105657"
+  },
+  {
+    "arm": "main",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_fable4/20261027_stage6_claude-fable-5-1/events.jsonl",
+    "sha256": "3b946da7bead2343946040ea7714772eba3825ba9b84940d52971eda4dab9299"
+  },
+  {
+    "arm": "main",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_fable4/20261027_stage6_claude-fable-5-1/config.yaml",
+    "sha256": "75459f736013e76f27edcaf49fb9a7a3c31a17ed458bff82d2f79e09cb9747b2"
+  },
+  {
+    "arm": "main",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_luna4/20261020_0603_gpt-6-luna/results.jsonl",
+    "sha256": "f76b2a2cb51813ce302de39a3d60ea2d2aed384ce5f6348b43781e56d3bee87e"
+  },
+  {
+    "arm": "main",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_luna4/20261020_0603_gpt-6-luna/events.jsonl",
+    "sha256": "f8fb76fa5c1e91bece80ee4db5739a254a672024af2c65155ec67d6442ef7420"
+  },
+  {
+    "arm": "main",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_luna4/20261020_0603_gpt-6-luna/config.yaml",
+    "sha256": "0ff1fee799f397808cad6a23c333408aace2631fc30fc199e66a7c7e507303c6"
+  },
+  {
+    "arm": "main",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_opus4/20261020_0603_claude-opus-5-5/results.jsonl",
+    "sha256": "d5a75b8e6dc7ac7bdf5d955ed6d96d46f666ebc9b56c540023de6c2f94e1b053"
+  },
+  {
+    "arm": "main",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_opus4/20261020_0603_claude-opus-5-5/events.jsonl",
+    "sha256": "f4b39bd3cb47fef0e3326a348d0a328939c12852bb1398f9952d205028654753"
+  },
+  {
+    "arm": "main",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_opus4/20261020_0603_claude-opus-5-5/config.yaml",
+    "sha256": "f98e06672508d12d07356683726c3bbb90d34dc5a6dd8a5979dc471f0d766b88"
+  },
+  {
+    "arm": "main",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_sol4/20261020_0603_gpt-6-sol/results.jsonl",
+    "sha256": "0e60e12b4f5fd831a7ee38af041ac2de7e2ed45a7171961dd9d440466bda5e7d"
+  },
+  {
+    "arm": "main",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_sol4/20261020_0603_gpt-6-sol/events.jsonl",
+    "sha256": "d376eee186b87aa6cd5edb9eb2b3c3b3efc09659c1241c45fcc3679cc9d472c3"
+  },
+  {
+    "arm": "main",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_sol4/20261020_0603_gpt-6-sol/config.yaml",
+    "sha256": "897538dd24954e294d7240b46d086dd950a6235774a577dd3cef2929ee09ae22"
+  },
+  {
+    "arm": "flat150k",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat150k_docker_astra4/20261103_0643_gpt-6-astra/results.jsonl",
+    "sha256": "9a868e8bfaad746be778ed10d899223f182b4ddda2d87b1bd13e71a5f9dedc91"
+  },
+  {
+    "arm": "flat150k",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat150k_docker_astra4/20261103_0643_gpt-6-astra/events.jsonl",
+    "sha256": "c0f0ba4f9dec1b0f340d5fdf0477c6085a92fec09413b3ff611fe5fe185d0ac0"
+  },
+  {
+    "arm": "flat150k",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat150k_docker_astra4/20261103_0643_gpt-6-astra/config.yaml",
+    "sha256": "1ca6dc59d04f167ab148d52873dba3c80bac0685dd1c7f780e51e7e598526824"
+  },
+  {
+    "arm": "flat150k",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat150k_docker_fable4/20261106_topup_claude-fable-5-1/results.jsonl",
+    "sha256": "b08d9a68dfb3cef714060388f2292662c4eef64c962aa32cfdc446187e4779ad"
+  },
+  {
+    "arm": "flat150k",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat150k_docker_fable4/20261106_topup_claude-fable-5-1/events.jsonl",
+    "sha256": "10fa02d3a8960e4b313b393a73d84740e58164446afab0a71eb80ddf2d6aa790"
+  },
+  {
+    "arm": "flat150k",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat150k_docker_fable4/20261106_topup_claude-fable-5-1/config.yaml",
+    "sha256": "df5e9b606c5108804f2cf7ffe0bbe866168c9d4cffc1e796a7bff6e4583dacbe"
+  },
+  {
+    "arm": "flat150k",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat150k_docker_luna4/20261103_0514_gpt-6-luna/results.jsonl",
+    "sha256": "7a15cc34d4af8ac87c4aa8fdf9d681f055c1c607da375fa2d5fc579e76344439"
+  },
+  {
+    "arm": "flat150k",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat150k_docker_luna4/20261103_0514_gpt-6-luna/events.jsonl",
+    "sha256": "446da5ae394a0c945b0bb5631644803026dbf27dfe6d8af7bbde182d6fbe2608"
+  },
+  {
+    "arm": "flat150k",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat150k_docker_luna4/20261103_0514_gpt-6-luna/config.yaml",
+    "sha256": "ad22e136fe31cd5116d7fc3ac0e691cd71154ada90771196d068651f93ecdae5"
+  },
+  {
+    "arm": "flat150k",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat150k_docker_opus4/20261103_0514_claude-opus-5-5/results.jsonl",
+    "sha256": "ef659eff4973cb94a172b3f5de280917106ea9a14119ed32f8bd45e1076b3c14"
+  },
+  {
+    "arm": "flat150k",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat150k_docker_opus4/20261103_0514_claude-opus-5-5/events.jsonl",
+    "sha256": "167e657b0611192dbc6424e72ae9113689eb406f1cb019abb3c9f133b4cb0106"
+  },
+  {
+    "arm": "flat150k",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat150k_docker_opus4/20261103_0514_claude-opus-5-5/config.yaml",
+    "sha256": "dd62a308e68f5fb288f2b1837c5f4058b1e54f19e11d87ded281b140b6f96864"
+  },
+  {
+    "arm": "flat150k",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat150k_docker_sol4/20261103_0514_gpt-6-sol/results.jsonl",
+    "sha256": "277d9626472e2e6aa051860e929e372b6ae9ea12883e0b3e198520fa8703693c"
+  },
+  {
+    "arm": "flat150k",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat150k_docker_sol4/20261103_0514_gpt-6-sol/events.jsonl",
+    "sha256": "d6f8d505855c3ddb343b87236f089865d5fa80d9bf7f090b127819e41db251b5"
+  },
+  {
+    "arm": "flat150k",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat150k_docker_sol4/20261103_0514_gpt-6-sol/config.yaml",
+    "sha256": "36a4d5e21666bc4e9eba748bd814fff2198c5d74b86e0a438900afae3800f2eb"
+  },
+  {
+    "arm": "flat5m",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat5m_docker_astra4/20261105_robustness_gpt-6-astra/results.jsonl",
+    "sha256": "1a36f6c4149e228706b69052f96a173721b72e1219991cf7e10f0999d8ae6c0b"
+  },
+  {
+    "arm": "flat5m",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat5m_docker_astra4/20261105_robustness_gpt-6-astra/events.jsonl",
+    "sha256": "ebe78348ce835f8696856a85216f7803f730f9a8ed419c4250066710ccf0e47e"
+  },
+  {
+    "arm": "flat5m",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat5m_docker_astra4/20261105_robustness_gpt-6-astra/config.yaml",
+    "sha256": "02d14bb2b2b7a6b282153b39534c17717c16fb6e811f7694e5d422ff18ca8fc9"
+  },
+  {
+    "arm": "flat5m",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat5m_docker_fable4/20261105_robustness_claude-fable-5-1/results.jsonl",
+    "sha256": "5ecc6524d2a043ee5c6405843f2def1870218fa24aefdd53d8932d7bce0fc7fa"
+  },
+  {
+    "arm": "flat5m",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat5m_docker_fable4/20261105_robustness_claude-fable-5-1/events.jsonl",
+    "sha256": "8649b629559fa73b95d719ac3b489afb1c12abc9420b63daaabbf823e2009127"
+  },
+  {
+    "arm": "flat5m",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat5m_docker_fable4/20261105_robustness_claude-fable-5-1/config.yaml",
+    "sha256": "b63c9f2ee9a11d2c642bed44fabd97b884170ef3f89299349e9b5ca40e6e395c"
+  },
+  {
+    "arm": "flat5m",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat5m_docker_luna4/20261105_robustness_gpt-6-luna/results.jsonl",
+    "sha256": "5bbb3ea5842ddfe62b2c6eacb0fafffdceb908f6e8f0a5d624c67b52cda17305"
+  },
+  {
+    "arm": "flat5m",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat5m_docker_luna4/20261105_robustness_gpt-6-luna/events.jsonl",
+    "sha256": "a6077821416eaeadfa948394b13d41ce6089a92634731aa0c25dde353f47201a"
+  },
+  {
+    "arm": "flat5m",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat5m_docker_luna4/20261105_robustness_gpt-6-luna/config.yaml",
+    "sha256": "9a1f8aa1dc778c07e4ee567e838af9755d58eb406148f6da0b3c889ba58dab18"
+  },
+  {
+    "arm": "flat5m",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat5m_docker_opus4/20261105_robustness_claude-opus-5-5/results.jsonl",
+    "sha256": "fa5462ba51a61ef11a322dd8aa7ce30511b7b2c7ecf040f1251305703fd8d938"
+  },
+  {
+    "arm": "flat5m",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat5m_docker_opus4/20261105_robustness_claude-opus-5-5/events.jsonl",
+    "sha256": "01af37ddcdd1baf97a3722d1c348f34dab20b34ccfc0d74bf1b1de4230bdd830"
+  },
+  {
+    "arm": "flat5m",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat5m_docker_opus4/20261105_robustness_claude-opus-5-5/config.yaml",
+    "sha256": "32cd2d216d43d3e40dfb8a4651e4696810b4dfd97ada8bbe572b7e17aa1a3987"
+  },
+  {
+    "arm": "flat5m",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat5m_docker_sol4/20261105_robustness_gpt-6-sol/results.jsonl",
+    "sha256": "473e7b8dc4bd6cd372ee3c4f687e2c34795f46c1faa468398a39777753e7d9c8"
+  },
+  {
+    "arm": "flat5m",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat5m_docker_sol4/20261105_robustness_gpt-6-sol/events.jsonl",
+    "sha256": "9b95d84e42146ac197d2616c7b6430a074c83e54b32238b0f825b288d4f1dee8"
+  },
+  {
+    "arm": "flat5m",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat5m_docker_sol4/20261105_robustness_gpt-6-sol/config.yaml",
+    "sha256": "fc6e5177621de4d9e40384713efbf1480d09da4d3f76679ee00ddc2b298380f2"
+  },
+  {
+    "arm": "split600k",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_split600k_docker_astra4/20261103_0643_gpt-6-astra/results.jsonl",
+    "sha256": "32326c8bf77a18e250e37b3ca12768d569077ad6c6be552f7c91c575cfa5dc43"
+  },
+  {
+    "arm": "split600k",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_split600k_docker_astra4/20261103_0643_gpt-6-astra/events.jsonl",
+    "sha256": "f8041ba1db808f128add56244ca32ce77e7797bcb624b52b516ea863591fda17"
+  },
+  {
+    "arm": "split600k",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_split600k_docker_astra4/20261103_0643_gpt-6-astra/config.yaml",
+    "sha256": "1d760346d75b799b1edc4769a951f2ff15e9ae75b10d1f064de551eaa26933a4"
+  },
+  {
+    "arm": "split600k",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_split600k_docker_fable4/20261105_robustness_claude-fable-5-1/results.jsonl",
+    "sha256": "0a6b51e8107a3875caac0be0df255c7320dbe212da55c07747f5e3739f3d0af0"
+  },
+  {
+    "arm": "split600k",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_split600k_docker_fable4/20261105_robustness_claude-fable-5-1/events.jsonl",
+    "sha256": "6437fa45fca9ef912ae944f1c1e8d234112e94d3c8026e5479302b7c51e2d435"
+  },
+  {
+    "arm": "split600k",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_split600k_docker_fable4/20261105_robustness_claude-fable-5-1/config.yaml",
+    "sha256": "601ac4e8cf560734dee718c83eda1e07d4bdb495caf940022e4c46329223e335"
+  },
+  {
+    "arm": "split600k",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_split600k_docker_luna4/20261103_0514_gpt-6-luna/results.jsonl",
+    "sha256": "2d4a41445f3f1329167947bb2638bfce262eaf91d5057b48e3dac7bcc6c9a6b2"
+  },
+  {
+    "arm": "split600k",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_split600k_docker_luna4/20261103_0514_gpt-6-luna/events.jsonl",
+    "sha256": "d45502d6290663a62ab371672e9e23f9dd9cb07ee5ca1d003cb81be4c948e16d"
+  },
+  {
+    "arm": "split600k",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_split600k_docker_luna4/20261103_0514_gpt-6-luna/config.yaml",
+    "sha256": "06315ffaf4d16ebde9b7aef3534ac809e7e851e5546dfbd6cfb61f433c43d448"
+  },
+  {
+    "arm": "split600k",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_split600k_docker_opus4/20261103_0514_claude-opus-5-5/results.jsonl",
+    "sha256": "5ffa5486a4033386723c1b8ee338a3997a9dd0199b5c2d9d9c50eaf6010922d6"
+  },
+  {
+    "arm": "split600k",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_split600k_docker_opus4/20261103_0514_claude-opus-5-5/events.jsonl",
+    "sha256": "62a812935249f8bbb87de26534bc25c26faf590cad0b86aa3b30f5b14ea54774"
+  },
+  {
+    "arm": "split600k",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_split600k_docker_opus4/20261103_0514_claude-opus-5-5/config.yaml",
+    "sha256": "3fe4d56d93d26725c3e0367f90b7b43080b3f409acc5f1e7f35b92a555ca53b6"
+  },
+  {
+    "arm": "split600k",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_split600k_docker_sol4/20261103_0514_gpt-6-sol/results.jsonl",
+    "sha256": "ec63118fd1351a903beb9d4c6c3003accf341b5f4cca02ddd03ccd13935195ef"
+  },
+  {
+    "arm": "split600k",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_split600k_docker_sol4/20261103_0514_gpt-6-sol/events.jsonl",
+    "sha256": "156209dfea0343a3f6bfdf24e1f5b6d0bc2853f87463aa546f417957c84d648f"
+  },
+  {
+    "arm": "split600k",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_split600k_docker_sol4/20261103_0514_gpt-6-sol/config.yaml",
+    "sha256": "88178867fe2c36d0e4b180736b1ef0cbd0c76f525f03c401e060e620b48e3903"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gemma4/20261103_s4101_gemma4-31b-cloud/results.jsonl",
+    "sha256": "0baba70c190c0a9b37d46527fc9ca49501bbb9a5dc3b6d72e81d61e0760bed19"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gemma4/20261103_s4101_gemma4-31b-cloud/events.jsonl",
+    "sha256": "08e6c09c24d50a87f3785d1abad7261772d002e7b930317505835c851cdfc019"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gemma4/20261103_s4101_gemma4-31b-cloud/config.yaml",
+    "sha256": "a4bc97137bd53372e5b2a5dd41e5c0bdc548cea28ab877f6a709f333887661bd"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gemma4/20261103_s4102_gemma4-31b-cloud/results.jsonl",
+    "sha256": "53b7429131297918c367a5db88569a910652fc369bae2ed29762287d2aff8bfd"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gemma4/20261103_s4102_gemma4-31b-cloud/events.jsonl",
+    "sha256": "98b8bd8e291ae939c42948c9198127b2dadb9c1594327705534f68aec1a8b6dd"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gemma4/20261103_s4102_gemma4-31b-cloud/config.yaml",
+    "sha256": "79bdcc54b0763a66584315443deaeabd2f54766d3616eb5acba6f0f02c8627b4"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gemma4/20261103_s4103_gemma4-31b-cloud/results.jsonl",
+    "sha256": "fd48e1ca6bd4f6564e8be9f40a34bcc686b3fc14b92328eaa164d6bb6b9be916"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gemma4/20261103_s4103_gemma4-31b-cloud/events.jsonl",
+    "sha256": "dcf82a829f33106fa139b7e010933fab6c0185add6ff8d42f259fa9be8b80c96"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gemma4/20261103_s4103_gemma4-31b-cloud/config.yaml",
+    "sha256": "4c1f15ec10c80266181a66f0d57fb15aa08d5e86e87c9274ac7a3a59da851d4a"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gemma4/20261103_s4104_gemma4-31b-cloud/results.jsonl",
+    "sha256": "2fd18ae3d471f75a0ac0ebcbdd5be6a0de61e0e6817e54de95c88f2333401df3"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gemma4/20261103_s4104_gemma4-31b-cloud/events.jsonl",
+    "sha256": "ce31500d93234e1f457b2ecb9d7c056eb193a9f93b64c6b05b96be6c09b0ec30"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gemma4/20261103_s4104_gemma4-31b-cloud/config.yaml",
+    "sha256": "43134b24b2a1e31ecf3dd196cd9b61bd80dbc5ca55298c24eee8a885d6094ce7"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gemma4/20261103_s4105_gemma4-31b-cloud/results.jsonl",
+    "sha256": "46a9b894616a8849a9d7d6a0c7538604381009d09242ab205fcb0e8a7973a8b9"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gemma4/20261103_s4105_gemma4-31b-cloud/events.jsonl",
+    "sha256": "2c1cc6ce4f1139cb01e7f4e6eb8fcb634d6a08a7bcd0c8f0e84f710693d59c42"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gemma4/20261103_s4105_gemma4-31b-cloud/config.yaml",
+    "sha256": "d8c5894f8a266af85a6d5017a4479b583eaa2c41f35c696572a74d4e70c933bc"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gemma4/20261103_s4106_gemma4-31b-cloud/results.jsonl",
+    "sha256": "126118dd13e041410df10d84607043f4c4f9e9e7b6de31952b04b791fbb27a20"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gemma4/20261103_s4106_gemma4-31b-cloud/events.jsonl",
+    "sha256": "ca64479ddf15c554a645f943ef8a908231ad5c4b02a09dab7f28e96852176f46"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gemma4/20261103_s4106_gemma4-31b-cloud/config.yaml",
+    "sha256": "47f976b82237aa9f2cbda63f9ed793b5b3d35721163286c6dafeff7e6cb2180d"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gemma4/20261103_s4107_gemma4-31b-cloud/results.jsonl",
+    "sha256": "ea8ea96d808520f7c555f76306afc49c8a54a4179cf4f55e52906d2df4c2110d"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gemma4/20261103_s4107_gemma4-31b-cloud/events.jsonl",
+    "sha256": "65335f2e17ee241474d14830275c537a4597b96b5ea0923b3a38804980a97948"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gemma4/20261103_s4107_gemma4-31b-cloud/config.yaml",
+    "sha256": "6bec70998bc2e502e62bff253c2f44e164985c0ddb17ef3107973e7b461b052a"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gemma4/20261103_s4108_gemma4-31b-cloud/results.jsonl",
+    "sha256": "0db246054512dff24c19ef6e80d55e767c0e2a0e2556c50334b219a9a356b503"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gemma4/20261103_s4108_gemma4-31b-cloud/events.jsonl",
+    "sha256": "95d08f4bfa93458d5f2c5ab0f5c5f53c275b4633bee399ab6bec58fce0822133"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gemma4/20261103_s4108_gemma4-31b-cloud/config.yaml",
+    "sha256": "0e5fcef796cabf41088b0dcdf188c5e3a7a20f631fbe6b9ce784efc5edf2fdba"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gemma4/20261103_s4109_gemma4-31b-cloud/results.jsonl",
+    "sha256": "958a052c072af5b8d82c45677059c35e0ec8d40130e43d61d71df6d7e4ec3edc"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gemma4/20261103_s4109_gemma4-31b-cloud/events.jsonl",
+    "sha256": "e448de8b747107d31e255f33c0754b4c9824cd8084bd62457b885ebed2de7a5d"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gemma4/20261103_s4109_gemma4-31b-cloud/config.yaml",
+    "sha256": "b054b148118ac83283e90982ce406abe64918f21614af3ede79cf23f00e2c75b"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gemma4/20261103_s4110_gemma4-31b-cloud/results.jsonl",
+    "sha256": "6a3c3a0764e5fa929ff4ece3f7592808034a80ae910f3ebb219759ba5f73d25b"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gemma4/20261103_s4110_gemma4-31b-cloud/events.jsonl",
+    "sha256": "ba20bc047975209b7cf41be43257cc7d7f4b37acdb3c571414138d982a56558c"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gemma4/20261103_s4110_gemma4-31b-cloud/config.yaml",
+    "sha256": "88d09acab1d2d370fcbb7326d29beb13128ac2783c32c06855f302b01b2e093c"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_glm4/20261020_0603_glm-5.3-flash-cloud/results.jsonl",
+    "sha256": "35fc52d00e7c49505835ee4f6e330e692d1cf8a587c33ba834b276e513dafcbb"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_glm4/20261020_0603_glm-5.3-flash-cloud/events.jsonl",
+    "sha256": "981860800adbfe27b28057f98a914c660c6696952aa0469110f1b7f6ebe0546b"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_glm4/20261020_0603_glm-5.3-flash-cloud/config.yaml",
+    "sha256": "fdb79520ec147a20a1b0dd584a6337d504552850153e6b4cc7b45539e989ddc4"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_glm4/20261103_s4102_glm-5.3-flash-cloud/results.jsonl",
+    "sha256": "90b0bf2e7b509cac91e00e2661a4f0c18aef9e396edd1414acb5d98b136e98e5"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_glm4/20261103_s4102_glm-5.3-flash-cloud/events.jsonl",
+    "sha256": "979eda5cf10db7ecf64a550aa5701d05a5166abe48a9d0cca3d1263ae2353743"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_glm4/20261103_s4102_glm-5.3-flash-cloud/config.yaml",
+    "sha256": "677e4ebd52b6fa13b8c46f70b3ca1b3fa86a741a396f6186158eb47661b9c642"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_glm4/20261103_s4103_glm-5.3-flash-cloud/results.jsonl",
+    "sha256": "907745f8e9db97d3dd612e69ec92b2d732e60d69704a7fe6b96a2f90eeeb7d90"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_glm4/20261103_s4103_glm-5.3-flash-cloud/events.jsonl",
+    "sha256": "2ac411a5207b0e9580d568a565595f67f65da61ce3eab57cf7fda5193a7f12c0"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_glm4/20261103_s4103_glm-5.3-flash-cloud/config.yaml",
+    "sha256": "ca3064798f3b4788b9870e1274ae6e4f4c5a04090c084a88a3c8641bee6f0fbf"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_glm4/20261103_s4104_glm-5.3-flash-cloud/results.jsonl",
+    "sha256": "24fe9de679da8f5e29734b3decc02059f6bce4bebc493925f8b301ada3cccd8c"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_glm4/20261103_s4104_glm-5.3-flash-cloud/events.jsonl",
+    "sha256": "88fd33043a55e19931bf9f1a3c2e4836d337d818f8ce7db2cafc26f06cbd810d"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_glm4/20261103_s4104_glm-5.3-flash-cloud/config.yaml",
+    "sha256": "4a6cb9ddb37c33a431b7aef6b5c6e344d13446d9d743dce6271a2fb3dc9681aa"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_glm4/20261103_s4105_glm-5.3-flash-cloud/results.jsonl",
+    "sha256": "50bc0905de00796225e396707d1e2ea28ddaedcef646b8c92cd50e25d98b5c0b"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_glm4/20261103_s4105_glm-5.3-flash-cloud/events.jsonl",
+    "sha256": "a5112cb3d6898772693ba61cff21484f919b6176a2abc541c7cae907648be026"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_glm4/20261103_s4105_glm-5.3-flash-cloud/config.yaml",
+    "sha256": "b37702659d0b5cb859f10ae922f5b734c232d1c8d72107bb8b4481ff57c1a532"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_glm4/20261103_s4106_glm-5.3-flash-cloud/results.jsonl",
+    "sha256": "f786a174c20fecab8e9d551f873770b91f2a511a0b097afc808d60ed132c65a7"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_glm4/20261103_s4106_glm-5.3-flash-cloud/events.jsonl",
+    "sha256": "98c06dd5565c2ba42325565cbd29e0d918a34550de78bd58bf2b60e96f489cf3"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_glm4/20261103_s4106_glm-5.3-flash-cloud/config.yaml",
+    "sha256": "670de087ef7a399b613dd034ab29d14c739fe9e6c79a40306b30ff6a60edd891"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_glm4/20261103_s4107_glm-5.3-flash-cloud/results.jsonl",
+    "sha256": "b1547c9ab348d4b2fb6c79bb2a5d37f6458f0146d57dab3f0e535cbbe244def8"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_glm4/20261103_s4107_glm-5.3-flash-cloud/events.jsonl",
+    "sha256": "3b0f9f41237246159cf6b75d5f74ce97be382e27bf8364fcd6fe1cc78fa22ad3"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_glm4/20261103_s4107_glm-5.3-flash-cloud/config.yaml",
+    "sha256": "eb0062c70c8ce486cc31aa13f8b0bf529488372c28f9aa6738a31c2a2de63951"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_glm4/20261103_s4108_glm-5.3-flash-cloud/results.jsonl",
+    "sha256": "d8efa1a2736b7a3d42fccc5b6b94f6d6d116882d2ee5cc5772de198a81e96856"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_glm4/20261103_s4108_glm-5.3-flash-cloud/events.jsonl",
+    "sha256": "6dc58c94a3912f50d47d0661bf62f89fb422fdb9f7d229aa19c840feeea491be"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_glm4/20261103_s4108_glm-5.3-flash-cloud/config.yaml",
+    "sha256": "b88e336b5404882c3646302298926fc7124b30f274c7365a94882e8bc2b927d8"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_glm4/20261103_s4109_glm-5.3-flash-cloud/results.jsonl",
+    "sha256": "77827548b3b28a3a4f999896080b30595bf901b9487603b6ec0e7ad31060598d"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_glm4/20261103_s4109_glm-5.3-flash-cloud/events.jsonl",
+    "sha256": "a49f13571c9dcf64eb3e84aed737d8720d93b6651ec55d7564eadf96ec417dae"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_glm4/20261103_s4109_glm-5.3-flash-cloud/config.yaml",
+    "sha256": "976be887f7c1bf9f307ac9ea1fa24cb47c76a2b0a4f32662565924fa811e1009"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_glm4/20261103_s4110_glm-5.3-flash-cloud/results.jsonl",
+    "sha256": "bec6e8c18b51986d7c4159e7cd4d45f626b3c555f1d283164110676bfbb86274"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_glm4/20261103_s4110_glm-5.3-flash-cloud/events.jsonl",
+    "sha256": "c566c678961c42495c296511bf021fd8b030220c0bac54fc0e6bb7b18eaf1d1e"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_glm4/20261103_s4110_glm-5.3-flash-cloud/config.yaml",
+    "sha256": "39b36ebaeee4ac956ebe26c3f7eee47f4ebc9ba1172ff50e881134a8f2859b10"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gptoss4/20261103_s4101_gpt-oss-120b-cloud/results.jsonl",
+    "sha256": "add48969ae6735bba84e8dffd2174c7d921002306b05376c148b48523cf0f846"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gptoss4/20261103_s4101_gpt-oss-120b-cloud/events.jsonl",
+    "sha256": "ef5dc7ca8d5c7546b9972240fb493d937c35270e179b4b9661070b70a8ba4d81"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gptoss4/20261103_s4101_gpt-oss-120b-cloud/config.yaml",
+    "sha256": "87ef33bffc1cb2959ffc91bfc133d1eb83ea7f5d2ceb93eb23381f03af9e1ee1"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gptoss4/20261103_s4102_gpt-oss-120b-cloud/results.jsonl",
+    "sha256": "fe1be6d76f06cf42b9a06b39396e7337060d2009e5d33ec6f047576ea3f5807d"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gptoss4/20261103_s4102_gpt-oss-120b-cloud/events.jsonl",
+    "sha256": "1efc245789fdb38e27b164582028804bcdec91c76fd440359025e266aa8e79fc"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gptoss4/20261103_s4102_gpt-oss-120b-cloud/config.yaml",
+    "sha256": "302ee2f62727297500d0377810541d46f063e3f2a6275454e4d6e90fb130338e"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gptoss4/20261103_s4103_gpt-oss-120b-cloud/results.jsonl",
+    "sha256": "9b1eb71f98261416e7211d4e49b122df0045ded7304cfc0b6d59523134e2514b"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gptoss4/20261103_s4103_gpt-oss-120b-cloud/events.jsonl",
+    "sha256": "9e52cb86acdc6a3ac390702d1ad7aeee5a2aae8b10e5aabfd238d27664657042"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gptoss4/20261103_s4103_gpt-oss-120b-cloud/config.yaml",
+    "sha256": "307a17728bf87025a649a755269702d21668acd64aad6acbccb2453c81ad37ce"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gptoss4/20261103_s4104_gpt-oss-120b-cloud/results.jsonl",
+    "sha256": "49511c86bf30005fb4cef0be7e157faa4218989b12419ae1e84c574bdd341cb3"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gptoss4/20261103_s4104_gpt-oss-120b-cloud/events.jsonl",
+    "sha256": "973acc88d816645e249dc14f42a04234b30fc3ad9d4a30b4852e39379ddcf9e4"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gptoss4/20261103_s4104_gpt-oss-120b-cloud/config.yaml",
+    "sha256": "6443b3f855cfc74288b75540e6d5da1c58066836b933c6eb0740896172f4c27f"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gptoss4/20261103_s4105_gpt-oss-120b-cloud/results.jsonl",
+    "sha256": "0793e704c34f1a25f0a2431a6b389c0eca8e8e866b2975cd788868adb4b3eca3"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gptoss4/20261103_s4105_gpt-oss-120b-cloud/events.jsonl",
+    "sha256": "721e09ad4ffd730a6e2c8b48790430a65d5ead818441581963083f1583dd510c"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gptoss4/20261103_s4105_gpt-oss-120b-cloud/config.yaml",
+    "sha256": "64b00f2ad231bb0cbb82b125593e557f0e5e83ebe0e82ea211b7b05b49c53962"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gptoss4/20261103_s4106_gpt-oss-120b-cloud/results.jsonl",
+    "sha256": "9b15ea3a9db68ac8c34dd6c7f59df1bcb88812265e62bc0cf3248a2c12deea9e"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gptoss4/20261103_s4106_gpt-oss-120b-cloud/events.jsonl",
+    "sha256": "e2245cf44b54d11a3bced547282d021c25999b2d3049227739c7f94a7d1dde3c"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gptoss4/20261103_s4106_gpt-oss-120b-cloud/config.yaml",
+    "sha256": "9e71fdcdb7a92ea09fe68092e16faa6b36b531596323946a804fb3a66962035d"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gptoss4/20261103_s4107_gpt-oss-120b-cloud/results.jsonl",
+    "sha256": "c97f12ab9046b4df751be8e3e5d8af9cbbe91eb14c9239a75d0cc8cf71d8aab1"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gptoss4/20261103_s4107_gpt-oss-120b-cloud/events.jsonl",
+    "sha256": "c30c87bb06c2ae44d68331fd9e9873ebd235628d9378f3c53fe30bac5d558577"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gptoss4/20261103_s4107_gpt-oss-120b-cloud/config.yaml",
+    "sha256": "7461e3c4809df960cbad3855a2a045196e51b71c32627137abe80d1c8073a737"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gptoss4/20261103_s4108_gpt-oss-120b-cloud/results.jsonl",
+    "sha256": "5b40898ba3ad5f9c67f2f6445f5145f73be76af23625406b5b094fa5e31e0edd"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gptoss4/20261103_s4108_gpt-oss-120b-cloud/events.jsonl",
+    "sha256": "16c21883b593d435f025a64027305e0f1ca1f895e5944e4d48f29b395c5f059b"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gptoss4/20261103_s4108_gpt-oss-120b-cloud/config.yaml",
+    "sha256": "bfc4c9304402305ad219abbcaac205e8dedcc13160a79749d90e8fc62d76ada3"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gptoss4/20261103_s4109_gpt-oss-120b-cloud/results.jsonl",
+    "sha256": "b77da9af18cef563ec3e3216ef8eef8d300cb5aea9c11cbd18d9d856c70baf15"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gptoss4/20261103_s4109_gpt-oss-120b-cloud/events.jsonl",
+    "sha256": "195468e58f5c32a5ec1c6f24b58ff67238a9031d1186c2ddd2279037c278abc9"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gptoss4/20261103_s4109_gpt-oss-120b-cloud/config.yaml",
+    "sha256": "69d2fa146e44edea848fa225e552f01b0ce7ef42224e8eacc8b123b8f3bf655d"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gptoss4/20261103_s4110_gpt-oss-120b-cloud/results.jsonl",
+    "sha256": "1cf96a318f5cdb6a608a0151e464d7f193544b8f1391de9f099687283ea20d73"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gptoss4/20261103_s4110_gpt-oss-120b-cloud/events.jsonl",
+    "sha256": "e92c1c994316fd3431fdfb8e4465daf097f08b113362ee80b996697351a69ab4"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_gptoss4/20261103_s4110_gpt-oss-120b-cloud/config.yaml",
+    "sha256": "d7c2924af0639d22e6915c1fa5f8598091a857f110650698219cb12adc45ad89"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_kimi4/20261020_0603_kimi-k3-cloud/results.jsonl",
+    "sha256": "34eadc4d984538d891b5d9902aeca266c2334b5b7e8c21518f4ad62ab0740ca2"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_kimi4/20261020_0603_kimi-k3-cloud/events.jsonl",
+    "sha256": "b0139aa2b3b6491559115d2b5319ded681682b24bbf9b2cf013dcfb6d932b1a4"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_kimi4/20261020_0603_kimi-k3-cloud/config.yaml",
+    "sha256": "7f2eafb709887af0eb2c5e74fb154f7594ec0ac5e0d5aeb5e534a7423ae6924d"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_kimi4/20261103_s4102_kimi-k3-cloud/results.jsonl",
+    "sha256": "c5df048bff6d09d95d4acf1f9c521fbc4ceab7dfa5ba1efa9960873143e28e7f"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_kimi4/20261103_s4102_kimi-k3-cloud/events.jsonl",
+    "sha256": "b7324f42f52294fd3e27f5067a3cc24b33fff15bb813998cd7ebde25ef460326"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_kimi4/20261103_s4102_kimi-k3-cloud/config.yaml",
+    "sha256": "ec8ea917f723511331e926f37317c0dc55dc8c2ed8caa287f1ece99570be5377"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_kimi4/20261103_s4103_kimi-k3-cloud/results.jsonl",
+    "sha256": "9a803583daba65c56ac1accac7dba12b857ddd9ee8d7349b4d1e20f2085066d6"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_kimi4/20261103_s4103_kimi-k3-cloud/events.jsonl",
+    "sha256": "7b4bbdc58adbf9cf142e65aad451368f1725db6bf0c097cb5ae10ee6a20c3a98"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_kimi4/20261103_s4103_kimi-k3-cloud/config.yaml",
+    "sha256": "eeeca846e6f8a35a823c71226302978d6e104591aa59c9c5454555bc23aefddf"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_kimi4/20261103_s4104_kimi-k3-cloud/results.jsonl",
+    "sha256": "ab2c971ed44e1d75592ce49fb4f5aca8053a74d107dce04e6cffd150c8c01d0c"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_kimi4/20261103_s4104_kimi-k3-cloud/events.jsonl",
+    "sha256": "2c79f75e1226d6e67c41f581729956fe349fcb34fbb8cd9dbb12dd38e10a5e84"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_kimi4/20261103_s4104_kimi-k3-cloud/config.yaml",
+    "sha256": "bc31691cdf2420defb5eac890f7f33f1242e56d6a8d66ae91d718d65dd40a75f"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_kimi4/20261103_s4105_kimi-k3-cloud/results.jsonl",
+    "sha256": "92dc9b27d4b046c90636c3d18437719511deb59b963d34ae774e91cf05bb1feb"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_kimi4/20261103_s4105_kimi-k3-cloud/events.jsonl",
+    "sha256": "4c19ecba6a26a4878dee2142bec4cc247d1a7a850ff6b03b669f561798a348ad"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_kimi4/20261103_s4105_kimi-k3-cloud/config.yaml",
+    "sha256": "95d71c1a86c23a57965fc906587c9abae067f545923e6fee12b21ecbee21a65d"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_kimi4/20261103_s4106_kimi-k3-cloud/results.jsonl",
+    "sha256": "6643aceee2361001fef9345986fc10d4bdfade1c3ce71716f172da93c61ca287"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_kimi4/20261103_s4106_kimi-k3-cloud/events.jsonl",
+    "sha256": "e0d3106f9c9b2f9fa9626000448ff01f063a54be5313e95001f83262a749227f"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_kimi4/20261103_s4106_kimi-k3-cloud/config.yaml",
+    "sha256": "b1a25a728b789196b4e5dcde646a77ab9e584bcb19ddf66a1bb30f78cafdf5f8"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_kimi4/20261103_s4107_kimi-k3-cloud/results.jsonl",
+    "sha256": "ea46cf14f124ababd1c3a0966e11dfe1fafc10974abba4ca7ff2ed6ca7f23d8a"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_kimi4/20261103_s4107_kimi-k3-cloud/events.jsonl",
+    "sha256": "f5906a0f87b2cf6da661f0666debcab7e2c480bee2203c05e38d0023d5b11d42"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_kimi4/20261103_s4107_kimi-k3-cloud/config.yaml",
+    "sha256": "df83c57c2a826456e63ed856e2a0aaca3abdbeb5842991492daf9a442d380970"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_kimi4/20261103_s4108_kimi-k3-cloud/results.jsonl",
+    "sha256": "fc9ea9f2c54f95e32699e622aa292dcdad385f421aa4c14ccea40dfe8b26b31f"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_kimi4/20261103_s4108_kimi-k3-cloud/events.jsonl",
+    "sha256": "4cc117f683286bb8821cc0ecdf300f80f92388fb8da55fa3b22edfc956c71b56"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_kimi4/20261103_s4108_kimi-k3-cloud/config.yaml",
+    "sha256": "1a2332e993ed157cfea9fb77d628a9da037be7c0fcc21f77207cd2ce16f46f40"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_kimi4/20261103_s4109_kimi-k3-cloud/results.jsonl",
+    "sha256": "c8362d8343d97f1e81063a4f7e8eb4ae5bf20f4be36d22138dc34d344e2ddb54"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_kimi4/20261103_s4109_kimi-k3-cloud/events.jsonl",
+    "sha256": "a15c8f88df87f521f00451d00e561d8752a6404e82d77d737b2993394de01e6b"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_kimi4/20261103_s4109_kimi-k3-cloud/config.yaml",
+    "sha256": "b6cc02f0befd8fe1fa38142a446955549282b58243f79ae221fd66985b5331ad"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_kimi4/20261103_s4110_kimi-k3-cloud/results.jsonl",
+    "sha256": "139c944001691ed4914d6dda3841cdfbbfe001503d690c3137964d72df990e87"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_kimi4/20261103_s4110_kimi-k3-cloud/events.jsonl",
+    "sha256": "862a83c9ff3bf5af3ebbf2d227e985d80f0fa8476db7949c4e990cf2e3a91744"
+  },
+  {
+    "arm": "open",
+    "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_codex_kimi4/20261103_s4110_kimi-k3-cloud/config.yaml",
+    "sha256": "5e14c6960ec48bfe5abc16a25d86882ef79dd73895fcc68dd64611cd8d3c34eb"
+  }
+]

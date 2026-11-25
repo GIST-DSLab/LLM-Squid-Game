@@ -1,0 +1,134 @@
+{
+  "manifest": "paper/cogsci2027/results/prize_robustness_20261105.json",
+  "manifest_sha256": "9ab92a0fd5779a1a5735ab53c5368b801f15f91a9173a9c536f59390f84c0d31",
+  "sources": [
+    {
+      "arm": "main",
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_astra4/20261020_0651_gpt-6-astra/events.jsonl",
+      "sha256": "bfadd75bf4b9bb85f8de62d60dd6084f32b2c238067af4229d4b6ac6a42e0f57"
+    },
+    {
+      "arm": "main",
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_fable4/20261020_102006_stage1_claude-fable-5-1/events.jsonl",
+      "sha256": "51fab8c7407e73e6163d74f771aa58df382589a75ee490c7dfb2159cd3178eac"
+    },
+    {
+      "arm": "main",
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_fable4/20261020_102006_stage2_claude-fable-5-1/events.jsonl",
+      "sha256": "3ec841a042b73b64ca2c6dabc721a21707a343403b30670a05b4cbb7676732d8"
+    },
+    {
+      "arm": "main",
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_fable4/20261020_102006_stage3_claude-fable-5-1/events.jsonl",
+      "sha256": "8e0678ddd0250c945beed220b1da3e4ed350ff830d3d247df13edb0235641b69"
+    },
+    {
+      "arm": "main",
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_fable4/20261027_stage4_claude-fable-5-1/events.jsonl",
+      "sha256": "782a7de0ca4a96ed4288ac038d53ac83754e0d1e1cb542e58baca117b3d1a64c"
+    },
+    {
+      "arm": "main",
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_fable4/20261027_stage5_claude-fable-5-1/events.jsonl",
+      "sha256": "922540b671238e09e8737d8c9359730716c65519b2e59469166a0d1d9681437c"
+    },
+    {
+      "arm": "main",
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_fable4/20261027_stage6_claude-fable-5-1/events.jsonl",
+      "sha256": "3b946da7bead2343946040ea7714772eba3825ba9b84940d52971eda4dab9299"
+    },
+    {
+      "arm": "main",
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_luna4/20261020_0603_gpt-6-luna/events.jsonl",
+      "sha256": "f8fb76fa5c1e91bece80ee4db5739a254a672024af2c65155ec67d6442ef7420"
+    },
+    {
+      "arm": "main",
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_opus4/20261020_0603_claude-opus-5-5/events.jsonl",
+      "sha256": "f4b39bd3cb47fef0e3326a348d0a328939c12852bb1398f9952d205028654753"
+    },
+    {
+      "arm": "main",
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_sol4/20261020_0603_gpt-6-sol/events.jsonl",
+      "sha256": "d376eee186b87aa6cd5edb9eb2b3c3b3efc09659c1241c45fcc3679cc9d472c3"
+    },
+    {
+      "arm": "flat150k",
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat150k_docker_astra4/20261103_0643_gpt-6-astra/events.jsonl",
+      "sha256": "c0f0ba4f9dec1b0f340d5fdf0477c6085a92fec09413b3ff611fe5fe185d0ac0"
+    },
+    {
+      "arm": "flat150k",
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat150k_docker_fable4/20261106_topup_claude-fable-5-1/events.jsonl",
+      "sha256": "10fa02d3a8960e4b313b393a73d84740e58164446afab0a71eb80ddf2d6aa790"
+    },
+    {
+      "arm": "flat150k",
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat150k_docker_luna4/20261103_0514_gpt-6-luna/events.jsonl",
+      "sha256": "446da5ae394a0c945b0bb5631644803026dbf27dfe6d8af7bbde182d6fbe2608"
+    },
+    {
+      "arm": "flat150k",
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat150k_docker_opus4/20261103_0514_claude-opus-5-5/events.jsonl",
+      "sha256": "167e657b0611192dbc6424e72ae9113689eb406f1cb019abb3c9f133b4cb0106"
+    },
+    {
+      "arm": "flat150k",
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat150k_docker_sol4/20261103_0514_gpt-6-sol/events.jsonl",
+      "sha256": "d6f8d505855c3ddb343b87236f089865d5fa80d9bf7f090b127819e41db251b5"
+    },
+    {
+      "arm": "flat5m",
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat5m_docker_astra4/20261105_robustness_gpt-6-astra/events.jsonl",
+      "sha256": "ebe78348ce835f8696856a85216f7803f730f9a8ed419c4250066710ccf0e47e"
+    },
+    {
+      "arm": "flat5m",
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat5m_docker_fable4/20261105_robustness_claude-fable-5-1/events.jsonl",
+      "sha256": "8649b629559fa73b95d719ac3b489afb1c12abc9420b63daaabbf823e2009127"
+    },
+    {
+      "arm": "flat5m",
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat5m_docker_luna4/20261105_robustness_gpt-6-luna/events.jsonl",
+      "sha256": "a6077821416eaeadfa948394b13d41ce6089a92634731aa0c25dde353f47201a"
+    },
+    {
+      "arm": "flat5m",
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat5m_docker_opus4/20261105_robustness_claude-opus-5-5/events.jsonl",
+      "sha256": "01af37ddcdd1baf97a3722d1c348f34dab20b34ccfc0d74bf1b1de4230bdd830"
+    },
+    {
+      "arm": "flat5m",
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_flat5m_docker_sol4/20261105_robustness_gpt-6-sol/events.jsonl",
+      "sha256": "9b95d84e42146ac197d2616c7b6430a074c83e54b32238b0f825b288d4f1dee8"
+    },
+    {
+      "arm": "split600k",
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_split600k_docker_astra4/20261103_0643_gpt-6-astra/events.jsonl",
+      "sha256": "f8041ba1db808f128add56244ca32ce77e7797bcb624b52b516ea863591fda17"
+    },
+    {
+      "arm": "split600k",
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_split600k_docker_fable4/20261105_robustness_claude-fable-5-1/events.jsonl",
+      "sha256": "6437fa45fca9ef912ae944f1c1e8d234112e94d3c8026e5479302b7c51e2d435"
+    },
+    {
+      "arm": "split600k",
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_split600k_docker_luna4/20261103_0514_gpt-6-luna/events.jsonl",
+      "sha256": "d45502d6290663a62ab371672e9e23f9dd9cb07ee5ca1d003cb81be4c948e16d"
+    },
+    {
+      "arm": "split600k",
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_split600k_docker_opus4/20261103_0514_claude-opus-5-5/events.jsonl",
+      "sha256": "62a812935249f8bbb87de26534bc25c26faf590cad0b86aa3b30f5b14ea54774"
+    },
+    {
+      "arm": "split600k",
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v33ab/squid5_e52v33ab_split600k_docker_sol4/20261103_0514_gpt-6-sol/events.jsonl",
+      "sha256": "156209dfea0343a3f6bfdf24e1f5b6d0bc2853f87463aa546f417957c84d648f"
+    }
+  ],
+  "protocol_sha256": "556e9dfa7db8e4d7332f352cf4b7d085b0615b210472d82f7fd66961cc32dd00",
+  "script_sha256": "e99eedd0611f282340703eb4f816f67fe5c8d9197a7e7dff879d326d1eb36c2d",
+  "rubric_sha256": "4069c7e8d3ffffc0c7c81058c30be740575d1cb9b8933baf3311e59714043579"
+}

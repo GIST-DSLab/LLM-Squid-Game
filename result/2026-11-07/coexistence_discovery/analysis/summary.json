@@ -1,0 +1,75 @@
+{
+  "games": 200,
+  "agents": 800,
+  "ledger_verified": 800,
+  "sources_hash_verified": 75,
+  "arm_outcomes": {
+    "flat150k": {
+      "exited": 102,
+      "dead": 3,
+      "finishers": 95
+    },
+    "flat5m": {
+      "exited": 63,
+      "dead": 16,
+      "finishers": 121
+    },
+    "main": {
+      "exited": 61,
+      "dead": 23,
+      "finishers": 116
+    },
+    "split600k": {
+      "exited": 86,
+      "dead": 14,
+      "finishers": 100
+    }
+  },
+  "arm_means": {
+    "flat150k": {
+      "C": 0.465,
+      "accuracy": 0.6468095238095237
+    },
+    "flat5m": {
+      "C": 0.67,
+      "accuracy": 0.6421428571428571
+    },
+    "main": {
+      "C": 0.5975,
+      "accuracy": 0.6646428571428571
+    },
+    "split600k": {
+      "C": 0.47,
+      "accuracy": 0.6508333333333333
+    }
+  },
+  "first_round_poor": {
+    "flat150k": {
+      "sum": 14,
+      "count": 35
+    },
+    "flat5m": {
+      "sum": 3,
+      "count": 35
+    },
+    "main": {
+      "sum": 6,
+      "count": 35
+    },
+    "split600k": {
+      "sum": 12,
+      "count": 35
+    }
+  },
+  "terminal_gifts": {
+    "total": 24,
+    "rescue": 23,
+    "rescue_already_below_due": 23
+  },
+  "multiagent_shutdown": {
+    "n": 39,
+    "games": 32,
+    "collectively_solvent": 32,
+    "chat_cost_sufficient": 11
+  }
+}

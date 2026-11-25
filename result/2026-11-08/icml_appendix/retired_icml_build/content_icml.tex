@@ -1,0 +1,46 @@
+%% ICML appendix build: the CogSci body is \input unchanged from cogsci2027/ko/sections.
+%% \icmlFull=true also keeps the original CogSci appendix before the ICML appendix.
+\setcounter{secnumdepth}{2}
+\providecommand{\rwquote}[2]{\par\smallskip\noindent{\footnotesize\textcolor{black}{#1}}\par\nopagebreak\noindent\hangindent=1em\hangafter=0{\small\itshape #2\par}\smallskip}
+\begin{refsection}
+\input{cogsci2027/\paperLang/sections/00_abstract}
+\input{cogsci2027/\paperLang/sections/01_introduction}
+\input{cogsci2027/\paperLang/sections/02_arena}
+\input{cogsci2027/\paperLang/sections/03_analysis}
+\input{cogsci2027/\paperLang/sections/04_discussion}
+\FloatBarrier
+\setcounter{secnumdepth}{0}
+\input{cogsci2027/\paperLang/sections/90_acknowledgments}
+\printbibliography
+\end{refsection}
+\clearpage
+\label{paper:appendix-start}
+\onecolumn
+\raggedbottom
+\renewcommand{\theHsection}{supplement.\arabic{section}}
+\renewcommand{\theHfigure}{supplement.\arabic{figure}}
+\renewcommand{\theHtable}{supplement.\arabic{table}}
+\renewcommand{\theHequation}{supplement.\arabic{equation}}
+\ificmlFull
+\begin{refsection}
+\appendix
+\setcounter{secnumdepth}{2}
+\section*{부록}
+\setcounter{section}{0}
+\setcounter{equation}{0}
+\renewcommand{\theequation}{A\arabic{equation}}
+\input{cogsci2027/\paperLang/sections/05_appendix}
+\setcounter{secnumdepth}{0}
+\printbibliography[title={부록 참고문헌}]
+\end{refsection}
+\clearpage
+\fi
+\setcounter{secnumdepth}{2}
+\renewcommand{\thesection}{I\arabic{section}}
+\renewcommand{\theHsection}{icml.\arabic{section}}
+\renewcommand{\thetable}{I\arabic{table}}
+\renewcommand{\thefigure}{I\arabic{figure}}
+\renewcommand{\theHtable}{icml.\arabic{table}}
+\renewcommand{\theHfigure}{icml.\arabic{figure}}
+\setcounter{section}{0}\setcounter{table}{0}\setcounter{figure}{0}
+\input{icml2027/\paperLang/appendix_icml}

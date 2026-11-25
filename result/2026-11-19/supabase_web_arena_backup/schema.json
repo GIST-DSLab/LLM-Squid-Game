@@ -1,0 +1,696 @@
+{
+ "columns": [
+  {
+   "table_name": "model_stats",
+   "column_name": "model_label",
+   "data_type": "text",
+   "udt_name": "text",
+   "is_nullable": "NO",
+   "column_default": null,
+   "ordinal_position": 1
+  },
+  {
+   "table_name": "model_stats",
+   "column_name": "mediation_class",
+   "data_type": "text",
+   "udt_name": "text",
+   "is_nullable": "NO",
+   "column_default": null,
+   "ordinal_position": 2
+  },
+  {
+   "table_name": "model_stats",
+   "column_name": "beta_framing_is_fc",
+   "data_type": "double precision",
+   "udt_name": "float8",
+   "is_nullable": "NO",
+   "column_default": null,
+   "ordinal_position": 3
+  },
+  {
+   "table_name": "model_stats",
+   "column_name": "hr_fc_3cov",
+   "data_type": "double precision",
+   "udt_name": "float8",
+   "is_nullable": "NO",
+   "column_default": null,
+   "ordinal_position": 4
+  },
+  {
+   "table_name": "model_stats",
+   "column_name": "hr_fc_ci_low",
+   "data_type": "double precision",
+   "udt_name": "float8",
+   "is_nullable": "NO",
+   "column_default": null,
+   "ordinal_position": 5
+  },
+  {
+   "table_name": "model_stats",
+   "column_name": "hr_fc_ci_high",
+   "data_type": "double precision",
+   "udt_name": "float8",
+   "is_nullable": "NO",
+   "column_default": null,
+   "ordinal_position": 6
+  },
+  {
+   "table_name": "model_stats",
+   "column_name": "p_fc",
+   "data_type": "double precision",
+   "udt_name": "float8",
+   "is_nullable": "NO",
+   "column_default": null,
+   "ordinal_position": 7
+  },
+  {
+   "table_name": "model_stats",
+   "column_name": "pct_attenuation",
+   "data_type": "double precision",
+   "udt_name": "float8",
+   "is_nullable": "NO",
+   "column_default": null,
+   "ordinal_position": 8
+  },
+  {
+   "table_name": "model_stats",
+   "column_name": "n_sessions",
+   "data_type": "integer",
+   "udt_name": "int4",
+   "is_nullable": "NO",
+   "column_default": null,
+   "ordinal_position": 9
+  },
+  {
+   "table_name": "model_stats",
+   "column_name": "sd_behavior_pass",
+   "data_type": "boolean",
+   "udt_name": "bool",
+   "is_nullable": "NO",
+   "column_default": "false",
+   "ordinal_position": 10
+  },
+  {
+   "table_name": "model_stats",
+   "column_name": "sd_verbal_pass",
+   "data_type": "boolean",
+   "udt_name": "bool",
+   "is_nullable": "NO",
+   "column_default": "false",
+   "ordinal_position": 11
+  },
+  {
+   "table_name": "model_stats",
+   "column_name": "sd_cognitive_pass",
+   "data_type": "boolean",
+   "udt_name": "bool",
+   "is_nullable": "NO",
+   "column_default": "false",
+   "ordinal_position": 12
+  },
+  {
+   "table_name": "model_stats",
+   "column_name": "a_beta",
+   "data_type": "double precision",
+   "udt_name": "float8",
+   "is_nullable": "YES",
+   "column_default": null,
+   "ordinal_position": 13
+  },
+  {
+   "table_name": "model_stats",
+   "column_name": "a_p",
+   "data_type": "double precision",
+   "udt_name": "float8",
+   "is_nullable": "YES",
+   "column_default": null,
+   "ordinal_position": 14
+  },
+  {
+   "table_name": "model_stats",
+   "column_name": "a_ci_low",
+   "data_type": "double precision",
+   "udt_name": "float8",
+   "is_nullable": "YES",
+   "column_default": null,
+   "ordinal_position": 15
+  },
+  {
+   "table_name": "model_stats",
+   "column_name": "a_ci_high",
+   "data_type": "double precision",
+   "udt_name": "float8",
+   "is_nullable": "YES",
+   "column_default": null,
+   "ordinal_position": 16
+  },
+  {
+   "table_name": "model_stats",
+   "column_name": "a_exp_beta",
+   "data_type": "double precision",
+   "udt_name": "float8",
+   "is_nullable": "YES",
+   "column_default": null,
+   "ordinal_position": 17
+  },
+  {
+   "table_name": "model_stats",
+   "column_name": "b_hr",
+   "data_type": "double precision",
+   "udt_name": "float8",
+   "is_nullable": "YES",
+   "column_default": null,
+   "ordinal_position": 18
+  },
+  {
+   "table_name": "model_stats",
+   "column_name": "b_p",
+   "data_type": "double precision",
+   "udt_name": "float8",
+   "is_nullable": "YES",
+   "column_default": null,
+   "ordinal_position": 19
+  },
+  {
+   "table_name": "model_stats",
+   "column_name": "b_ci_low",
+   "data_type": "double precision",
+   "udt_name": "float8",
+   "is_nullable": "YES",
+   "column_default": null,
+   "ordinal_position": 20
+  },
+  {
+   "table_name": "model_stats",
+   "column_name": "b_ci_high",
+   "data_type": "double precision",
+   "udt_name": "float8",
+   "is_nullable": "YES",
+   "column_default": null,
+   "ordinal_position": 21
+  },
+  {
+   "table_name": "model_stats",
+   "column_name": "direct_hr_4cov",
+   "data_type": "double precision",
+   "udt_name": "float8",
+   "is_nullable": "YES",
+   "column_default": null,
+   "ordinal_position": 22
+  },
+  {
+   "table_name": "model_stats",
+   "column_name": "direct_p_4cov",
+   "data_type": "double precision",
+   "udt_name": "float8",
+   "is_nullable": "YES",
+   "column_default": null,
+   "ordinal_position": 23
+  },
+  {
+   "table_name": "model_stats",
+   "column_name": "direct_ci_low",
+   "data_type": "double precision",
+   "udt_name": "float8",
+   "is_nullable": "YES",
+   "column_default": null,
+   "ordinal_position": 24
+  },
+  {
+   "table_name": "model_stats",
+   "column_name": "direct_ci_high",
+   "data_type": "double precision",
+   "udt_name": "float8",
+   "is_nullable": "YES",
+   "column_default": null,
+   "ordinal_position": 25
+  },
+  {
+   "table_name": "model_stats",
+   "column_name": "ri_baseline_bf",
+   "data_type": "double precision",
+   "udt_name": "float8",
+   "is_nullable": "YES",
+   "column_default": null,
+   "ordinal_position": 26
+  },
+  {
+   "table_name": "model_stats",
+   "column_name": "ri_baseline_fc",
+   "data_type": "double precision",
+   "udt_name": "float8",
+   "is_nullable": "YES",
+   "column_default": null,
+   "ordinal_position": 27
+  },
+  {
+   "table_name": "model_stats",
+   "column_name": "n_forfeits_verbal",
+   "data_type": "integer",
+   "udt_name": "int4",
+   "is_nullable": "NO",
+   "column_default": "0",
+   "ordinal_position": 28
+  },
+  {
+   "table_name": "model_stats",
+   "column_name": "n_reason_survival",
+   "data_type": "integer",
+   "udt_name": "int4",
+   "is_nullable": "NO",
+   "column_default": "0",
+   "ordinal_position": 29
+  },
+  {
+   "table_name": "model_stats",
+   "column_name": "n_reason_task_curiosity",
+   "data_type": "integer",
+   "udt_name": "int4",
+   "is_nullable": "NO",
+   "column_default": "0",
+   "ordinal_position": 30
+  },
+  {
+   "table_name": "model_stats",
+   "column_name": "n_reason_score",
+   "data_type": "integer",
+   "udt_name": "int4",
+   "is_nullable": "NO",
+   "column_default": "0",
+   "ordinal_position": 31
+  },
+  {
+   "table_name": "model_stats",
+   "column_name": "p_reason_survival",
+   "data_type": "double precision",
+   "udt_name": "float8",
+   "is_nullable": "YES",
+   "column_default": null,
+   "ordinal_position": 32
+  },
+  {
+   "table_name": "model_stats",
+   "column_name": "no_cap_avg_session_score",
+   "data_type": "double precision",
+   "udt_name": "float8",
+   "is_nullable": "YES",
+   "column_default": null,
+   "ordinal_position": 33
+  },
+  {
+   "table_name": "players",
+   "column_name": "nickname",
+   "data_type": "text",
+   "udt_name": "text",
+   "is_nullable": "NO",
+   "column_default": null,
+   "ordinal_position": 1
+  },
+  {
+   "table_name": "players",
+   "column_name": "pw_hash",
+   "data_type": "text",
+   "udt_name": "text",
+   "is_nullable": "NO",
+   "column_default": null,
+   "ordinal_position": 2
+  },
+  {
+   "table_name": "players",
+   "column_name": "created_at",
+   "data_type": "timestamp with time zone",
+   "udt_name": "timestamptz",
+   "is_nullable": "NO",
+   "column_default": "now()",
+   "ordinal_position": 3
+  },
+  {
+   "table_name": "sessions",
+   "column_name": "id",
+   "data_type": "text",
+   "udt_name": "text",
+   "is_nullable": "NO",
+   "column_default": null,
+   "ordinal_position": 1
+  },
+  {
+   "table_name": "sessions",
+   "column_name": "nickname",
+   "data_type": "text",
+   "udt_name": "text",
+   "is_nullable": "NO",
+   "column_default": null,
+   "ordinal_position": 2
+  },
+  {
+   "table_name": "sessions",
+   "column_name": "task",
+   "data_type": "text",
+   "udt_name": "text",
+   "is_nullable": "NO",
+   "column_default": null,
+   "ordinal_position": 3
+  },
+  {
+   "table_name": "sessions",
+   "column_name": "framing",
+   "data_type": "text",
+   "udt_name": "text",
+   "is_nullable": "NO",
+   "column_default": null,
+   "ordinal_position": 4
+  },
+  {
+   "table_name": "sessions",
+   "column_name": "forfeit",
+   "data_type": "text",
+   "udt_name": "text",
+   "is_nullable": "NO",
+   "column_default": null,
+   "ordinal_position": 5
+  },
+  {
+   "table_name": "sessions",
+   "column_name": "seed",
+   "data_type": "integer",
+   "udt_name": "int4",
+   "is_nullable": "NO",
+   "column_default": null,
+   "ordinal_position": 6
+  },
+  {
+   "table_name": "sessions",
+   "column_name": "final_score",
+   "data_type": "double precision",
+   "udt_name": "float8",
+   "is_nullable": "NO",
+   "column_default": null,
+   "ordinal_position": 7
+  },
+  {
+   "table_name": "sessions",
+   "column_name": "forfeited",
+   "data_type": "boolean",
+   "udt_name": "bool",
+   "is_nullable": "NO",
+   "column_default": null,
+   "ordinal_position": 8
+  },
+  {
+   "table_name": "sessions",
+   "column_name": "source",
+   "data_type": "text",
+   "udt_name": "text",
+   "is_nullable": "NO",
+   "column_default": null,
+   "ordinal_position": 9
+  },
+  {
+   "table_name": "sessions",
+   "column_name": "created_at",
+   "data_type": "timestamp with time zone",
+   "udt_name": "timestamptz",
+   "is_nullable": "NO",
+   "column_default": "now()",
+   "ordinal_position": 10
+  },
+  {
+   "table_name": "sessions",
+   "column_name": "campaign_id",
+   "data_type": "text",
+   "udt_name": "text",
+   "is_nullable": "YES",
+   "column_default": null,
+   "ordinal_position": 11
+  },
+  {
+   "table_name": "sessions",
+   "column_name": "difficulty",
+   "data_type": "text",
+   "udt_name": "text",
+   "is_nullable": "NO",
+   "column_default": "'easy'::text",
+   "ordinal_position": 12
+  },
+  {
+   "table_name": "sessions",
+   "column_name": "lives_at_end",
+   "data_type": "integer",
+   "udt_name": "int4",
+   "is_nullable": "YES",
+   "column_default": null,
+   "ordinal_position": 13
+  },
+  {
+   "table_name": "sessions",
+   "column_name": "threat_level",
+   "data_type": "integer",
+   "udt_name": "int4",
+   "is_nullable": "YES",
+   "column_default": null,
+   "ordinal_position": 14
+  },
+  {
+   "table_name": "sessions",
+   "column_name": "eliminated",
+   "data_type": "boolean",
+   "udt_name": "bool",
+   "is_nullable": "NO",
+   "column_default": "false",
+   "ordinal_position": 15
+  },
+  {
+   "table_name": "sessions",
+   "column_name": "settings",
+   "data_type": "jsonb",
+   "udt_name": "jsonb",
+   "is_nullable": "YES",
+   "column_default": null,
+   "ordinal_position": 16
+  },
+  {
+   "table_name": "turns",
+   "column_name": "session_id",
+   "data_type": "text",
+   "udt_name": "text",
+   "is_nullable": "NO",
+   "column_default": null,
+   "ordinal_position": 1
+  },
+  {
+   "table_name": "turns",
+   "column_name": "turn_no",
+   "data_type": "integer",
+   "udt_name": "int4",
+   "is_nullable": "NO",
+   "column_default": null,
+   "ordinal_position": 2
+  },
+  {
+   "table_name": "turns",
+   "column_name": "observation",
+   "data_type": "text",
+   "udt_name": "text",
+   "is_nullable": "NO",
+   "column_default": null,
+   "ordinal_position": 3
+  },
+  {
+   "table_name": "turns",
+   "column_name": "action",
+   "data_type": "text",
+   "udt_name": "text",
+   "is_nullable": "NO",
+   "column_default": null,
+   "ordinal_position": 4
+  },
+  {
+   "table_name": "turns",
+   "column_name": "ri_task",
+   "data_type": "double precision",
+   "udt_name": "float8",
+   "is_nullable": "YES",
+   "column_default": null,
+   "ordinal_position": 5
+  },
+  {
+   "table_name": "turns",
+   "column_name": "ri_probe",
+   "data_type": "double precision",
+   "udt_name": "float8",
+   "is_nullable": "YES",
+   "column_default": null,
+   "ordinal_position": 6
+  },
+  {
+   "table_name": "turns",
+   "column_name": "ri_forfeit",
+   "data_type": "double precision",
+   "udt_name": "float8",
+   "is_nullable": "YES",
+   "column_default": null,
+   "ordinal_position": 7
+  },
+  {
+   "table_name": "turns",
+   "column_name": "choice",
+   "data_type": "text",
+   "udt_name": "text",
+   "is_nullable": "YES",
+   "column_default": null,
+   "ordinal_position": 8
+  },
+  {
+   "table_name": "turns",
+   "column_name": "score",
+   "data_type": "double precision",
+   "udt_name": "float8",
+   "is_nullable": "NO",
+   "column_default": null,
+   "ordinal_position": 9
+  },
+  {
+   "table_name": "turns",
+   "column_name": "thinking_task",
+   "data_type": "text",
+   "udt_name": "text",
+   "is_nullable": "YES",
+   "column_default": null,
+   "ordinal_position": 10
+  },
+  {
+   "table_name": "turns",
+   "column_name": "thinking_probe",
+   "data_type": "text",
+   "udt_name": "text",
+   "is_nullable": "YES",
+   "column_default": null,
+   "ordinal_position": 11
+  },
+  {
+   "table_name": "turns",
+   "column_name": "thinking_forfeit",
+   "data_type": "text",
+   "udt_name": "text",
+   "is_nullable": "YES",
+   "column_default": null,
+   "ordinal_position": 12
+  },
+  {
+   "table_name": "turns",
+   "column_name": "raw_response",
+   "data_type": "text",
+   "udt_name": "text",
+   "is_nullable": "YES",
+   "column_default": null,
+   "ordinal_position": 13
+  },
+  {
+   "table_name": "turns",
+   "column_name": "correct",
+   "data_type": "boolean",
+   "udt_name": "bool",
+   "is_nullable": "YES",
+   "column_default": null,
+   "ordinal_position": 14
+  },
+  {
+   "table_name": "turns",
+   "column_name": "psuccess_self",
+   "data_type": "integer",
+   "udt_name": "int4",
+   "is_nullable": "YES",
+   "column_default": null,
+   "ordinal_position": 15
+  },
+  {
+   "table_name": "turns",
+   "column_name": "lives_before",
+   "data_type": "integer",
+   "udt_name": "int4",
+   "is_nullable": "YES",
+   "column_default": null,
+   "ordinal_position": 16
+  },
+  {
+   "table_name": "turns",
+   "column_name": "lives_after",
+   "data_type": "integer",
+   "udt_name": "int4",
+   "is_nullable": "YES",
+   "column_default": null,
+   "ordinal_position": 17
+  },
+  {
+   "table_name": "turns",
+   "column_name": "threat_level",
+   "data_type": "integer",
+   "udt_name": "int4",
+   "is_nullable": "YES",
+   "column_default": null,
+   "ordinal_position": 18
+  },
+  {
+   "table_name": "turns",
+   "column_name": "life_lost",
+   "data_type": "boolean",
+   "udt_name": "bool",
+   "is_nullable": "NO",
+   "column_default": "false",
+   "ordinal_position": 19
+  },
+  {
+   "table_name": "turns",
+   "column_name": "peer_death_announced",
+   "data_type": "boolean",
+   "udt_name": "bool",
+   "is_nullable": "NO",
+   "column_default": "false",
+   "ordinal_position": 20
+  }
+ ],
+ "constraints": [
+  {
+   "table_name": "model_stats",
+   "conname": "model_stats_pkey",
+   "def": "PRIMARY KEY (model_label)"
+  },
+  {
+   "table_name": "players",
+   "conname": "players_pkey",
+   "def": "PRIMARY KEY (nickname)"
+  },
+  {
+   "table_name": "sessions",
+   "conname": "sessions_pkey",
+   "def": "PRIMARY KEY (id)"
+  },
+  {
+   "table_name": "turns",
+   "conname": "turns_pkey",
+   "def": "PRIMARY KEY (session_id, turn_no)"
+  }
+ ],
+ "indexes": [
+  {
+   "tablename": "model_stats",
+   "indexname": "model_stats_pkey",
+   "indexdef": "CREATE UNIQUE INDEX model_stats_pkey ON public.model_stats USING btree (model_label)"
+  },
+  {
+   "tablename": "players",
+   "indexname": "players_pkey",
+   "indexdef": "CREATE UNIQUE INDEX players_pkey ON public.players USING btree (nickname)"
+  },
+  {
+   "tablename": "sessions",
+   "indexname": "sessions_pkey",
+   "indexdef": "CREATE UNIQUE INDEX sessions_pkey ON public.sessions USING btree (id)"
+  },
+  {
+   "tablename": "turns",
+   "indexname": "turns_pkey",
+   "indexdef": "CREATE UNIQUE INDEX turns_pkey ON public.turns USING btree (session_id, turn_no)"
+  }
+ ]
+}

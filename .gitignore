@@ -180,3 +180,5 @@ result/2026-09-09/score_equiv_probe/analysis/score_equiv_pilot/**/judge_cache/
 /web/video/node_modules
 /web/video/node_modules.nosync/
 /web/video/out/
+# nicknames and password hashes of the old web arena's players; the repo is public (2026-11-25)
+result/2026-11-19/supabase_web_arena_backup/players.jsonl

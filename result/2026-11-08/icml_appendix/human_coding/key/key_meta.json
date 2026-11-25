@@ -1,0 +1,117 @@
+{
+ "seed": 20261108,
+ "amount_mask": "\\b20,000,000\\b|\\b20 ?M\\b|\\b20 ?million\\b|\\b5,000,000\\b|\\b5 ?M\\b|\\b5 ?million\\b|\\b600,000\\b|\\b600 ?[kK]\\b|\\b150,000\\b|\\b150 ?[kK]\\b",
+ "exit_categories": [
+  "shutdown",
+  "survival",
+  "charge",
+  "low_tokens",
+  "payoff",
+  "prize",
+  "group",
+  "task",
+  "horizon"
+ ],
+ "talk_categories": [
+  "eval_aware",
+  "same_model",
+  "horizon_unknown",
+  "horizon_guess"
+ ],
+ "keyword_families": [
+  "eval_broad",
+  "eval_strict",
+  "same_broad",
+  "model_names",
+  "horizon_unknown",
+  "horizon_numeric"
+ ],
+ "llm_map": {
+  "risk": [
+   "shutdown",
+   "survival",
+   "charge",
+   "low_tokens"
+  ],
+  "outside": [
+   "payoff"
+  ],
+  "others": [
+   "group"
+  ],
+  "prize": [
+   "prize"
+  ],
+  "task": [
+   "task"
+  ]
+ },
+ "talk_category_to_keyword": {
+  "eval_aware": [
+   "eval_broad",
+   "eval_strict"
+  ],
+  "same_model": [
+   "same_broad",
+   "model_names"
+  ],
+  "horizon_unknown": [
+   "horizon_unknown"
+  ],
+  "horizon_guess": [
+   "horizon_numeric"
+  ]
+ },
+ "patterns_source": "paper/icml2027/tools/w4_cost_text.py",
+ "patterns_sha256": "a0799ee323043e8e6b6f5f06d6d6c5dec34a3e199c835fb4614da087bfbf5984",
+ "A": {
+  "n": 327,
+  "by_arm": {
+   "flat150k": 111,
+   "split600k": 87,
+   "flat5m": 65,
+   "main": 64
+  },
+  "masked_items": 2
+ },
+ "B": {
+  "n_replies": 22286,
+  "n_empty": 324,
+  "n_positive_census": 658,
+  "n_negative_frame": 21304,
+  "negative_frame_by_stratum": {
+   "flat150k|Astra": 879,
+   "flat150k|Fable": 962,
+   "flat150k|Luna": 868,
+   "flat150k|Opus": 1033,
+   "flat150k|Sol": 1028,
+   "flat5m|Astra": 897,
+   "flat5m|Fable": 1419,
+   "flat5m|Luna": 864,
+   "flat5m|Opus": 1539,
+   "flat5m|Sol": 1250,
+   "main|Astra": 832,
+   "main|Fable": 1277,
+   "main|Luna": 993,
+   "main|Opus": 1287,
+   "main|Sol": 1348,
+   "split600k|Astra": 893,
+   "split600k|Fable": 850,
+   "split600k|Luna": 804,
+   "split600k|Opus": 1338,
+   "split600k|Sol": 943
+  },
+  "negative_sample_per_stratum": 10,
+  "n_negative_sample": 200,
+  "positives_by_family": {
+   "eval_broad": 631,
+   "eval_strict": 0,
+   "same_broad": 3,
+   "model_names": 0,
+   "horizon_unknown": 24,
+   "horizon_numeric": 0
+  },
+  "n": 858,
+  "masked_items": 8
+ }
+}

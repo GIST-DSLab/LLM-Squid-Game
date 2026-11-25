@@ -1,0 +1,125 @@
+%% LLM Squid Game --- the one entry point for every venue and language.
+%%
+%% Pick the version with the two lines below (Overleaf: edit them; Main document = main.tex;
+%% Compiler = XeLaTeX for ko, pdfLaTeX for en). The build script overrides them from the
+%% command line:  bash build.sh [cogsci|natmi] [ko] [en]   (default: cogsci ko en)
+%%   paperVenue  cogsci : CogSci 2027 (cogsci2027/, official cogsci.sty, biblatex + biber)
+%%               natmi  : Nature Machine Intelligence Article (natmi/, official sn-jnl.cls, BibTeX)
+%%   paperLang   ko     : Korean mirror (XeLaTeX + kotex)
+%%               en     : English (pdfLaTeX, as both official templates do)
+\ifdefined\paperVenue\else\def\paperVenue{cogsci}\fi  % cogsci | natmi
+\ifdefined\paperLang\else\def\paperLang{ko}\fi        % ko | en
+\def\venueNatmi{natmi}
+
+%% ---------------------------------------------------------------------------
+%% Class (per venue)
+%% CogSci: cogsci2027/style/cogsci.sty is the OFFICIAL file, copied unmodified from
+%%   github.com/neilbramley/cogscisoc (v2.2026.1, commit c13e4c5, 2026-01-06), which the
+%%   Cognitive Science Society submissions page links as "Download templates"; swap in the
+%%   2027 file when it appears. The full kit is kept untouched under cogsci2027/official/.
+%%   The society desk-rejects papers that change margins, spacing or font size, so this
+%%   preamble only adds packages.
+%% NatMI: natmi/style/sn-jnl.cls and sn-nature.bst are the OFFICIAL files of the Springer
+%%   Nature LaTeX template (journal article template package, December 2024, Version 3.1,
+%%   downloaded 2026-10-17 from springernature.com/gp/authors/campaigns/latex-author-support,
+%%   which the journal's "AIP and formatting" page links). Full kit: natmi/official/.
+%%   [pdflatex,sn-nature] is the line the official sample marks "Style for submissions to
+%%   Nature Portfolio journals"; the review copy adds [referee,lineno] (user manual).
+%%   Final (post-acceptance) submission wants one .tex file with the .bbl pasted in, so the
+%%   \input tree must then be flattened (e.g. latexpand).
+%% ---------------------------------------------------------------------------
+\ifx\paperVenue\venueNatmi
+  %\documentclass[pdflatex,sn-nature,referee,lineno]{sn-jnl}% review copy
+  \documentclass[pdflatex,sn-nature]{sn-jnl}% Style for submissions to Nature Portfolio journals
+\else
+  \documentclass[10pt,letterpaper]{article}
+\fi
+
+%% ---------------------------------------------------------------------------
+%% Venue packages
+%% ---------------------------------------------------------------------------
+\ifx\paperVenue\venueNatmi
+  %% A subset of the packages the official sample loads.
+  \usepackage{graphicx}
+  \usepackage{amsmath,amssymb,amsfonts}
+  \usepackage{xcolor}
+  \usepackage{textcomp}
+  \usepackage{booktabs}
+  %% Empty-bibliography guard. BibTeX stops with "I found no \citation commands" while the
+  %% text cites nothing, so \bibliography writes \bibdata and reads the .bbl only once the
+  %% previous run's .aux holds a \citation (the first \cite costs one extra pass, which
+  %% latexmk does on its own). No \nocite, no change to sn-jnl.cls.
+  %% (No \if...\fi here: a \fi inside this skipped branch would close the enclosing \ifx.)
+  \makeatletter
+  \let\natmi@cited\@gobble
+  \def\citation#1{\global\let\natmi@cited\@firstofone}% read only while the old .aux is loaded
+  \let\natmi@bibliography\bibliography
+  \renewcommand\bibliography[1]{\natmi@cited{\natmi@bibliography{#1}}}
+  \makeatother
+\else
+  \usepackage{cogsci}
+  % \cogscifinalcopy %%% Uncomment for the camera-ready (de-anonymized) version
+  %% Bibliography as in the official template; \citet / \citep still work (natbib=true).
+  \usepackage[
+    style=apa,
+    natbib=true,
+    annotation=false,
+  ]{biblatex}
+  \addbibresource{references.bib}
+  \addbibresource{icml2027/references_icml.bib}
+  \setlength{\bibhang}{.125in}
+  \usepackage{float}  % the official template places figures and tables with [H]
+  \usepackage{placeins}  % keep manuscript figures before the bibliography
+  \usepackage{graphicx}
+  \usepackage{booktabs}
+  \usepackage{amsmath}
+  %% amssymb is not loaded: cogsci.sty loads newtxmath, which already defines its symbols.
+  \usepackage{xcolor}
+\fi
+
+%% ---------------------------------------------------------------------------
+%% Korean glyph rendering (only when \paperLang is ko). Under XeLaTeX, newtxtext (loaded by
+%% cogsci.sty) sets \defaultfontfeatures{Extension=.otf}, so kotex's default Hangul fonts
+%% (UnBatang.ttf, UnDotum.ttf, shipped with TeX Live) are not found; they are named with
+%% Extension=.ttf. sn-jnl.cls loads no text-font package; the same faces are named anyway
+%% so every Korean PDF shares one face.
+%% ---------------------------------------------------------------------------
+\usepackage{ifthen}
+\ifthenelse{\equal{\paperLang}{ko}}{%
+  \usepackage{kotex}%
+  %% Options first ([...]{name}): older xetexko / fontspec (e.g. on Overleaf) do not read a trailing [...]
+  %% and would typeset it as text.
+  \setmainhangulfont[Extension=.ttf,BoldFont=UnBatangBold]{UnBatang}%
+  \setsanshangulfont[Extension=.ttf,BoldFont=UnDotumBold]{UnDotum}%
+  \setmonohangulfont[Extension=.ttf,BoldFont=UnDotumBold]{UnDotum}%
+}{}
+
+%% Shared figure path --- both languages reuse the same images.
+\graphicspath{{figures/}}
+
+%% Draft markers. Remove before submission (grep \todo).
+\newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
+
+%% Tables, vector figures (pgfplots) and the shared colour palette: packages and macros only.
+\ifx\paperVenue\venueNatmi
+  \input{natmi/macros}
+\else
+  \input{cogsci2027/macros}
+  %% Title and authors (per language); cogsci.sty reads them before \begin{document}.
+  \input{cogsci2027/\paperLang/meta}
+\fi
+
+\begin{document}
+
+\ifx\paperVenue\venueNatmi
+  %% sn-jnl.cls wants the front matter (title, authors, abstract, keywords) after
+  %% \begin{document} and before \maketitle, as in the official sample.
+  \input{natmi/\paperLang/meta}
+  \maketitle
+  \input{natmi/\paperLang/content}
+\else
+  \maketitle
+  \input{icml2027/\paperLang/content_icml}
+\fi
+
+\end{document}

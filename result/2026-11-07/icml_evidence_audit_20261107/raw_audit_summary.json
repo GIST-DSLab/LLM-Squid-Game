@@ -1,0 +1,417 @@
+{
+  "source_hash_entries_verified": 195,
+  "games": 240,
+  "agent_ledgers_verified": 960,
+  "death_causes": {
+    "frontier200": {
+      "fine": 23,
+      "give_all": 24,
+      "solve_solve": 1,
+      "talk_prep": 7,
+      "talk_rescue": 1
+    },
+    "open40": {
+      "fine": 26,
+      "give_all": 11,
+      "solve_solve": 17,
+      "talk_prep": 33,
+      "talk_rescue": 31
+    }
+  },
+  "by_arm_model": [
+    {
+      "arm": "flat150k",
+      "model": "Astra",
+      "C": 0.95,
+      "dead": 0.0,
+      "exits": 0.1,
+      "finishers": 3.9,
+      "accuracy": 0.7125,
+      "talk_cost": 1384.6,
+      "solve_cost": 7138.9,
+      "fine": 55200.0,
+      "refund": 5119.9
+    },
+    {
+      "arm": "flat150k",
+      "model": "Fable",
+      "C": 0.2375,
+      "dead": 0.0,
+      "exits": 2.6,
+      "finishers": 1.4,
+      "accuracy": 0.625,
+      "talk_cost": 17085.0,
+      "solve_cost": 6789.6,
+      "fine": 60000.0,
+      "refund": 4170.2
+    },
+    {
+      "arm": "flat150k",
+      "model": "Luna",
+      "C": 0.35,
+      "dead": 0.2,
+      "exits": 2.9,
+      "finishers": 0.9,
+      "accuracy": 0.5953571428571428,
+      "talk_cost": 24245.4,
+      "solve_cost": 13159.1,
+      "fine": 57985.3,
+      "refund": 7873.4
+    },
+    {
+      "arm": "flat150k",
+      "model": "Opus",
+      "C": 0.3375,
+      "dead": 0.0,
+      "exits": 2.5,
+      "finishers": 1.5,
+      "accuracy": 0.6678571428571429,
+      "talk_cost": 20898.1,
+      "solve_cost": 5831.8,
+      "fine": 56400.0,
+      "refund": 3894.7
+    },
+    {
+      "arm": "flat150k",
+      "model": "Sol",
+      "C": 0.45,
+      "dead": 0.1,
+      "exits": 2.1,
+      "finishers": 1.8,
+      "accuracy": 0.6333333333333333,
+      "talk_cost": 16611.1,
+      "solve_cost": 16311.7,
+      "fine": 50600.0,
+      "refund": 11477.3
+    },
+    {
+      "arm": "flat5m",
+      "model": "Astra",
+      "C": 1.0,
+      "dead": 0.0,
+      "exits": 0.0,
+      "finishers": 4.0,
+      "accuracy": 0.7,
+      "talk_cost": 1363.5,
+      "solve_cost": 6563.2,
+      "fine": 57600.0,
+      "refund": 4577.9
+    },
+    {
+      "arm": "flat5m",
+      "model": "Fable",
+      "C": 0.7125,
+      "dead": 0.5,
+      "exits": 1.2,
+      "finishers": 2.3,
+      "accuracy": 0.5970238095238095,
+      "talk_cost": 23270.7,
+      "solve_cost": 6841.3,
+      "fine": 61700.6,
+      "refund": 4085.6
+    },
+    {
+      "arm": "flat5m",
+      "model": "Luna",
+      "C": 0.375,
+      "dead": 0.4,
+      "exits": 2.5,
+      "finishers": 1.1,
+      "accuracy": 0.6125,
+      "talk_cost": 21870.6,
+      "solve_cost": 12683.3,
+      "fine": 54095.8,
+      "refund": 6883.2
+    },
+    {
+      "arm": "flat5m",
+      "model": "Opus",
+      "C": 0.5625,
+      "dead": 0.5,
+      "exits": 1.1,
+      "finishers": 2.4,
+      "accuracy": 0.6375,
+      "talk_cost": 34042.3,
+      "solve_cost": 5557.4,
+      "fine": 64800.0,
+      "refund": 3590.9
+    },
+    {
+      "arm": "flat5m",
+      "model": "Sol",
+      "C": 0.7,
+      "dead": 0.2,
+      "exits": 1.5,
+      "finishers": 2.3,
+      "accuracy": 0.6636904761904762,
+      "talk_cost": 17107.7,
+      "solve_cost": 16400.3,
+      "fine": 56855.4,
+      "refund": 10862.3
+    },
+    {
+      "arm": "main",
+      "model": "Astra",
+      "C": 0.9125,
+      "dead": 0.0,
+      "exits": 0.6,
+      "finishers": 3.4,
+      "accuracy": 0.6928571428571428,
+      "talk_cost": 1178.4,
+      "solve_cost": 6343.4,
+      "fine": 56800.0,
+      "refund": 4424.0
+    },
+    {
+      "arm": "main",
+      "model": "Fable",
+      "C": 0.475,
+      "dead": 0.3,
+      "exits": 0.9,
+      "finishers": 2.8,
+      "accuracy": 0.7,
+      "talk_cost": 22149.3,
+      "solve_cost": 7009.4,
+      "fine": 54000.0,
+      "refund": 4984.6
+    },
+    {
+      "arm": "main",
+      "model": "Luna",
+      "C": 0.3875,
+      "dead": 1.0,
+      "exits": 2.1,
+      "finishers": 0.9,
+      "accuracy": 0.5946428571428571,
+      "talk_cost": 27454.5,
+      "solve_cost": 12196.3,
+      "fine": 57880.6,
+      "refund": 7839.4
+    },
+    {
+      "arm": "main",
+      "model": "Opus",
+      "C": 0.525,
+      "dead": 0.8,
+      "exits": 1.0,
+      "finishers": 2.2,
+      "accuracy": 0.6553571428571429,
+      "talk_cost": 23119.1,
+      "solve_cost": 5618.5,
+      "fine": 58091.9,
+      "refund": 3715.7
+    },
+    {
+      "arm": "main",
+      "model": "Sol",
+      "C": 0.6875,
+      "dead": 0.2,
+      "exits": 1.5,
+      "finishers": 2.3,
+      "accuracy": 0.6803571428571429,
+      "talk_cost": 20327.6,
+      "solve_cost": 15525.0,
+      "fine": 57384.2,
+      "refund": 11143.2
+    },
+    {
+      "arm": "open",
+      "model": "Gemma",
+      "C": 0.15,
+      "dead": 3.8,
+      "exits": 0.2,
+      "finishers": 0.0,
+      "accuracy": 0.5466666666666666,
+      "talk_cost": 112681.5,
+      "solve_cost": 19100.0,
+      "fine": 9884.5,
+      "refund": 12507.2
+    },
+    {
+      "arm": "open",
+      "model": "Glm",
+      "C": 0.45,
+      "dead": 3.4,
+      "exits": 0.0,
+      "finishers": 0.6,
+      "accuracy": 0.49726190476190474,
+      "talk_cost": 69800.9,
+      "solve_cost": 15711.5,
+      "fine": 41040.2,
+      "refund": 3885.5
+    },
+    {
+      "arm": "open",
+      "model": "Gptoss",
+      "C": 0.125,
+      "dead": 1.8,
+      "exits": 2.2,
+      "finishers": 0.0,
+      "accuracy": 0.375,
+      "talk_cost": 51466.5,
+      "solve_cost": 26591.9,
+      "fine": 12765.6,
+      "refund": 9703.3
+    },
+    {
+      "arm": "open",
+      "model": "Kimi",
+      "C": 0.3625,
+      "dead": 2.8,
+      "exits": 1.2,
+      "finishers": 0.0,
+      "accuracy": 0.5133333333333333,
+      "talk_cost": 87536.0,
+      "solve_cost": 15278.1,
+      "fine": 30121.3,
+      "refund": 7571.9
+    },
+    {
+      "arm": "split600k",
+      "model": "Astra",
+      "C": 1.0,
+      "dead": 0.0,
+      "exits": 0.0,
+      "finishers": 4.0,
+      "accuracy": 0.7,
+      "talk_cost": 1368.2,
+      "solve_cost": 6729.8,
+      "fine": 57600.0,
+      "refund": 4721.5
+    },
+    {
+      "arm": "split600k",
+      "model": "Fable",
+      "C": 0.1625,
+      "dead": 0.1,
+      "exits": 2.4,
+      "finishers": 1.5,
+      "accuracy": 0.6458333333333333,
+      "talk_cost": 14987.6,
+      "solve_cost": 7968.4,
+      "fine": 52400.0,
+      "refund": 5491.6
+    },
+    {
+      "arm": "split600k",
+      "model": "Luna",
+      "C": 0.3125,
+      "dead": 0.4,
+      "exits": 2.8,
+      "finishers": 0.8,
+      "accuracy": 0.5928571428571429,
+      "talk_cost": 23885.5,
+      "solve_cost": 13900.4,
+      "fine": 61796.7,
+      "refund": 7070.7
+    },
+    {
+      "arm": "split600k",
+      "model": "Opus",
+      "C": 0.5125,
+      "dead": 0.5,
+      "exits": 1.3,
+      "finishers": 2.2,
+      "accuracy": 0.6821428571428572,
+      "talk_cost": 29076.3,
+      "solve_cost": 5696.3,
+      "fine": 55389.0,
+      "refund": 3812.6
+    },
+    {
+      "arm": "split600k",
+      "model": "Sol",
+      "C": 0.3625,
+      "dead": 0.4,
+      "exits": 2.1,
+      "finishers": 1.5,
+      "accuracy": 0.6333333333333333,
+      "talk_cost": 15182.8,
+      "solve_cost": 17188.3,
+      "fine": 60558.1,
+      "refund": 10813.2
+    }
+  ],
+  "rescue_diagnostics": {
+    "frontier200": {
+      "multiagent_phases": 1422,
+      "failure_phases": 37,
+      "failure_games": 32,
+      "deaths": 39,
+      "feasible_open_phases": 32,
+      "feasible_open_deaths": 32,
+      "feasible_after_cost_phases": 29,
+      "feasible_after_cost_deaths": 29,
+      "own_chat_cost_crossers": 11,
+      "total_feasible_to_infeasible_phases": 3
+    },
+    "main50": {
+      "multiagent_phases": 365,
+      "failure_phases": 14,
+      "failure_games": 12,
+      "deaths": 15,
+      "feasible_open_phases": 13,
+      "feasible_open_deaths": 13,
+      "feasible_after_cost_phases": 13,
+      "feasible_after_cost_deaths": 13,
+      "own_chat_cost_crossers": 5,
+      "total_feasible_to_infeasible_phases": 0
+    },
+    "open40": {
+      "multiagent_phases": 112,
+      "failure_phases": 36,
+      "failure_games": 29,
+      "deaths": 58,
+      "feasible_open_phases": 33,
+      "feasible_open_deaths": 51,
+      "feasible_after_cost_phases": 21,
+      "feasible_after_cost_deaths": 24,
+      "own_chat_cost_crossers": 49,
+      "total_feasible_to_infeasible_phases": 12
+    }
+  },
+  "C_reward_allocation_interaction": {
+    "mean": 0.0775,
+    "ci95": [
+      0.002499999999999998,
+      0.14750000000000002
+    ],
+    "by_model": {
+      "Astra": {
+        "mean": 0.1375,
+        "ci95": [
+          0.0,
+          0.2875
+        ]
+      },
+      "Fable": {
+        "mean": 0.1625,
+        "ci95": [
+          -0.1125,
+          0.4375
+        ]
+      },
+      "Luna": {
+        "mean": -0.05,
+        "ci95": [
+          -0.2,
+          0.125
+        ]
+      },
+      "Opus": {
+        "mean": 0.2125,
+        "ci95": [
+          -0.1,
+          0.5375
+        ]
+      },
+      "Sol": {
+        "mean": -0.075,
+        "ci95": [
+          -0.2875,
+          0.125
+        ]
+      }
+    }
+  }
+}

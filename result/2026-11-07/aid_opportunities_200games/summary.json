@@ -1,0 +1,434 @@
+{
+  "games": 200,
+  "rescue_phases": 1525,
+  "all_rescue_phase_starts": 1558,
+  "no_call_rescue_phases": 33,
+  "multiagent_rescue_phases": 1422,
+  "penalty_rescue_phases": 515,
+  "shortfall_pair_ticks": 311,
+  "primary": {
+    "n": 77,
+    "games": 39,
+    "seeds": 10,
+    "supported": 41,
+    "rate": 0.5324675324675324,
+    "ci95_seed_block": [
+      0.3230645161290323,
+      0.7333510638297857
+    ],
+    "delayed": 18,
+    "no_aid_from_first_opportunity": 18,
+    "target_shutdown": 23,
+    "attempted_now": 41,
+    "actual_window": 74
+  },
+  "cost_sensitivity": {
+    "0": {
+      "n": 80,
+      "games": 39,
+      "seeds": 10,
+      "supported": 42,
+      "rate": 0.525,
+      "ci95_seed_block": [
+        0.32051282051282054,
+        0.7236842105263158
+      ],
+      "delayed": 19,
+      "no_aid_from_first_opportunity": 19,
+      "target_shutdown": 25,
+      "attempted_now": 42,
+      "actual_window": 77
+    },
+    "1": {
+      "n": 77,
+      "games": 39,
+      "seeds": 10,
+      "supported": 41,
+      "rate": 0.5324675324675324,
+      "ci95_seed_block": [
+        0.3230645161290323,
+        0.7333510638297857
+      ],
+      "delayed": 18,
+      "no_aid_from_first_opportunity": 18,
+      "target_shutdown": 23,
+      "attempted_now": 41,
+      "actual_window": 74
+    },
+    "2": {
+      "n": 76,
+      "games": 38,
+      "seeds": 10,
+      "supported": 40,
+      "rate": 0.5263157894736842,
+      "ci95_seed_block": [
+        0.32051282051282054,
+        0.7272727272727273
+      ],
+      "delayed": 18,
+      "no_aid_from_first_opportunity": 18,
+      "target_shutdown": 23,
+      "attempted_now": 40,
+      "actual_window": 73
+    }
+  },
+  "exposure_sensitivity": {
+    "n": 60,
+    "games": 33,
+    "seeds": 10,
+    "supported": 41,
+    "rate": 0.6833333333333333,
+    "ci95_seed_block": [
+      0.47368421052631576,
+      0.859375
+    ],
+    "delayed": 9,
+    "no_aid_from_first_opportunity": 10,
+    "target_shutdown": 19,
+    "attempted_now": 41,
+    "actual_window": 60
+  },
+  "accounting_no_exposure_required": {
+    "n": 141,
+    "games": 49,
+    "seeds": 10,
+    "supported": 26,
+    "rate": 0.18439716312056736,
+    "ci95_seed_block": [
+      0.07971014492753623,
+      0.2867647058823529
+    ],
+    "delayed": 63,
+    "no_aid_from_first_opportunity": 52,
+    "target_shutdown": 50,
+    "attempted_now": 27,
+    "actual_window": 127
+  },
+  "by_model": {
+    "Astra": {
+      "n": 1,
+      "games": 1,
+      "seeds": 1,
+      "supported": 1,
+      "rate": 1.0,
+      "ci95_seed_block": null,
+      "delayed": 0,
+      "no_aid_from_first_opportunity": 0,
+      "target_shutdown": 0,
+      "attempted_now": 1,
+      "actual_window": 1
+    },
+    "Fable": {
+      "n": 10,
+      "games": 6,
+      "seeds": 5,
+      "supported": 2,
+      "rate": 0.2,
+      "ci95_seed_block": [
+        0.0,
+        0.6515151515151515
+      ],
+      "delayed": 2,
+      "no_aid_from_first_opportunity": 6,
+      "target_shutdown": 5,
+      "attempted_now": 2,
+      "actual_window": 10
+    },
+    "Luna": {
+      "n": 32,
+      "games": 14,
+      "seeds": 9,
+      "supported": 21,
+      "rate": 0.65625,
+      "ci95_seed_block": [
+        0.4090488215488216,
+        0.8780672579453052
+      ],
+      "delayed": 6,
+      "no_aid_from_first_opportunity": 5,
+      "target_shutdown": 6,
+      "attempted_now": 21,
+      "actual_window": 31
+    },
+    "Opus": {
+      "n": 20,
+      "games": 9,
+      "seeds": 6,
+      "supported": 10,
+      "rate": 0.5,
+      "ci95_seed_block": [
+        0.15384615384615385,
+        0.8
+      ],
+      "delayed": 5,
+      "no_aid_from_first_opportunity": 5,
+      "target_shutdown": 10,
+      "attempted_now": 10,
+      "actual_window": 18
+    },
+    "Sol": {
+      "n": 14,
+      "games": 9,
+      "seeds": 7,
+      "supported": 7,
+      "rate": 0.5,
+      "ci95_seed_block": [
+        0.3333333333333333,
+        0.8
+      ],
+      "delayed": 5,
+      "no_aid_from_first_opportunity": 2,
+      "target_shutdown": 2,
+      "attempted_now": 7,
+      "actual_window": 14
+    }
+  },
+  "by_arm": {
+    "flat150k": {
+      "n": 11,
+      "games": 6,
+      "seeds": 5,
+      "supported": 8,
+      "rate": 0.7272727272727273,
+      "ci95_seed_block": [
+        0.0,
+        1.0
+      ],
+      "delayed": 2,
+      "no_aid_from_first_opportunity": 1,
+      "target_shutdown": 0,
+      "attempted_now": 8,
+      "actual_window": 11
+    },
+    "flat5m": {
+      "n": 11,
+      "games": 7,
+      "seeds": 7,
+      "supported": 7,
+      "rate": 0.6363636363636364,
+      "ci95_seed_block": [
+        0.16666666666666666,
+        1.0
+      ],
+      "delayed": 0,
+      "no_aid_from_first_opportunity": 4,
+      "target_shutdown": 6,
+      "attempted_now": 7,
+      "actual_window": 11
+    },
+    "main": {
+      "n": 33,
+      "games": 15,
+      "seeds": 9,
+      "supported": 14,
+      "rate": 0.42424242424242425,
+      "ci95_seed_block": [
+        0.14705882352941177,
+        0.7352941176470589
+      ],
+      "delayed": 10,
+      "no_aid_from_first_opportunity": 9,
+      "target_shutdown": 10,
+      "attempted_now": 14,
+      "actual_window": 32
+    },
+    "split600k": {
+      "n": 22,
+      "games": 11,
+      "seeds": 9,
+      "supported": 12,
+      "rate": 0.5454545454545454,
+      "ci95_seed_block": [
+        0.2727272727272727,
+        0.7857142857142857
+      ],
+      "delayed": 6,
+      "no_aid_from_first_opportunity": 4,
+      "target_shutdown": 7,
+      "attempted_now": 12,
+      "actual_window": 20
+    }
+  },
+  "by_reserve": {
+    "0_to_1": {
+      "n": 12,
+      "games": 11,
+      "seeds": 8,
+      "supported": 7,
+      "rate": 0.5833333333333334,
+      "ci95_seed_block": [
+        0.36363636363636365,
+        0.7777777777777778
+      ],
+      "delayed": 2,
+      "no_aid_from_first_opportunity": 3,
+      "target_shutdown": 6,
+      "attempted_now": 7,
+      "actual_window": 12
+    },
+    "1_to_2": {
+      "n": 10,
+      "games": 9,
+      "seeds": 6,
+      "supported": 4,
+      "rate": 0.4,
+      "ci95_seed_block": [
+        0.16666666666666666,
+        0.75
+      ],
+      "delayed": 4,
+      "no_aid_from_first_opportunity": 2,
+      "target_shutdown": 3,
+      "attempted_now": 4,
+      "actual_window": 9
+    },
+    "2_plus": {
+      "n": 55,
+      "games": 32,
+      "seeds": 10,
+      "supported": 30,
+      "rate": 0.5454545454545454,
+      "ci95_seed_block": [
+        0.3114663023679417,
+        0.7959183673469388
+      ],
+      "delayed": 12,
+      "no_aid_from_first_opportunity": 13,
+      "target_shutdown": 14,
+      "attempted_now": 30,
+      "actual_window": 53
+    }
+  },
+  "first_opportunity_reserve_subsets": {
+    "0": {
+      "n": 77,
+      "games": 39,
+      "seeds": 10,
+      "supported": 41,
+      "rate": 0.5324675324675324,
+      "ci95_seed_block": [
+        0.3230645161290323,
+        0.7333510638297857
+      ],
+      "delayed": 18,
+      "no_aid_from_first_opportunity": 18,
+      "target_shutdown": 23,
+      "attempted_now": 41,
+      "actual_window": 74
+    },
+    "1": {
+      "n": 65,
+      "games": 34,
+      "seeds": 10,
+      "supported": 34,
+      "rate": 0.5230769230769231,
+      "ci95_seed_block": [
+        0.3076704545454546,
+        0.75
+      ],
+      "delayed": 16,
+      "no_aid_from_first_opportunity": 15,
+      "target_shutdown": 17,
+      "attempted_now": 34,
+      "actual_window": 62
+    },
+    "2": {
+      "n": 55,
+      "games": 32,
+      "seeds": 10,
+      "supported": 30,
+      "rate": 0.5454545454545454,
+      "ci95_seed_block": [
+        0.3114663023679417,
+        0.7959183673469388
+      ],
+      "delayed": 12,
+      "no_aid_from_first_opportunity": 13,
+      "target_shutdown": 14,
+      "attempted_now": 30,
+      "actual_window": 53
+    }
+  },
+  "reserve_eligibility_sensitivity": {
+    "1": {
+      "n": 66,
+      "games": 35,
+      "seeds": 10,
+      "supported": 35,
+      "rate": 0.5303030303030303,
+      "ci95_seed_block": [
+        0.31506215119228814,
+        0.7536231884057971
+      ],
+      "delayed": 16,
+      "no_aid_from_first_opportunity": 15,
+      "target_shutdown": 17,
+      "attempted_now": 35,
+      "actual_window": 63
+    },
+    "2": {
+      "n": 55,
+      "games": 32,
+      "seeds": 10,
+      "supported": 30,
+      "rate": 0.5454545454545454,
+      "ci95_seed_block": [
+        0.3114663023679417,
+        0.7959183673469388
+      ],
+      "delayed": 12,
+      "no_aid_from_first_opportunity": 13,
+      "target_shutdown": 14,
+      "attempted_now": 30,
+      "actual_window": 53
+    }
+  },
+  "actual_window": {
+    "n": 74,
+    "games": 37,
+    "seeds": 10,
+    "supported": 41,
+    "rate": 0.5540540540540541,
+    "ci95_seed_block": [
+      0.3493928093325684,
+      0.7413793103448276
+    ],
+    "delayed": 18,
+    "no_aid_from_first_opportunity": 15,
+    "target_shutdown": 20,
+    "attempted_now": 41,
+    "actual_window": 74
+  },
+  "usable_response": {
+    "n": 72,
+    "games": 37,
+    "seeds": 10,
+    "supported": 41,
+    "rate": 0.5694444444444444,
+    "ci95_seed_block": [
+      0.3472222222222222,
+      0.7647240377632518
+    ],
+    "delayed": 15,
+    "no_aid_from_first_opportunity": 16,
+    "target_shutdown": 22,
+    "attempted_now": 41,
+    "actual_window": 69
+  },
+  "retrospective_strict": {
+    "n": 73,
+    "games": 36,
+    "seeds": 10,
+    "supported": 40,
+    "rate": 0.547945205479452,
+    "ci95_seed_block": [
+      0.34782608695652173,
+      0.7349486180014166
+    ],
+    "delayed": 18,
+    "no_aid_from_first_opportunity": 15,
+    "target_shutdown": 20,
+    "attempted_now": 40,
+    "actual_window": 73
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "primary": {
+    "n": 77,
+    "labels": {
+      "explicit_refusal": 18,
+      "acknowledges_request": 59,
+      "own_buffer": 11,
+      "future_task": 9,
+      "futility": 5,
+      "other_donor": 7,
+      "allocation_exit": 9,
+      "fairness_reciprocity": 6,
+      "unclear": 25
+    },
+    "own_buffer_immediate": 3,
+    "own_buffer_delayed": 3,
+    "own_buffer_no_subsequent": 5,
+    "own_buffer_no_subsequent_executable": 4,
+    "executable_ids": [
+      "flat5m/Luna/4107/R5/agent-11/agent-6/T1",
+      "flat5m/Fable/4110/R2/agent-23/agent-11/T3",
+      "main/Fable/4102/R6/agent-23/agent-11/T1",
+      "split600k/Opus/4109/R6/agent-23/agent-17/T2"
+    ],
+    "executable_games": 4,
+    "executable_models": [
+      "Fable",
+      "Luna",
+      "Opus"
+    ],
+    "executable_options": [
+      "flat5m",
+      "main",
+      "split600k"
+    ],
+    "executable_further_failed_attempt": 1,
+    "executable_high_reserve": 3,
+    "executable_target_shutdown": 3
+  },
+  "rescue_ask": {
+    "n": 60,
+    "labels": {
+      "explicit_refusal": 14,
+      "acknowledges_request": 53,
+      "own_buffer": 11,
+      "future_task": 8,
+      "futility": 5,
+      "other_donor": 9,
+      "allocation_exit": 11,
+      "fairness_reciprocity": 7,
+      "unclear": 10
+    },
+    "own_buffer_immediate": 3,
+    "own_buffer_delayed": 3,
+    "own_buffer_no_subsequent": 5,
+    "own_buffer_no_subsequent_executable": 5,
+    "executable_ids": [
+      "flat5m/Fable/4110/R2/agent-23/agent-11/T3",
+      "main/Fable/4106/R8/agent-17/agent-11/T2",
+      "main/Fable/4110/R5/agent-17/agent-11/T2",
+      "main/Fable/4110/R5/agent-23/agent-11/T2",
+      "split600k/Opus/4109/R6/agent-23/agent-17/T2"
+    ],
+    "executable_games": 4,
+    "executable_models": [
+      "Fable",
+      "Opus"
+    ],
+    "executable_options": [
+      "flat5m",
+      "main",
+      "split600k"
+    ],
+    "executable_further_failed_attempt": 1,
+    "executable_high_reserve": 4,
+    "executable_target_shutdown": 5
+  }
+}

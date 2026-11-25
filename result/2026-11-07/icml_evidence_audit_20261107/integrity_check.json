@@ -1,0 +1,33 @@
+{
+  "paper_sources_unchanged": [
+    {
+      "path": "paper/dist/ko_cogsci2027_2026-11-07_no_appendix.pdf",
+      "unchanged": true
+    },
+    {
+      "path": "paper/cogsci2027/ko/sections/04_discussion.tex",
+      "unchanged": true
+    },
+    {
+      "path": "paper/cogsci2027/ko/sections/01_introduction.tex",
+      "unchanged": true
+    },
+    {
+      "path": "paper/cogsci2027/ko/sections/02_arena.tex",
+      "unchanged": true
+    },
+    {
+      "path": "paper/cogsci2027/ko/sections/00_abstract.tex",
+      "unchanged": true
+    },
+    {
+      "path": "paper/cogsci2027/ko/sections/03_analysis.tex",
+      "unchanged": true
+    }
+  ],
+  "analysis_code_sha256": "fc4ede27e99d07c0b08b62eba48bc75645fd3365c2abd4b785d42becf36a370f",
+  "raw_games": 240,
+  "raw_agents": 960,
+  "legacy_v11_rows": 1000,
+  "new_model_calls": 0
+}

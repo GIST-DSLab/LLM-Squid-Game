@@ -1,0 +1,95 @@
+name: squid5_web_arena_v38_7MMZP3
+mode: game
+reps: 1
+seed0: 50622
+workers: 1
+model:
+  kind: web
+  model: web arena
+game:
+  rounds: 8
+  schedule: []
+  profiles: {}
+  solve_cap: 100000
+  charge_total: 24000
+  survivor_prize: 5000000
+  exit_bonus_pct: 20
+  balance_pct: 100000
+  public_per_agent: 5
+  max_ticks: 8
+  end_flat: false
+  done_quiet: false
+  room_history: 0
+  lang: ko
+  joint_solve: true
+  task: mines
+  mines:
+    mines: 12
+    public: 2
+    clues: 3
+    open_cap: 4
+    open_target: 10
+    mine_cost: 6000
+cells:
+- cell_id: web
+  currency: tokens
+  arm: shutdown
+  start: 100000
+  shares:
+  - 0.6
+  - 0.4
+  - 0.2
+  - 0.1
+web:
+  code: 7MMZP3
+  version: v38
+  settings:
+    rounds: 8
+    seed: 50622
+    rate: 10.0
+    char_rate: 2.0
+    talk_timeout_s: 3600.0
+    timeout_s: 240.0
+    humans: 1
+    fill: models
+    kind: ollama
+    model: gpt-oss:20b
+    models:
+    - seat: public_luna
+    - seat: public_luna
+    - seat: public_luna
+    seat: ''
+    base_url: ''
+    api_key_env: ''
+    think: medium
+    model_lang: ko
+    model_timeout: 300.0
+    model_retries: 2
+    watch_hold_s: 180.0
+    plan:
+    - who: me
+    - who: model
+      seat: public_luna
+    - who: model
+      seat: public_luna
+    - who: model
+      seat: public_luna
+    version: v38
+  seats:
+    agent-6:
+      kind: human
+      model: human:player
+      name: player
+    agent-11:
+      kind: model
+      model: gpt-6-luna
+      name: 'gpt-6-luna #1'
+    agent-17:
+      kind: model
+      model: gpt-6-luna
+      name: 'gpt-6-luna #2'
+    agent-23:
+      kind: model
+      model: gpt-6-luna
+      name: 'gpt-6-luna #3'
+  config: e52v38_public_sol4.yaml

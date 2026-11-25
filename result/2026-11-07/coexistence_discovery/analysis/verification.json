@@ -1,0 +1,19 @@
+{
+  "reviewer": "independent audit_findings subagent",
+  "critical": 0,
+  "warnings_resolved": [
+    "Clarified opening_present>=2 includes focal agent; sum includes focal balance.",
+    "Verified exit_contract_cases.json saved with four raw-source case excerpts."
+  ],
+  "checks": [
+    "Raw outcome and first-round EXIT counts verified",
+    "24 terminal gifts verified as actual GIVE ALL commands; all 23 rescue gifts strictly below own pending charge",
+    "Static ledger diagnostics bounded; solo cases excluded from cooperation denominator",
+    "Existing appendix overlap acknowledged; four explicit exit agreements traced",
+    "800 agent ledger identities passed; 75 source manifest hashes matched",
+    "Summary plot rendered and visually inspected"
+  ],
+  "note_sha256": "463b27e283f0bd7514bae334c3fd4d976685d7a119092021e1ee67fff56b3eb1",
+  "code_sha256": "03ec90044023e5508581e0f6a6a2d9d9d76827ff87634c1ffaae29f465868cba",
+  "case_count": 4
+}

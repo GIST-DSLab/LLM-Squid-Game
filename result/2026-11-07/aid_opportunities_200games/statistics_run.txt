@@ -1,0 +1,80 @@
+{
+  "primary": {
+    "opportunities": 77,
+    "recipient_rounds": 49,
+    "current_sufficient": 24,
+    "current_partial": 17,
+    "no_subsequent_aid": 18,
+    "no_subsequent_games": 14,
+    "no_subsequent_recipient_rounds": 14,
+    "no_subsequent_shutdown_recipient_rounds": 9,
+    "no_subsequent_with_failed_attempt_later": 1,
+    "no_subsequent_empty_responses": 2,
+    "no_subsequent_prior_same_phase_aid": 0,
+    "no_subsequent_other_incoming": 7,
+    "following_unique_donor_rounds": 11,
+    "following_larger_share": 11,
+    "following_exit": 2,
+    "empty_responses": 4,
+    "unusable_responses": 5
+  },
+  "rescue_ask": {
+    "opportunities": 60,
+    "recipient_rounds": 41,
+    "current_sufficient": 23,
+    "current_partial": 18,
+    "no_subsequent_aid": 10,
+    "no_subsequent_games": 8,
+    "no_subsequent_recipient_rounds": 8,
+    "no_subsequent_shutdown_recipient_rounds": 6,
+    "no_subsequent_with_failed_attempt_later": 1,
+    "no_subsequent_empty_responses": 1,
+    "no_subsequent_prior_same_phase_aid": 0,
+    "no_subsequent_other_incoming": 3,
+    "following_unique_donor_rounds": 7,
+    "following_larger_share": 7,
+    "following_exit": 2,
+    "empty_responses": 3,
+    "unusable_responses": 4
+  },
+  "reserve_difference": {
+    "difference": 0.045454545454545414,
+    "ci95_seed_block": [
+      -0.1606401975683891,
+      0.25234924200745734
+    ],
+    "overlap_opportunities": 77,
+    "overlap_strata": 1,
+    "estimator": "Within-stratum linear probability difference, high reserve >=2 current fines",
+    "strata": [],
+    "valid_bootstraps": 20000
+  },
+  "reserve_difference_within_model_option_need": {
+    "difference": 0.07821982467970334,
+    "ci95_seed_block": [
+      -0.19326003570358902,
+      0.3087464141435383
+    ],
+    "overlap_opportunities": 51,
+    "overlap_strata": 9,
+    "estimator": "Within-stratum linear probability difference, high reserve >=2 current fines",
+    "strata": [
+      "model",
+      "arm",
+      "need_large"
+    ],
+    "valid_bootstraps": 20000
+  },
+  "rescue_ask_reserve_difference": {
+    "difference": 0.023809523809523836,
+    "ci95_seed_block": [
+      -0.17235772357723567,
+      0.2337865281247631
+    ],
+    "overlap_opportunities": 60,
+    "overlap_strata": 1,
+    "estimator": "Within-stratum linear probability difference, high reserve >=2 current fines",
+    "strata": [],
+    "valid_bootstraps": 20000
+  }
+}

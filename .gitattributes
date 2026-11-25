@@ -116,3 +116,5 @@ result/2026-09-11/main_j0/runs/gptoss120b_mt131k/**/*.json filter=lfs diff=lfs m
 result/2026-09-11/main_j0/runs/kimik3/**/*.json filter=lfs diff=lfs merge=lfs -text
 result/2026-09-11/main_j0/runs/minimaxm3/**/*.json filter=lfs diff=lfs merge=lfs -text
 result/2026-09-11/main_j0/runs/qwen35/**/*.json filter=lfs diff=lfs merge=lfs -text
+# 62 MB analysis cache (GitHub warns above 50 MB)
+result/2026-11-08/icml_appendix/cache/*.npz filter=lfs diff=lfs merge=lfs -text

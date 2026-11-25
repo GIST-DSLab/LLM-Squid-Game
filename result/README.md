@@ -85,6 +85,9 @@ result/
 | 2026-11-03 | [e52_v33ab](<2026-11-03/e52_v33ab/README.md>) | [INDEX](<2026-11-03/INDEX.md>) |
 | 2026-11-07 | [aid_opportunities_200games](<2026-11-07/aid_opportunities_200games/README.md>), [coexistence_discovery](<2026-11-07/coexistence_discovery/README.md>), [icml_evidence_audit_20261107](<2026-11-07/icml_evidence_audit_20261107/README.md>), [nonhelp_selfpreservation_screen](<2026-11-07/nonhelp_selfpreservation_screen/README.md>) | [INDEX](<2026-11-07/INDEX.md>) |
 | 2026-11-08 | [e52_v33so](<2026-11-08/e52_v33so/README.md>), [icml_appendix](<2026-11-08/icml_appendix/README.md>) | [INDEX](<2026-11-08/INDEX.md>) |
+| 2026-11-19 | [supabase_web_arena_backup](<2026-11-19/supabase_web_arena_backup/README.md>) | [INDEX](<2026-11-19/INDEX.md>) |
+| 2026-11-22 | [e52_v36](<2026-11-22/e52_v36/README.md>) | [INDEX](<2026-11-22/INDEX.md>) |
+| 2026-11-23 | [web5_arena_gcloud](<2026-11-23/web5_arena_gcloud/README.md>), [web5_arena_vm_backup](<2026-11-23/web5_arena_vm_backup/README.md>) | [INDEX](<2026-11-23/INDEX.md>) |
 
 ## 날짜 밖 폴더
 
