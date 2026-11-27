@@ -55,29 +55,42 @@
   // The trailer: a small box over the page on the first visit of a browser
   // session. It starts muted (browsers refuse sound without a click); the
   // "Sound on" chip restarts it with sound. Closing it (the x, Esc, a click
-  // outside the box) stops the video and shows the site; it is not shown
-  // again until the tab's session ends.
+  // outside the box) stops the video and shows the site; it does not open
+  // by itself again until the tab's session ends. The guard beside the
+  // buttons (#trailer-again) opens it again, from the start and with sound:
+  // that click is the permission a browser wants.
   // ---------------------------------------------------------------------
   const pop = document.getElementById("trailer-pop");
   const video = document.getElementById("trailer-video");
-  let seen = false;
-  try { seen = sessionStorage.getItem("trailer-seen") === "1"; } catch (_) { /* storage blocked: show it */ }
-  if (pop && video && !seen) {
+  if (pop && video) {
     const sound = document.getElementById("trailer-sound");
+    const x = document.getElementById("trailer-x");
+    const again = document.getElementById("trailer-again");
+    const open = (asked) => {
+      video.muted = !asked;
+      sound.hidden = asked;
+      video.currentTime = 0;
+      pop.hidden = false;
+      document.documentElement.classList.add("trailer-open");
+      if (asked || !window.matchMedia("(prefers-reduced-motion: reduce)").matches) video.play().catch(() => {});
+      if (asked) x.focus();
+    };
     const close = () => {
       video.pause();
       pop.hidden = true;
       document.documentElement.classList.remove("trailer-open");
       try { sessionStorage.setItem("trailer-seen", "1"); } catch (_) { /* fine without */ }
+      if (again && pop.contains(document.activeElement)) again.focus();
     };
-    pop.hidden = false;
-    document.documentElement.classList.add("trailer-open");
-    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) video.play().catch(() => {});
-    document.getElementById("trailer-x").addEventListener("click", close);
+    x.addEventListener("click", close);
     pop.addEventListener("click", (e) => { if (e.target === pop) close(); });
     document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !pop.hidden) close(); });
     video.addEventListener("ended", close);
     video.addEventListener("volumechange", () => { sound.hidden = !video.muted; });
     sound.addEventListener("click", () => { video.muted = false; video.currentTime = 0; video.play().catch(() => {}); });
+    if (again) again.addEventListener("click", () => open(true));
+    let seen = false;
+    try { seen = sessionStorage.getItem("trailer-seen") === "1"; } catch (_) { /* storage blocked: show it */ }
+    if (!seen) open(false);
   }
 })();

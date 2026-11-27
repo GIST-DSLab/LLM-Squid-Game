@@ -49,9 +49,9 @@ if (process.argv.includes("--render")) {
     if (!process.argv.includes("--skip-render")) {
       run("npx", ["remotion", "render", "src/index.ts", comp, master, "--codec", "h264", "--crf", "14", "--audio-codec", "aac", "--audio-bitrate", "192k"]);
     }
-    // the mix comes out near -20 LUFS: 4 dB up puts it at -16 (a plain gain, so the silence of T13-T14 stays silent)
+    // the mix comes out near -18 LUFS: 2 dB up puts it at -16 (a plain gain, so the quiet of T12-T14 stays quiet)
     run("ffmpeg", ["-hide_banner", "-loglevel", "error", "-y", "-i", master, "-c:v", "libx264", "-preset", "slow", "-crf", "20",
-      "-pix_fmt", "yuv420p", "-af", "volume=4dB,alimiter=limit=0.89:level=disabled", "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", join(ROOT, "out", `${name}.mp4`)]);
+      "-pix_fmt", "yuv420p", "-af", "volume=2dB,alimiter=limit=0.89:level=disabled", "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", join(ROOT, "out", `${name}.mp4`)]);
     console.log(`out/${name}.mp4`);
   }
 }

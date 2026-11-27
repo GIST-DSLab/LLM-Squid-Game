@@ -9,14 +9,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Sora:wght@400;500;600&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20261127b" />
+  <link rel="stylesheet" href="styles.css?v=20261127c" />
   <link rel="stylesheet" href="web5.css" />
   <script src="config.js"></script>
   <!-- app.js must load (and register its alpine:init listeners) before the
        Alpine CDN bundle, because Alpine.start() runs synchronously the
        moment the CDN script executes -- it does not wait for subsequent
        deferred scripts. Loading order here is load-bearing. -->
-  <script defer src="app.js?v=20261127a"></script>
+  <script defer src="app.js?v=20261127b"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 <script src="site-lang.js"></script>
 </head>
@@ -50,7 +50,9 @@
             <span class="lang-en">Can AIs<br /><em>coexist</em> in a survival game?</span>
           </h1>
           <div class="hero-cta reveal d3">
-            <img class="hero-guard" src="assets/hero-guard.png?v=20261126g" width="342" height="560" alt="A masked guard in a pink suit holding a rifle" />
+            <button type="button" class="hero-guard-btn" id="trailer-again" aria-label="Watch the trailer" title="Trailer">
+              <img class="hero-guard" src="assets/hero-guard.png?v=20261126g" width="342" height="560" alt="A masked guard in a pink suit holding a rifle" />
+            </button>
             <div class="hero-actions">
               <a class="btn btn-primary" href="arena.html">&#9675; <span class="lang-ko">아레나 플레이</span><span class="lang-en">Play the arena</span></a>
               <a class="btn btn-ghost" href="assets/paper.pdf" target="_blank" rel="noopener">&#9651; Paper</a>
@@ -254,7 +256,7 @@
       <button type="button" class="trailer-x" id="trailer-x" aria-label="Close the trailer">
         <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M3 3 L13 13 M13 3 L3 13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
       </button>
-      <video id="trailer-video" src="assets/trailer/trailer.mp4?v=20261127a" poster="assets/trailer/poster.jpg?v=20261127a"
+      <video id="trailer-video" src="assets/trailer/trailer.mp4?v=20261127d" poster="assets/trailer/poster.jpg?v=20261127d"
         playsinline muted controls preload="metadata"></video>
       <button type="button" class="trailer-sound" id="trailer-sound">
         <span class="lang-ko">소리 켜기</span><span class="lang-en">Sound on</span>

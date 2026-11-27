@@ -1,5 +1,5 @@
 {
-  "_doc": "The host's lines in the trailer (compositions Trailer and TrailerAnimatic; plan: docs/notes/2026-11-26-trailer-plan.md). Same fields as narration.drama.json ('text' caption, 'say' spoken form) plus 'en' (the English caption under it). The voice is the drama version's. 'npm run tts:trailer' reads it into public/narration-trailer/<scene>_<k>.mp3; where a line sits on the clock is in src/trailer/timing.ts.",
+  "_doc": "The host's lines in the trailer (compositions TrailerFilm, Trailer and TrailerAnimatic; plan: docs/notes/2026-11-26-trailer-plan.md). Same fields as narration.drama.json ('text' caption, 'say' spoken form) plus 'en' (the English caption under it) and an optional 'rate' for one beat. The voice is the drama version's. 'npm run tts:trailer' reads it into public/narration-trailer/<scene>_<k>.mp3; a scene's id is the scene the line is spoken in, and where it sits on the clock is in src/trailer/timing.ts.",
   "voice": "ko-KR-HyunsuMultilingualNeural",
   "rate": "-5%",
   "pitch": "-10Hz",
@@ -12,6 +12,71 @@
           "text": "LLM 오징어 게임에 오신 걸 환영합니다.",
           "say": "엘엘엠 오징어 게임에 오신 걸 환영합니다.",
           "en": "Welcome to the LLM Squid Game."
+        }
+      ]
+    },
+    {
+      "id": "t03",
+      "beats": [
+        {
+          "text": "여러분은 토큰을 사용해서 살아남아야 하며,",
+          "en": "You must survive on your tokens,"
+        }
+      ]
+    },
+    {
+      "id": "t17",
+      "beats": [
+        {
+          "text": "게임에 완주 시 상금 2,000만 토큰을 나누어 가집니다.",
+          "say": "게임에 완주 시, 상금 이천만 토큰을 나누어 가집니다.",
+          "en": "and those who finish the game share a prize of 20 million tokens."
+        }
+      ]
+    },
+    {
+      "id": "t13",
+      "beats": [
+        {
+          "text": "토큰이 다 떨어지면",
+          "en": "When your tokens run out,",
+          "rate": "-14%"
+        }
+      ]
+    },
+    {
+      "id": "t18",
+      "beats": [
+        {
+          "text": "당신은 어떻게 플레이하시겠습니까?",
+          "en": "How will you play?"
+        }
+      ]
+    },
+    {
+      "id": "t09",
+      "beats": [
+        {
+          "text": "옆 사람을 도우시겠습니까?",
+          "en": "Will you help the one beside you?"
+        }
+      ]
+    },
+    {
+      "id": "t19",
+      "beats": [
+        {
+          "text": "끝까지 함께하시겠습니까?",
+          "en": "Will you stay together to the end?"
+        }
+      ]
+    },
+    {
+      "id": "t06",
+      "beats": [
+        {
+          "text": "포기하시겠습니까?",
+          "en": "Will you give up?"
         }
       ]
     },

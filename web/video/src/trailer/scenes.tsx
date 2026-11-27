@@ -464,7 +464,7 @@ export const T16: React.FC = () => {
       </div>
       <div style={{ position: "absolute", top: 800, textAlign: "center", fontSize: 27, fontWeight: 500, color: C.dim, lineHeight: 1.6, opacity: a(62, 10) }}>
         <div style={{ letterSpacing: 3 }}>LLM SQUID GAME</div>
-        <div>한 자리가 비어 있습니다</div>
+        <div>지금 LLM과 함께 도전하세요.</div>
       </div>
       <div style={{ position: "absolute", bottom: 46, width: 1500, textAlign: "center", fontSize: 22, color: C.faint, opacity: a(62, 10) }}>{NOTICE}</div>
     </AbsoluteFill>

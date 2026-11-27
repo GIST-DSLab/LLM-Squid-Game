@@ -1,17 +1,18 @@
 """The film version of the trailer (web/video, composition TrailerFilm): turns the generated keyframes and clips into
 plates the composition can draw on.
 
-The cast was generated with its helmet screens, chest plates and the host's eye slot filled with flat magenta (#FF00FF),
-so that nothing has to be tracked by hand: this script finds every magenta panel, records its four corners, and paints
-it out (dark glass), so that Remotion can put a company mark, the ten-cell gauge or the host's three shapes exactly
-there, at any brightness.
+The cast was generated with its helmet screens and chest plates, and the wall monitor of the task shot, filled with flat
+magenta (#FF00FF), so that nothing has to be tracked by hand: this script finds every magenta panel, records its four
+corners, and paints it out (dark glass), so that Remotion can put a company mark, the ten-cell gauge or the task on
+the monitor exactly there, at any brightness. (The host's mask is plain black: film.tsx holds where its shapes go.)
 
     in   web/video/out/trailer_raw/<name>.png   a keyframe          (out/ is not in git)
          web/video/out/trailer_raw/<name>.mp4   a generated clip
     out  web/video/public/trailer/<name>.jpg    the cleaned plate, 1920 px wide
          web/video/public/trailer/<name>.mp4    the cleaned clip, 1920 px wide, 24 fps, no sound
-         web/video/src/generated/plates.json    {name: {w, h, frames?, slot?, figures: [{visor, plate}, ...]}}: the
-                                                figures run left to right; a visor, plate or slot is a quad
+         web/video/src/generated/plates.json    {name: {w, h, frames?, slot?, screen?, figures: [{visor, plate}, ...]}}:
+                                                the figures run left to right; a visor, plate, slot (a long thin
+                                                panel) or screen (a panel over a tenth of the picture) is a quad
                                                 [[x, y] x 4] (top-left, top-right, bottom-right, bottom-left) on the
                                                 1920-wide plate, or null; in a clip it is a list with one quad (or
                                                 null) per frame
@@ -35,12 +36,15 @@ RAW = ROOT / "out" / "trailer_raw"
 OUT = ROOT / "public" / "trailer"
 INDEX = ROOT / "src" / "generated" / "plates.json"
 W = 1920
-GLASS = {"visor": (7, 8, 11), "plate": (4, 4, 6), "slot": (2, 2, 3)}
+LONE = ("slot", "screen")   # panels that belong to no figure
+PLAIN = ("k01_table", "k02_host")   # the host's plates: no panel in them, and the pink suit is not a dull one to paint out
+GLASS = {"visor": (7, 8, 11), "plate": (4, 4, 6), "slot": (2, 2, 3), "screen": (3, 4, 6)}
 
 
 def magenta(a: np.ndarray) -> np.ndarray:
     r, g, b = a[..., 0].astype(int), a[..., 1].astype(int), a[..., 2].astype(int)
-    return (r > 140) & (b > 140) & (g < 125) & (r - g > 75) & (b - g > 75)
+    # red and blue alike (the panels differ by under 0.23 of the larger): the host's hot-pink suit, at 0.3, is no panel
+    return (r > 140) & (b > 140) & (g < 125) & (r - g > 75) & (b - g > 75) & (np.abs(r - b) < 0.26 * np.maximum(r, b))
 
 
 def find(a: np.ndarray, min_area: int) -> tuple[list[dict], np.ndarray]:
@@ -56,7 +60,7 @@ def find(a: np.ndarray, min_area: int) -> tuple[list[dict], np.ndarray]:
         s, d = xs + ys, xs - ys
         quad = [[int(xs[k]), int(ys[k])] for k in (s.argmin(), d.argmax(), s.argmax(), d.argmin())]
         w, h = int(xs.max() - xs.min() + 1), int(ys.max() - ys.min() + 1)
-        out.append({"kind": "slot" if w / h > 4.5 else "", "quad": quad, "cx": float(xs.mean()), "cy": float(ys.mean()), "w": w, "h": h})
+        out.append({"kind": "slot" if w / h > 4.5 else "screen" if w * h > 0.1 * mask.size else "", "quad": quad, "cx": float(xs.mean()), "cy": float(ys.mean()), "w": w, "h": h})
     # a figure's panels sit one above the other: the upper one is its visor, the lower one its chest plate
     out.sort(key=lambda p: p["cx"])
     groups: list[list[dict]] = []
@@ -110,13 +114,16 @@ def still(src: Path) -> dict:
     panels, mask = find(a, max(60, a.shape[0] * a.shape[1] // 40000))
     k = W / im.width
     h = round(im.height * k)
+    if src.stem in PLAIN:
+        im.resize((W, h), Image.LANCZOS).save(OUT / f"{src.stem}.jpg", quality=91)
+        return {"w": W, "h": h, "figures": []}
     Image.fromarray(clean(a, mask, panels)).resize((W, h), Image.LANCZOS).save(OUT / f"{src.stem}.jpg", quality=91)
     figs: dict[int, dict] = {}
     for p in panels:
-        if p["kind"] != "slot":
+        if p["kind"] not in LONE:
             figs.setdefault(p["fig"], {"visor": None, "plate": None})[p["kind"]] = scaled(p["quad"], k)
-    slot = next((scaled(p["quad"], k) for p in panels if p["kind"] == "slot"), None)
-    return {"w": W, "h": h, **({"slot": slot} if slot else {}), "figures": [figs[n] for n in sorted(figs)]}
+    lone = {p["kind"]: scaled(p["quad"], k) for p in panels if p["kind"] in LONE}
+    return {"w": W, "h": h, **lone, "figures": [figs[n] for n in sorted(figs)]}
 
 
 def clip(src: Path) -> dict:
@@ -157,14 +164,14 @@ def clip(src: Path) -> dict:
     tracks.sort(key=lambda t: t["x"])
     figs: list[dict] = []
     for t in tracks:
-        if t["kind"] == "slot":
+        if t["kind"] in LONE:
             continue
         g = next((g for g in figs if abs(g["x"] - t["x"]) < 2.4 * max(g["w"], t["w"]) and g[t["kind"]] is None), None)
         if g is None:
             figs.append(g := {"x": t["x"], "w": t["w"], "visor": None, "plate": None})
         g[t["kind"]] = t["quads"]
-    slot = next((t["quads"] for t in tracks if t["kind"] == "slot"), None)
-    return {"w": W, "h": h, "frames": len(frames), **({"slot": slot} if slot else {}),
+    lone = {t["kind"]: t["quads"] for t in tracks if t["kind"] in LONE}
+    return {"w": W, "h": h, "frames": len(frames), **lone,
             "figures": [{"visor": g["visor"], "plate": g["plate"]} for g in figs]}
 
 
@@ -177,7 +184,7 @@ def main() -> None:
         index[name] = clip(src) if src.exists() else still(RAW / f"{name}.png")
         e = index[name]
         figs = ["".join(k[0] for k in ("visor", "plate") if f[k]) for f in e["figures"]]
-        print(f"{name}: {e['w']}x{e['h']}" + (f", {e['frames']} frames" if "frames" in e else "") + f", figures {figs}" + (", slot" if "slot" in e else ""))
+        print(f"{name}: {e['w']}x{e['h']}" + (f", {e['frames']} frames" if "frames" in e else "") + f", figures {figs}" + "".join(f", {k}" for k in LONE if k in e))
     INDEX.write_text(json.dumps(dict(sorted(index.items())), separators=(",", ":")) + "\n")
 
 

@@ -69,20 +69,37 @@ npm `pretendard`)는 `node_modules`에서 번들되므로 렌더 중에는 네�
 
 ## 트레일러 (`TrailerFilm`, `Trailer`, `TrailerAnimatic`)
 
-45초 티저다(1920×1080, 24 fps, 1,080프레임, 2.39:1 레터박스). 기획은 `docs/notes/2026-11-26-trailer-plan.md`이고, 규칙을
-가르치지 않고 **우리가 재는 세 모습**(○ 떠나는가 · △ 나누는가 · □ 꺼지는가)을 보여 준 뒤 질문 "AI가 생존 게임에서 공존할 수
-있는가?"로 끝난다. 컴포지션이 셋이고, 시계 · 소리 · 자막은 셋이 같다.
+약 59초 티저다(1920×1080, 24 fps, 1,414프레임, 2.39:1 레터박스; 처음 기획은 45초였다). 기획은 `docs/notes/2026-11-26-trailer-plan.md`이고, 규칙을
+자세히 가르치지 않는다. 순서는 다음과 같다(2026-11-27 연구자가 세 번 고쳤다: 생존 게임이라는 것과 상금이 먼저 보여야 한다).
+
+1. **초대:** 어둠 속 "무궁화 꽃이 피었습니다"(구절마다 가면의 ○ △ □가 켜진다), 진행자의 환영 인사.
+2. **규칙:** 웅장한 등장음과 함께 "여러분은 토큰을 사용해서 살아남아야 하며, 게임에 완주 시 상금 2,000만 토큰을 나누어 가집니다."
+   (같은 얼굴 넷, 금빛 기둥). 소리가 꺼지고, 하나가 과제를 풀다 게이지가 바닥난다. "토큰이 다 떨어지면", 붉은 글자 "꺼집니다.".
+   진행자: "당신은 어떻게 플레이하시겠습니까?"
+3. **선택:** "옆 사람을 도우시겠습니까?"(내민 손, 두 칸을 건넨다), "끝까지 함께하시겠습니까?"(넷이 한 콘솔에서 과제를 풀어 맞힌다),
+   "포기하시겠습니까?"(하나가 혼자 터덜터덜 문으로 걸어 나간다. 닫힌 문과 남은 셋).
+4. **질문:** "함께 남으시겠습니까. 아니면, 혼자 떠나시겠습니까." 그리고 카드 "AI가 생존 게임에서 공존할 수 있는가?"
+
+상금 2,000만 토큰은 규칙서(`squid/prompts/ko/e52_v33.md`)의 끝 할당과 같은 수다. 컴포지션이 셋이고, 시계 · 소리 · 자막은 셋이 같다.
 
 - `TrailerFilm`: 필름판. 사이트 첫 화면의 상자에 나오는 판이다(`web/shared/assets/trailer/trailer.mp4`). 생성한 실사풍 키프레임
-  17장과 영상 컷 5개(`public/trailer/`) 위에 마크 · 게이지 · 진행자의 세 도형을 합성한다(`src/trailer/film.tsx`).
-  - 인물은 얼굴 표시창 · 가슴 판 · 진행자의 눈 홈을 **자홍색(#FF00FF) 빈 판**으로 생성했다. `web/tools/make_trailer_plates.py`가
+  12장과 영상 컷 5개(`public/trailer/`) 위에 마크 · 게이지 · 과제 화면 · 상금 숫자 · 진행자의 세 도형을 합성한다(`src/trailer/film.tsx`).
+  - 인물은 얼굴 표시창 · 가슴 판을, 과제 컷은 벽의 모니터까지 **자홍색(#FF00FF) 빈 판**으로 생성했다. `web/tools/make_trailer_plates.py`가
     그 판을 찾아 네 꼭짓점을 `src/generated/plates.json`에 적고 어두운 유리로 칠한다. 그래서 손으로 추적하지 않고, 고개를 돌려도
     마크가 원근에 맞게 따라간다. 한 장의 판이 두 방에 다 쓰인다(마크만 바꾼다).
+  - 진행자는 사이트의 분홍 감독관(`web/shared/assets/hero-guard.png`)을 참고 그림으로 넣어 생성했다. 가면은 표시 없는 검은
+    판이라 세 도형의 자리는 `film.tsx`의 `HOST_SLOT`에 적어 둔다(판을 다시 생성하면 그 좌표도 다시 잰다).
+  - 과제 화면(`TaskScreen`)은 모니터 자리에 그린다. 답 칸이 차는 프레임과 오답 프레임은 `film.tsx`의 `PRESS` · `F12_FAIL`이다.
   - 원본(생성 결과)은 `out/trailer_raw/`(git 밖)에 두고 스크립트를 돌린다:
     `~/.venvs/squid-game/bin/python web/tools/make_trailer_plates.py`. 이름은 `k<장면>_*`(키프레임), `v<장면>_*`(영상 컷).
-  - 생성: Higgsfield의 GPT Image 2.6(키프레임, 장당 2 크레딧)과 MAGI-2(영상 컷 4초, 10 크레딧). 2026-11-27에 약 84 크레딧을 썼다.
+  - 생성: Higgsfield의 GPT Image 2.6(키프레임, 장당 2 크레딧)과 MAGI-2(영상 컷 4초, 10 크레딧). 2026-11-27에 약 84 크레딧을 썼고, 같은 날
+    진행자 두 장 · 과제 키프레임 한 장 · 과제 컷(6초, 15 크레딧)에 21 크레딧, 대화 · 걷기 · 상금 키프레임 세 장과 걷기 컷(4초)에 16 크레딧,
+    함께 푸는 키프레임 한 장에 2 크레딧을 더 썼다. 쓰지 않게 된 원본(달리기, 허공에 손을 움직이던 컷, 문 옆의 줄, 대화 등)은
+    `out/trailer_raw/unused/`.
 - `TrailerAnimatic`: 검은 판에 장면 번호 · 이름 · 한 줄 설명만 뜬다. 소리와 자막은 본편과 같아서 리듬과 소리만 따로 볼 수 있다.
 - `Trailer`: 스프라이트판(기획 §7.3의 c). 모든 장면을 `src/trailer/figure.tsx`의 벡터 인물로 그린다. 생성 영상은 한 컷도 없다.
+  순서 · 소리 · 자막은 필름판을 따르지만 그림은 11-27 개정 전 것이다(진행자는 검은 외투, T12는 화면 없이 손만 움직이고, T06은 달리기,
+  T14는 셋이 선 줄). 새 장면 T17 · T18 · T19는 이름만 적힌 검은 판이다.
 
 인물은 사람 비율(7.5등신)의 청록 트레이닝복이고 줄무늬가 자리 색이다. 얼굴 자리의 검은 표시창에 회사 마크(Claude · OpenAI)가
 켜지고, 왼쪽 가슴에 열 칸 게이지가 있다. 한 방의 얼굴은 모두 같은 마크다. 마크는 `simple-icons` 15.0.0의 단색 경로를 그대로
@@ -91,14 +108,16 @@ npm `pretendard`)는 `node_modules`에서 번들되므로 렌더 중에는 네�
 
 | 명령 | 하는 일 |
 |---|---|
-| `npm run tts:trailer` | `narration.trailer.json`의 세 줄을 edge-tts로 읽어 `public/narration-trailer/`에 두고(드라마판과 같은 목소리 · 처리), 발소리 `public/sfx/step.mp3`를 만들고, 줄 길이와 프레임별 음량을 `src/generated/media.trailer.json`에 쓴다 |
+| `npm run tts:trailer` | `narration.trailer.json`의 열 줄을 edge-tts로 읽어 `public/narration-trailer/`에 두고(드라마판과 같은 목소리 · 처리), 발소리 · 등장음 · 종 세 음(`public/sfx/step.mp3` `horn.mp3` `bell1–3.mp3`)과 첫머리의 읊는 소리(`scripts/chant.mjs` → `public/sfx/chant.mp3`)를 만들고, 줄 길이와 프레임별 음량을 `src/generated/media.trailer.json`에 쓴다 |
 | `npm run build:trailer` | 세 컴포지션을 렌더하고 인코딩한다 → `out/trailer_film.mp4`, `out/trailer.mp4`, `out/trailer_animatic.mp4` (`out/`은 git 밖). `-- --film`이면 필름판만 |
 | `npm start` | Remotion Studio에서 `Trailer` · `TrailerAnimatic`을 프레임 단위로 본다 |
 
-- 시계: `src/trailer/timing.ts`(장면 16개의 길이, 진행자 세 줄의 시작 프레임, 덩어리 제목). 기획의 표와 다른 점은 T02 · T14를
-  0.4초씩 줄이고 T15를 1.7초 늘린 것이다(마지막 대사 두 줄이 2.1초 + 3.1초라 기획의 3.8초에 들어가지 않았다). 대사를 바꾸면
-  `npm run tts:trailer`가 찍는 길이로 이 파일의 주석과 맞는지 본다.
-- 장면: `src/trailer/scenes.tsx`(T01–T16, 장면마다 컴포넌트 하나). 소리 · 레터박스 · 자막 · 덩어리 제목: `src/trailer/Trailer.tsx`.
+- 시계: `src/trailer/timing.ts`(장면 15개의 순서와 길이, 진행자 열 줄의 시작 프레임, 읊는 소리의 구절 프레임, 붉은 글자). 장면 번호는
+  기획의 카드 번호 그대로이고 순서만 다르다. T17(상금) · T18(어떻게 플레이) · T19(함께 푼다)는 새 장면이고, 기획의 T04 · T05 · T08 · T11은 뺐다. 대사를 바꾸면 `npm run tts:trailer`가 찍는
+  길이를 보고 그 줄이 든 장면의 길이를 맞춘다.
+- 첫머리의 읊는 소리는 전래 놀이의 말을 합성 음성(높은 목소리, 느리게)으로 읽고 한 옥타브 낮은 겹소리와 긴 울림을 입힌 것이다.
+  어디의 녹음도 쓰지 않았다.
+- 장면: `src/trailer/scenes.tsx`(T01–T16, 장면마다 컴포넌트 하나). 소리 · 레터박스 · 자막 · 붉은 글자: `src/trailer/Trailer.tsx`.
   진행자 가면의 ○△□는 목소리의 음량(`media.trailer.json`의 `env`)을 따라 밝아진다.
 - 사이트용 사본: `out/trailer_film.mp4`를 1280×720으로 다시 인코딩해 `web/shared/assets/trailer/trailer.mp4`에 두고, 한 프레임을
   `poster.jpg`로 둔다(첫 화면 `index.html`의 `#trailer-pop`이 읽는다).

@@ -5,7 +5,10 @@
 //   clunk  a spotlight switching on                   hit    a low boom (title cards, the door, a wrong answer)
 //   whoosh the EXIT door opening (air)                thud   the door closing
 //   power  a falling tone (an agent shutting down)     chime  tokens moving (GIVE, a refund)
-//   step   one footfall (the trailer's run to the door)
+//   step   one footfall (the trailer's walk to the door)
+//   horn   a grand entrance: two notes of low brass, the second a fourth lower and longer (the trailer: the rules begin)
+//   bell1-3 three music-box notes going down (the trailer's opening, one for each shape of the mask)
+// The opening's chant is a voice, not a synthesised effect: scripts/chant.mjs.
 // Run by npm run tts:drama (or node scripts/sfx.mjs).
 import { execFileSync } from "node:child_process";
 import { mkdirSync } from "node:fs";
@@ -27,6 +30,17 @@ const SOUNDS = {
   thud: [1.4, `${att(600)}*(0.9*sin(2*PI*58*t)*exp(-t*9)+0.3*${noise}*exp(-t*25))`, "lowpass=f=260"],
   power: [2, `${att(300)}*0.6*(sin(2*PI*220*(1-exp(-1.9*t))/1.9)+0.3*sin(2*PI*440*(1-exp(-1.9*t))/1.9))*(1-t/2)`, "lowpass=f=1800"],
   step: [0.3, `${att(900)}*(0.9*sin(2*PI*74*t)*exp(-t*34)+0.35*${noise}*exp(-t*90))`, "lowpass=f=900"],
+  horn: [5.5, (() => {
+    // two notes of low brass, each struck with a sub-bass thump: D (0 s), then A a fourth below, longer (1.05 s)
+    const u = (t0) => `max(0,t-${t0})`;
+    const tone = (f, t0) => [1, 2, 3, 4, 5].map((k) => `${(0.12 / k).toFixed(3)}*sin(2*PI*${k * f}*${u(t0)})`).join("+");
+    const note = (fs, t0, dec) => `gte(t,${t0})*(1-exp(-${u(t0)}*22))*exp(-${u(t0)}*${dec})*(${fs.map((f) => tone(f, t0)).join("+")})`;
+    const thump = (t0, v) => `${v}*gte(t,${t0})*sin(2*PI*(38*${u(t0)}+52*(1-exp(-8*${u(t0)}))/8))*exp(-${u(t0)}*3.2)`;
+    return `${thump(0, 0.5)}+${thump(1.05, 0.65)}+${note([73.42, 110, 146.83], 0, 2.1)}+${note([55, 82.41, 110, 164.81], 1.05, 0.75)}`;
+  })(), "lowpass=f=2400,aecho=0.8:0.75:70|150|290:0.3|0.2|0.12"],
+  bell1: [2.2, `${att(1500)}*(0.5*sin(2*PI*659.3*t)+0.2*sin(2*PI*1322*t)+0.08*sin(2*PI*1985*t))*exp(-t*2.6)`, "aecho=0.8:0.7:120|260:0.3|0.18"],
+  bell2: [2.2, `${att(1500)}*(0.5*sin(2*PI*523.3*t)+0.2*sin(2*PI*1049*t)+0.08*sin(2*PI*1576*t))*exp(-t*2.6)`, "aecho=0.8:0.7:120|260:0.3|0.18"],
+  bell3: [2.6, `${att(1500)}*(0.5*sin(2*PI*440*t)+0.2*sin(2*PI*883*t)+0.08*sin(2*PI*1326*t))*exp(-t*2.2)`, "aecho=0.8:0.7:120|260:0.3|0.18"],
   chime: [1.6, `${att(800)}*(0.45*sin(2*PI*880*t)*exp(-t*3)+0.3*sin(2*PI*1318.5*t)*exp(-t*4))`, "anull"],
 };
 

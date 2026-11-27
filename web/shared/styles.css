@@ -1248,6 +1248,15 @@ footer {
 .landing .hero-grid .hero-title { font-size: clamp(40px, 5.7vw, 86px); line-height: 1.1; margin-bottom: 30px; }
 .landing .hero-cta { display: flex; align-items: center; gap: 22px; }
 .landing .hero-cta .hero-guard { display: block; width: auto; height: clamp(112px, 11.5vw, 168px); flex: none; }
+/* the guard is the button that opens the trailer box again (app.js); the small play mark says so */
+.landing .hero-guard-btn { position: relative; flex: none; margin: 0; padding: 0; border: 0; border-radius: 14px; background: none; cursor: pointer;
+  transition: transform 0.18s ease; }
+.landing .hero-guard-btn::after { content: ""; position: absolute; right: -6px; bottom: 6px; width: 26px; height: 26px; border-radius: 50%;
+  background: var(--accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 26'%3E%3Cpath d='M10.5 8v10l8-5z' fill='%23fff'/%3E%3C/svg%3E") center / 26px 26px no-repeat;
+  box-shadow: 0 0 0 3px var(--bg, #0e0d11); }
+.landing .hero-guard-btn:hover { transform: translateY(-3px); }
+.landing .hero-guard-btn:focus-visible { outline: 2px solid var(--teal-bright); outline-offset: 4px; }
+@media (prefers-reduced-motion: reduce) { .landing .hero-guard-btn { transition: none; } .landing .hero-guard-btn:hover { transform: none; } }
 .landing .hero-grid .hero-actions { flex-wrap: nowrap; }
 .landing .hero-grid .hero-actions .btn { padding: 13px 22px; white-space: nowrap; }
 @media (max-width: 560px) { .landing .hero-grid .hero-actions { flex-wrap: wrap; } }

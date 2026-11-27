@@ -39,12 +39,13 @@ for (const scene of script.scenes) {
   scene.beats.forEach((beat, k) => {
     const name = `${scene.id}_${k}.mp3`;
     const say = beat.say ?? beat.text;
-    const hash = createHash("sha1").update([script.voice, script.rate, say, TRIM, ...pitch].join("\n")).digest("hex").slice(0, 16);
+    const rate = beat.rate ?? script.rate;   // one beat may be read at its own speed
+    const hash = createHash("sha1").update([script.voice, rate, say, TRIM, ...pitch].join("\n")).digest("hex").slice(0, 16);
     next[name] = hash;
     if (!all && man[name] === hash && existsSync(join(OUT, name))) return;
     for (let tries = 1; ; tries++) {  // the free endpoint now and then sends no audio: wait and ask again
       try {
-        execFileSync("uvx", ["edge-tts", "--voice", script.voice, `--rate=${script.rate}`, ...pitch, "--text", say,
+        execFileSync("uvx", ["edge-tts", "--voice", script.voice, `--rate=${rate}`, ...pitch, "--text", say,
           "--write-media", raw], { stdio: ["ignore", "ignore", "pipe"] });
         break;
       } catch (e) {
