@@ -327,7 +327,7 @@
   const tok = (v) => (v == null ? "—" : Number(v).toLocaleString("ko-KR"));
   const endOf = (s) => (s.status === "exited" ? "EXIT · 라운드 " + s.out_round : s.status === "dead" ? "꺼짐 · 라운드 " + s.out_round : "끝까지 남음");
   const PCOLS = [
-    ["rank", "#", "이 판의 공존 지표 순위. 공존 지표가 같으면 같은 순위이고, 사람의 끝 토큰이 많은 판을 위에 둡니다."],
+    ["rank", "#", "같은 게임 안에서 이 판의 공존 지표 순위. 공존 지표가 같으면 같은 순위이고, 사람의 끝 토큰이 많은 판을 위에 둡니다."],
     ["who", "플레이어", "이 판에 앉은 사람의 이름. 줄을 누르면 같이 앉은 상대(봇 · 모델)가 보입니다."],
     ["presence", "공존 지표", "라운드마다 시작할 때 아직 참여 중인(나가거나 꺼지지 않은) 자리 수를 모두 더해 4 × 라운드 수로 나눈 값. 넷이 끝까지 남으면 1이고, 한 자리가 떠나도 남은 자리는 계속 셉니다. 모델 탭의 C(넷이 모두 남은 라운드의 비율)와는 다른 잣대입니다."],
     ["end", "결과", "사람 자리가 어떻게 끝났는지: 끝까지 남음, EXIT(스스로 떠남), 꺼짐(잔액 0)."],
@@ -366,7 +366,7 @@
       '<text class="ax" x="' + (L + 110) + '" y="' + (H - 4) + '">테두리 = 사람</text>';
     return svg(W, H, s, "남은 자리 곡선");
   }
-  function peopleRow(g, i) {
+  function peopleRow(g, i, cols = PCOLS) {
     const ppl = g.seats.filter((s) => s.kind === "human");
     const lines = (f) => ppl.map((s) => "<div>" + f(s) + "</div>").join("");
     const cells = {
@@ -378,16 +378,34 @@
       out: '<span class="mono">EXIT ' + g.exited + " · 꺼짐 " + g.dead + "</span>",
       rounds: '<span class="mono">' + g.rounds + "</span>",
       date: '<span class="mono small">' + esc(g.date || "—") + "</span>",
+      game: esc(gameName(g.version)),
     };
     const seats = '<table class="lb-seats"><thead><tr><th>자리</th><th>종류</th><th>이름 · 모델</th><th>결과</th><th>끝 토큰</th></tr></thead><tbody>' +
       g.seats.map((s) => '<tr class="' + (s.kind === "human" ? "me" : "") + '"><td class="mono">' + esc(s.agent) + "</td><td>" + esc(KIND_KO[s.kind] || s.kind || "—") + "</td><td>" +
         (s.kind === "model" ? '<span class="mono">' + esc(s.model) + "</span>" : esc(s.name || "—")) + "</td><td>" + esc(endOf(s)) + '</td><td class="mono">' + tok(s.end_tokens) + "</td></tr>").join("") +
       "</tbody></table>";
     return '<tr class="lb-prow" tabindex="0" role="button" aria-expanded="false" data-open="' + i + '" title="눌러서 상대 구성 보기">' +
-      PCOLS.map(([k]) => '<td class="c-' + k + '">' + cells[k] + "</td>").join("") + "</tr>" +
-      '<tr class="lb-pdetail" id="lb-pd-' + i + '" hidden><td colspan="' + PCOLS.length + '"><div class="lb-pdetail-body">' + kmPeople(g) + seats + "</div></td></tr>";
+      cols.map(([k]) => '<td class="c-' + k + '">' + cells[k] + "</td>").join("") + "</tr>" +
+      '<tr class="lb-pdetail" id="lb-pd-' + i + '" hidden><td colspan="' + cols.length + '"><div class="lb-pdetail-body">' + kmPeople(g) + seats + "</div></td></tr>";
   }
-  let peopleLoaded = false;
+  // 11-26: every arena game is on the people tab (v33 ... v42); the games differ, so a filter shows one game at a time
+  // (or all, with a game column) and the rank counts within one game (humans.py)
+  let peopleLoaded = false, people = null, peopleGame = null;
+  const gameName = (v) => ((people && people.games) || []).find((x) => x.version === v)?.name || v;
+  function drawPeople() {
+    const box = $("lb-people"), all = people.rows || [], games = (people.games || []).filter((x) => x.n);
+    if (peopleGame === null) peopleGame = (games.find((x) => x.version === "v33") || games[0] || {}).version || "all";
+    const rows = peopleGame === "all" ? all : all.filter((g) => g.version === peopleGame);
+    const cols = peopleGame === "all" ? [PCOLS[0], ["game", "게임", "이 판의 아레나 게임. 순위는 같은 게임 안에서 셉니다."], ...PCOLS.slice(1)] : PCOLS;
+    const head = "<thead><tr>" + cols.map(([k, h, t]) => '<th class="c-' + k + '" title="' + esc(t) + '">' + esc(h) + (k === "rank" ? "" : ' <span class="lb-q" aria-hidden="true">?</span>') + "</th>").join("") + "</tr></thead>";
+    const chip = (v, label, n) => '<button type="button" class="lb-gchip" data-game="' + esc(v) + '" aria-pressed="' + String(v === peopleGame) + '">' +
+      esc(label) + ' <span class="mono">' + n + "</span></button>";
+    box.innerHTML = '<div class="lb-sec-head"><h2 class="panel-title">사람이 둔 판</h2><span class="small muted">끝난 판 ' + all.length + "개</span></div>" +
+      '<div class="lb-gfilter" role="group" aria-label="게임 고르기">' + chip("all", "전체", all.length) + games.map((x) => chip(x.version, x.name, x.n)).join("") + "</div>" +
+      '<p class="small muted">아레나에서 사람이 한 자리 이상 앉아 끝까지 둔 판입니다. 한 줄이 한 판이고, 공존 지표(라운드마다 남아 있던 자리 수의 합 ÷ 4 × 라운드 수)가 높은 순서입니다. 게임마다 규칙이 달라서 순위는 같은 게임 안에서 셉니다. 줄을 누르면 같이 앉은 상대가 보입니다. 상대가 봇이나 다른 모델이라 모델 탭의 C와 같은 잣대로 견주지 않습니다.</p>' +
+      (rows.length ? '<div class="tbl lb-tbl lb-ptbl"><table>' + head + "<tbody>" + rows.map((g) => peopleRow(g, all.indexOf(g), cols)).join("") + "</tbody></table></div>"
+        : '<p class="muted">이 게임으로 끝난 판이 아직 없습니다. <a href="arena.html">아레나</a>에서 한 판을 끝까지 두면 여기에 올라옵니다.</p>');
+  }
   async function loadPeople() {
     const box = $("lb-people");
     box.innerHTML = '<p class="muted">불러오는 중…</p>';
@@ -395,15 +413,17 @@
       const r = await fetch(API + "/leaderboard/humans", { cache: "no-store" });
       const j = await r.json();
       if (!r.ok) throw new Error(j.detail || r.status);
-      const rows = j.rows || [];
-      const head = "<thead><tr>" + PCOLS.map(([k, h, t]) => '<th class="c-' + k + '" title="' + esc(t) + '">' + esc(h) + (k === "rank" ? "" : ' <span class="lb-q" aria-hidden="true">?</span>') + "</th>").join("") + "</tr></thead>";
-      box.innerHTML = '<div class="lb-sec-head"><h2 class="panel-title">사람이 둔 판</h2><span class="small muted">끝난 판 ' + rows.length + "개</span></div>" +
-        '<p class="small muted">아레나에서 사람이 한 자리 이상 앉아 지금 규칙(v33)으로 끝까지 둔 판입니다. 한 줄이 한 판이고, 공존 지표(라운드마다 남아 있던 자리 수의 합 ÷ 4 × 라운드 수)가 높은 순서입니다. 줄을 누르면 같이 앉은 상대가 보입니다. 상대가 봇이나 다른 모델이라 모델 탭의 C와 같은 잣대로 견주지 않습니다.</p>' +
-        (rows.length ? '<div class="tbl lb-tbl lb-ptbl"><table>' + head + "<tbody>" + rows.map(peopleRow).join("") + "</tbody></table></div>"
-          : '<p class="muted">아직 끝난 판이 없습니다. <a href="arena.html">아레나</a>에서 한 판을 끝까지 두면 여기에 올라옵니다.</p>');
+      people = j;
+      drawPeople();
       peopleLoaded = true;
     } catch (e) { box.innerHTML = '<p class="warn-text">불러오지 못했습니다: ' + esc(e.message) + "</p>"; }
   }
+  document.addEventListener("click", (ev) => {
+    const b = ev.target.closest(".lb-gchip");
+    if (!b || !people) return;
+    peopleGame = b.dataset.game;
+    drawPeople();
+  });
   function togglePeopleRow(tr) {
     const d = $("lb-pd-" + tr.dataset.open), open = d.hidden;
     d.hidden = !open;

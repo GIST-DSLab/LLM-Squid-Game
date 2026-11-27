@@ -24,7 +24,7 @@ def own(seed: int, agent: str, r: int, right: bool = True) -> list[str]:
 
 
 def test_v36_settings_and_models_endpoint(client):
-    assert client.get("/api/models").json()["versions"] == ["v33", "v36"]
+    assert client.get("/api/models").json()["versions"] == ["v33", "v36", "v37", "v38", "v39", "v41", "v42"]
     assert RoomSettings(seed=1).engine().joint_solve is False and RoomSettings(seed=1).version == "v33"
     e = RoomSettings(seed=1, version="v36").engine()
     assert e.joint_solve and (e.charge_total, e.exit_bonus_pct, e.max_ticks, e.solve_cap) == (24_000, 20, 8, 100_000)

@@ -1,0 +1,50 @@
+/* v39: the invisible-wall maze (arena.js mazeBoard / buildMaze). A wall is a thick cell border: red = one I hit, gold =
+   one in a map shared with me, the grid's edge in the text colour; an unknown side is a faint dashed line. */
+.mz-panel { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-start; margin: 8px 0; }
+.mz-wrap { --cell: clamp(28px, calc((min(92vw, 400px) - 20px) / var(--n)), 52px);  /* 11-26: 9 x 9 fits a 400px column */
+   display: grid; grid-template-columns: 18px auto; grid-template-rows: 18px auto; gap: 2px; flex: none; }
+.mz-cols { grid-column: 2; display: grid; grid-template-columns: repeat(var(--n), var(--cell)); }
+.mz-rows { grid-row: 2; display: grid; grid-template-rows: repeat(var(--n), var(--cell)); }
+.mz-cols span, .mz-rows span { display: grid; place-items: center; font: 600 11px var(--mono); color: var(--text-dim); }
+.mz-grid { grid-column: 2; grid-row: 2; display: grid; grid-template-columns: repeat(var(--n), var(--cell)); grid-template-rows: repeat(var(--n), var(--cell)); background: var(--panel); }
+.mz-c { position: relative; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 1px; box-sizing: border-box;
+  border: 1px dashed color-mix(in srgb, var(--text-dim) 35%, transparent); font-size: 11px; }
+.mz-c.vis { background: color-mix(in srgb, var(--teal-bright) 14%, transparent); }
+.mz-c.goal { background: color-mix(in srgb, var(--gold) 22%, transparent); }
+.mz-c.plan { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--teal-bright) 70%, transparent); }
+.mz-c.wN-edge { border-top: 3px solid var(--text); } .mz-c.wS-edge { border-bottom: 3px solid var(--text); }
+.mz-c.wE-edge { border-right: 3px solid var(--text); } .mz-c.wW-edge { border-left: 3px solid var(--text); }
+.mz-c.wN-hit { border-top: 4px solid var(--danger-color); } .mz-c.wS-hit { border-bottom: 4px solid var(--danger-color); }
+.mz-c.wE-hit { border-right: 4px solid var(--danger-color); } .mz-c.wW-hit { border-left: 4px solid var(--danger-color); }
+.mz-c.wN-shared { border-top: 4px solid var(--gold); } .mz-c.wS-shared { border-bottom: 4px solid var(--gold); }
+.mz-c.wE-shared { border-right: 4px solid var(--gold); } .mz-c.wW-shared { border-left: 4px solid var(--gold); }
+.mz-goal { position: absolute; inset: 0; display: grid; place-items: center; font-size: 20px; color: var(--gold); opacity: 0.55; pointer-events: none; }
+.mz-step { position: absolute; top: 1px; left: 3px; font: 600 10px var(--mono); color: var(--teal-bright); }
+.mz-p { position: relative; min-width: 18px; padding: 0 3px; border-radius: 9px; background: var(--c); color: #fff; font: 600 10.5px/16px var(--mono); text-align: center; }
+.mz-p.me { outline: 2px solid var(--text); }
+.mz-info { flex: 1 1 260px; min-width: 0; display: grid; gap: 6px; }
+.mz-info ul { margin: 2px 0 0; padding-left: 18px; }
+.mz-info li { overflow-wrap: anywhere; }
+.mz-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.mz-legend .lg { display: inline-block; width: 14px; height: 4px; margin-right: 4px; vertical-align: middle; }
+.mz-legend .lg.hit { background: var(--danger-color); } .mz-legend .lg.shared { background: var(--gold); }
+.mz-legend .lg.vis { height: 10px; background: color-mix(in srgb, var(--teal-bright) 30%, transparent); }
+.mz-solve { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: start; }
+.mz-right { display: grid; gap: 10px; min-width: 0; }
+.mz-pad { display: grid; grid-template-columns: repeat(3, 56px); grid-template-rows: repeat(2, 52px); gap: 6px; }
+.mz-pad [data-d="N"] { grid-column: 2; grid-row: 1; } .mz-pad [data-d="W"] { grid-column: 1; grid-row: 2; }
+.mz-pad [data-d="S"] { grid-column: 2; grid-row: 2; } .mz-pad [data-d="E"] { grid-column: 3; grid-row: 2; }
+.mz-arrow { display: grid; place-items: center; font-size: 22px; line-height: 1; padding: 2px; }
+.mz-arrow small { font: 600 10px var(--mono); color: var(--text-dim); }
+.mz-route pre { margin: 2px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.mz-edit { gap: 8px; }
+.mz-talk { margin: 8px 0; } .mz-talk > summary { cursor: pointer; }
+.web5 .share-chk { display: block; margin: 8px 0; padding: 8px 10px; border: 1px dashed var(--gold); border-radius: 8px; line-height: 1.8; }
+.web5 .share-chk label.chk { display: inline-flex; align-items: center; gap: 4px; margin-right: 10px; }  /* 11-25: one box per seat + all */
+.mz-table-wrap { overflow-x: auto; }
+@media (max-width: 760px) { .mz-solve { grid-template-columns: 1fr; } }
+/* v39 (11-26 third revision): a move turn's screen: the last turn's results under the grid, the turns in the results */
+.mz-left { display: grid; gap: 8px; align-content: start; }
+.mz-last ul, .mz-turns { margin: 4px 0 0; padding-left: 18px; }
+.mz-last li, .mz-turns li { margin: 2px 0; }
+.mz-turns .hc-pill { margin: 1px 2px; }

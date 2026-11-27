@@ -1,0 +1,31 @@
+/* minigames.html — the arena's games, one card each. Builds on styles.css / web5.css / arena.css (lobby hero, panel). */
+html[data-site-lang="ko"] .lang-en, html[data-site-lang="en"] .lang-ko { display: none; }
+.mg-page { word-break: keep-all; }
+.mg-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin: 6px 0 22px; }
+.web5 .mg-card {
+  display: flex; flex-direction: column; gap: 0; padding: 0; overflow: hidden; text-align: left; white-space: normal;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 4px; color: var(--text); cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s;
+}
+.web5 .mg-card:hover { transform: translateY(-3px); border-color: var(--teal-bright); }
+.web5 .mg-card:focus-visible { outline: 2px solid var(--teal-bright); outline-offset: 2px; }
+.web5 .mg-card[aria-expanded="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.mg-card img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-bottom: 1px solid var(--border); }
+.mg-card .mg-name { padding: 11px 13px 12px; font-family: var(--font-display); font-size: 15.5px; line-height: 1.3; }
+.mg-hint { margin: 0 0 22px; }
+
+.mg-detail { display: grid; grid-template-columns: minmax(220px, 0.7fr) 1.3fr; gap: 26px; align-items: start; }
+.mg-detail[hidden] { display: none; }
+.mg-side { display: flex; flex-direction: column; gap: 14px; }
+.mg-side img { display: block; width: 100%; border: 1px solid var(--border); border-radius: 4px; }
+.mg-one { margin: 0; padding: 16px 18px; border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border)); border-radius: 18px 18px 18px 4px;
+  background: linear-gradient(150deg, color-mix(in srgb, var(--accent) 26%, var(--panel)), var(--panel) 75%); color: var(--text); font-weight: 600; line-height: 1.5; }
+.mg-body h2 { font-family: var(--font-display); font-size: 24px; margin: 0 0 12px; }
+.mg-body h3 { font-family: var(--mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--teal-bright); margin: 18px 0 6px; }
+.mg-body p, .mg-body li { font-size: 15px; line-height: 1.65; color: var(--text-dim); }
+.mg-body p { margin: 0 0 8px; }
+.mg-body ul { margin: 0; padding-left: 20px; }
+.mg-body strong, .mg-body code { color: var(--text); }
+.mg-body code { font-family: var(--mono); font-size: 13px; }
+.mg-foot { margin-top: 22px; }
+@media (max-width: 760px) { .mg-detail { grid-template-columns: 1fr; } }

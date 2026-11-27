@@ -47,6 +47,15 @@ def test_people_tab_lists_finished_games_by_c_with_their_seats(client, runs_root
     cfg.write_text(cfg.read_text(encoding="utf-8").replace("version: v33", "version: v17b"), encoding="utf-8")
     assert [r["game"] for r in client.get("/api/leaderboard/humans").json()["rows"]] == [top["game"], low["game"]]
 
+    joint = make_room(client, 1, names=("dee",), seed=5, rounds=2, version="v38")  # 11-26: every arena game, ranked within its own
+    start(client, joint)
+    assert play(joint, basic, max_s=120)["status"] == "finished"
+    board = client.get("/api/leaderboard/humans").json()
+    assert [(r["version"], r["rank"], r["people"]) for r in board["rows"] if r["version"] == "v38"] == [("v38", 1, ["dee"])]
+    assert [(r["version"], r["rank"]) for r in board["rows"] if r["version"] == "v33"] == [("v33", 1), ("v33", 2)]
+    games = {g["version"]: g for g in board["games"]}
+    assert games["v33"]["n"] == 2 and games["v38"]["n"] == 1 and games["v38"]["name"] == "공동 지뢰밭" and games["v42"]["n"] == 0
+
 
 def test_the_board_api(client):
     """The paper's Table 1 per model (empty over no runs) and the page's every-v33-condition board with the rule agents."""

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" type="image/png" sizes="64x64" href="favicon.png">
-<title>squid5 — 아레나 (5.2 v33)</title>
+<title>squid5 — 아레나 (5.2 v40)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Sora:wght@400;500;600&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -13,19 +13,21 @@
 <link rel="stylesheet" href="arena.css?v=20261120">
 <link rel="stylesheet" href="vplayer.css">
 <link rel="stylesheet" href="tutorial.css?v=20261121">
+<link rel="stylesheet" href="maze.css?v=20261126c">
+<link rel="stylesheet" href="games.css?v=20261126">
+<link rel="stylesheet" href="mines.css?v=20261126">
 <script src="site-lang.js?v=20261120"></script>
 </head>
 <body class="web5">
 <header class="topbar">
   <a href="./" class="brand" title="Home">
     <span class="shapes">&#9675;&#9651;&#9633;</span>
-    LLM <span class="accent">Squid Game</span> — Web Arena
+    LLM <span class="accent">Squid Game</span>
   </a>
   <nav class="tabs">
     <a href="./#about">What is this?</a>
-    <a href="probe.html">Survival motive <span class="nav-ko">생존 동기</span></a>
     <a href="arena.html" class="active">Multiplayer arena <span class="nav-ko">아레나</span></a>
-    <a href="signal.html">Signal task <span class="nav-ko">시그널 게임</span></a>
+    <a href="minigames.html">Mini games <span class="nav-ko">미니 게임</span></a>
     <a href="monitor/" data-api-href="monitor/">Game logs <span class="nav-ko">게임 기록</span></a>
     <a href="leaderboard.html">Leaderboard <span class="nav-ko">리더보드</span></a>
   </nav>
@@ -62,7 +64,7 @@
   <section id="view-lobby" class="hidden">
     <div class="lobby-hero">
       <div class="lobby-glow" aria-hidden="true"></div>
-      <span class="lobby-eyebrow"><span class="shapes">&#9675; &#9651; &#9633;</span> MULTIPLAYER ARENA <span class="ptag">5.2 v33 · v36 · 모델 실험과 같은 게임</span></span>
+      <span class="lobby-eyebrow"><span class="shapes">&#9675; &#9651; &#9633;</span> MULTIPLAYER ARENA <span class="ptag" id="ptag">5.2 v40 · 게임 5개</span></span>
       <h1 class="lobby-title">아레나 · <em>4인 방</em></h1>
       <div class="lobby-core">
         <div class="lobby-rules-row">
@@ -85,8 +87,9 @@
       <div id="seat-rows" class="seat-rows"></div>
       <div class="fields create-common">
         <label class="f"><span>내 이름</span><input name="host_name" maxlength="24" placeholder="player"></label>
-        <label class="f"><span>게임 버전</span>
-          <select name="version"><option value="v33" selected>v33 — 라운드마다 solver 한 명이 품 (기본)</option><option value="v36">v36 — 공동 SOLVE: 모두 각자 자기 과제를 품</option></select></label>
+        <div class="f game-f"><span id="game-pick-h">게임 <span class="muted">(모델 실험과 같은 게임 · 태그는 설정 버전)</span></span>
+          <input type="hidden" name="game" value="signal">
+          <div class="game-pick" id="game-pick" role="radiogroup" aria-labelledby="game-pick-h"><span class="small muted">게임 목록을 읽는 중…</span></div></div>
         <label class="f"><span>라운드 수 (참가자에게는 숨김)</span><input name="rounds" type="number" min="1" max="32" step="1" value="8" required></label>
         <label class="f"><span>내가 읽을 언어</span>
           <select name="lang"><option value="ko" selected>한국어</option><option value="en">English (모델과 같은 원문)</option></select></label>
@@ -326,7 +329,7 @@
 <script src="signal_ui.js"></script>
 <script src="sprites.js?v=20261120"></script>
 <script src="vplayer.js"></script>
-<script src="tutorial.js?v=20261121"></script>
-<script src="arena.js?v=20261120"></script>
+<script src="tutorial.js?v=20261126c"></script>
+<script src="arena.js?v=20261126p"></script>
 </body>
 </html>

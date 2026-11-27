@@ -9,7 +9,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Query
 
-from web.server.game import VERSION
+from web.server.game import GAME_LIST, VERSIONS
 from web.server.runs import load_compare
 from web.server.site import Site, serve_static
 
@@ -46,10 +46,10 @@ def mount(app: FastAPI, site: Site) -> None:
 
     @app.get("/api/leaderboard/humans")
     def leaderboard_humans() -> dict:
-        """The people tab: every finished arena room of this engine version with a person in it, one row per game,
-        best C first (server/humans.py)."""
+        """The people tab: every finished arena room with a person in it, one row per game, tagged with its arena game
+        (v33 ... v42; the page filters by game), best presence first within a game (humans.py)."""
         try:
-            return humans_board(runs, load_compare(), VERSION)
+            return humans_board(runs, load_compare(), VERSIONS, {g["version"]: g["ko"] for g in GAME_LIST.values()})
         except Exception as err:  # noqa: BLE001
             raise HTTPException(500, f"leaderboard: {err!r}") from err
 

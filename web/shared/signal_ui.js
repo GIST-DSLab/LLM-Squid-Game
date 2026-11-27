@@ -1,5 +1,5 @@
-// Signal pictures, card boxes, answer buttons and the compact rule memo, shared by the arena's SOLVE screen and
-// signal.html (the task alone).
+// Signal pictures, card boxes, answer buttons and the compact rule memo, used by the arena's SOLVE screen
+// (once shared with signal.html, the task alone, removed 2026-11-26).
 //
 // A signal "blue triangle with number 3" is drawn as three blue triangles (inline SVG: an emoji cannot be recoloured,
 // there is no red star glyph). The shapes, colours and the drop-shadow are the old Web Arena's (styles.css .glyph,

@@ -7,10 +7,10 @@
 |---|---|---|---|
 | `home/` | 랜딩 | `/`, `/index.html`, `/about.html`(옛 주소) | |
 | `arena/` | 멀티플레이 아레나 | `/arena.html`, `/api/models`, `/api/rooms...` | 방 엔진 `engine.py` |
-| `signal/` | 시그널 게임 연습 | `/signal.html`, `/api/signal/*` | |
+| `minigames/` | 미니 게임 소개 | `/minigames.html` | 카드 다섯 장(그림 + 이름), 누르면 설명. 플레이와 API는 없음. 숫자는 `squid/configs`의 각 설정을 따름 |
 | `leaderboard/` | 리더보드 | `/leaderboard.html`, `/api/leaderboard*` | 사람 탭은 아레나 방의 run dir을 읽는다 |
 | `monitor/` | 게임 기록 | `/monitor/...` | 화면 파일은 `tools/monitor`의 것(`static/` 없음) |
-| `probe/` | 5.1 생존 동기 설문 | `/probe.html`, `/api/probe` | 짝 실험 `experiments/refill/` |
+| `probe/` | 5.1 생존 동기 설문 | `/probe.html`, `/api/probe` | 짝 실험 `experiments/refill/`. 11-26부터 쓰지 않음: 모든 페이지에서 링크를 뺌(주소로만 열림) |
 
 ## 한 페이지 폴더의 모양
 
@@ -18,7 +18,7 @@
 web/pages/<page>/
 ├─ __init__.py   # mount(app, site): 이 페이지의 API 경로를 붙이고 serve_static(app, static/)
 ├─ static/       # 사이트 루트에 그대로 놓이는 파일 (공용 파일은 web/shared 것을 상대 경로로 읽음)
-├─ *.py          # 이 페이지만 쓰는 서버 코드 (예: arena/engine.py, signal/task.py)
+├─ *.py          # 이 페이지만 쓰는 서버 코드 (예: arena/engine.py, leaderboard/humans.py)
 └─ test_*.py     # 이 페이지의 테스트 (CI: pytest web/tests web/pages)
 ```
 

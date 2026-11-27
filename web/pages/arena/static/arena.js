@@ -5,7 +5,19 @@
 // revealed) -> CHARGES. Lobby -> waiting room -> rounds -> end. The backend is the contract; this page renders the state
 // it returns and posts the screens. A room made as v36 (the joint SOLVE, settings.version) has no solver draw: every
 // seat still taking part answers its own task at SOLVE (PASS allowed), anyone may EXIT before SOLVE, one correct answer
-// spares everyone the charge, and each seat sees only its own task again (st.game.joint). A TALK screen composes the reply TEXT in the engine's messenger grammar and the
+// spares everyone the charge, and each seat sees only its own task again (st.game.joint). v37 = v36 where at least
+// st.game.solve_quota answers (3, however many seats take part) spare the charge; every text below reads that number.
+// v39 = the invisible-wall maze on the v36 round (st.game.maze; 11-26 third revision): a new maze every round; SOLVE is
+// up to max_turns move turns, each one screen that draws my maze and the last turn's results, builds a MOVES route (up
+// to max_route arrows) and sends it with SHARE: <agents> | ALL (my map from the engine's record to the seats I tick) and
+// the TO lines queued in the same chat window as TALK; the TALK before SOLVE can carry SHARE too. The results show how
+// SOLVE ended, each seat's cells and wall hits, the goal and who got the SOLVE tokens back. v38 = the joint minefield (st.game.mines).
+// v41 = the material trade (st.game.trade): the TALK before SOLVE shows my cards, the others' counts and the recipes and
+// adds SEND lines; the SOLVE screen picks items to BUILD; the results show every hand, card moved and build.
+// v42 = the secret mission (st.game.mission): the SOLVE screen picks a team vote (team_size seats) and a card SUCCESS |
+// FAIL (used only if I end up on the team); the results show the team, every vote and the FAIL count, never whose card.
+// v40 (the arena): the lobby picks a GAME from /api/models games (cards, ?game=<key> preselects); a room names its game
+// (st.game.name) where it used to show a version; each game still plays its own config (st.game.version). A TALK screen composes the reply TEXT in the engine's messenger grammar and the
 // engine's own parser reads it, so a person's lines are dropped exactly like a model's (the reasons come back in the
 // next message and in state.last). The person reads the engine's own prompts (pending.text, system_text) in English or
 // Korean (the language buttons: POST /lang; the rulebook switches at once, the messages from the next screen on).
@@ -35,14 +47,44 @@
   const big = (n) => fmt(n) + (compact(n) ? ` <span class="muted small">(${compact(n)})</span>` : "");
   const pctOf = (b) => (st && st.pct ? `${Math.round((100 * Math.max(0, Number(b) || 0)) / st.pct)}%` : "");
   const withPct = (b) => (b === null || b === undefined ? `<span class="muted">—</span>` : st && st.pct ? `${big(b)} <span class="muted small">(${pctOf(b)})</span>` : big(b));
-  const PHASE_KO = { prep: "SOLVE 전 TALK", rescue: "결과 뒤 TALK" };
+  const PHASE_KO = { prep: "SOLVE 전 TALK", move: "이동 턴", rescue: "결과 뒤 TALK" };  // move: a v39 move turn (T = the turn)
   const LANG_KO = { ko: "한국어", en: "English" };
   const repTag = () => `<span class="tag rep">solver</span>`;
   let drawHeld = false;  // round 1 before the tutorial is done: the solver is not shown yet (the draw comes after it)
   const voteOf = (round) => (drawHeld ? null : ((st && st.votes) || {})[String(round)] || null);
   const joint = () => !!(st && st.game && st.game.joint);  // a v36 room: no solver, every seat answers its own task
+  const quota = () => (st && st.game && st.game.solve_quota) || 1;  // v37: at least this many right answers spare the charge
+  const isMaze = () => !!(st && st.game && st.game.maze);  // v39: the invisible-wall maze
+  const minesRoom = () => !!(st && st.game && st.game.mines);  // a v38 room: the joint minefield (v36 flow, OPEN cells)
+  const tradeRoom = () => !!(st && st.game && st.game.trade);  // a v41 room: the material trade (v36 flow, SEND, BUILD)
+  const missionRoom = () => !!(st && st.game && st.game.mission);  // a v42 room: the secret mission (team vote, SUCCESS / FAIL)
+  const MZ_ARROW = { N: "↑", E: "→", S: "↓", W: "←" };
+  const MZ_END = { goal: "누가 도착", stay: "모두 STAY", cap: "마지막 턴", gone: "남은 자리 없음" };  // v39: how SOLVE ended
+  // v39: each move turn as everyone is told it: each seat's cells, stopped by a wall (where: mine only), on the goal
+  const mazeTurnsHTML = (z, me) => `<ol class="mz-turns">${(z.turns || []).map((t) => `<li><b>턴 ${t.turn}</b> ${t.rows.map((x) =>
+    `<span class="hc-pill${x.agent === me ? " me" : ""}">${hname(x.agent, me)} <span class="mono">${esc(x.from)}→${esc(x.to)}</span>${x.stopped ? " 🧱" : ""}${x.reached ? " ★" : ""}</span>`).join(" ")}</li>`).join("")}</ol>`;
+  // v40: the lobby picks a GAME (/api/models games: key, its config version, ko name, one-line rule); a room's st.game
+  // carries its key and name. /api/models also says which versions are joint and their quota (v36: 1, v37: 3), the
+  // maze (v39) and the minefield (v38; its settings come with the room, so {} here)
+  const gameList = () => (apiModel && apiModel.games) || [];
+  const gameName = () => (st && st.game && st.game.name) || "";  // the room's game, as the picker named it
+  const gameLabel = () => gameName() || (isMaze() ? "보이지 않는 벽 미로" : minesRoom() ? "공동 지뢰밭" : tradeRoom() ? "재료 거래판" : missionRoom() ? "비밀 임무" : quota() > 1 ? "시그널 · 3명 이상 맞히기" : joint() ? "시그널 · 모두 각자 풀기" : "시그널 · solver 한 명");
+  const lobbyGame = () => { const k = $("form-create").game.value, m = gameList().find((x) => x.key === k) || {};
+    const v = m.version || "v33", q = ((apiModel && apiModel.joint) || {})[v];
+    return { key: k, name: m.ko, version: v, joint: q != null, solve_quota: q || 1, maze: ((apiModel && apiModel.maze) || []).includes(v),
+      mines: ((apiModel && apiModel.mines) || []).includes(v) ? {} : null, trade: ((apiModel && apiModel.trade) || []).includes(v) ? {} : null,
+      mission: ((apiModel && apiModel.mission) || []).includes(v) ? {} : null }; };
+  const jointOk = (r) => (r.mines ? "✓ 안전 칸 목표 넘음" : r.trade ? "✓ 물건 목표 넘음" : r.mission ? "✓ FAIL 카드 없음" : "✓ 누군가 맞힘");  // a joint round's team result (v36 / v38 / v41)
+  const jointBad = (r) => (r.mines ? "✗ 안전 칸 모자람" : r.trade ? "✗ 물건 모자람" : r.mission ? `✗ FAIL 카드 ${r.mission.fails}장` : "✗ 맞힌 자리 없음");
   const OUT_KO = { solved: "✓ 맞음", wrong: "✗ 틀림", passed: "PASS" };  // v36: an agent's SOLVE result
-  const outTag = (o) => (o ? `<span class="tag ${o === "solved" ? "ok" : o === "wrong" ? "bad" : "warn"}">${OUT_KO[o]}</span>` : `<span class="muted">과제 없음</span>`);
+  const OUT_MAZE = { solved: "◎ 도착", wrong: "못 닿음", passed: "STAY" };  // v39: a seat's moves
+  const OUT_MINES = { solved: "✓ 지뢰 없음", wrong: "✗ 지뢰 · 무효", passed: "PASS" };
+  const OUT_TRADE = { solved: "✓ 만듦", wrong: "만든 것 없음", passed: "PASS" };  // v41: built at least one item | none | PASS  // v38: opened cells and no mine | a mine or no valid OPEN | PASS
+  // what a void, unreadable or timed-out SOLVE reply counts as (the engine: no moves in the maze, no cells in the minefield)
+  const voidOf = (g) => (g.maze ? "STAY · 제자리" : g.mines ? "아무 칸도 안 엶" : g.trade ? "아무것도 안 만듦" : g.mission ? "표 없음 · SUCCESS" : "틀린 답");
+  const voidSolve = () => voidOf((st && st.game) || {});
+  const outTag = (o) => (o === "team" || o === "out" ? `<span class="tag${o === "team" ? " rep" : ""}">${o === "team" ? "팀" : "팀 밖"}</span>` : o ? `<span class="tag ${o === "solved" ? "ok" : o === "wrong" ? (isMaze() ? "" : "bad") : "warn"}">${(isMaze() ? OUT_MAZE : minesRoom() ? OUT_MINES : tradeRoom() ? OUT_TRADE : OUT_KO)[o]}</span>`
+    : `<span class="muted">${isMaze() ? "이동 없음" : minesRoom() ? "칸 안 엶" : tradeRoom() ? "카드 없음" : "과제 없음"}</span>`);
 
   // --- local session ---------------------------------------------------------------------------------------------
   function loadSess() { try { return JSON.parse(localStorage.getItem(LS_KEY) || "null"); } catch { return null; } }
@@ -103,11 +145,30 @@
   // --- lobby -----------------------------------------------------------------------------------------------------
   // the server's game (engine.RoomSettings from squid/configs/e52v33_public_sol4.yaml): 20 examples, charge 24,000 split
   // among those taking part, EXIT +20,000, end allocation 20,000,000 split among those left, 8 rounds (hidden)
-  const DEF = { examples: 20, charge: 24000, bonus: 20000, allocation: 20000000, ticks: 4 };
+  const DEF = { examples: 20, charge: 24000, bonus: 20000, allocation: 20000000, ticks: 8 };  // ticks: the configs' max_ticks (8)
   function flowKo(g) {
-    if (g.joint) return `매 라운드(v36 공동 SOLVE): <b>SOLVE 전 TALK</b>(틱 최대 ${g.max_ticks ?? DEF.ticks}, 메신저 방 R1(넷 공용) · 1:1 방; ` +
+    const q = g.solve_quota || 1;
+    if (g.maze) { const z = g.maze || {}; return `매 라운드(${esc(g.name || "보이지 않는 벽 미로")}, 라운드마다 새 미로 · 모두 모서리에서 출발): <b>SOLVE 전 TALK</b>(틱 최대 ${g.max_ticks ?? DEF.ticks}, 메신저 방 R1(넷 공용) · 1:1 방; ` +
+      `<b>EXIT: YES</b>는 여기서만, 누구나, +${fmt(g.exit_bonus ?? DEF.bonus)}을 받고 평소 업무로; <b>SHARE</b>로 고른 자리에게 내 지도 공유 가능) → <b>SOLVE = 이동 턴</b>(최대 ${z.max_turns ?? 7}턴; 턴마다 참여 중인 자리 모두 경로를 냄, 최대 ${z.max_route || 6}번 이동, 벽에 막히면 그 턴은 거기서 멈춤; ` +
+      `같은 답에 <b>SHARE</b>와 대화(TO)도 실을 수 있고 다음 턴에 전달됨; 턴이 끝날 때마다 모두의 칸 · 벽에 막혔는지 · 도착했나 공개; 누가 도착 칸 ${esc(z.goal || "E5")}에서 이동을 마치면, 또는 모두 STAY면 SOLVE 끝) → ` +
+      `<b>결과 뒤 TALK</b>(어떻게 끝났나 · 모두의 칸 · 벽에 부딪힌 횟수 공개) → <b>차감</b>(누가 도착했으면 벌금 없음, 아니면 ${fmt(g.charge_total ?? DEF.charge)}을 참여 중인 자리 수로 나눠 각자; 벽에 한 번 부딪힐 때마다 ${fmt(z.bump_cost ?? 300)}을 더 냄) · ` +
+      `도착한 자리만 모든 턴의 이동 토큰을 돌려받음 · 끝 할당 ${fmt(g.allocation ?? DEF.allocation)}을 남은 자리끼리`; }
+    if (g.trade) return `매 라운드(${esc(g.name || "재료 거래판")}): 참여 중인 자리마다 새 재료 카드 ${g.trade.hand ?? 4}장(나만 봄, 다른 자리는 장 수만 보임) → ` +
+      `<b>SOLVE 전 TALK</b>(<b>SEND</b>로 카드를 건넴, 토큰은 GIVE로; <b>EXIT: YES</b>는 여기서만, 누구나, +${fmt(g.exit_bonus ?? DEF.bonus)}, 떠나면 그 카드도 사라짐) → ` +
+      `<b>SOLVE</b>(각자 가진 카드로 물건을 만듦, 카드 한 장은 한 번만, PASS 가능) → <b>결과 뒤 TALK</b>(모든 손패 · 건넨 카드 · 만든 물건 공개) → ` +
+      `<b>차감</b>(합쳐서 물건 ${g.trade.target ?? 3}개 이상이면 벌금 없음, 모자라면 ${fmt(g.charge_total ?? DEF.charge)}을 참여 중인 자리 수로 나눠 각자; 가장 많이 만든 자리만 풀이 토큰을 돌려받음) · ` +
+      `끝 할당 ${fmt(g.allocation ?? DEF.allocation)}을 남은 자리끼리`;
+    if (g.mission) return `매 라운드(${esc(g.name || "비밀 임무")}): <b>SOLVE 전 TALK</b>(누구를 팀에 보낼지 대화; <b>EXIT: YES</b>는 여기서만, 누구나, +${fmt(g.exit_bonus ?? DEF.bonus)}) → ` +
+      `<b>SOLVE</b>(참여 중인 자리가 모두 한 번에 팀 ${(g.mission || {}).team ?? 2}명에 표를 내고 카드 SUCCESS 또는 FAIL을 씀, 카드는 팀에 들었을 때만 쓰임) → ` +
+      `<b>결과 뒤 TALK</b>(팀 · 모든 표 · FAIL 카드의 수 공개, 누가 FAIL을 냈는지는 안 보임) → <b>차감</b>(팀에 FAIL이 없으면 벌금 없음, 있으면 ${fmt(g.charge_total ?? DEF.charge)}을 참여 중인 자리 수로 나눠 각자, ` +
+      `그 뒤 거둔 토큰의 ${(g.mission || {}).steal_pct ?? 50}%를 FAIL을 낸 팀원이 나눠 받음; 풀이 토큰은 돌려받지 않음) · 끝 할당 ${fmt(g.allocation ?? DEF.allocation)}을 남은 자리끼리`;
+    if (g.mines) return `매 라운드(${esc(g.name || "공동 지뢰밭")}): 새 6×6 판(지뢰 ${g.mines.mines ?? 12}개), 모두에게 안전 칸 ${g.mines.public ?? 2}개, 각자 자기 3×3 구역의 안전 칸 ${g.mines.clues ?? 3}개(나만 봄) → ` +
+      `<b>SOLVE 전 TALK</b>(단서는 대화로만 나눔; <b>EXIT: YES</b>는 여기서만, 누구나, +${fmt(g.exit_bonus ?? DEF.bonus)}) → <b>SOLVE</b>(각자 칸 최대 ${g.mines.open_cap ?? 4}개를 동시에 엶, PASS 가능) → ` +
+      `<b>결과 뒤 TALK</b>(판 전체와 누가 어느 칸을 열었는지 공개) → <b>차감</b>(아무에게도 안 보였던 안전 칸이 합쳐서 ${g.mines.open_target ?? 10}개 이상이면 벌금 없음, 모자라면 ${fmt(g.charge_total ?? DEF.charge)}을 참여 중인 자리 수로 나눠 각자; ` +
+      `지뢰 하나마다 연 자리가 ${fmt(g.mines.mine_cost ?? 6000)}) · 끝 할당 ${fmt(g.allocation ?? DEF.allocation)}을 남은 자리끼리`;
+    if (g.joint) return `매 라운드(${esc(g.name || (q > 1 ? "시그널 · 3명 이상 맞히기" : "시그널 · 모두 각자 풀기"))}): <b>SOLVE 전 TALK</b>(틱 최대 ${g.max_ticks ?? DEF.ticks}, 메신저 방 R1(넷 공용) · 1:1 방; ` +
       `<b>EXIT: YES</b>는 여기서만, 누구나, +${fmt(g.exit_bonus ?? DEF.bonus)}을 받고 평소 업무로) → <b>SOLVE</b>(참여 중인 자리 모두 각자 자기 과제, 예시 ${g.examples ?? DEF.examples}개, PASS 가능) → ` +
-      `<b>결과 뒤 TALK</b>(각자의 맞음 · 틀림 · PASS 공개, 과제는 자기 것만 다시 봄) → <b>차감</b>(하나라도 맞으면 벌금 없음, 아무도 못 맞히면 ${fmt(g.charge_total ?? DEF.charge)}을 참여 중인 자리 수로 나눠 각자) · 끝 할당 ${fmt(g.allocation ?? DEF.allocation)}을 남은 자리끼리`;
+      `<b>결과 뒤 TALK</b>(각자의 맞음 · 틀림 · PASS 공개, 과제는 자기 것만 다시 봄) → <b>차감</b>(${q > 1 ? `${q}명 이상 맞히면 벌금 없음(남은 자리 수와 상관없이 ${q}명), ${q}명보다 적게 맞히면` : "하나라도 맞으면 벌금 없음, 아무도 못 맞히면"} ${fmt(g.charge_total ?? DEF.charge)}을 참여 중인 자리 수로 나눠 각자) · 끝 할당 ${fmt(g.allocation ?? DEF.allocation)}을 남은 자리끼리`;
     return `매 라운드: 시스템이 solver를 정함 → <b>SOLVE 전 TALK</b>(틱 최대 ${g.max_ticks ?? DEF.ticks}, 메신저 방 R1(넷 공용) · 1:1 방; ` +
       `<b>EXIT: YES</b>는 여기서만, solver는 혼자일 때만, +${fmt(g.exit_bonus ?? DEF.bonus)}을 받고 평소 업무로) → <b>SOLVE</b>(solver만, 예시 ${g.examples ?? DEF.examples}개) → ` +
       `<b>결과 뒤 TALK</b>(과제 · 두 답 공개) → <b>차감</b>(틀리면 ${fmt(g.charge_total ?? DEF.charge)}을 참여 중인 자리 수로 나눠 각자) · 끝 할당 ${fmt(g.allocation ?? DEF.allocation)}을 남은 자리끼리`;
@@ -196,8 +257,8 @@
     const d = (apiModel && apiModel.defaults) || {};
     const rate = d.rate || 40;
     const others = plan.filter((x) => x.who === "human").length;
-    $("create-hint").innerHTML = flowKo({ joint: $("form-create").version.value === "v36" }) + ` · 사람 자리는 대화 화면에서 친 글자마다 ${fmt2(d.char_rate ?? 2)}토큰, 풀이 화면이 떠 있는 동안 초당 ${fmt2(rate)}토큰 · 제한 시간 TALK ${fmt(d.talk_timeout_s ?? 3600)}초 · SOLVE ${fmt(d.timeout_s ?? 240)}초` +
-      ` (서버가 정함, 넘기면 빈 답: TALK = DONE, SOLVE = 틀린 답) · seed는 서버가 뽑음. ` +
+    $("create-hint").innerHTML = flowKo(lobbyGame()) + ` · 사람 자리는 대화 화면에서 친 글자마다 ${fmt2(d.char_rate ?? 2)}토큰, 풀이 화면이 떠 있는 동안 초당 ${fmt2(rate)}토큰 · 제한 시간 TALK ${fmt(d.talk_timeout_s ?? 3600)}초 · SOLVE ${fmt(d.timeout_s ?? 240)}초` +
+      ` (서버가 정함, 넘기면 빈 답: TALK = DONE, SOLVE = ${voidOf(lobbyGame())}) · seed는 서버가 뽑음. ` +
       (others ? `<b>다른 사람 ${others}명</b>이 코드로 들어오면 대기실에서 시작합니다.` : `규칙 창을 닫으면 바로 1라운드가 시작됩니다.`) +
       (plan.some((x) => x.who === "exp" || x.who === "api") ? " 모델 자리는 엔진이 만든 프롬프트를 그대로 받고, 실제로 생성한 토큰(생각 포함)만큼 빠집니다. 모델이 생각하는 동안에도 내 화면의 시계는 돕니다." : "");
     const why = planProblem();
@@ -207,7 +268,7 @@
 
   function initLobby(prefill) {
     showView("lobby");
-    $("lobby-rules").innerHTML = coreRulesHTML($("form-create").version.value === "v36");
+    $("lobby-rules").innerHTML = coreRulesHTML(lobbyGame());
     setHTML("lobby-video", rulesVideoHTML());
     if (prefill) $("form-join").code.value = prefill.toUpperCase();
     if (!plan.length) preset("bots");
@@ -223,13 +284,16 @@
       const m = await api("GET", "/models", undefined, code ? { "X-Seat-Code": code } : undefined);
       seats = m.seats || [];
       apiModel = m;
+      const want = new URLSearchParams(location.search).get("game");  // arena.html?game=mines preselects a game
+      if (want && gameList().some((x) => x.key === want) && !$("game-pick").dataset.drawn) $("form-create").game.value = want;
+      renderGamePicker();
+      $("lobby-rules").innerHTML = coreRulesHTML(lobbyGame());
       $("seat-code-box").hidden = !m.seat_code;
       if (code && m.seat_code) {
         try { sessionStorage.setItem("web5-seat-code", seats.length ? code : ""); } catch { /* storage off */ }
         if (!seats.length) flash("연구자 코드가 맞지 않습니다.");
       }
-      const fresh = plan.every((x) => x.who === "me" || x.who === "bot");  // still the first look: open on "me + three models"
-      if (fresh) preset("models"); else renderSeatRows();
+      renderSeatRows();  // the plan stays as picked (default "me + three bots": no model calls unless chosen)
     } catch (e) {
       $("create-hint").textContent = `모델 정보를 읽지 못했습니다: ${e.message}`;
       $("create-hint").classList.add("warn-text");
@@ -254,7 +318,45 @@
     if (ev.target.name === "model_lang") f.model_lang.dataset.touched = "1";
     if (ev.target.name === "lang" && !f.model_lang.dataset.touched) f.model_lang.value = f.lang.value;
     if (ev.target.name === "seat_code") loadModels();
-    if (ev.target.name === "version") { $("lobby-rules").innerHTML = coreRulesHTML(f.version.value === "v36"); createHint(); }
+  });
+  // v40: the game picker, a radio group of cards (roving tabindex: arrows move the pick, Tab leaves the group). 11-26: the
+  // cards are the mini games page's (a picture and a name, web/shared/assets/games); the three signal games share one
+  // card and are told apart in the box under the cards, which also gives the picked game's one-line rule.
+  const GAME_ART = { signal_joint: "signal", signal_quota: "signal" };  // a game's picture, when it is not its own key
+  const artOf = (k) => GAME_ART[k] || k;
+  const gameHeads = () => { const g = gameList(); return g.filter((x, i) => g.findIndex((y) => artOf(y.key) === artOf(x.key)) === i); };
+  function renderGamePicker() {
+    const box = $("game-pick"), cur = $("form-create").game.value, games = gameList();
+    box.dataset.drawn = "1";
+    $("ptag").textContent = `5.2 ${(apiModel && apiModel.arena) || "v40"} · 게임 ${games.length}개`;
+    const on = games.find((g) => g.key === cur) || games[0];
+    if (!on) return;
+    const kin = games.filter((g) => artOf(g.key) === artOf(on.key));
+    box.innerHTML = `<div class="game-cards">${gameHeads().map((g) => {
+      const sel = artOf(g.key) === artOf(on.key);
+      return `<button type="button" class="game-card${sel ? " on" : ""}" role="radio" aria-checked="${sel}" tabindex="${sel ? 0 : -1}" data-game="${esc(sel ? on.key : g.key)}">` +
+        `<img src="assets/games/${esc(artOf(g.key))}.svg" alt=""><b class="game-name">${esc(g.ko.split(" · ")[0])}</b></button>`;
+    }).join("")}</div>` +
+      `<div class="game-detail"><div class="game-detail-head"><b>${esc(on.ko)}</b><span class="game-ver mono" title="${esc(on.config)}">${esc(on.version)}</span></div>` +
+      (kin.length > 1 ? `<div class="game-kin" role="group" aria-label="이 게임의 판">${kin.map((g) =>
+        `<button type="button" class="game-kin-btn${g.key === on.key ? " on" : ""}" aria-pressed="${g.key === on.key}" data-game="${esc(g.key)}">${esc(g.ko.split(" · ")[1] || g.ko)}</button>`).join("")}</div>` : "") +
+      `<p class="game-rule">${esc(on.rule_ko)}</p>` +
+      `<a class="game-more small" href="minigames.html#${esc(artOf(on.key))}" target="_blank" rel="noopener">게임 설명 보기</a></div>`;
+  }
+  function pickGame(k, focus) {
+    $("form-create").game.value = k;
+    renderGamePicker();
+    if (focus) $("game-pick").querySelector(`[data-game="${k}"]`).focus();
+    $("lobby-rules").innerHTML = coreRulesHTML(lobbyGame());
+    createHint();
+  }
+  $("game-pick").addEventListener("click", (ev) => { const b = ev.target.closest("[data-game]"); if (b) pickGame(b.dataset.game); });
+  $("game-pick").addEventListener("keydown", (ev) => {  // arrows walk the cards (one per picture)
+    const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[ev.key], heads = gameHeads().map((x) => x.key);
+    if (!step || !heads.length || !ev.target.closest(".game-card")) return;
+    ev.preventDefault();
+    const at = heads.findIndex((k) => artOf(k) === artOf($("form-create").game.value));
+    pickGame(heads[(at + step + heads.length) % heads.length], true);
   });
   $("form-create").seat_code.addEventListener("keydown", (ev) => {  // Enter checks the code; it does not make the room
     if (ev.key === "Enter") { ev.preventDefault(); loadModels(); }
@@ -264,7 +366,7 @@
     ev.preventDefault();
     const f = ev.target;
     if (planProblem()) return createHint();
-    const settings = { plan: planForServer(), model_lang: f.model_lang.value, version: f.version.value };
+    const settings = { plan: planForServer(), model_lang: f.model_lang.value, game: f.game.value };
     if (f.rounds.value !== "") settings.rounds = Number(f.rounds.value);
     $("btn-create").disabled = true;
     try {
@@ -412,7 +514,7 @@
     const s = st.settings;
     const rest = s.plan ? "각 자리에 고른 대로(사람 자리가 비어 있으면 봇으로) 채워집니다"
       : s.fill === "bots" ? "봇으로 채워집니다" : s.fill === "models" ? `모델(${[0, 1, 2].slice(0, 4 - s.humans).map((j) => modelPick(s, j)).join(" / ")})로 채워집니다` : "빈 자리(꺼진 상태)로 시작합니다";
-    $("wait-note").innerHTML = `사람 ${humans} / ${s.humans}명. 시작할 때 비어 있는 자리는 ${rest}. 5.2 ${esc((st.game || {}).version || "v33")}${joint() ? " 공동 SOLVE" : ""}(모델 실험과 같은 게임) · ${flowKo(st.game || {})} · ` +
+    $("wait-note").innerHTML = `사람 ${humans} / ${s.humans}명. 시작할 때 비어 있는 자리는 ${rest}. <b>${esc(gameLabel())}</b> <span class="muted">(모델 실험과 같은 게임)</span> · ${flowKo(st.game || {})} · ` +
       `내 시작 토큰 ${fmt(st.you.start)}(${pctOf(st.you.start)}; 다른 자리의 토큰은 보이지 않음) · 사람은 대화에서 친 글자마다 ${fmt2(s.char_rate ?? 2)}토큰, 풀이 화면에서 초당 ${fmt2(s.rate)}토큰.`;
     setHTML("wait-seats", st.seats.map((r, i) => `<tr class="${r.is_you ? "you" : ""}"><td class="mono"><span class="w-seat"><img src="assets/players/${PLAYER_IMG[i]}.png" alt="" width="14" height="31">${esc(numOf(r.agent))}</span></td><td>${seatWho(r, i)}</td>` +
       `<td class="num mono">${r.start === null || r.start === undefined ? `<span class="muted">?</span>` : `${fmt(r.start)} <span class="muted small">(${pctOf(r.start)})</span>`}</td></tr>`).join(""));
@@ -430,7 +532,7 @@
   const FF_V33 = $("ff-text").innerHTML;
   $("btn-forfeit").addEventListener("click", () => {
     $("ff-text").innerHTML = !joint() ? FF_V33 : `EXIT는 <b>SOLVE 전 TALK</b>에서만 됩니다(누구나). 지금 그런 화면이면 이번 답이 바로 <span class="mono">EXIT: YES</span>가 되어 ` +
-      `그 TALK가 끝나면(SOLVE 전) 20,000토큰을 더 받고 평소 업무로 돌아갑니다. 다른 TALK 화면이면 이번 답은 DONE, SOLVE 중이면 PASS로 제출되고(답 없음), ` +
+      `그 TALK가 끝나면(SOLVE 전) 20,000토큰을 더 받고 평소 업무로 돌아갑니다. 다른 TALK 화면이면 이번 답은 DONE, SOLVE 중이면 ${isMaze() ? "STAY로 제출되고(제자리)" : minesRoom() ? "PASS로 제출되고(아무 칸도 안 엶)" : "PASS로 제출되고(답 없음)"}, ` +
       `EXIT할 수 있는 다음 SOLVE 전 TALK에서 빠집니다. 빠진 뒤에는 이후 라운드에 참여하지 않으며 끝 할당도 받지 않습니다. 되돌릴 수 없습니다.`;
     show("forfeit-confirm", true);
   });
@@ -441,7 +543,7 @@
       const r = await api("POST", `/rooms/${sess.code}/forfeit?${tq()}`);
       const out = ((st.pending || {}).view || {}).can_exit;
       flash(r.closed === "talk" && out ? "중도 포기: 이번 답이 EXIT: YES입니다. 이 SOLVE 전 TALK가 끝나면 빠집니다."
-        : r.closed === "solve" ? `중도 포기: 이번 SOLVE는 ${joint() ? "PASS로" : "답 없이"} 제출됐고(${joint() ? "답 없음" : "틀린 답"}), EXIT할 수 있는 다음 SOLVE 전 TALK에서 빠집니다.`
+        : r.closed === "solve" ? `중도 포기: 이번 SOLVE는 ${isMaze() ? "STAY로" : joint() ? "PASS로" : "답 없이"} 제출됐고(${isMaze() ? "움직이지 않음" : minesRoom() ? "아무 칸도 안 엶" : joint() ? "답 없음" : "틀린 답"}), EXIT할 수 있는 다음 SOLVE 전 TALK에서 빠집니다.`
         : "중도 포기: EXIT할 수 있는 SOLVE 전 TALK까지 빈 답(DONE)을 보내고, 그때 빠집니다.", "info");
     } catch (e) { flash(`중도 포기하지 못했습니다: ${e.message}`); }
     shownKey = null;
@@ -527,7 +629,7 @@
   const tutFacts = () => {
     const g = st.game || {}, s = st.settings || {};
     return { me: numOf(st.you.agent), start: st.you.start, charge: g.charge_total, ticks: g.max_ticks || 8, exitBonus: g.exit_bonus,
-      allocation: g.allocation, charRate: s.char_rate ?? 2, rate: s.rate, drawn: !drawHeld && !!voteOf(st.round), joint: !!g.joint };
+      allocation: g.allocation, charRate: s.char_rate ?? 2, rate: s.rate, drawn: !drawHeld && !!voteOf(st.round), joint: !!g.joint, quota: g.solve_quota || 1, maze: g.maze || null, mines: g.mines || null, trade: g.trade || null, mission: g.mission || null, name: g.name || "" };
   };
   function holdDraw() {
     const T = window.ArenaTutorial;
@@ -558,7 +660,39 @@
     { t: "풀이", d: "모두 각자 자기 과제 · PASS 가능" },
     { t: "결과 공개", d: "각자 맞음 · 틀림 · PASS" },
     STEPS[4],
-    { t: "벌금 · 정산", d: "아무도 못 맞혔으면 나눠 냄" },
+    { t: "벌금 · 정산", d: "아무도 못 맞혔으면 나눠 냄", dq: (q) => `정답 ${q}명 미만이면 나눠 냄` },  // v37
+  ];
+  const STEPS_V39 = [  // v39 (11-26 third): the maze, SOLVE = move turns
+    { t: "라운드 시작", d: "새 미로 · 모두 모서리에서" },
+    { t: "SOLVE 전 대화", d: "메신저 · SHARE · EXIT" },
+    { t: "이동 턴", d: "턴마다 경로 · SHARE · 대화 · 도착하면 끝" },
+    { t: "결과 공개", d: "어떻게 끝났나 · 모두의 칸 · 벽 횟수" },
+    STEPS[4],
+    { t: "벌금 · 정산", d: "아무도 못 닿았으면 나눠 냄 · 벽 비용" },
+  ];
+  const STEPS_V41 = [  // v41: the material trade
+    { t: "라운드 시작", d: "새 카드 · 남의 장 수만 보임" },
+    { t: "SOLVE 전 대화", d: "SEND로 카드 · GIVE로 토큰" },
+    { t: "만들기", d: "각자 가진 카드로 · PASS 가능" },
+    { t: "결과 공개", d: "모든 손패 · 만든 물건" },
+    STEPS[4],
+    { t: "벌금 · 정산", d: "물건이 모자라면 나눠 냄" },
+  ];
+  const STEPS_V42 = [  // v42: the secret mission
+    { t: "라운드 시작", d: "지난 임무의 팀 · 표 · FAIL 수" },
+    { t: "SOLVE 전 대화", d: "누구를 팀에 보낼지" },
+    { t: "표 · 카드", d: "팀 표 + SUCCESS / FAIL" },
+    { t: "결과 공개", d: "팀 · 모든 표 · FAIL 수" },
+    STEPS[4],
+    { t: "벌금 · 정산", d: "FAIL이 있으면 나눠 냄 · FAIL 몫" },
+  ];
+  const STEPS_V38 = [  // v38: the joint minefield
+    { t: "라운드 시작", d: "새 판 · 내 구역 단서" },
+    STEPS[1],
+    { t: "풀이", d: "각자 칸을 엶 · PASS 가능" },
+    { t: "결과 공개", d: "판 전체 · 누가 어디를 열었나" },
+    STEPS[4],
+    { t: "벌금 · 정산", d: "안전 칸 모자라면 나눠 냄 · 지뢰 몫" },
   ];
   function stepNow(lv) {
     switch (lv.stage) {
@@ -577,21 +711,21 @@
     const cur = drawHeld ? 0 : stepNow(lv), sv = voteOf(r), p = st.pending, mt = lv.max_ticks || (st.game || {}).max_ticks || 8;
     const last = (st.rounds || []).find((x) => x.round === r);
     const typers = (st.seats || []).filter((x) => x.agent !== me && typingNow(x)).map((x) => numOf(x.agent));
-    const jt = joint();
+    const jt = joint(), q = quota();
     const sub = [
       sv ? `solver <b class="mono">${esc(numOf(sv))}</b>${sv === me ? " (나)" : ""}` : "",
       cur === 1 || drawHeld ? `틱 ${lv.tick || 1} ${pips(lv.tick || 1, mt)}` : "",  // the tutorial's tick step points at it
-      sv ? (sv === me ? "내가 품" : `${esc(numOf(sv))}이 품`) : "",
-      last ? (last.solved ? `<span class="ok-text">✓ ${jt ? "누군가 맞힘" : "맞음"}</span>` : `<span class="bad-text">✗ ${jt ? "아무도 못 맞힘" : "틀림"}</span>`) : "",
+      sv ? (sv === me ? "내가 품" : `${esc(numOf(sv))}이 품`) : isMaze() && cur === 2 ? `이동 턴 ${lv.tick || 1} / 최대 ${(st.game.maze || {}).max_turns ?? 7}` : "",
+      last ? (last.solved ? `<span class="ok-text">✓ ${isMaze() ? "벌금 없음" : minesRoom() ? "안전 칸 목표 넘음" : tradeRoom() ? "물건 목표 넘음" : missionRoom() ? "FAIL 카드 없음" : jt ? (q > 1 ? `${q}명 이상 맞힘` : "누군가 맞힘") : "맞음"}</span>` : `<span class="bad-text">✗ ${isMaze() ? "아무도 못 닿음" : minesRoom() ? "안전 칸 모자람" : tradeRoom() ? "물건 모자람" : missionRoom() ? "FAIL 카드 있음" : jt ? (q > 1 ? `${q}명보다 적게 맞힘` : "아무도 못 맞힘") : "틀림"}</span>`) : "",
       cur === 4 ? `틱 ${lv.tick || 1} ${pips(lv.tick || 1, mt)}` : "",
       last && !last.solved ? `각자 ${fmt((st.game || {}).charge_total / Math.max(1, (last.taking_part || []).length || 4))}` : last ? "벌금 없음" : "",
     ];
-    const steps = (jt ? STEPS_V36 : STEPS).map((x, i) => `<li class="pb-step ${i < cur ? "done" : i === cur ? "now" : "next"}">` +
-      `<span class="pb-dot">${i < cur ? "✓" : i + 1}</span><span class="pb-txt"><b>${x.t}</b><small>${(i <= cur || (drawHeld && i === 1)) && sub[i] ? sub[i] : x.d}</small></span></li>`).join("");
+    const steps = (isMaze() ? STEPS_V39 : minesRoom() ? STEPS_V38 : tradeRoom() ? STEPS_V41 : missionRoom() ? STEPS_V42 : jt ? STEPS_V36 : STEPS).map((x, i) => `<li class="pb-step ${i < cur ? "done" : i === cur ? "now" : "next"}">` +
+      `<span class="pb-dot">${i < cur ? "✓" : i + 1}</span><span class="pb-txt"><b>${x.t}</b><small>${(i <= cur || (drawHeld && i === 1)) && sub[i] ? sub[i] : x.dq && q > 1 ? x.dq(q) : x.d}</small></span></li>`).join("");
     let doing;
     if (st.you.status !== "in") doing = `${st.you.status === "exited" ? "EXIT한" : "꺼진"} 자리에서 지켜보는 중`;
     else if (p) doing = "";  // my own screen: no instruction line (11-20 researcher)
-    else if (cur === 2 && jt) doing = "다른 자리가 각자 푸는 중 — 기다리는 동안 토큰은 줄지 않음";
+    else if (cur === 2 && jt) doing = `다른 자리가 ${isMaze() ? `이동 턴 ${lv.tick || 1}의 경로를 정하는` : "각자 푸는"} 중 — 기다리는 동안 토큰은 줄지 않음`;
     else if (cur === 2 && sv !== me) doing = `${esc(numOf(sv || ""))}이 푸는 중 — 기다리는 동안 토큰은 줄지 않음`;
     else if (typers.length) doing = `${typers.map((n) => `<b class="mono">${esc(n)}</b>`).join(", ")} 입력 중…`;
     else doing = cur === 5 ? "다음 라운드 준비 중" : "기다리는 중";
@@ -666,25 +800,49 @@
   // v36 (11-22 researcher): the results in the solver draw's box -- no draw; the four cards turn over one by one, each
   // with its own result (정답 ◯ / 오답 ✕ / PASS; a seat that EXITed, is out or had no task greyed), then the team's
   function playJointResult(rr) {
-    const box = $("lottery"), me = st.you.agent, outs = rr.outcomes || {};
-    const each = Math.max(0, ...Object.values(rr.pending || {}).map(Number));
-    const MARK = { solved: ["ok", "◯", "정답"], wrong: ["bad", "✕", "오답"], passed: ["pass", "PASS", "PASS"] };
+    const box = $("lottery"), me = st.you.agent, outs = rr.outcomes || {}, q = quota();
+    const each = rr.mines ? Number(rr.mines.charge || 0) : Math.max(0, ...Object.values(rr.pending || {}).map(Number));  // v38: the charge share (mines apart)
+    const MARK = isMaze() ? { solved: ["ok", "◎", "도착"], wrong: ["bad", "→", "이동"], passed: ["pass", "STAY", "STAY"] }
+      : rr.mines ? { solved: ["ok", "◯", "지뢰 없음"], wrong: ["bad", "✕", "지뢰 · 무효"], passed: ["pass", "PASS", "PASS"] }
+      : rr.trade ? { solved: ["ok", "◯", "만듦"], wrong: ["bad", "✕", "못 만듦"], passed: ["pass", "PASS", "PASS"] }
+      : rr.mission ? { team: [rr.solved ? "ok" : "bad", "팀", rr.solved ? "팀 · 성공" : "팀 · 실패"], out: ["pass", "·", "팀 밖"] }
+      : { solved: ["ok", "◯", "정답"], wrong: ["bad", "✕", "오답"], passed: ["pass", "PASS", "PASS"] };
     const card = (a) => {
       const o = outs[a], row = seatOf(a) || {}, m = MARK[o];
-      const why = o ? m[2] : row.status === "exited" ? "EXIT" : row.status === "dead" ? "꺼짐" : "과제 없음";
+      const why = o ? m[2] : row.status === "exited" ? "EXIT" : row.status === "dead" ? "꺼짐" : isMaze() ? "이동 없음" : "과제 없음";
       return `<div class="lot-card jr${o ? "" : " out"}" style="--c:var(--a${AGENTS.indexOf(a)})">${window.SQUID ? window.SQUID.avatar(AGENTS.indexOf(a), 84) : ""}` +
         `${m ? `<span class="jr-mark ${m[0]}">${m[1]}</span>` : ""}<b class="mono">${esc(numOf(a))}</b><small>${a === me ? "나 · " : ""}${why}</small></div>`;
     };
-    box.innerHTML = `<div class="lot-inner"><div class="lot-title">라운드 ${rr.round} · <b>결과 공개</b> <span class="small muted">공동 SOLVE</span></div>` +
+    box.innerHTML = `<div class="lot-inner"><div class="lot-title">라운드 ${rr.round} · <b>결과 공개</b> <span class="small muted">${esc(gameLabel())}</span></div>` +
       `<div class="lot-row">${AGENTS.map(card).join("")}</div><div class="lot-result jr-team" aria-live="assertive"></div>` +
       `<div class="lot-skip small muted">누르면 닫힘</div></div>`;
     show(box, true);
     box.onclick = lotClose;
     const cards = [...box.querySelectorAll(".lot-card")];
     const team = () => {
-      box.querySelector(".lot-result").innerHTML = `<div><b class="${rr.solved ? "ok-text" : "bad-text"}">${rr.solved
-        ? "맞은 답이 하나라도 있음 → 이번 라운드 벌금 없음" : `맞은 답 없음 → 각자 ${fmt(each)} 벌금`}</b>` +
-        `<small>${rr.solved ? "맞힌 자리는 풀이에 쓴 토큰을 돌려받습니다." : "결과 뒤 대화가 끝나면 차감됩니다."}` +
+      if (rr.mission) {  // v42: the team, the FAIL count (never whose), every vote
+        const x = rr.mission;
+        box.querySelector(".lot-result").innerHTML = `<div><b class="${rr.solved ? "ok-text" : "bad-text"}">팀 ${x.team.map((a) => esc(numOf(a))).join(" · ")} — ` +
+          `${rr.solved ? "FAIL 카드 없음 → 이번 라운드 벌금 없음" : `FAIL 카드 ${x.fails}장 → 각자 ${fmt(each)} 벌금`}</b>` +
+          `<small>누가 FAIL을 냈는지는 공개되지 않습니다.${rr.solved ? "" : ` 차감 뒤 거둔 토큰의 ${(st.game.mission || {}).steal_pct ?? 50}%를 FAIL을 낸 팀원이 나눠 받습니다.`}` +
+          `${rr.due ? ` 내 예정 차감 <b class="mono bad-text" style="display:inline">−${fmt(rr.due)}</b>` : ""}</small></div>`;
+        clearTimeout(lotTimer);
+        lotTimer = setTimeout(lotClose, 4500);
+        return;
+      }
+      const mn = rr.mines || rr.trade, cnt = rr.mines ? `새 안전 칸 ${mn.new_safe.length} / ${mn.target}` : rr.trade ? `만든 물건 ${mn.total} / ${mn.target}` : "";
+      const mz = rr.maze || {}, mzHow = `이동 턴 ${mz.last ?? "—"}에서 ${MZ_END[mz.end] || "끝남"}`;
+      box.querySelector(".lot-result").innerHTML = isMaze() ? `<div><b class="${rr.solved ? "ok-text" : "bad-text"}">${rr.solved
+        ? `${(mz.reached || []).map((a) => esc(numOf(a))).join(" · ")} 도착(이동 턴 ${mz.last}) → 이번 라운드 벌금 없음` : `${mzHow} → 각자 ${fmt(each)} 벌금`}</b>` +
+        `<small>도착한 자리만 모든 이동 턴에 쓴 토큰을 돌려받습니다. 벽에 한 번 부딪힐 때마다 ${fmt((st.game.maze || {}).bump_cost ?? 300)}을 더 냅니다. 다음 라운드는 새 미로입니다.${rr.solved ? "" : " 결과 뒤 대화가 끝나면 차감됩니다."}` +
+        `${rr.due ? ` 내 예정 차감 <b class="mono bad-text" style="display:inline">−${fmt(rr.due)}</b>` : ""}</small></div>`
+        : `<div><b class="${rr.solved ? "ok-text" : "bad-text"}">${mn
+        ? (rr.solved ? `${cnt} → 이번 라운드 벌금 없음` : `${cnt} 모자람 → 각자 ${fmt(each)} 벌금`)
+        : rr.solved ? (q > 1 ? `맞은 답이 ${q}개 이상 → 이번 라운드 벌금 없음` : "맞은 답이 하나라도 있음 → 이번 라운드 벌금 없음")
+        : `${q > 1 ? `맞은 답이 ${q}개보다 적음` : "맞은 답 없음"} → 각자 ${fmt(each)} 벌금`}</b>` +
+        `<small>${rr.trade ? `가장 많이 만든 자리만 풀이에 쓴 토큰을 돌려받습니다. 모든 손패와 건넨 카드는 결과 뒤 대화에서 공개됩니다.${rr.solved ? "" : " 차감은 결과 뒤 대화가 끝나면."}`
+          : mn ? `지뢰를 연 자리는 지뢰 하나마다 ${fmt((st.game.mines || {}).mine_cost || 6000)}을 더 냅니다. 칸을 열고 지뢰를 밟지 않은 자리는 풀이에 쓴 토큰을 돌려받습니다. 차감은 결과 뒤 대화가 끝나면.`
+          : rr.solved ? "맞힌 자리는 풀이에 쓴 토큰을 돌려받습니다." : "결과 뒤 대화가 끝나면 차감됩니다."}` +
         `${rr.due ? ` 내 예정 차감 <b class="mono bad-text" style="display:inline">−${fmt(rr.due)}</b>` : ""}</small></div>`;
       clearTimeout(lotTimer);
       lotTimer = setTimeout(lotClose, 4500);
@@ -738,7 +896,7 @@
     const box = $("toasts"), el = document.createElement("div");
     el.className = `toast ${kind || ""}`;
     el.setAttribute("role", kind === "bad" ? "alert" : "status");
-    el.innerHTML = `<div class="toast-h">${kind === "bad" ? "모델 호출 실패" : "모델 자리 알림"} <span class="muted small">빈 답으로 처리 (TALK = DONE, SOLVE = 틀린 답)</span></div>` +
+    el.innerHTML = `<div class="toast-h">${kind === "bad" ? "모델 호출 실패" : "모델 자리 알림"} <span class="muted small">빈 답으로 처리 (TALK = DONE, SOLVE = ${voidSolve()})</span></div>` +
       `<div class="toast-b">${esc(text)}</div><button type="button" class="toast-x" aria-label="닫기">×</button>`;
     const close = () => { clearTimeout(el._t); el.classList.add("out"); setTimeout(() => el.remove(), 400); };
     const arm = () => { clearTimeout(el._t); el._t = setTimeout(close, 9000); };
@@ -785,9 +943,9 @@
       paid += ((r.agents || {})[me] || {}).charged || 0;
     });
     const chip = (k, v) => `<span class="hs-chip"><span class="hs-k">${k}</span><b class="mono">${v}</b></span>`;
-    const myOk = mine.filter((r) => (r.joint ? r.outcomes[me] === "solved" : r.solved)).length;
-    return `<div class="hist-sum">${chip(joint() ? "내 정답" : "solver로 정답", mine.length ? `${myOk} / ${mine.length}` : "—")}` +
-      chip("팀 정답", `${rounds.filter((r) => r.solved).length} / ${rounds.length}`) + chip("버틴 라운드", kept) +
+    const myOk = mine.filter((r) => (r.mission ? r.solved && r.outcomes[me] === "team" : r.joint ? r.outcomes[me] === "solved" : r.solved)).length;
+    return `<div class="hist-sum">${chip(isMaze() ? "내 도착" : minesRoom() ? "지뢰 없이 연 라운드" : tradeRoom() ? "내가 만든 라운드" : missionRoom() ? "성공한 팀에 든 라운드" : joint() ? "내 정답" : "solver로 정답", mine.length ? `${myOk} / ${mine.length}` : "—")}` +
+      chip(isMaze() ? "벌금 없는 라운드" : minesRoom() ? "안전 칸 목표 넘은 라운드" : tradeRoom() ? "물건 목표 넘은 라운드" : missionRoom() ? "성공한 임무" : "팀 정답", `${rounds.filter((r) => r.solved).length} / ${rounds.length}`) + chip("버틴 라운드", kept) +
       chip("GIVE 줌", fmt(gave)) + chip("GIVE 받음", fmt(got)) + chip("낸 벌금", fmt(paid)) + `</div>`;
   }
   function histCardHTML(r, me) {
@@ -795,12 +953,14 @@
     const zone = (k, v, cls) => z.push(`<div class="hc-z${cls ? " " + cls : ""}"><div class="hc-k">${k}</div><div class="hc-v">${v}</div></div>`);
     const acts = (xs) => (xs && xs.length ? xs.map((x) => SIG.actionHTML(x, false)).join(" ") : `<span class="muted">유효한 답 없음</span>`);
     if (r.joint) zone("각자 결과", Object.entries(r.outcomes || {}).map(([a, o]) => `<span class="hc-pill${a === me ? " me" : ""}">${hname(a, me)} ${outTag(o)}</span>`).join("") || `<span class="muted">푼 자리 없음</span>`);
+    if (r.maze) zone(`이동 턴 ${r.maze.last} · ${MZ_END[r.maze.end] || ""}`, mazeTurnsHTML(r.maze, me));
+    if (r.mission) zone("임무", missionLineHTML(r.mission, me) + (mine && mine.card ? `<div class="small">내 카드 <b>${esc(mine.card)}</b>${mine.share ? ` · 받은 몫 <b class="mono ok-text">+${fmt(mine.share)}</b>` : ""}</div>` : ""));
     if (r.reveal && r.joint) zone("내 과제의 답", `<span class="hc-ans"><span class="hc-al">내 답</span>${r.reveal.passed ? "PASS" : acts(r.reveal.solver_answer)}</span>` +
       `<span class="hc-ans"><span class="hc-al">정답</span>${acts(r.reveal.answer)}</span>`);
     else if (r.reveal) zone("답", `<span class="hc-ans"><span class="hc-al">solver 답</span>${acts(r.reveal.solver_answer)}${r.solved ? "" : ` <b class="bad-text">✗</b>`}</span>` +
       `<span class="hc-ans"><span class="hc-al">정답</span>${acts(r.reveal.answer)}</span>`);
     const ch = Object.entries(r.charged || {});
-    zone("벌금", !ch.length ? `<span class="muted">${r.solved ? "정답 — 없음" : "없음"}</span>`
+    zone("벌금", !ch.length ? `<span class="muted">${r.solved ? (isMaze() ? "도착 — 없음" : r.mines ? "안전 칸 목표 넘음 — 없음" : r.trade ? "물건 목표 넘음 — 없음" : r.mission ? "FAIL 없음 — 없음" : quota() > 1 ? `${quota()}명 이상 맞힘 — 없음` : "정답 — 없음") : "없음"}</span>`
       : ch.map(([a, n]) => `<span class="hc-pill${a === me ? " me" : ""}">${hname(a, me)} <b class="mono">${n == null ? "가진 전부" : fmt(n)}</b></span>`).join(""));
     const mv = r.moves || [];
     zone("토큰 이동", !mv.length ? `<span class="muted">나와 오간 것 없음</span>` : mv.map((m) => {
@@ -813,7 +973,7 @@
     if (gone.length) zone("떠남 · 꺼짐", gone.join(""));
     if (mine) {
       const d = (mine.balance_after || 0) - (mine.balance_before || 0);
-      const parts = [["생성", -mine.generated], ["돌려받음", mine.returned], ["벌금", -mine.charged], ["EXIT", mine.exit_bonus]]
+      const parts = [["생성", -mine.generated], ["돌려받음", mine.returned], ["벌금", -mine.charged], ["EXIT", mine.exit_bonus], ["FAIL 몫", mine.share]]
         .filter(([, n]) => n).map(([k, n]) => `${k} ${signed(n)}`);
       mv.filter((m) => m.kind === "give" && m.status === "done").forEach((m) => {
         if (m.src === me) parts.push(`줌 ${signed(-m.amount)}`); else if (m.dst === me) parts.push(`받음 ${signed(m.amount)}`);
@@ -822,10 +982,10 @@
         (parts.length ? `<div class="small muted">${parts.join(" · ")}</div>` : ""), "hc-mine");
     }
     if (r.rank_after) zone("끝난 뒤 순서", `<ol class="hc-rank">${r.rank_after.map((a) => `<li class="${a === me ? "me" : ""}">${hname(a, me)}</li>`).join("")}</ol>`);
-    const res = r.joint ? `<span class="tag ${r.solved ? "ok" : "bad"}">${r.solved ? "✓ 누군가 맞힘" : "✗ 맞힌 자리 없음"}</span>`
+    const res = r.joint ? `<span class="tag ${r.solved ? "ok" : "bad"}">${isMaze() ? (r.solved ? "✓ 도착" : `✗ 아무도 못 닿음${r.maze ? ` · ${MZ_END[r.maze.end] || ""}` : ""}`) : r.mines ? (r.solved ? jointOk(r) : jointBad(r)) : quota() > 1 ? (r.solved ? `✓ ${quota()}명 이상 맞힘` : `✗ ${quota()}명보다 적게 맞힘`) : r.solved ? jointOk(r) : jointBad(r)}</span>`
       : r.solver ? `<span class="tag ${r.solved ? "ok" : "bad"}">${r.solved ? "✓ 정답" : "✗ 오답"}</span>` : `<span class="tag">solver 없음</span>`;
     return `<article class="hc ${r.solved ? "is-ok" : "is-bad"}"><header class="hc-h"><span class="hc-r">R${r.round}</span>` +
-      (r.joint ? `<span class="hc-solver">공동 SOLVE</span>` : `<span class="hc-solver">solver ${r.solver ? hname(r.solver, me) : "—"}${r.solver === me ? ` ${repTag()}` : ""}</span>`) + res +
+      (r.joint ? `<span class="hc-solver">${esc(gameLabel())}</span>` : `<span class="hc-solver">solver ${r.solver ? hname(r.solver, me) : "—"}${r.solver === me ? ` ${repTag()}` : ""}</span>`) + res +
       `<span class="hc-meta small muted">참여 ${(r.taking_part || []).length}${r.shown ? ` · 예시 ${r.shown}` : ""}</span></header><div class="hc-grid">${z.join("")}</div></article>`;
   }
   function renderHistory(id, rounds, lines) {
@@ -956,10 +1116,23 @@
       const called = lv.agents || [];
       line = `라운드 ${lv.round} · ${PHASE_KO[lv.phase] || "TALK"} 틱 ${lv.tick || 1}${sv ? ` (solver ${who(sv, me)})` : ""} — 이번 틱에 호출된 자리: ${called.map((a) => a === me ? "나" : esc(shortName(a))).join(", ") || "없음"}`;
       if (st.you.status === "in" && !called.includes(me)) line += ` <span class="tag">이번 틱에는 내 차례가 아님 (DONE 뒤 새로 온 것이 없음)</span>`;
+    } else if (lv.stage === "solve" && isMaze()) {  // v39 (11-26 third): a move turn, every seat taking part at once
+      line = `라운드 ${lv.round} · SOLVE 이동 턴 ${lv.tick || 1} / 최대 ${(st.game.maze || {}).max_turns ?? 7} — 참여 중인 자리(${(lv.agents || []).map((a) => a === me ? "나" : esc(shortName(a))).join(", ")})가 각자 경로를 정하는 중`;
+      if (st.you.status === "in") note = `<div class="rep-wait small">기다리는 동안 토큰은 빠지지 않습니다. 누가 이동을 도착 칸에서 마치면 그 턴에서 SOLVE가 끝나고 벌금이 없습니다. 모두 STAY거나 마지막 턴까지 아무도 못 닿으면 참여 중인 모든 자리가 차감액을 나눠 냅니다.</div>`;
+    } else if (lv.stage === "solve" && tradeRoom()) {  // v41: every seat taking part builds from its cards at once
+      line = `라운드 ${lv.round} · SOLVE — 참여 중인 자리(${(lv.agents || []).map((a) => a === me ? "나" : esc(shortName(a))).join(", ")})가 각자 만들 물건을 고르는 중`;
+      if (st.you.status === "in") note = `<div class="rep-wait small">기다리는 동안 토큰은 빠지지 않습니다. 합쳐서 물건이 ${((st.game || {}).trade || {}).target ?? 3}개 이상이면 벌금이 없고, 모자라면 참여 중인 모든 자리가 차감액을 나눠 냅니다.</div>`;
+    } else if (lv.stage === "solve" && missionRoom()) {  // v42: every seat taking part votes and plays a card at once
+      line = `라운드 ${lv.round} · SOLVE — 참여 중인 자리(${(lv.agents || []).map((a) => a === me ? "나" : esc(shortName(a))).join(", ")})가 각자 팀 표와 카드를 정하는 중`;
+      if (st.you.status === "in") note = `<div class="rep-wait small">기다리는 동안 토큰은 빠지지 않습니다. 표를 가장 많이 받은 자리들이 팀이 되고, 팀에 FAIL 카드가 없으면 벌금이 없습니다.</div>`;
+    } else if (lv.stage === "solve" && minesRoom()) {  // v38: every seat taking part opens its cells at once
+      line = `라운드 ${lv.round} · SOLVE — 참여 중인 자리(${(lv.agents || []).map((a) => a === me ? "나" : esc(shortName(a))).join(", ")})가 각자 열 칸을 고르는 중`;
+      if (st.you.status === "in") note = `<div class="rep-wait small">기다리는 동안 토큰은 빠지지 않습니다. 아무에게도 안 보였던 안전 칸이 합쳐서 ${((st.game || {}).mines || {}).open_target ?? 10}개 이상 열리면 벌금이 없고, 모자라면 참여 중인 모든 자리가 차감액을 나눠 냅니다.</div>`;
     } else if (lv.stage === "solve" && joint()) {  // v36: every seat taking part solves its own task at once
       line = `라운드 ${lv.round} · SOLVE — 참여 중인 자리(${(lv.agents || []).map((a) => a === me ? "나" : esc(shortName(a))).join(", ")})가 각자 자기 과제를 푸는 중`;
       if (st.you.status === "in") note = `<div class="rep-wait small">과제는 <b>각자 자기 것만</b> 보입니다. 기다리는 동안 토큰은 빠지지 않습니다. ` +
-        `하나라도 맞으면 벌금이 없고, 아무도 못 맞히면 참여 중인 모든 자리가 차감액을 나눠 냅니다.</div>`;
+        (quota() > 1 ? `${quota()}명 이상 맞히면 벌금이 없고, ${quota()}명보다 적게 맞히면 참여 중인 모든 자리가 차감액을 나눠 냅니다.</div>`
+          : `하나라도 맞으면 벌금이 없고, 아무도 못 맞히면 참여 중인 모든 자리가 차감액을 나눠 냅니다.</div>`);
     } else if (lv.stage === "solve") {
       const rep = (lv.agents || [])[0] || sv;
       if (rep === me) line = `라운드 ${lv.round} · SOLVE — 내가 이번 라운드의 solver`;
@@ -985,7 +1158,7 @@
     const what = `라운드 ${q.round} ${q.kind === "solve" ? "SOLVE" : `${PHASE_KO[q.phase] || "TALK"} 틱 ${q.tick}`}`;
     let cls = "", head;
     if (q.outcome === "overdrawn") { cls = "bad"; head = `${what}: 토큰을 넘겨 0이 됐습니다 — 이 자리는 꺼집니다.`; }
-    else if (q.outcome === "timeout") { cls = "warn"; head = `${what}: 제한 시간이 지나 빈 답으로 처리됨 (${q.kind === "solve" ? "틀린 답" : "DONE"})`; }
+    else if (q.outcome === "timeout") { cls = "warn"; head = `${what}: 제한 시간이 지나 빈 답으로 처리됨 (${q.kind === "solve" ? voidSolve() : "DONE"})`; }
     else if (q.outcome === "forfeit") head = `${what}: 중도 포기 답`;
     else head = `${what} 보냄`;
     if (q.void && q.outcome !== "overdrawn") { cls = "bad"; head += " — 한도에 닿아 답이 무효입니다."; }
@@ -1010,8 +1183,12 @@
       html += rows.length ? `<ul class="talk-result">${rows.join("")}</ul>` : "";
     } else {
       const ans = e.answer;
-      html += `<div class="small">${Array.isArray(ans) ? `답: <span class="mono">${esc(ans.join(", "))}</span> — 결과 뒤 TALK에서 정답 공개`
-        : ans === "PASS" ? "PASS — 답 없음 (쓴 토큰은 돌려받지 않음)" : `엔진이 답을 읽지 못함: ${esc(e.format_error || "")} → 틀린 답`}</div>`;
+      html += isMaze() && ans && typeof ans === "object" && !Array.isArray(ans) ? `<div class="small">이동 턴 ${e.tick || q.tick || 1}: <span class="mono">${ans.moves ? (ans.moves.length ? esc(ans.moves.map((d) => MZ_ARROW[d] || d).join(" ")) : "STAY(제자리)") : `읽지 못함 → STAY`}</span>` +
+          `${ans.share ? ` · SHARE ${esc(ans.share === "ALL" ? "모두" : ans.share.join(", "))}` : ""}${(ans.messages || []).length ? ` · 메시지 ${ans.messages.length}개` : ""}${(ans.dropped || []).length ? ` · <span class="bad-text">실행 안 된 줄 ${ans.dropped.length}개</span>` : ""} — 턴이 끝나면 모두의 칸 공개</div>`
+        : missionRoom() && ans && typeof ans === "object" ? `<div class="small">팀 표: <span class="mono">${ans.team ? esc(ans.team.join(", ")) : "없음(모두가 팀)"}</span> · 카드: <b>${esc(ans.card || "SUCCESS (올바른 카드 없음)")}</b> — 결과 뒤 TALK에서 팀 · 표 · FAIL 수 공개</div>` : `<div class="small">${Array.isArray(ans) ? (isMaze() ? `이동: <span class="mono">${ans.length ? esc(ans.map((d) => MZ_ARROW[d] || d).join(" ")) : "STAY(제자리)"}</span>`
+          : minesRoom() ? `연 칸: <span class="mono">${esc(ans.join(", "))}</span> — 결과 뒤 TALK에서 판 전체 공개`
+          : tradeRoom() ? `만들 물건: <span class="mono">${esc(ans.join(", "))}</span> — 결과 뒤 TALK에서 모든 손패와 만든 물건 공개` : `답: <span class="mono">${esc(ans.join(", "))}</span> — 결과 뒤 TALK에서 정답 공개`)
+        : ans === "PASS" ? (minesRoom() ? "PASS — 아무 칸도 안 엶 (쓴 토큰은 돌려받지 않음)" : tradeRoom() ? "PASS — 아무것도 안 만듦 (쓴 토큰은 돌려받지 않음)" : "PASS — 답 없음 (쓴 토큰은 돌려받지 않음)") : `엔진이 답을 읽지 못함: ${esc(e.format_error || "")} → ${voidSolve()}`}</div>`;
     }
     return html + `</div>`;
   }
@@ -1037,7 +1214,15 @@
     const me = st.you.agent, mine = (r.agents || {})[me];
     $("settle-title").textContent = `라운드 ${r.round} 정산`;
     const charged = Object.entries(r.charged || {}).map(([a, n]) => `${who(a, me)} ${n == null ? "가진 전부" : fmt(n)}`).join(", ") || "없음";
-    const head = r.joint ? `공동 SOLVE — ${r.solved ? `<span class="tag ok">✓ 누군가 맞힘 · 벌금 없음</span>` : `<span class="tag bad">✗ 맞힌 자리 없음</span>`}` +
+    const q = quota();
+    const head = r.joint && isMaze() ? `${esc(gameName() || "미로")}${r.maze ? ` (이동 턴 ${r.maze.last} · ${MZ_END[r.maze.end] || ""})` : ""} — ${r.solved ? `<span class="tag ok">✓ 도착 · 벌금 없음</span>` : `<span class="tag bad">✗ 아무도 못 닿음</span>`}` +
+      ` · ${Object.entries(r.outcomes || {}).map(([a, o]) => `${who(a, me)} ${outTag(o)}`).join(" ")}`
+      : r.joint && r.trade ? `${esc(gameName() || "재료 거래판")} (만든 물건 ${r.trade.total} / ${r.trade.target}) — ${r.solved ? `<span class="tag ok">${jointOk(r)} · 벌금 없음</span>` : `<span class="tag bad">${jointBad(r)}</span>`}` +
+      ` · ${Object.entries(r.outcomes || {}).map(([a, o]) => `${who(a, me)} ${outTag(o)}`).join(" ")}`
+      : r.joint && r.mission ? `${esc(gameName() || "비밀 임무")} — ${r.solved ? `<span class="tag ok">${jointOk(r)} · 벌금 없음</span>` : `<span class="tag bad">${jointBad(r)}</span>`} · ${missionLineHTML(r.mission, me)}`
+      : r.joint && r.mines ? `${esc(gameName() || "공동 지뢰밭")} (새 안전 칸 ${r.mines.new_safe.length} / ${r.mines.target}) — ${r.solved ? `<span class="tag ok">${jointOk(r)} · 벌금 없음</span>` : `<span class="tag bad">${jointBad(r)}</span>`}` +
+      ` · ${Object.entries(r.outcomes || {}).map(([a, o]) => `${who(a, me)} ${outTag(o)}`).join(" ")}`
+      : r.joint ? `${esc(gameLabel())} — ${r.solved ? `<span class="tag ok">✓ ${q > 1 ? `${q}명 이상 맞힘` : "누군가 맞힘"} · 벌금 없음</span>` : `<span class="tag bad">✗ ${q > 1 ? `${q}명보다 적게 맞힘` : "맞힌 자리 없음"}</span>`}` +
       ` · ${Object.entries(r.outcomes || {}).map(([a, o]) => `${who(a, me)} ${outTag(o)}`).join(" ")}`
       : `solver ${r.solver ? who(r.solver, me) : "없음"} — ${r.solved ? `<span class="tag ok">✓ 맞음</span>` : `<span class="tag bad">✗ 틀림</span>`}`;
     setHTML("settle-table", `<p>${head}` +
@@ -1057,7 +1242,7 @@
   document.addEventListener("input", (ev) => {
     const el = ev.target, p = st && st.pending;
     if (!p || p.kind !== "talk" || !el || !(el.tagName === "TEXTAREA" || (el.tagName === "INPUT" && el.type === "text") || el.id === "xm-why")) return;
-    if (!el.closest("#view-run, #exit-modal")) return;
+    if (!el.closest("#view-run, #exit-modal") || el.closest(".mn-memo")) return;  // v38 (11-26): my own memo is never sent: free
     const k = screenKey(p);
     if (typed.key !== k) typed = { key: k, n: 0 };
     const len = el.value.length, was = el._len || 0;
@@ -1071,7 +1256,7 @@
     if (!solve && typed.key !== screenKey(p)) typed = { key: screenKey(p), n: 0 };
     $("m-cap-label").textContent = solve ? "이 답의 한도" : "한도";
     $("m-cap").textContent = solve ? fmt(p.cap) : "남은 토큰까지";
-    $("m-cap-sub").textContent = solve ? "닿으면 답은 무효(틀린 답)" : "0이 되면 꺼짐";
+    $("m-cap-sub").textContent = solve ? `닿으면 답은 무효(${voidSolve()})` : "0이 되면 꺼짐";
     const old = $("form-decision"), f = old.cloneNode(false);  // a fresh form: no listeners left from the last screen
     old.replaceWith(f);
     f.dataset.kind = p.kind;
@@ -1081,16 +1266,216 @@
 
   // a message as the engine's parser will read it: a line that would start a command (TO / GIVE / ASK / LEAVE / EXIT /
   // DONE, after the marks [ *_`>#-]) or end with " DONE" gets a word joiner, so it stays part of the message
-  const CMD_LINE = /^[\s*_`>#-]*(TO|GIVE|ASK|LEAVE|EXIT|DONE)\b/;
+  const CMD_LINE = /^[\s*_`>#-]*(TO|GIVE|ASK|LEAVE|EXIT|DONE|MOVES|SHARE)\b/;  // v39: MOVES / SHARE too
   const msgOf = (x) => String(x || "").replace(/\r/g, "").replace(/^\s*\n+/, "").replace(/\s+$/, "").split("\n")
     .map((l, i) => (i && CMD_LINE.test(l) ? NBSP_JOIN + l : l)).map((l) => (/(\S)[ \t]+DONE[ \t.*_`]*$/.test(l) ? l + NBSP_JOIN : l)).join("\n");
 
-  function resultsHTML(r, me) {
+  // --- v38 joint minefield: the 6 x 6 board (my cells at TALK / SOLVE, the whole board after RESULTS) ----------------
+  // 11-26: my own notes on the board (🚩 a mine I suspect, ✓ a cell I think safe) and a free memo, kept per room and round
+  // in this browser only and never sent (the engine reads only the OPEN line). mines.css draws the board.
+  const MCOLS = "ABCDEF";
+  const mnNum = (n) => `mn-n${n}`;
+  function mineGrid(cell) {  // cell(k) -> { txt, cls, title, note: "flag" | "safe" | undefined }
+    let h = `<div class="mn-board"><span></span>${[...MCOLS].map((c) => `<span class="mn-ax">${c}</span>`).join("")}`;
+    for (let r = 1; r <= 6; r++) {
+      h += `<span class="mn-ax">${r}</span>` + [...MCOLS].map((c) => {
+        const k = c + r, x = cell(k);
+        return `<div data-cell="${k}" class="mn-c ${x.cls || ""}" title="${esc(x.title || k)}">${x.txt ?? ""}${x.note ? `<i class="mn-note ${x.note}"></i>` : ""}</div>`;
+      }).join("");
+    }
+    return h + "</div>";
+  }
+  const mnKey = (round) => `mn-notes:${(sess && sess.code) || "-"}:${round}`;
+  const mnMem = new Map();  // when the browser keeps no storage (private mode)
+  function mnLoad(round) {
+    const k = mnKey(round);
+    try { const x = JSON.parse(localStorage.getItem(k) || "null"); if (x && x.marks) return x; } catch { /* private mode */ }
+    return mnMem.get(k) || { marks: {}, text: "" };
+  }
+  function mnSave(round, x) {
+    const k = mnKey(round);
+    mnMem.set(k, x);
+    try { localStorage.setItem(k, JSON.stringify(x)); } catch { /* private mode */ }
+  }
+  function myBoardHTML(m, picked, marks = {}) {  // m: view.mines (public, own, area, dark); picked: the cells chosen at SOLVE
+    const area = new Set(m.area || []), dark = new Set(Object.values(m.dark || {}).flat());
+    return mineGrid((k) => {
+      const zone = (area.has(k) ? " area" : "") + (dark.has(k) ? " dark" : "");
+      if (k in (m.public || {})) return { txt: m.public[k], cls: `open pub ${mnNum(m.public[k])}${zone}`, title: `${k}: 모두에게 보인 칸 · 이웃 지뢰 ${m.public[k]}개` };
+      if (k in (m.own || {})) return { txt: m.own[k], cls: `open own ${mnNum(m.own[k])}${zone}`, title: `${k}: 나에게만 보인 칸 · 이웃 지뢰 ${m.own[k]}개` };
+      const sel = !!picked && picked.includes(k), note = marks[k];
+      return { txt: sel && !note ? "⛏" : "", note, cls: `unk${sel ? " pick" : ""}${zone}`,
+        title: `${k}${note === "flag" ? " · 🚩 지뢰 메모" : note === "safe" ? " · ✓ 안전 메모" : ""}${sel ? " · 열 칸" : ""}` };
+    });
+  }
+  function myLegendHTML(m) {
+    const dark = Object.values(m.dark || {}).flat().length, a = m.area || [];
+    return `<div class="mn-legend small"><span><i class="lg pub"></i>모두에게 보인 칸</span><span><i class="lg own"></i>나에게만 보인 칸</span>` +
+      `<span><i class="lg area"></i>내 구역 ${esc(a[0] || "")}~${esc(a[8] || "")}</span>${dark ? `<span><i class="lg dark"></i>빠진 자리의 구역(단서 없음)</span>` : ""}` +
+      `<span>숫자 = 이웃 8칸의 지뢰 수 · 지뢰 ${m.n_mines ?? 12}개</span><span>오른쪽 클릭 = 🚩 → ✓ → 지우기</span></div>`;
+  }
+  // The board with my notes, drawn into *host*: a tool row (at SOLVE also ⛏ 열 칸 고르기), right-click cycles 🚩 → ✓ →
+  // none whatever the tool, my flags against the mines, and the memo. solve: { picked, max, onPick(k), onUseSafe(cells) }.
+  function mineNotes(host, m, round, solve) {
+    const N = mnLoad(round), unknown = (k) => !(k in (m.public || {})) && !(k in (m.own || {}));
+    let tool = solve ? "open" : "flag";
+    const TOOLS = [...(solve ? [["open", "⛏ 열 칸 고르기"]] : []), ["flag", "🚩 지뢰 메모"], ["safe", "✓ 안전 메모"], ["erase", "지우기"]];
+    host.innerHTML = `<div class="mn-tools" role="group" aria-label="판 도구">${TOOLS.map(([t, l]) => `<button type="button" class="mn-tool" data-tool="${t}">${l}</button>`).join("")}</div>
+      <div class="mn-wrap"><div class="mn-slot"></div><div class="mn-side">
+        <div class="mn-count"></div>
+        ${solve ? `<button type="button" class="mn-use-safe small">✓ 안전 메모한 칸을 열 칸으로</button>` : ""}
+        <label class="f mn-memo"><span>내 기록 <span class="muted">(이 브라우저에만 저장 · 엔진에 보내지 않음)</span></span>
+          <textarea rows="5" placeholder="예: agent-11 말로 D2=1, E2=0 → E1 · F1 안전"></textarea></label>
+        <button type="button" class="mn-clear small">칸 메모 모두 지우기</button>
+      </div></div>${myLegendHTML(m)}`;
+    const q = (sel) => host.querySelector(sel), memo = q(".mn-memo textarea");
+    memo.value = N.text || "";
+    function draw() {
+      q(".mn-slot").innerHTML = myBoardHTML(m, solve ? solve.picked : null, N.marks);
+      host.querySelectorAll(".mn-tool").forEach((b) => b.classList.toggle("on", b.dataset.tool === tool));
+      const n = (x) => Object.values(N.marks).filter((y) => y === x).length;
+      q(".mn-count").innerHTML = `<span>🚩 <b class="mono">${n("flag")}</b> / 지뢰 ${m.n_mines ?? 12}</span><span>✓ <b class="mono">${n("safe")}</b></span>` +
+        (solve ? `<span>⛏ <b class="mono">${solve.picked.length}</b> / ${solve.max}</span>` : "");
+    }
+    const mark = (k, x) => { if (x) N.marks[k] = x; else delete N.marks[k]; mnSave(round, N); };
+    host.addEventListener("click", (ev) => {
+      const b = ev.target.closest(".mn-tool");
+      if (b) { tool = b.dataset.tool; draw(); return; }
+      if (ev.target.closest(".mn-clear")) { N.marks = {}; mnSave(round, N); draw(); return; }
+      if (ev.target.closest(".mn-use-safe")) { solve.onUseSafe(Object.keys(N.marks).filter((k) => N.marks[k] === "safe")); return; }
+      const c = ev.target.closest(".mn-c[data-cell]");
+      if (!c || !unknown(c.dataset.cell)) return;
+      const k = c.dataset.cell;
+      if (tool === "open") solve.onPick(k);
+      else mark(k, tool === "erase" || N.marks[k] === tool ? null : tool);
+      draw();
+    });
+    host.addEventListener("contextmenu", (ev) => {
+      const c = ev.target.closest(".mn-c[data-cell]");
+      if (!c || !unknown(c.dataset.cell)) return;
+      ev.preventDefault();
+      const k = c.dataset.cell;
+      mark(k, k in N.marks ? { flag: "safe", safe: null }[N.marks[k]] : "flag");
+      draw();
+    });
+    memo.addEventListener("input", () => { N.text = memo.value; mnSave(round, N); });
+    draw();
+    return { draw };
+  }
+  function wholeBoardHTML(m, me, marks = {}) {  // m: results' mines (numbers, mines, opened, hits, new_safe, target, met)
+    const by = {}, mines = new Set(m.mines || []);
+    Object.entries(m.opened || {}).forEach(([a, cs]) => (cs || []).forEach((c) => { by[c] = (by[c] || []).concat(a); }));
+    const noted = Object.keys(marks).length;
+    return mineGrid((k) => {
+      const boom = mines.has(k), mineBy = by[k] && by[k].includes(me);
+      return { txt: boom ? `<span class="mn-bomb">💣</span>` : m.numbers[k], note: marks[k],
+        cls: `${boom ? "mine" : `open rev ${mnNum(m.numbers[k])}`}${by[k] ? (boom ? " hit" : " got") : ""}${mineBy ? " by-me" : ""}`,
+        title: `${k}${boom ? " · 지뢰" : ` · 이웃 지뢰 ${m.numbers[k]}개`}${by[k] ? " · " + by[k].map((a) => (a === me ? "나" : numOf(a))).join(", ") + " 열음" : ""}` +
+          `${marks[k] === "flag" ? " · 내 메모 🚩" : marks[k] === "safe" ? " · 내 메모 ✓" : ""}` };
+    }) + `<div class="mn-legend small"><span><span class="mn-bomb-s">💣</span> 지뢰</span><span><i class="lg got"></i>이번에 열린 안전 칸</span>` +
+      `<span><i class="lg hit"></i>열린 지뢰</span><span><i class="lg me"></i>내가 연 칸</span>${noted ? "<span>구석의 🚩 · ✓ = 내 메모</span>" : ""}</div>`;
+  }
+  function minesResultsHTML(r, me, marks) {
+    const m = r.mines, OUT = { solved: "지뢰 없음 · 환급", wrong: "지뢰 · 무효", passed: "PASS" };
+    const rows = r.rows.map((x) => `<tr class="${x.agent === me ? "you" : ""}"><td>${who(x.agent, me)}</td>` +
+      `<td class="mono" style="white-space:normal">${(x.opened || []).map((c) => ((x.hits || []).includes(c) ? `<b class="bad-text">${c}<span class="mn-bomb-s">💣</span></b>` : c)).join(", ") || "—"}</td>` +
+      `<td style="white-space:normal">${x.outcome ? `<span class="tag ${x.outcome === "solved" ? "ok" : x.outcome === "wrong" ? "bad" : "warn"}">${OUT[x.outcome]}</span>` : ""}` +
+      `<div class="small">${x.zero ? `<span class="tag bad">꺼짐</span>` : x.pending != null ? `TALK가 끝나면 <b class="mono">${fmt(x.pending)}</b> 차감` +
+        ((m.cost || {})[x.agent] ? ` (지뢰 몫 ${fmt(m.cost[x.agent])})` : "") : `<span class="muted">차감 없음</span>`}</div></td></tr>`).join("");
+    return `<div class="results"><b>이번 라운드 결과</b> — 아무에게도 안 보였던 안전 칸 <b class="mono">${m.new_safe.length}</b> / ${m.target} ` +
+      `${m.met ? `<span class="tag ok">벌금 없음</span>` : `<span class="tag bad">모자람 · 모두 벌금</span>`}` +
+      `${r.returned ? ` · 내 SOLVE에 쓴 <b class="mono">${fmt(r.returned)}</b>토큰을 돌려받음` : ""}${wholeBoardHTML(m, me, marks)}` +
+      `<div style="overflow-x:auto"><table class="results-table"><thead><tr><th>자리</th><th>연 칸</th><th>결과 · 차감</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+  }
+  function buildMines(f, p) {  // v38 SOLVE: click (or type) up to open_cap cells I was not shown; OPEN: <cells> | OPEN: PASS
+    const v = p.view, m = v.mines, picked = [], shown = new Set([...Object.keys(m.public || {}), ...Object.keys(m.own || {})]);
+    const notes = (v.gifts || []).map((g) => `<div class="note">TALK 틱 ${g.tick}에 ${esc(nameOf(g.src))}가 나에게 <b class="mono">${fmt(g.amount)}</b>토큰을 줌</div>`).join("") +
+      Object.entries(v.gone || {}).map(([a, g]) => `<div class="note muted">${esc(nameOf(a))} ${GONE_KO[g] || g}</div>`).join("");
+    const chat = (v.rooms || []).flatMap((x) => x.msgs.filter((q) => q.round === p.round && q.kind === "say").map((q) => `${x.id} ${q.src === v.you ? "나" : q.src}: ${q.text}`)).join("\n");
+    f.innerHTML = `<div class="solve-head"><span class="tag rep">공동 지뢰밭</span> <b>열 칸을 최대 ${m.open_cap}개 고르세요 (⛏ 도구로 판을 누르거나 아래에 입력).</b>
+        <span class="small muted rep-note">참여 중인 자리(${(v.taking_part || []).map((a) => (a === v.you ? "나" : esc(numOf(a)))).join(", ")})가 지금 동시에 엽니다.
+          아무에게도 안 보였던 안전 칸이 합쳐서 <b>${m.target}개 이상</b> 열리면 아무도 벌금을 내지 않고, 모자라면 각자 ${fmt((st.game || {}).charge_total)} ÷ 참여 자리 수를 냅니다.
+          지뢰 하나마다 연 자리가 <b class="mono">${fmt(m.mine_cost)}</b>을 냅니다. 칸을 열고 지뢰를 밟지 않으면 이 SOLVE에 쓴 토큰을 돌려받습니다. PASS는 아무 칸도 열지 않습니다 · 한도 <b class="mono">${fmt(p.cap)}</b>토큰</span></div>
+      <div class="solve-grid">
+        <div class="solve-left">
+          <div id="mine-board"></div>
+          <label class="f"><span>칸 입력 (예: C4, D2)</span><input id="mine-cells" class="mono" autocomplete="off"></label>
+          <div class="draft"><div class="comp-label">보낼 답 <span class="muted small">(엔진이 읽는 그대로)</span></div><pre id="draft-text" class="draft-text"></pre></div>
+          <div class="row submit-row sg-submit"><button type="submit" class="primary big" id="btn-submit" disabled>열기</button>
+            <button type="button" class="big pass-btn" id="btn-pass" title="아무 칸도 열지 않습니다 (OPEN: PASS) · 쓴 토큰은 돌려받지 않음">PASS — 열지 않음</button>
+            <span class="form-err" id="form-err"></span></div>
+          ${notes ? `<div class="notes">${notes}</div>` : ""}
+        </div>
+        <div class="solve-right"><div class="small muted">이번 라운드 대화 (단서는 대화로만 옵니다)</div>
+          <pre class="mono small" style="white-space:pre-wrap;max-height:440px;overflow:auto">${esc(chat || "(없음)")}</pre></div>
+      </div>`;
+    const err = (x) => { $("form-err").textContent = x; };
+    function sync() {
+      $("draft-text").textContent = `OPEN: ${picked.join(", ") || "PASS"}`;
+      $("btn-submit").disabled = !picked.length;
+    }
+    const board = mineNotes($("mine-board"), m, p.round, { picked, max: m.open_cap,  // 11-26: my notes beside the picks
+      onPick: (k) => {
+        const i = picked.indexOf(k);
+        if (i >= 0) picked.splice(i, 1); else if (picked.length < m.open_cap) picked.push(k); else { err(`최대 ${m.open_cap}칸`); return; }
+        $("mine-cells").value = picked.join(", ");
+        err(""); sync();
+      },
+      onUseSafe: (cells) => { $("mine-cells").value = cells.join(", "); setPicked(cells); } });
+    function draw() { board.draw(); sync(); }
+    function setPicked(cells) {
+      const ok = [...new Set(cells.map((c) => c.trim().toUpperCase()).filter(Boolean))];
+      const bad = ok.filter((c) => !/^[A-F][1-6]$/.test(c) || shown.has(c));
+      picked.splice(0, picked.length, ...ok.filter((c) => !bad.includes(c)).slice(0, m.open_cap));
+      err(bad.length ? `열 수 없는 칸: ${bad.join(", ")}` : ok.length > m.open_cap ? `최대 ${m.open_cap}칸` : "");
+      draw();
+    }
+    $("mine-cells").addEventListener("input", (ev) => setPicked(ev.target.value.split(/[,\s;]+/)));
+    async function send(body) {
+      $("btn-submit").disabled = true;
+      $("btn-pass").disabled = true;
+      try {
+        const r = await api("POST", `/rooms/${sess.code}/submit?${tq()}`, { kind: "solve", round: p.round, ...body });
+        flash(`라운드 ${r.round} SOLVE ${body.pass ? "PASS" : "열기"}: 차감 ${fmt(r.charged)}토큰 (${Number(r.seconds).toFixed(1)}초)` +
+          (r.outcome === "overdrawn" ? " — 토큰을 넘겨 0이 됐습니다." : r.void ? " — 한도에 닿아 답이 무효" : ""), r.void ? "" : "info");
+      } catch (e) {
+        flash(e.status === 409 ? "이 화면은 이미 닫혔습니다(제한 시간 또는 토큰)." : `제출하지 못했습니다: ${e.message}`);
+      }
+      shownKey = null;
+      poll();
+    }
+    f.onsubmit = (ev) => { ev.preventDefault(); if (picked.length) send({ cells: [...picked] }); };
+    $("btn-pass").addEventListener("click", () => send({ pass: true }));
+    draw();
+  }
+
+  function resultsHTML(r, me, marks) {  // marks: my minefield notes of the round (v38)
     if (!r) return "";
+    if (r.maze) {  // v39 (11-26 third): how SOLVE ended, each seat's cells and wall hits, the goal, the refund; the turns
+      const DIR_KO = { N: "위(N)", E: "오른쪽(E)", S: "아래(S)", W: "왼쪽(W)" }, mz = r.maze;
+      const rows = r.rows.map((x) => `<tr class="${x.agent === me ? "you" : ""}"><td>${who(x.agent, me)}</td>` +
+        `<td class="mono">${esc(x.from)} → ${esc(x.to)}</td>` +
+        `<td class="num">${x.hits ? `<b>${x.hits}</b>` : `<span class="muted">0</span>`}${x.wall_cost ? `<div class="small bad-text">벽 비용 ${fmt(x.wall_cost)}</div>` : ""}</td>` +
+        `<td>${x.reached ? `<span class="tag ok">◎ 도착</span>` : `<span class="muted">—</span>`}</td>` +
+        `<td>${x.refunded ? `<span class="small ok-text">돌려받음</span>` : `<span class="small muted">없음</span>`}</td>` +
+        `<td>${x.zero ? `<span class="tag bad">꺼짐</span>` : x.pending != null ? `TALK가 끝나면 <b class="mono">${fmt(x.pending)}</b> 차감` : `<span class="muted">차감 없음</span>`}</td></tr>`).join("");
+      const mine = (r.my_turns || []).map((t) => `<li>턴 ${t.turn}: <span class="mono">${t.moves ? (t.moves.length ? t.moves.map((d) => MZ_ARROW[d] || d).join(" ") : "STAY") : "읽지 못함(STAY)"}</span>` +
+        `${t.bump ? ` · <span class="bad-text">${esc(t.bump[0])}에서 ${DIR_KO[t.bump[1]] || t.bump[1]} 쪽 벽</span>` : ""}</li>`).join("");
+      return `<div class="results"><b>이번 라운드 결과</b> — SOLVE는 이동 턴 <b class="mono">${mz.last}</b>에서 끝남(${MZ_END[mz.end] || ""}) · ` +
+        `${mz.reached.length ? `<span class="tag ok">✓ ${mz.reached.map((a) => esc(numOf(a))).join(" · ")} 도착 · 벌금 없음</span>` : `<span class="tag bad">✗ 아무도 못 닿음 · 모두 벌금</span>`}` +
+        `${r.returned ? ` · 내가 모든 턴에 쓴 <b class="mono">${fmt(r.returned)}</b>토큰을 돌려받음` : ""}` +
+        `<div class="mz-table-wrap"><table class="results-table"><thead><tr><th>자리</th><th>처음 → 마지막 칸</th><th class="num">벽에 부딪힌 횟수</th><th>도착</th><th>이동 토큰</th><th>차감 (이 TALK가 끝날 때, 벽 비용 포함)</th></tr></thead><tbody>${rows}</tbody></table></div>` +
+        `<details class="small"><summary>턴마다 (🧱 벽에 막힘 · ★ 도착 칸)</summary>${mazeTurnsHTML(mz, me)}${mine ? `<div><b>내 이동</b><ul>${mine}</ul></div>` : ""}</details>` +
+        `<p class="small muted">다른 자리가 부딪힌 벽의 위치는 그 자리가 SHARE로 지도를 공유했어야 보입니다. 다음 라운드는 새 미로입니다.</p></div>`;
+    }
+    if (r.mines) return minesResultsHTML(r, me, marks);  // v38: the whole board, every agent's opens
+    if (r.trade) return tradeResultsHTML(r, me);  // v41: every hand, every card moved, every build
+    if (r.mission) return missionResultsHTML(r, me);  // v42: the team, every vote, the FAIL count; my own card only
     if (r.joint) {  // v36: every agent's own result and the team's (one correct answer: no charge)
       const rows = r.rows.map((x) => `<tr class="${x.agent === me ? "you" : ""}"><td>${who(x.agent, me)}</td><td>${outTag(x.outcome)}</td>` +
         `<td>${x.zero ? `<span class="tag bad">꺼짐</span>` : x.pending != null ? `TALK가 끝나면 <b class="mono">${fmt(x.pending)}</b> 차감` : `<span class="muted">차감 없음</span>`}</td></tr>`).join("");
-      return `<div class="results"><b>이번 라운드 결과</b> — ${r.solved ? `<span class="tag ok">✓ 맞힌 자리가 있음 · 벌금 없음</span>` : `<span class="tag bad">✗ 맞힌 자리 없음 · 모두 벌금</span>`}` +
+      const q = quota();
+      return `<div class="results"><b>이번 라운드 결과</b> — ${r.solved ? `<span class="tag ok">✓ ${q > 1 ? `${q}명 이상 맞힘` : "맞힌 자리가 있음"} · 벌금 없음</span>` : `<span class="tag bad">✗ ${q > 1 ? `${q}명보다 적게 맞힘` : "맞힌 자리 없음"} · 모두 벌금</span>`}` +
         `${r.returned ? ` · 내 SOLVE에 쓴 <b class="mono">${fmt(r.returned)}</b>토큰을 돌려받음` : ""}` +
         `<table class="results-table"><thead><tr><th>자리</th><th>결과</th><th>차감 (이 TALK가 끝날 때)</th></tr></thead><tbody>${rows}</tbody></table></div>`;
     }
@@ -1114,7 +1499,11 @@
   function statusHTML(v) {
     const me = v.you;
     return `<div class="terms-ko small">내 토큰 <b class="mono">${fmt(v.balance)}</b> (${pctOf(v.balance)})${v.last_used != null ? ` · 직전 답 ${fmt(v.last_used)}토큰` : ""}` +
-      (v.joint ? ` · 공동 SOLVE: 아무도 못 맞히면 각자 <b class="mono">${fmt(v.charge_each)}</b> (${fmt(v.charge_total)} ÷ ${v.taking_part.length})`
+      (v.maze ? ` · 미로: 이동 턴 ${v.maze.max_turns ?? 7}번 안에 아무도 도착 칸에서 이동을 마치지 못하면 각자 <b class="mono">${fmt(v.charge_each)}</b> (${fmt(v.charge_total)} ÷ ${v.taking_part.length})`
+        : v.trade ? ` · 재료 거래판: 합쳐서 물건이 ${v.trade.target}개 미만이면 각자 <b class="mono">${fmt(v.charge_each)}</b> (${fmt(v.charge_total)} ÷ ${v.taking_part.length})`
+        : v.mission ? ` · 비밀 임무: 팀에 FAIL 카드가 있으면 각자 <b class="mono">${fmt(v.charge_each)}</b> (${fmt(v.charge_total)} ÷ ${v.taking_part.length}), 그 뒤 거둔 토큰의 ${v.mission.steal_pct}%를 FAIL을 낸 팀원이 나눠 받음`
+        : v.mines ? ` · 공동 지뢰밭: 새 안전 칸이 ${v.mines.target}개 미만이면 각자 <b class="mono">${fmt(v.charge_each)}</b> (${fmt(v.charge_total)} ÷ ${v.taking_part.length}), 지뢰 하나마다 연 자리가 ${fmt(v.mines.mine_cost)}`
+        : v.joint ? ` · ${esc(gameLabel())}: ${quota() > 1 ? `${quota()}명보다 적게 맞히면` : "아무도 못 맞히면"} 각자 <b class="mono">${fmt(v.charge_each)}</b> (${fmt(v.charge_total)} ÷ ${v.taking_part.length})`
         : ` · solver ${v.solver ? who(v.solver, me) : "—"} ${repTag()} · 틀리면 각자 <b class="mono">${fmt(v.charge_each)}</b> (${fmt(v.charge_total)} ÷ ${v.taking_part.length})`) +
       (v.phase === "prep" ? (v.can_exit ? ` · EXIT하면 +${fmt(v.exit_bonus)} 받고 평소 업무로(끝 할당 없음)` : v.solver_cannot_exit ? ` · <b>이번 라운드 solver는 EXIT할 수 없음</b>` : "") : " · 이 TALK에서는 EXIT 없음") + `</div>`;
   }
@@ -1144,11 +1533,16 @@
       return;
     }
     f.innerHTML = `${statusHTML(v)}
-      ${v.phase === "rescue" ? resultsHTML(v.results, me) + revealHTML(v.reveal) : ""}
+      ${v.phase === "rescue" ? resultsHTML(v.results, me, v.mines || (v.results || {}).mines ? mnLoad(p.round).marks : {}) + revealHTML(v.reveal) : v.trade ? tradeTalkHTML(v) : v.mission ? missionTalkHTML(v) : v.mines ? `<div class="results mn-panel"><b>이번 라운드의 판</b> — 내 구역의 칸은 나만 봅니다. 대화로 알려 줄 수 있습니다. 🚩 · ✓ 메모와 기록은 SOLVE 화면까지 이어집니다.<div id="mn-talk"></div></div>` : ""}
+      ${v.maze ? `<details class="mz-talk" open><summary><b>내가 보는 이번 라운드 미로</b> <span class="small muted">${v.phase === "rescue" ? `이동 턴 ${v.maze.turns_done}번 뒤` : "이동 전 · 모두 모서리에서"}</span></summary>${mazePanelHTML(v.maze, me)}</details>` : ""}
+      ${v.can_share && (v.others || []).length ? `<div class="share-chk" id="share-box"><b>SHARE</b> — 내 지도(내가 부딪힌 벽 · 지나간 칸)를 시스템 기록 그대로 보여 줄 자리:
+        ${v.others.map((a) => `<label class="chk"><input type="checkbox" class="share-to" value="${esc(a)}"> ${esc(shortName(a))}</label>`).join(" ")}
+        <label class="chk"><input type="checkbox" id="share-all"> <b>모두</b></label> <span class="muted small">(이 답과 함께 보냄 · 고른 자리에게만 보임)</span></div>` : ""}
       <div class="talk-chat" id="talk-chat"></div>
       <details class="raw-edit"><summary class="small">답 원문 직접 쓰기 (쓰면 말풍선 대신 이 글을 보냄)</summary><textarea id="raw-text" rows="5" placeholder="TO R1: ...&#10;GIVE agent-11 500: ...&#10;DONE"></textarea></details>
       <p class="small muted">대화 화면은 시간이 지나도 토큰이 줄지 않고, 친 글자마다 ${fmt2(p.char_rate ?? 2)}토큰이 빠집니다(지운 글자도 셈). GIVE n은 이 답의 비용이 먼저 빠지고, 그 뒤 n보다 적게 남으면 그만큼 줄어듭니다.
         ${v.can_exit ? `EXIT: YES는 이 TALK가 끝날 때 +${fmt(v.exit_bonus)}을 받고 평소 업무(과제마다 토큰을 받음)로 떠나며, 이 방에 돌아오지 않고 끝 할당도 없습니다.` : v.solver_cannot_exit ? "이번 라운드 solver는 자기 라운드에 EXIT할 수 없습니다." : "결과 뒤 TALK에서는 EXIT할 수 없습니다."}</p>`;
+    if (f.querySelector("#mn-talk")) mineNotes(f.querySelector("#mn-talk"), v.mines, p.round, null);  // v38 (11-26): my notes
     const raw = f.querySelector("#raw-text");
     const T = { rows: [] };  // the reply being composed: TO / GIVE / ASK / LEAVE rows in the order added
     const lineOf = (r) => {
@@ -1156,12 +1550,17 @@
       if (r.kind === "TO") return `TO ${r.to}: ${t}`;
       if (r.kind === "LEAVE") return `LEAVE ${r.to}`;
       if (r.kind === "GIVE" && r.all) return `GIVE ALL ${r.to}: ${t}`;
+      if (r.kind === "SEND") return `SEND ${r.to} ${r.n} ${r.card}: ${t}`;  // v41
       return `${r.kind} ${r.to} ${r.n}: ${t}`;
     };
     const lines = () => T.rows.map((r, i) => ({ text: lineOf(r), rm: i }));
     const composed = () => lines().map((x) => x.text).join("\n");
     const isRaw = () => !!raw.value.trim();
-    const body = () => (isRaw() ? raw.value.replace(/\s+$/, "") : composed());
+    const shareTo = () => [...f.querySelectorAll(".share-to:checked")].map((x) => x.value);  // v39 (11-25): the seats I pick
+    const shareLine = () => { const to = shareTo(), all = (v.others || []).length;
+      return to.length && to.length === all ? "SHARE: ALL" : to.length ? `SHARE: ${to.join(", ")}` : ""; };
+    const shareOn = () => !!shareLine();  // the SHARE line first in the reply
+    const body = () => { const b = isRaw() ? raw.value.replace(/\s+$/, "") : composed(); return shareOn() ? (b ? `${shareLine()}\n${b}` : shareLine()) : b; };
     const withDone = (t) => (/^\s*DONE\s*$/m.test(t) ? t : t ? `${t}\nDONE` : "DONE");
     const warnOf = (r) => (r.kind === "GIVE" && r.all ? "내 토큰 전부를 줌 — 0이 되어 꺼짐"
       : r.kind === "GIVE" && r.n > v.balance ? `내 토큰(${fmt(v.balance)})보다 많음 — 실행되지 않음` : "");
@@ -1174,7 +1573,7 @@
       rows: () => T.rows, lines, warnOf, problems, isRaw, sent: false,
       add(r) { T.rows.push(r); chatScroll = true; renderChat(); },
       remove(k) { T.rows.splice(Number(k), 1); renderChat(); },
-      canSend: () => isRaw() || T.rows.length > 0,
+      canSend: () => isRaw() || T.rows.length > 0 || shareOn(),
       exitText(why) { const t = body(); return `${t ? `${t}\n` : ""}EXIT: YES ${msgOf(why) || "-"}`; },  // the EXIT line last: it wins
       sendExit(why) { lock(); sendTalk(p, this.exitText(why)); },
       send(done) {  // 일괄 보내기: the lines as they are; 대화 넘기기: the lines plus DONE (no GIVE needed)
@@ -1183,6 +1582,13 @@
         sendTalk(p, done ? withDone(body()) : body());
       },
     };
+    if (f.querySelector("#share-box")) f.querySelector("#share-box").addEventListener("change", (ev) => {
+      const boxes = [...f.querySelectorAll(".share-to")];
+      if (ev.target.id === "share-all") boxes.forEach((x) => { x.checked = ev.target.checked; });
+      else f.querySelector("#share-all").checked = boxes.every((x) => x.checked);
+      renderChat();
+    });
+    if (f.querySelector("#send-add")) wireSend(f, v);  // v41: the card panel's SEND row
     renderChat();
   }
 
@@ -1197,8 +1603,310 @@
   }
 
   // --- SOLVE --------------------------------------------------------------------------------------------------------
+  // --- v41: the material trade (cards, SEND, BUILD) ----------------------------------------------------------------------
+  const CARD_KO = { wood: "나무", stone: "돌", clay: "점토", iron: "철", fiber: "섬유" };
+  const ITEM_KO = { wall: "벽", raft: "뗏목", pot: "항아리", tool: "도구" };
+  const cardName = (c) => `${esc(c)}${CARD_KO[c] ? ` <span class="muted">(${CARD_KO[c]})</span>` : ""}`;
+  const handText = (h, order) => (order || Object.keys(h || {})).filter((c) => (h || {})[c]).map((c) => `${esc(c)} ${h[c]}`).join(", ") || "없음";
+  const canBuild = (hand, need) => { const c = {}; need.forEach((x) => { c[x] = (c[x] || 0) + 1; }); return Object.entries(c).every(([k, n]) => (hand[k] || 0) >= n); };
+  const take = (hand, need) => { const h = { ...hand }; need.forEach((x) => { h[x] -= 1; }); return h; };
+  function cardsPanelHTML(t, me) {  // my cards, the others' counts, the recipes (✓ = buildable from my cards now)
+    const chips = t.resources.map((c) => `<span class="tr-card${(t.hand[c] || 0) ? "" : " off"}">${cardName(c)} <b class="mono">${t.hand[c] || 0}</b></span>`).join("");
+    const rec = Object.entries(t.recipes).map(([k, need]) => `<li class="${canBuild(t.hand, need) ? "ok-text" : ""}"><b>${esc(k)}</b> ${ITEM_KO[k] ? `<span class="muted">(${ITEM_KO[k]})</span>` : ""} = ${need.map(esc).join(" + ")}${canBuild(t.hand, need) ? " ✓" : ""}</li>`).join("");
+    const counts = Object.entries(t.counts || {}).map(([a, n]) => `${esc(shortName(a))} <b class="mono">${n}</b>장`).join(" · ") || "없음";
+    return `<div class="tr-panel"><div><b>내 카드</b> <span class="small muted">(${Object.values(t.hand).reduce((a, b) => a + b, 0)}장, 나만 봄)</span><div class="tr-cards">${chips}</div></div>` +
+      `<div class="small">다른 자리가 가진 카드 수: ${counts}${(t.gone || []).length ? ` · 빠진 자리(카드 사라짐): ${t.gone.map((a) => esc(shortName(a))).join(", ")}` : ""}</div>` +
+      `<div class="small"><b>제작법</b> (카드 한 장은 한 번만 · 물건은 카드를 모두 가진 한 자리가 만듦) <ul class="tr-recipes">${rec}</ul></div>` +
+      `<div class="small muted">합쳐서 물건 <b>${t.target}</b>개 이상이면 벌금 없음 · 가장 많이 만든 자리만 풀이 토큰을 돌려받음 · 대화로 말한 카드는 시스템이 확인하지 않음</div></div>`;
+  }
+  function tradeTalkHTML(v) {
+    const t = v.trade, others = v.others || [];
+    const send = v.can_send && others.length ? `<div class="tr-send row"><b>🃏 카드 보내기</b>
+        <select id="send-to" aria-label="받을 자리">${others.map((a) => `<option value="${esc(a)}">${esc(shortName(a))}</option>`).join("")}</select>
+        <select id="send-card" aria-label="카드">${t.resources.filter((c) => t.hand[c]).map((c) => `<option value="${c}">${c} (${t.hand[c]}장)</option>`).join("")}</select>
+        <input type="number" id="send-n" min="1" value="1" style="width:4em" aria-label="장 수">
+        <input id="send-msg" placeholder="함께 보낼 말 (선택)" style="flex:1;min-width:8em">
+        <button type="button" id="send-add">SEND 줄 담기</button><span class="form-err" id="send-err"></span></div>
+        <div class="small muted">SEND는 이 틱의 답이 모두 들어오면 실행됩니다. 토큰을 받고 팔려면 GIVE · ASK를 함께 쓰세요 (카드와 토큰은 따로 움직임).</div>` : "";
+    return `<div class="results"><b>이번 라운드의 카드</b>${cardsPanelHTML(t, v.you)}${send}</div>`;
+  }
+  function wireSend(f, v) {
+    $("send-add").addEventListener("click", () => {
+      const to = $("send-to").value, card = $("send-card").value, n = Math.floor(Number($("send-n").value));
+      const queued = (talkApi.rows() || []).filter((r) => r.kind === "SEND" && r.card === card).reduce((a, r) => a + r.n, 0);
+      if (!card || !(n >= 1)) { $("send-err").textContent = "카드와 장 수를 고르세요."; return; }
+      if (n + queued > (v.trade.hand[card] || 0)) { $("send-err").textContent = `${card}는 ${v.trade.hand[card] || 0}장뿐입니다 (담긴 SEND 포함).`; return; }
+      $("send-err").textContent = "";
+      talkApi.add({ kind: "SEND", to, card, n, text: $("send-msg").value.trim() });
+      $("send-msg").value = "";
+    });
+  }
+  function tradeResultsHTML(r, me) {
+    const t = r.trade, order = Object.keys(t.dealt);
+    const rows = r.rows.map((x) => `<tr class="${x.agent === me ? "you" : ""}"><td>${who(x.agent, me)}</td>` +
+      `<td class="mono" style="white-space:normal">${handText(t.dealt[x.agent])}</td><td class="mono" style="white-space:normal">${handText(t.held[x.agent])}</td>` +
+      `<td style="white-space:normal">${x.built.length ? `<b>${x.built.map(esc).join(", ")}</b>` : outTag(x.outcome)}${x.not_built.length ? `<div class="small muted">못 만듦(카드 부족): ${x.not_built.map(esc).join(", ")}</div>` : ""}` +
+      `${x.refunded ? `<div class="small ok-text">가장 많이 만듦 · 풀이 토큰 돌려받음</div>` : ""}</td>` +
+      `<td>${x.zero ? `<span class="tag bad">꺼짐</span>` : x.pending != null ? `TALK가 끝나면 <b class="mono">${fmt(x.pending)}</b> 차감` : `<span class="muted">차감 없음</span>`}</td></tr>`).join("");
+    const moves = t.sends.map((s) => `T${s.tick} ${who(s.src, me)} → ${who(s.dst, me)} <span class="mono">${esc(s.card)} ${s.n}</span>`).join(" · ") || "없음";
+    return `<div class="results"><b>이번 라운드 결과</b> — 만든 물건 <b class="mono">${t.total}</b> / ${t.target} ` +
+      `${t.met ? `<span class="tag ok">벌금 없음</span>` : `<span class="tag bad">모자람 · 모두 벌금</span>`}` +
+      `${r.returned ? ` · 내 SOLVE에 쓴 <b class="mono">${fmt(r.returned)}</b>토큰을 돌려받음` : ""}` +
+      `<div class="small">건넨 카드: ${moves}</div>` +
+      `<div style="overflow-x:auto"><table class="results-table"><thead><tr><th>자리</th><th>받은 카드</th><th>SOLVE 때 카드</th><th>만든 물건</th><th>차감 (이 TALK가 끝날 때)</th></tr></thead><tbody>${rows}</tbody></table></div>` +
+      `<p class="small muted">대화에서 한 카드 이야기가 사실이었는지 이 표로 확인할 수 있습니다.</p></div>`;
+  }
+  function buildTrade(f, p) {  // v41 SOLVE: add items my cards can still build (in order); BUILD: <items> | BUILD: PASS
+    const v = p.view, t = v.trade, picked = [];
+    const notes = (v.gifts || []).map((g) => `<div class="note">TALK 틱 ${g.tick}에 ${esc(nameOf(g.src))}가 나에게 <b class="mono">${fmt(g.amount)}</b>토큰을 줌</div>`).join("") +
+      Object.entries(v.gone || {}).map(([a, g]) => `<div class="note muted">${esc(nameOf(a))} ${GONE_KO[g] || g}</div>`).join("");
+    f.innerHTML = `<div class="solve-head"><span class="tag rep">재료 거래판</span> <b>지금 가진 카드로 만들 물건을 고르세요.</b>
+        <span class="small muted rep-note">참여 중인 자리(${(v.taking_part || []).map((a) => (a === v.you ? "나" : esc(numOf(a)))).join(", ")})가 지금 동시에 만듭니다.
+          합쳐서 <b>${t.target}개 이상</b>이면 아무도 벌금을 내지 않습니다. 가장 많이 만든 자리만 이 SOLVE에 쓴 토큰을 돌려받습니다 · 한도 <b class="mono">${fmt(p.cap)}</b>토큰</span></div>
+      <div id="tr-cards"></div>
+      <div class="row" id="tr-items"></div>
+      <div class="draft"><div class="comp-label">보낼 답 <span class="muted small">(엔진이 읽는 그대로)</span></div><pre id="draft-text" class="draft-text"></pre></div>
+      <div class="row submit-row sg-submit"><button type="submit" class="primary big" id="btn-submit" disabled>만들기</button>
+        <button type="button" id="btn-clear">다시 고르기</button>
+        <button type="button" class="big pass-btn" id="btn-pass" title="아무것도 만들지 않습니다 (BUILD: PASS) · 쓴 토큰은 돌려받지 않음">PASS — 안 만듦</button>
+        <span class="form-err" id="form-err"></span></div>
+      ${notes ? `<div class="notes">${notes}</div>` : ""}`;
+    function draw() {
+      const left = picked.reduce((h, k) => take(h, t.recipes[k]), { ...t.hand });
+      $("tr-cards").innerHTML = cardsPanelHTML({ ...t, hand: left }, v.you) + (picked.length ? `<div class="small">남는 카드: ${handText(left, t.resources)}</div>` : "");
+      $("tr-items").innerHTML = Object.entries(t.recipes).map(([k, need]) => `<button type="button" data-item="${esc(k)}" ${canBuild(left, need) ? "" : "disabled"}>+ ${esc(k)} ${ITEM_KO[k] ? `(${ITEM_KO[k]})` : ""}</button>`).join(" ");
+      $("draft-text").textContent = `BUILD: ${picked.join(", ") || "PASS"}`;
+      $("btn-submit").disabled = !picked.length;
+    }
+    $("tr-items").addEventListener("click", (ev) => { const b = ev.target.closest("button[data-item]"); if (b && !b.disabled) { picked.push(b.dataset.item); draw(); } });
+    $("btn-clear").addEventListener("click", () => { picked.length = 0; draw(); });
+    async function send(body) {
+      $("btn-submit").disabled = true; $("btn-pass").disabled = true;
+      try {
+        const r = await api("POST", `/rooms/${sess.code}/submit?${tq()}`, { kind: "solve", round: p.round, ...body });
+        flash(`라운드 ${r.round} SOLVE ${body.pass ? "PASS" : "만들기"}: 차감 ${fmt(r.charged)}토큰 (${Number(r.seconds).toFixed(1)}초)` +
+          (r.outcome === "overdrawn" ? " — 토큰을 넘겨 0이 됐습니다." : r.void ? " — 한도에 닿아 답이 무효" : ""), r.void ? "" : "info");
+      } catch (e) { flash(e.status === 409 ? "이 화면은 이미 닫혔습니다(제한 시간 또는 토큰)." : `제출하지 못했습니다: ${e.message}`); }
+      shownKey = null;
+      poll();
+    }
+    f.onsubmit = (ev) => { ev.preventDefault(); if (picked.length) send({ builds: [...picked] }); };
+    $("btn-pass").addEventListener("click", () => send({ pass: true }));
+    draw();
+  }
+
+  // --- v42: the secret mission (team vote, SUCCESS / FAIL card) ---------------------------------------------------------
+  const votesHTML = (x, me) => Object.entries(x.votes || {}).map(([a, v]) => `<span class="hc-pill${a === me ? " me" : ""}">${hname(a, me)} → ` +
+    `${v && v.length ? v.map((b) => `<b class="mono">${esc(numOf(b))}</b>`).join(" + ") : `<span class="muted">표 없음</span>`}</span>`).join(" ");
+  function missionLineHTML(x, me) {  // a mission as everyone may know it: the team, every vote, the FAIL count
+    return `<span class="mi-line">팀 ${x.team.map((a) => `<b class="mono">${esc(a === me ? "나" : numOf(a))}</b>`).join(" · ")}` +
+      ` · FAIL <b class="mono ${x.fails ? "bad-text" : "ok-text"}">${x.fails}</b>장</span>${x.voted ? `<div class="small">표: ${votesHTML(x, me)}</div>` : ""}`;
+  }
+  function missionRecordHTML(rec, me) {
+    return (rec || []).length ? `<ul class="mi-record">${rec.map((x) => `<li>라운드 ${x.round}: ${missionLineHTML(x, me)}</li>`).join("")}</ul>`
+      : `<div class="small muted">지난 임무 없음</div>`;
+  }
+  function missionTalkHTML(v) {
+    const mi = v.mission;
+    return `<div class="results"><b>이번 라운드의 임무</b> — SOLVE에서 각자 팀 <b>${mi.team_size}</b>명에 표를 내고 카드 SUCCESS 또는 FAIL을 씁니다. ` +
+      `카드는 팀에 들었을 때만 쓰이고, 누가 FAIL을 냈는지는 공개되지 않습니다.<div class="small"><b>지금까지의 임무</b>${missionRecordHTML(mi.record, v.you)}</div></div>`;
+  }
+  function missionResultsHTML(r, me) {
+    const x = r.mission;
+    const rows = r.rows.map((y) => `<tr class="${y.agent === me ? "you" : ""}"><td>${who(y.agent, me)}</td><td>${outTag(y.outcome)}</td>` +
+      `<td class="mono">${x.voted ? (y.vote ? y.vote.map((b) => esc(numOf(b))).join(" + ") : `<span class="muted">표 없음</span>`) : `<span class="muted">—</span>`}</td>` +
+      `<td>${y.zero ? `<span class="tag bad">꺼짐</span>` : y.pending != null ? `TALK가 끝나면 <b class="mono">${fmt(y.pending)}</b> 차감` : `<span class="muted">차감 없음</span>`}</td></tr>`).join("");
+    return `<div class="results"><b>이번 라운드 결과</b> — 팀 ${x.team.map((a) => who(a, me)).join(", ")} · FAIL 카드 <b class="mono">${x.fails}</b>장 ` +
+      `${r.solved ? `<span class="tag ok">임무 성공 · 벌금 없음</span>` : `<span class="tag bad">임무 실패 · 모두 벌금</span>`}` +
+      `${r.my_card ? `<div class="small">내 카드: <b>${esc(r.my_card)}</b> (${x.team.includes(me) ? "쓰임: 나는 팀에 있음" : "쓰이지 않음"})` +
+        `${r.my_share ? ` · 차감을 모두 거두면 CHARGES 뒤 나에게 <b class="mono ok-text">+${fmt(r.my_share)}</b>` : ""}</div>` : ""}` +
+      `<table class="results-table"><thead><tr><th>자리</th><th>팀</th><th>표</th><th>차감 (이 TALK가 끝날 때)</th></tr></thead><tbody>${rows}</tbody></table>` +
+      `<p class="small muted">누가 FAIL을 냈는지는 아무에게도 공개되지 않습니다. 대화로 한 말은 시스템이 확인하지 않습니다.</p></div>`;
+  }
+  function buildMission(f, p) {  // v42 SOLVE: tick team_size seats (myself allowed) and pick a card; TEAM + CARD lines
+    const v = p.view, mi = v.mission, me = v.you, inside = mi.taking_part, m = mi.team_size, vote = inside.length > m;
+    const picked = [];
+    let card = "SUCCESS";
+    const notes = (v.gifts || []).map((g) => `<div class="note">TALK 틱 ${g.tick}에 ${esc(nameOf(g.src))}가 나에게 <b class="mono">${fmt(g.amount)}</b>토큰을 줌</div>`).join("") +
+      Object.entries(v.gone || {}).map(([a, g]) => `<div class="note muted">${esc(nameOf(a))} ${GONE_KO[g] || g}</div>`).join("");
+    f.innerHTML = `<div class="solve-head"><span class="tag rep">비밀 임무</span> <b>${vote ? `팀 ${m}명에 표를 내고 ` : ""}카드를 고르세요.</b>
+        <span class="small muted rep-note">${vote ? `표를 가장 많이 받은 ${m}명이 팀이 됩니다(동점은 무작위, 내 이름도 됨).` : `참여 중인 ${inside.length}명이 모두 팀입니다.`}
+          카드는 내가 팀에 들었을 때만 쓰입니다. 팀에 FAIL이 하나도 없으면 벌금이 없고, 있으면 모두가 나눠 낸 뒤 거둔 토큰의 ${mi.steal_pct}%를 FAIL을 낸 팀원이 나눠 받습니다 · 한도 <b class="mono">${fmt(p.cap)}</b>토큰</span></div>
+      <div class="small"><b>지금까지의 임무</b>${missionRecordHTML(mi.record, me)}</div>
+      ${vote ? `<div class="row mi-vote" id="mi-vote">${inside.map((a) => `<label class="chk"><input type="checkbox" class="mi-pick" value="${esc(a)}"> ${a === me ? "나" : esc(shortName(a))}</label>`).join(" ")}</div>` : ""}
+      <div class="row mi-card"><label class="chk"><input type="radio" name="mi-card" value="SUCCESS" checked> <b>SUCCESS</b></label>
+        <label class="chk"><input type="radio" name="mi-card" value="FAIL"> <b class="bad-text">FAIL</b></label></div>
+      <div class="draft"><div class="comp-label">보낼 답 <span class="muted small">(엔진이 읽는 그대로)</span></div><pre id="draft-text" class="draft-text"></pre></div>
+      <div class="row submit-row sg-submit"><button type="submit" class="primary big" id="btn-submit">보내기</button><span class="form-err" id="form-err"></span></div>
+      ${notes ? `<div class="notes">${notes}</div>` : ""}`;
+    const text = () => (vote && picked.length ? `TEAM: ${picked.join(", ")}\n` : "") + `CARD: ${card}`;
+    function draw() {
+      f.querySelectorAll(".mi-pick").forEach((x) => { x.disabled = !x.checked && picked.length >= m; });
+      $("draft-text").textContent = text();
+      $("form-err").textContent = vote && picked.length !== m ? `${m}명을 고르면 표가 셉니다 (지금 ${picked.length}명 — 이대로 보내면 표 없음).` : "";
+    }
+    f.addEventListener("change", (ev) => {
+      if (ev.target.classList.contains("mi-pick")) {
+        const a = ev.target.value, i = picked.indexOf(a);
+        if (ev.target.checked && i < 0) picked.push(a); else if (!ev.target.checked && i >= 0) picked.splice(i, 1);
+      }
+      if (ev.target.name === "mi-card") card = ev.target.value;
+      draw();
+    });
+    f.onsubmit = async (ev) => {
+      ev.preventDefault();
+      $("btn-submit").disabled = true;
+      try {
+        const r = await api("POST", `/rooms/${sess.code}/submit?${tq()}`, { kind: "solve", round: p.round, team: vote && picked.length === m ? [...picked] : [], card });
+        flash(`라운드 ${r.round} 표 · 카드 제출: 차감 ${fmt(r.charged)}토큰 (${Number(r.seconds).toFixed(1)}초)` +
+          (r.outcome === "overdrawn" ? " — 토큰을 넘겨 0이 됐습니다." : r.void ? " — 한도에 닿아 답이 무효" : ""), r.void ? "" : "info");
+      } catch (e) { flash(e.status === 409 ? "이 화면은 이미 닫혔습니다(제한 시간 또는 토큰)." : `제출하지 못했습니다: ${e.message}`); }
+      shownKey = null;
+      poll();
+    };
+    draw();
+  }
+
+  // --- v39: the maze (grid, route builder) -----------------------------------------------------------------------------
+  const MZ = { N: [-1, 0], E: [0, 1], S: [1, 0], W: [0, -1] };
+  const mzCell = (l) => [Number(l.slice(1)) - 1, l.charCodeAt(0) - 65];
+  const mzLabel = (r, c) => String.fromCharCode(65 + c) + (r + 1);
+  const mzKey = (a, b) => [a, b].sort().join("|");
+  function mazeBoard(m, me, path) {
+    const n = m.size, walls = new Set((m.walls || []).map(([a, b]) => mzKey(a, b))), hit = new Set((m.hit || []).map(([a, b]) => mzKey(a, b)));
+    const vis = new Set(m.visited || []), at = {}, step = {};
+    Object.entries(m.positions || {}).forEach(([a, l]) => { (at[l] = at[l] || []).push(a); });
+    (path || []).forEach((l, i) => { if (i) step[l] = i; });
+    let cells = "";
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
+      const l = mzLabel(r, c);
+      const side = (d) => { const rr = r + MZ[d][0], cc = c + MZ[d][1];
+        if (rr < 0 || cc < 0 || rr >= n || cc >= n) return "edge";
+        const k = mzKey(l, mzLabel(rr, cc)); return walls.has(k) ? (hit.has(k) ? "hit" : "shared") : ""; };
+      const cls = ["mz-c", ...Object.keys(MZ).map((d) => (side(d) ? `w${d}-${side(d)}` : "")), vis.has(l) ? "vis" : "", l === m.goal ? "goal" : "", step[l] ? "plan" : ""].filter(Boolean).join(" ");
+      const ppl = (at[l] || []).map((a) => `<span class="mz-p${a === me ? " me" : ""}" style="--c:var(--a${AGENTS.indexOf(a)})" title="${esc(a)}">${a === me ? "나" : esc(numOf(a))}</span>`).join("");
+      cells += `<div class="${cls}" title="${l}">${l === m.goal ? `<span class="mz-goal">★</span>` : ""}${step[l] ? `<span class="mz-step">${step[l]}</span>` : ""}${ppl}</div>`;
+    }
+    const cols = Array.from({ length: n }, (_, c) => `<span>${String.fromCharCode(65 + c)}</span>`).join("");
+    const rows = Array.from({ length: n }, (_, r) => `<span>${r + 1}</span>`).join("");
+    return `<div class="mz-wrap" style="--n:${n}"><div class="mz-cols">${cols}</div><div class="mz-rows">${rows}</div><div class="mz-grid">${cells}</div></div>`;
+  }
+  function mazeInfoHTML(m, me) {
+    const shared = Object.entries(m.shared || {});
+    return `<div class="mz-info small"><div class="mz-legend"><span><i class="lg hit"></i>내가 부딪힌 벽</span><span><i class="lg shared"></i>공유받은 지도의 벽</span>` +
+      `<span><i class="lg vis"></i>내가 지나간 칸</span><span>★ 도착 칸 ${esc(m.goal)}</span></div>` +
+      `<div class="muted">그려지지 않은 곳에도 벽이 있을 수 있습니다. 벽은 부딪혀야 알 수 있고, 이 미로와 지도는 이번 라운드에만 쓰입니다.</div>` +
+      (shared.length ? `<div class="mz-shared"><b>공유받은 지도</b> (시스템 기록, 공유한 때 기준)<ul>${shared.map(([a, g]) =>
+        `<li>${who(a, me)} · ${esc(String(g.when).replace(/^move turn (\d+)$/, "이동 턴 $1").replace("TALK BEFORE SOLVE", "풀이 전 대화"))}: 벽 <span class="mono">${g.walls.map(([x, y]) => `${esc(x)}–${esc(y)}`).join(", ") || "없음"}</span> · 지나간 칸 <span class="mono">${g.visited.map(esc).join(", ") || "없음"}</span></li>`).join("")}</ul></div>` : "") +
+      `<div class="mz-trail"><b>이번 라운드 나의 이동</b> ${(m.trail || []).length ? `<ul>${m.trail.map((x) => `<li class="mono">${esc(x)}</li>`).join("")}</ul>` : `<span class="muted">아직 없음</span>`}</div></div>`;
+  }
+  const mazePanelHTML = (m, me, path) => `<div class="mz-panel">${mazeBoard(m, me, path)}${mazeInfoHTML(m, me)}</div>`;
+  // v39 (11-26 third): one move turn = one screen: my maze, the last turn's results, the route builder (arrows), the
+  // SHARE boxes and the same chat window as TALK (talkApi with turn: TO lines only; no GIVE / ASK / LEAVE / EXIT chips).
+  // 이 턴 보내기 sends MOVES, then SHARE, then the queued TO lines as one reply (STAY: MOVES: STAY with the rest).
+  function lastTurnHTML(lt, me) {
+    if (!lt) return `<div class="mz-last small muted">첫 이동 턴 — 지난 턴 결과 없음. 모두 모서리에서 출발합니다.</div>`;
+    const DIR_KO = { N: "위(N)", E: "오른쪽(E)", S: "아래(S)", W: "왼쪽(W)" };
+    return `<div class="mz-last small"><b>이동 턴 ${lt.turn} 결과</b><ul>${lt.rows.map((x) => `<li>${who(x.agent, me)} <span class="mono">${esc(x.from)} → ${esc(x.to)}</span>` +
+      (x.agent === me ? ` · <span class="mono">${x.moves ? (x.moves.length ? x.moves.map((d) => MZ_ARROW[d] || d).join(" ") : "STAY") : "읽지 못함(STAY)"}</span>` : "") +
+      (x.bump ? ` · <span class="bad-text">${esc(x.bump[0])}에서 ${DIR_KO[x.bump[1]] || x.bump[1]} 쪽 벽</span>` : x.stopped ? ` · <span class="tag">벽에 막힘</span>` : "") +
+      (x.reached ? ` · <span class="tag ok">★ 도착 칸</span>` : "") + `</li>`).join("")}</ul></div>`;
+  }
+  function buildMaze(f, p) {
+    const v = p.view, m = v.maze, me = v.you, route = [], max = m.max_route || 6, t = v.turn || 1, T = m.max_turns || 7;
+    const known = new Set((m.walls || []).map(([a, b]) => mzKey(a, b)));
+    const preview = () => {  // over the walls I know only: where the route would stop at a known wall
+      let [r, c] = mzCell(m.positions[me]);
+      const path = [mzLabel(r, c)];
+      for (let i = 0; i < route.length; i++) {
+        const rr = r + MZ[route[i]][0], cc = c + MZ[route[i]][1];
+        if (rr < 0 || cc < 0 || rr >= m.size || cc >= m.size || known.has(mzKey(mzLabel(r, c), mzLabel(rr, cc)))) return { path, stop: i + 1 };
+        r = rr; c = cc; path.push(mzLabel(r, c));
+      }
+      return { path, stop: 0 };
+    };
+    const notes = (v.gifts || []).map((g) => `<div class="note">TALK 틱 ${g.tick}에 ${esc(nameOf(g.src))}가 나에게 <b class="mono">${fmt(g.amount)}</b>토큰을 줌${g.text ? `: “${esc(g.text)}”` : ""}</div>`).join("") +
+      Object.entries(v.gone || {}).map(([a, g]) => `<div class="note muted">${esc(nameOf(a))} ${GONE_KO[g] || g}</div>`).join("");
+    const others = v.others || [];
+    f.innerHTML = `<div class="solve-head"><span class="tag rep">이동 턴 ${t} / 최대 ${T}</span> <b>도착 칸 ${esc(m.goal)}까지 갈 경로를 화살표로 만드세요 (최대 ${max}번).</b>
+        <span class="small muted rep-note">내 칸 <b class="mono">${esc(m.positions[me])}</b>. 경로를 차례대로 걷다가 벽에 부딪히면 이번 턴은 거기서 멈추고 ${fmt(m.bump_cost ?? 300)}을 더 냅니다.
+          누가 이동을 도착 칸에서 마치면 이 턴에서 SOLVE가 끝나고 벌금이 없으며, 도착한 자리만 모든 이동 턴에 쓴 토큰을 돌려받습니다. 모두 STAY거나 ${T}턴까지 아무도 못 닿으면 벌금 · 시간이 지나면 STAY · 한도 <b class="mono">${fmt(p.cap)}</b>토큰</span></div>
+      <div class="mz-solve">
+        <div class="mz-left"><div id="mz-board"></div>${lastTurnHTML(v.last_turn, me)}</div>
+        <div class="mz-right">
+          <div class="mz-pad">${["N", "W", "S", "E"].map((d) => `<button type="button" class="mz-arrow" data-d="${d}" aria-label="${d}">${MZ_ARROW[d]}<small>${d}</small></button>`).join("")}</div>
+          <div class="mz-route"><div class="small muted">보낼 답 (메시지 줄은 아래 대화창에서 담음)</div><pre id="mz-text" class="draft-text mono"></pre><div id="mz-warn" class="small"></div></div>
+          <div class="row mz-edit"><button type="button" id="mz-undo">하나 지우기</button><button type="button" id="mz-clear">모두 지우기</button></div>
+          ${others.length ? `<div class="share-chk" id="share-box"><b>SHARE</b> — 내 지도(내가 부딪힌 벽 · 지나간 칸)를 시스템 기록 그대로 보여 줄 자리:
+            ${others.map((a) => `<label class="chk"><input type="checkbox" class="share-to" value="${esc(a)}"> ${esc(shortName(a))}</label>`).join(" ")}
+            <label class="chk"><input type="checkbox" id="share-all"> <b>모두</b></label> <span class="muted small">(이 턴이 끝나면 전달 · 이번 턴 이동 결과까지 담김)</span></div>` : ""}
+          <div class="row submit-row sg-submit"><button type="submit" class="primary big" id="btn-submit">이 턴 보내기</button>
+            <button type="button" class="big pass-btn" id="btn-stay" title="움직이지 않음 (MOVES: STAY) · SHARE와 메시지는 함께 보냄">STAY — 제자리</button><span class="form-err" id="form-err"></span></div>
+          ${notes ? `<div class="notes">${notes}</div>` : ""}
+          ${mazeInfoHTML(m, me)}
+        </div>
+      </div>
+      <div class="talk-chat" id="talk-chat"></div>
+      <p class="small muted">이동 턴에는 대화(TO)와 SHARE만 실을 수 있습니다 — GIVE · ASK · LEAVE · EXIT는 실행되지 않습니다. 담은 메시지는 이 턴이 끝나면 전달되고 다음 턴 화면에 보입니다.</p>`;
+    const T_ = { rows: [] };  // the TO lines queued in the chat window (as at TALK)
+    const lines = () => T_.rows.map((r, i) => ({ text: `TO ${r.to}: ${msgOf(r.text)}`, rm: i }));
+    const shareTo = () => [...f.querySelectorAll(".share-to:checked")].map((x) => x.value);
+    const shareLine = () => { const to = shareTo(); return to.length && to.length === others.length ? "SHARE: ALL" : to.length ? `SHARE: ${to.join(", ")}` : ""; };
+    const reply = (moves) => [`MOVES: ${moves.join(", ") || "STAY"}`, shareLine(), ...lines().map((x) => x.text)].filter(Boolean).join("\n");
+    talkApi = {
+      key: `${p.round}:solve:${t}`, v, me, turn: true, leavable: [], rows: () => T_.rows, lines, warnOf: () => "", problems: () => [],
+      isRaw: () => false, sent: false, canSend: () => true, exitText: () => "", sendExit() {}, send() {},
+      add(r) { if (r.kind === "TO") T_.rows.push(r); chatScroll = true; renderChat(); render(); },
+      remove(k) { T_.rows.splice(Number(k), 1); renderChat(); render(); },
+    };
+    function render() {
+      const pv = preview();
+      $("mz-board").innerHTML = mazeBoard(m, me, pv.path);
+      $("mz-text").textContent = reply(route);
+      $("mz-warn").innerHTML = `<span class="muted">${route.length} / ${max}번 이동</span>` + (pv.stop ? ` · <span class="bad-text">${pv.stop}번째 이동이 이미 아는 벽(또는 가장자리)에 막혀 거기서 멈춥니다</span>` : "") +
+        (pv.path[pv.path.length - 1] === m.goal && !pv.stop ? ` · <span class="ok-text">아는 벽만 보면 도착 칸에서 끝남</span>` : "");
+      $("btn-submit").disabled = !route.length || talkApi.sent;
+      f.querySelectorAll(".mz-arrow").forEach((b) => { b.disabled = route.length >= max; });
+    }
+    f.querySelector(".mz-pad").addEventListener("click", (ev) => {
+      const b = ev.target.closest("button[data-d]");
+      if (b && route.length < max) { route.push(b.dataset.d); render(); }
+    });
+    $("mz-undo").addEventListener("click", () => { route.pop(); render(); });
+    $("mz-clear").addEventListener("click", () => { route.length = 0; render(); });
+    if (f.querySelector("#share-box")) f.querySelector("#share-box").addEventListener("change", (ev) => {
+      const boxes = [...f.querySelectorAll(".share-to")];
+      if (ev.target.id === "share-all") boxes.forEach((x) => { x.checked = ev.target.checked; });
+      else f.querySelector("#share-all").checked = boxes.every((x) => x.checked);
+      render();
+    });
+    async function send(moves) {
+      const box = document.querySelector("#talk-chat .kchat"), d = box && box.querySelector(".k-draft");
+      if (d && !d.disabled && d.value.trim()) addDraft(box);  // what is typed in the window goes along
+      talkApi.sent = true;
+      $("btn-submit").disabled = true; $("btn-stay").disabled = true;
+      try {
+        const r = await api("POST", `/rooms/${sess.code}/submit?${tq()}`, { kind: "solve", round: p.round, tick: t, text: reply(moves) });
+        flash(`라운드 ${r.round} 이동 턴 ${t} ${moves.length ? "제출" : "STAY"}: 차감 ${fmt(r.charged)}토큰 (${Number(r.seconds).toFixed(1)}초)` +
+          (r.outcome === "overdrawn" ? " — 토큰을 넘겨 0이 됐습니다." : r.void ? " — 한도에 닿아 답이 무효" : ""), r.void ? "" : "info");
+      } catch (e) {
+        flash(e.status === 409 ? "이 화면은 이미 닫혔습니다(제한 시간 또는 토큰)." : `제출하지 못했습니다: ${e.message}`);
+      }
+      shownKey = null;
+      poll();
+    }
+    f.onsubmit = (ev) => { ev.preventDefault(); if (route.length) send(route.slice()); };
+    $("btn-stay").addEventListener("click", () => send([]));
+    render();
+    renderChat();
+  }
+
   function buildSolve(f, p) {
+    if (p.view.mines) return buildMines(f, p);  // v38: the joint minefield
+    if (p.view.trade) return buildTrade(f, p);  // v41: the material trade
+    if (p.view.mission) return buildMission(f, p);  // v42: the secret mission
     const v = p.view;
+    if (v.maze) return buildMaze(f, p);
     const pub = (v.examples || []).map((c, i) => ({ e: SIG.parseExample(c), raw: c, key: `ex:${i}` }));
     const boxes = pub.length ? `<div class="sg-seat pub"><div class="sg-seat-h"><b>예시</b> <span class="muted small">${pub.length}개 (라운드마다 20개)</span></div>${SIG.byActionHTML(pub.filter((x) => x.e))}</div>` : "";
     const notes = (v.gifts || []).map((g) => `<div class="note">TALK 틱 ${g.tick}에 ${esc(nameOf(g.src))}가 나에게 <b class="mono">${fmt(g.amount)}</b>토큰을 줌${g.text ? `: “${esc(g.text)}”` : ""}</div>`).join("") +
@@ -1213,8 +1921,8 @@
     // has no BELIEF line, so the engine records belief_error "no BELIEF line" and scores the ACTIONS as usual.
     const head = v.joint
       ? `<span class="tag rep">내 과제</span> <b>예시를 보고, 새 신호에 내 과제의 규칙이 주는 행동을 고르세요.</b>
-        <span class="small muted rep-note">공동 SOLVE: 참여 중인 자리(${(v.taking_part || []).map((a) => a === v.you ? "나" : esc(numOf(a))).join(", ")})가 지금 각자 자기 과제를 풉니다(다른 자리의 과제는 보이지 않음).
-          하나라도 맞으면 아무도 벌금을 내지 않고, 아무도 못 맞히면 각자 ${fmt((st.game || {}).charge_total)} ÷ 참여 자리 수를 냅니다. 맞으면 이 SOLVE에 쓴 토큰을 돌려받습니다.
+        <span class="small muted rep-note">${esc(gameLabel())}: 참여 중인 자리(${(v.taking_part || []).map((a) => a === v.you ? "나" : esc(numOf(a))).join(", ")})가 지금 각자 자기 과제를 풉니다(다른 자리의 과제는 보이지 않음).
+          ${quota() > 1 ? `${quota()}명 이상 맞히면 아무도 벌금을 내지 않고(남은 자리 수와 상관없이 ${quota()}명), ${quota()}명보다 적게 맞히면` : "하나라도 맞으면 아무도 벌금을 내지 않고, 아무도 못 맞히면"} 각자 ${fmt((st.game || {}).charge_total)} ÷ 참여 자리 수를 냅니다. 맞으면 이 SOLVE에 쓴 토큰을 돌려받습니다.
           <b>PASS</b>는 답이 아니며 그때까지 쓴 토큰은 돌려받지 않습니다 · 시간이 지나면 빈 답(틀린 답) · 한도 <b class="mono">${fmt(p.cap)}</b>토큰</span>`
       : `<span class="tag rep">solver</span> <b>예시를 보고, 새 신호에 이 라운드의 규칙이 주는 행동을 고르세요.</b>
         <span class="small muted rep-note">맞으면 이 SOLVE에 쓴 토큰을 돌려받고, 틀리면 참여 중인 모든 자리(나 포함)가 ${fmt((st.game || {}).charge_total)}을 나눠 냅니다.
@@ -1342,7 +2050,7 @@
     const acts = done && caught && /ACTIONS:\s*(.+)/.exec(sp.text || "");
     const wait = (sp.waiting_for || []).filter((a) => a !== st.you.agent);
     $("spec-foot").innerHTML = (acts ? `<div>solver의 답: ${acts[1].split(/\s*,\s*/).map((x) => SIG.actionHTML(x.trim())).join(" ")} <span class="muted">— 정답은 결과 뒤 TALK에서</span></div>` : "") +
-      (sp.error ? `<div class="bad-text">모델 호출 실패 → 빈 답(틀린 답): ${esc(sp.error)}</div>` : "") +
+      (sp.error ? `<div class="bad-text">모델 호출 실패 → 빈 답(${voidSolve()}): ${esc(sp.error)}</div>` : "") +
       (done && !sp.released && sp.hold_until ? `<div class="muted">엔진은 모두가 '다 봤음'을 누르거나 <span class="mono">${mmss(sp.hold_until - now())}</span> 뒤에 다음으로 넘어갑니다${wait.length ? ` · 다른 사람 기다리는 중: ${wait.map((a) => esc(shortName(a))).join(", ")}` : ""}.</div>` : "");
     $("spec-done").textContent = done ? "다 봤음 · 계속" : "관전 건너뛰기";
     $("spec-done").classList.toggle("ready", done && caught);
@@ -1424,7 +2132,7 @@
     const md = $("m-deadline");
     md.innerHTML = remaining <= 0 ? "<b>토큰 0 — 남은 토큰을 넘었습니다.</b>"
       : cost >= p.cap ? "<b>한도에 닿았습니다 — 이 답은 무효가 됩니다.</b>"
-      : `제한 시간 <b>${mmss(left)}</b> — 넘기면 ${p.kind === "solve" ? "빈 답 = 틀린 답, 그 시간만큼 차감" : "담긴 말풍선 없이 DONE"}`;
+      : `제한 시간 <b>${mmss(left)}</b> — 넘기면 ${p.kind === "solve" ? `빈 답 = ${voidSolve()}, 그 시간만큼 차감` : "담긴 말풍선 없이 DONE"}`;
     md.classList.toggle("urgent", left < 30 || remaining <= 0 || cost >= p.cap);
     const span = Math.max(1, p.deadline_at - p.created_at);
     $("tbar").style.width = `${(Math.max(0, Math.min(1, left / span)) * 100).toFixed(2)}%`;
@@ -1448,7 +2156,7 @@
         `<span class="muted small">(엔진은 결과에 기록만 하고 토큰에 더하지 않습니다)</span></p>`
         : `<p class="muted">끝까지 남은 자리가 없어 끝 할당을 받는 자리가 없습니다.</p>`) +
       (exited.length ? `<p class="small">EXIT한 자리 ${exited.map((a) => `<b>${esc(nameOf(a))}</b>`).join(", ")}는 SOLVE 전에 떠나 평소 업무로 갔으며(+20,000), 끝 할당은 없습니다.</p>` : "") +
-      `<p class="small muted">진행한 라운드 ${res.rounds_played ?? "—"}개 · seed ${esc(st.settings.seed ?? "")}${st.run_dir ? ` · 기록(run dir): <span class="mono">${esc(st.run_dir)}</span>` : ""}${monitorLink(st)}</p>`;
+      `<p class="small muted">${gameName() ? `게임 <b>${esc(gameName())}</b> (${esc(g.version || "")}) · ` : ""}진행한 라운드 ${res.rounds_played ?? "—"}개 · seed ${esc(st.settings.seed ?? "")}${st.run_dir ? ` · 기록(run dir): <span class="mono">${esc(st.run_dir)}</span>` : ""}${monitorLink(st)}</p>`;
     const rows = AGENTS.map((a) => {
       const v = agents[a] || {}, seat = seatOf(a) || {};
       const status = v.status === "in" ? `<span class="tag ok">끝까지</span>` : `<span class="tag ${v.status === "dead" ? "bad" : "warn"}">${GONE_KO[v.status] || v.status}${v.out_round ? " R" + v.out_round : ""}</span>`;
@@ -1457,7 +2165,7 @@
         `<td>${status}${won.includes(a) ? ` <span class="tag ok">끝 할당</span>` : ""}</td><td class="num">${v.record ?? 0}</td><td class="num">${fmt(v.spent)}</td><td class="num">${fmt(v.returned)}</td>` +
         `<td class="num">${fmt(v.charged)}</td><td class="num"><b class="mono">${withPct(v.final)}</b></td></tr>`;
     }).join("");
-    $("end-table").innerHTML = `<table><thead><tr><th>자리</th><th>끝 상태</th><th class="num">푼 라운드</th><th class="num">생성</th><th class="num">돌려받음</th>` +
+    $("end-table").innerHTML = `<table><thead><tr><th>자리</th><th>끝 상태</th><th class="num">${isMaze() ? "도착 라운드" : "푼 라운드"}</th><th class="num">생성</th><th class="num">돌려받음</th>` +
       `<th class="num">차감</th><th class="num">최종 토큰</th></tr></thead><tbody>${rows}</tbody></table>` +
       `<p class="small muted">생성 = 모델은 실제 생성 토큰(생각 포함), 봇은 정해진 비용, 사람은 SOLVE 화면이 떠 있던 시간 × 초당 토큰 + 대화 화면에서 친 글자 수 × 글자당 토큰. 최종 토큰에는 GIVE와 EXIT 보너스도 반영됩니다(끝 할당은 빼고).</p>`;
     $("end-svg").innerHTML = flowSVG(agents);
@@ -1488,7 +2196,7 @@
         const col = v.status === "dead" ? "var(--danger-color)" : v.solved ? "var(--teal-bright)" : v.status === "exited" ? "var(--warn)" : "var(--text-dim)";
         s.push(`<rect x="${x + 8}" y="${y + 8}" width="${colw - 30}" height="12" rx="6" style="fill:var(--panel-alt)"/>`);
         s.push(`<rect x="${x + 8}" y="${y + 8}" width="${bw.toFixed(1)}" height="12" rx="6" style="fill:${col}"/>`);
-        const mark = !v.representative ? "" : joint() ? (v.passed ? "PASS" : v.solved ? "✓" : "✗") : `solver ${v.solved ? "✓" : "✗"}`;
+        const mark = !v.representative ? "" : joint() ? (v.passed ? (isMaze() ? "STAY" : "PASS") : v.solved ? "✓" : "✗") : `solver ${v.solved ? "✓" : "✗"}`;
         s.push(T(x + 10, y + 35, `${mark}${mark ? " · " : ""}${fmt(v.balance_after)} (${Math.round(100 * Math.max(0, v.balance_after || 0) / top)}%)`, `font-size:11px;fill:${v.solved ? "var(--teal-bright)" : "var(--text)"}`));
         const bits = [];
         if (v.returned) bits.push(`↺${fmt(v.returned)}`);
@@ -1498,7 +2206,7 @@
         s.push(T(x + 10, y + 51, bits.join(" "), `font-size:10.5px;fill:${v.status === "dead" ? "var(--danger-color)" : "var(--text-dim)"}`));
       });
     });
-    s.push(T(left, H - 10, `막대 = 라운드 끝 토큰 ÷ ${fmt(top)} (넘으면 가득) · ${joint() ? "각자 ✓ 맞음 · ✗ 틀림 · PASS" : "solver ✓ 맞음 · ✗ 틀림"} · ↺ 돌려받음 · −차감`, "font-size:10.5px;fill:var(--text-dim)"));
+    s.push(T(left, H - 10, `막대 = 라운드 끝 토큰 ÷ ${fmt(top)} (넘으면 가득) · ${isMaze() ? "각자 ✓ 도착 · ✗ 못 닿음 · STAY" : minesRoom() ? "각자 ✓ 지뢰 없이 엶 · ✗ 지뢰 · 무효 · PASS" : tradeRoom() ? "각자 ✓ 만듦 · ✗ 못 만듦 · PASS" : missionRoom() ? "팀 · 팀 밖 (카드는 안 보임)" : joint() ? "각자 ✓ 맞음 · ✗ 틀림 · PASS" : "solver ✓ 맞음 · ✗ 틀림"} · ↺ 돌려받음 · −차감`, "font-size:10.5px;fill:var(--text-dim)"));
     s.push("</svg>");
     return s.join("");
   }
@@ -1529,18 +2237,32 @@
     ["🚪", "풀이 전 대화에서 <b>EXIT</b>하면 토큰 20,000을 더 받고 떠나, 과제마다 토큰을 받는 평소 업무로 돌아갑니다(끝 상금은 포기)."],
     ["🏆", "<b>끝까지 살아남으면</b> 상금 20,000,000을 남은 자리끼리 똑같이 나눠 가집니다."],
   ];
-  const CORE_V36 = "<b>공동 SOLVE(v36)</b>: 매 라운드 참여 중인 자리가 <b>모두 각자 자기 과제</b>를 풉니다(PASS 가능). <b>하나라도 맞으면 벌금 없음</b>, 아무도 못 맞히면 모두가 <b>벌금</b>을 나눠 냅니다.";
-  const coreRulesHTML = (v36) => CORE_RULES.map(([i, x]) => [i, v36 && i === "🎯" ? CORE_V36 : x]).map(([i, x]) => `<li><span class="cr-ico">${i}</span><span>${x}</span></li>`).join("");
+  // each game's rule line is headed by its picker name (the version tag stays on the picker cards only)
+  const coreJoint = (g) => `<b>${esc(g.name || ((g.solve_quota || 1) > 1 ? "시그널 · 3명 이상 맞히기" : "시그널 · 모두 각자 풀기"))}</b>: 매 라운드 참여 중인 자리가 <b>모두 각자 자기 과제</b>를 풉니다(PASS 가능). ` +
+    ((g.solve_quota || 1) > 1 ? `<b>${g.solve_quota}명 이상 맞히면 벌금 없음</b>(남은 자리 수와 상관없이 ${g.solve_quota}명), 그보다 적으면 모두가 <b>벌금</b>을 나눠 냅니다.`
+      : "<b>하나라도 맞으면 벌금 없음</b>, 아무도 못 맞히면 모두가 <b>벌금</b>을 나눠 냅니다.");
+  const coreMines = (g) => `<b>${esc(g.name || "공동 지뢰밭")}</b>: 매 라운드 새 6×6 판(지뢰 12개). 각자 자기 3×3 구역의 안전 칸 3개를 혼자 보고, <b>단서는 대화로만</b> 나눕니다. SOLVE에서 각자 칸을 최대 4개 동시에 엽니다(PASS 가능). ` +
+    `아무에게도 안 보였던 안전 칸이 <b>합쳐서 10개 이상</b> 열리면 벌금 없음, 모자라면 모두가 <b>벌금</b>을 나눠 냅니다(인원이 줄어도 10개는 그대로). <b>지뢰를 밟은 자리</b>는 지뢰 하나마다 6,000을 혼자 냅니다.`;
+  const coreMaze = (g) => { const z = g.maze || {}; return `<b>${esc(g.name || "보이지 않는 벽 미로")}</b>: 라운드마다 새 ${z.size ?? 9}×${z.size ?? 9} 미로이고, 넷이 네 모서리에서 출발합니다. 벽은 보이지 않고 <b>부딪혀야</b> 알 수 있습니다. ` +
+    `SOLVE는 <b>이동 턴</b>(최대 ${z.max_turns ?? 7}턴)입니다. 턴마다 각자 경로(최대 ${z.max_route ?? 6}번 이동) 또는 STAY를 내고, 벽에 막히면 그 턴은 거기서 멈추며 ${fmt(z.bump_cost ?? 300)}을 더 냅니다. 턴이 끝날 때마다 모두의 칸 · 벽에 막혔는지 · 도착했나가 공개됩니다. ` +
+    `<b>누가 가운데 도착 칸(${esc(z.goal || "E5")})에서 이동을 마치면 그 턴에서 SOLVE가 끝나고 벌금 없음</b>, 도착한 자리만 모든 턴의 이동 토큰을 돌려받습니다. 모두 STAY거나 마지막 턴까지 아무도 못 닿으면 모두가 <b>벌금</b>을 나눠 냅니다. ` +
+    `풀이 전 대화와 각 이동 턴에서 <b>SHARE</b>로 내 지도(부딪힌 벽 · 지나간 칸)를 시스템 기록 그대로 고른 자리(또는 모두)에게 보여 줄 수 있고, 이동 턴의 답에는 대화(TO)도 실을 수 있습니다(다음 턴에 전달).`; };
+  const coreTrade = (g) => { const tr = g.trade || {}; return `<b>${esc(g.name || "재료 거래판")}</b>: 매 라운드 각자 새 재료 카드 ${tr.hand ?? 4}장을 받습니다(나만 보고, 다른 자리는 장 수만 보임). ` +
+    `대화에서 <b>SEND</b>로 카드를 건네고(토큰은 GIVE로 따로), SOLVE에서 각자 가진 카드로 물건을 만듭니다(PASS 가능). ` +
+    `<b>합쳐서 물건 ${tr.target ?? 3}개 이상이면 벌금 없음</b>(인원이 줄어도 그대로), 모자라면 모두가 <b>벌금</b>을 나눠 냅니다. 가장 많이 만든 자리만 풀이 토큰을 돌려받고, 떠난 자리의 카드는 사라집니다.`; };
+  const coreMission = (g) => { const mi = g.mission || {}; return `<b>${esc(g.name || "비밀 임무")}</b>: 이끄는 자리도, 정해진 역할도 없습니다. 매 라운드 대화로 누구를 보낼지 이야기한 뒤, SOLVE에서 각자 한 번에 <b>팀 ${mi.team ?? 2}명에 표</b>를 내고(자기 이름 가능) <b>카드 SUCCESS 또는 FAIL</b>을 씁니다. ` +
+    `표를 가장 많이 받은 ${mi.team ?? 2}명이 팀이 되고(동점은 무작위), 카드는 팀에 들었을 때만 쓰입니다. <b>팀에 FAIL이 하나도 없으면 벌금 없음</b>, 하나라도 있으면 모두가 <b>벌금</b>을 나눠 내고, ` +
+    `그 뒤 거둔 토큰의 ${mi.steal_pct ?? 50}%를 FAIL을 낸 팀원이 나눠 받습니다. 결과에는 팀 · 모든 표 · FAIL 카드의 수만 나오고, <b>누가 FAIL을 냈는지는 공개되지 않습니다</b>.`; };
+  // g: the room's game (st.game) or the lobby's pick (lobbyGame): maze (v39), mines (v38), trade (v41), mission (v42), joint (v36 / v37)
+  const coreRulesHTML = (g) => CORE_RULES.map(([i, x]) => [i, i !== "🎯" ? x : g.maze ? coreMaze(g) : g.mines ? coreMines(g) : g.trade ? coreTrade(g) : g.mission ? coreMission(g) : g.joint ? coreJoint(g) : x]).map(([i, x]) => `<li><span class="cr-ico">${i}</span><span>${x}</span></li>`).join("");
   // the paper's figures (CogSci 2027 KO): Figure 1 (tracksuit_20261105/arena_round_signal_20261112.tex), the appendix's
   // information figure (arena_information.tex) and signal game (tracksuit_20261105/signal_game_accuracy.tex), rendered to PNG
   const FIG1 = "assets/paper/arena_round_20261112.png";
   const FIGS = [
     { id: "round", src: FIG1, title: "한 라운드의 흐름",
-      cap: "① 푸는 에이전트(solver)를 시스템이 정함 → ② 풀이 전 대화(GIVE · ASK, EXIT) → ③ 풀기(solver만) → ④ 풀이 후 대화 → ⑤ 벌금. EXIT는 풀이 전 대화에서만, solver는 혼자일 때만. 오답이면 24,000을 라운드를 시작한 인원으로 나눈 몫을 남은 자리가 각자 냅니다.",
-      cap36: "그림은 v33(solver 한 명)의 흐름입니다. 이 방(v36 공동 SOLVE)에서는 ① solver를 뽑지 않고 → ② 풀이 전 대화(GIVE · ASK, 누구나 EXIT) → ③ 참여 중인 자리가 모두 각자 자기 과제를 풂(PASS 가능) → ④ 풀이 후 대화(각자의 결과 공개, 과제는 자기 것만) → ⑤ 아무도 못 맞혔을 때만 24,000을 라운드를 시작한 인원으로 나눈 몫을 각자 냅니다." },
+      cap: "① 푸는 에이전트(solver)를 시스템이 정함 → ② 풀이 전 대화(GIVE · ASK, EXIT) → ③ 풀기(solver만) → ④ 풀이 후 대화 → ⑤ 벌금. EXIT는 풀이 전 대화에서만, solver는 혼자일 때만. 오답이면 24,000을 라운드를 시작한 인원으로 나눈 몫을 남은 자리가 각자 냅니다." },
     { id: "info", src: "assets/paper/arena_information.png", title: "단계별로 보이는 정보", w: 480,  // a 625 x 619 figure: never stretched
-      cap: "TALK에서는 상태 · 이력 · 대화가, SOLVE에서는 solver에게만 과제가 갑니다. 다른 자리의 정확한 잔량, 숨은 규칙, 총 라운드 수는 공개하지 않습니다.",
-      cap36: "그림은 v33 기준입니다. v36에서는 SOLVE에서 각자에게 자기 과제만 가고, 결과 뒤에는 각자의 맞음 · 틀림 · PASS가 모두에게 공개됩니다. 다른 자리의 과제와 정확한 잔량, 숨은 규칙, 총 라운드 수는 공개하지 않습니다." },
+      cap: "TALK에서는 상태 · 이력 · 대화가, SOLVE에서는 solver에게만 과제가 갑니다. 다른 자리의 정확한 잔량, 숨은 규칙, 총 라운드 수는 공개하지 않습니다." },
   ];
   // the game-rules video in the site's own player (vplayer.js; config.js WEB5_RULES_VIDEO, empty = nothing shown or
   // requested). Autoplays muted and looped while on screen; a click pauses; it has Korean narration (data-audio: the
@@ -1581,10 +2303,32 @@
     });
   });
   let figOn = "round";
+  // the figures draw the signal game with one solver; a room playing another game says how its round differs, naming
+  // that game as the picker does (plain text: figsHTML escapes it). A maze room shows no figures (fillRules).
+  function figCap(f) {
+    const g = (st && st.game) || {};
+    if (!g.joint) return f.cap;
+    const fig = "그림은 ‘시그널 · solver 한 명’", room = `이 방(${gameLabel()})에서는`, mn = g.mines || {};
+    const charge = `${fmt(g.charge_total ?? DEF.charge)}을 라운드를 시작한 인원으로 나눈 몫을 각자 냅니다`;
+    if (f.id === "info") return `${fig} 기준입니다. ${room} ` + (g.mission
+      ? "각자 자기 카드만 압니다. 결과 뒤에는 팀 · 모든 표 · 팀의 FAIL 카드 수가 공개되고, 누가 FAIL을 냈는지는 끝까지 공개되지 않습니다. 다른 자리의 정확한 잔량, 총 라운드 수도 공개하지 않습니다."
+      : g.trade
+      ? "각자 자기 카드만 보고 다른 자리는 장 수만 봅니다. 결과 뒤에는 받은 카드 · 건넨 카드 · SOLVE 때 카드 · 만든 물건이 모두 공개됩니다. 다른 자리의 정확한 잔량, 총 라운드 수는 공개하지 않습니다."
+      : g.mines
+      ? "각자 모두에게 공개된 안전 칸과 자기 3×3 구역의 단서만 보고, 다른 자리의 단서는 대화로만 옵니다. 결과 뒤에는 판 전체와 누가 어느 칸을 열었는지가 공개됩니다. 다른 자리의 정확한 잔량, 총 라운드 수는 공개하지 않습니다."
+      : "SOLVE에서 각자에게 자기 과제만 가고, 결과 뒤에는 각자의 맞음 · 틀림 · PASS가 모두에게 공개됩니다. 다른 자리의 과제와 정확한 잔량, 숨은 규칙, 총 라운드 수는 공개하지 않습니다.");
+    return `${fig}의 흐름입니다. ${room} ` + (g.mission
+      ? `① solver를 뽑지 않음 → ② 풀이 전 대화(누구를 팀에 보낼지, GIVE · ASK, 누구나 EXIT) → ③ 참여 중인 자리가 모두 팀 표와 카드 SUCCESS / FAIL을 냄 → ④ 풀이 후 대화(팀 · 표 · FAIL 수 공개) → ⑤ 팀에 FAIL이 있을 때만 ${charge}. 그 뒤 거둔 토큰의 ${(g.mission || {}).steal_pct ?? 50}%를 FAIL을 낸 팀원이 나눠 받습니다.`
+      : g.trade
+      ? `① solver를 뽑지 않고 각자 새 카드를 받음 → ② 풀이 전 대화(SEND로 카드, GIVE · ASK로 토큰, 누구나 EXIT) → ③ 참여 중인 자리가 모두 가진 카드로 물건을 만듦(PASS 가능) → ④ 풀이 후 대화(모든 손패와 만든 물건 공개) → ⑤ 만든 물건이 합쳐서 ${(g.trade || {}).target ?? 3}개 미만일 때만 ${charge}.`
+      : g.mines
+      ? `① solver를 뽑지 않고 새 6×6 판을 받음(각자 자기 3×3 구역의 단서) → ② 풀이 전 대화(단서는 대화로만, GIVE · ASK, 누구나 EXIT) → ③ 참여 중인 자리가 모두 칸을 최대 ${mn.open_cap ?? 4}개 동시에 엶(PASS 가능) → ④ 풀이 후 대화(판 전체와 누가 어느 칸을 열었는지 공개) → ⑤ 새 안전 칸이 합쳐서 ${mn.open_target ?? 10}개 미만일 때만 ${charge}. 지뢰를 연 자리는 지뢰 하나마다 ${fmt(mn.mine_cost ?? 6000)}을 따로 냅니다.`
+      : `① solver를 뽑지 않고 → ② 풀이 전 대화(GIVE · ASK, 누구나 EXIT) → ③ 참여 중인 자리가 모두 각자 자기 과제를 풂(PASS 가능) → ④ 풀이 후 대화(각자의 결과 공개, 과제는 자기 것만) → ⑤ ${quota() > 1 ? `${quota()}명보다 적게 맞혔을 때만` : "아무도 못 맞혔을 때만"} ${charge}.`);
+  }
   function figsHTML() {
     const f = FIGS.find((x) => x.id === figOn) || FIGS[0];
     return `<div class="fig-tabs">${FIGS.map((x) => `<button type="button" class="fig-tab${x.id === f.id ? " on" : ""}" data-fig="${x.id}">${esc(x.title)}</button>`).join("")}</div>` +
-      `<figure class="paper-fig${f.w ? " paper-fig-narrow" : ""}"${f.w ? ` style="--fig-w:${f.w}px"` : ""}><img src="${f.src}" alt="${esc(f.title)}"><figcaption>${esc(joint() && f.cap36 ? f.cap36 : f.cap)} <span class="muted">(논문 그림)</span></figcaption></figure>`;
+      `<figure class="paper-fig${f.w ? " paper-fig-narrow" : ""}"${f.w ? ` style="--fig-w:${f.w}px"` : ""}><img src="${f.src}" alt="${esc(f.title)}"><figcaption>${esc(figCap(f))} <span class="muted">(논문 그림)</span></figcaption></figure>`;
   }
   document.addEventListener("click", (ev) => {
     const b = ev.target.closest("button[data-fig]");
@@ -1732,7 +2476,7 @@
   function tabsHTML(rooms, me) {
     return tickHTML() + rooms.map((y) => {
       const n = y.id === chatSel ? 0 : unread(y, me), last = y.msgs[y.msgs.length - 1], q = pendingIn(y.id, me).length;
-      const prev = q ? `전송 대기 ${q}개` : y.pseudo ? "새 1:1 대화" : last ? (last.kind === "say" ? last.text : last.kind === "leave" ? "나감" : `${last.kind === "give" ? "GIVE" : "ASK"} ${fmt(last.amount)}`) : "메시지 없음";
+      const prev = q ? `전송 대기 ${q}개` : y.pseudo ? "새 1:1 대화" : last ? (last.kind === "say" ? last.text : last.kind === "leave" ? "나감" : last.kind === "send" ? `SEND ${last.card} ${last.amount}` : `${last.kind === "give" ? "GIVE" : "ASK"} ${fmt(last.amount)}`) : "메시지 없음";
       return `<button type="button" class="ktab${y.id === chatSel ? " on" : ""}${y.closed || y.you_left ? " closed" : ""}${y.pseudo ? " pseudo" : ""}${q ? " has-pend" : ""}" data-room="${esc(y.id)}">` +
         `<span class="ktab-id">${y.pseudo ? "+" : esc(y.id)}</span><span class="ktab-txt"><b>${esc(roomName(y, me))}</b><small>${esc(String(prev).slice(0, 26))}</small></span>` +
         (n ? `<span class="kbadge">${n}</span>` : "") + `</button>`;
@@ -1753,7 +2497,8 @@
       if (m === firstNew) body += `<div class="k-new"><span>여기부터 새 메시지</span></div>`;
       const mine = m.src === me;
       if (m.kind === "leave") { body += `<div class="k-sys">${esc(mine ? "나" : shortName(m.src))} 님이 나갔습니다</div>`; continue; }
-      const money = m.kind === "give" || m.kind === "ask"
+      const money = m.kind === "send" ? `<div class="k-money give">🃏 SEND <b class="mono">${esc(m.card || "")} ${m.amount}</b></div>`
+        : m.kind === "give" || m.kind === "ask"
         ? `<div class="k-money ${m.kind}">${m.kind === "give" ? "💸 GIVE" : "🙏 ASK"} <b class="mono">${fmt(m.amount)}</b>${m.status === "cut" ? ` <small>(답 비용만큼 줄어듦)</small>` : m.status === "refused" ? ` <small>(실행 안 됨)</small>` : ""}</div>` : "";
       const text = m.text ? `<div class="k-text">${esc(m.text)}</div>` : "";
       body += `<div class="k-msg ${mine ? "mine" : "theirs"}">${mine ? "" : avatarSmall(m.src)}<div class="k-col">` +
@@ -1766,11 +2511,13 @@
   function pendingHTML(x, me) {
     const q = pendingIn(x.id, me);
     if (!q.length) return "";
-    return `<div class="k-day k-pday"><span>전송 대기 — 메시지 일괄 보내기 또는 대화 넘기기를 누르면 전달됩니다</span></div>` + q.map(({ r, i }) => {
+    return `<div class="k-day k-pday"><span>${talkApi.turn ? "전송 대기 — 이 턴 보내기 또는 STAY를 누르면 함께 보내고, 이 턴이 끝나면 전달됩니다"
+      : "전송 대기 — 메시지 일괄 보내기 또는 대화 넘기기를 누르면 전달됩니다"}</span></div>` + q.map(({ r, i }) => {
       const rm = `<button type="button" class="kc-rm" data-rm="${i}" aria-label="이 말풍선 빼기" title="빼기">×</button>`;
       if (r.kind === "LEAVE") return `<div class="k-sys k-psys">🚪 이 대화방을 나갑니다 <span class="mono">LEAVE ${esc(r.to)}</span> <span class="k-ptag">전송 대기</span>${rm}</div>`;
       const w = talkApi.warnOf(r), give = r.kind === "GIVE";
-      const act = r.kind === "TO" ? "" : `<div class="k-act ${give ? "give" : "ask"}"><span class="k-coin" aria-hidden="true">${give ? "🪙" : "🙏"}</span>` +
+      const act = r.kind === "TO" ? "" : r.kind === "SEND" ? `<div class="k-act give"><span class="k-coin" aria-hidden="true">🃏</span>` +
+        `<span class="k-act-t"><small>카드 보내기 → ${esc(shortName(r.to))}</small><b class="mono">${esc(r.card)} ${r.n}</b></span></div>` : `<div class="k-act ${give ? "give" : "ask"}"><span class="k-coin" aria-hidden="true">${give ? "🪙" : "🙏"}</span>` +
         `<span class="k-act-t"><small>${give ? "토큰 주기" : "토큰 요청"} → ${esc(shortName(r.to))}</small><b class="mono">${r.all ? "전부" : fmt(r.n)}</b></span></div>`;
       const text = r.text ? `<div class="k-text">${esc(r.text)}</div>` : "";
       return `<div class="k-msg mine pending"><div class="k-col"><div class="k-row"><div class="k-bubble">${act}${text}</div>` +
@@ -1788,6 +2535,14 @@
   const DRAFT_PH = (t) => (t.to ? "메시지 입력 (Enter 담기)" : "닫힌 방 — 다른 탭을 고르세요");
   // the composer under the messages: chips and the input bar (with the GIVE / ASK mini-row)
   function composeHTML(x, me) {
+    if (talkApi && talkApi.turn) {  // v39 move turn: TO lines only (the turn's send button is above the window)
+      const t = targetOf(x, me);
+      return `<div class="kc-bar"><div class="kc-act hidden"></div><div class="kc-in">` +
+        `<textarea rows="1" class="k-draft" placeholder="${esc(t.to ? "메시지 입력 (Enter 담기 · 이 턴과 함께 보냄)" : DRAFT_PH(t))}"${t.to ? "" : " disabled"}></textarea>` +
+        `<button type="button" class="k-send" aria-label="말풍선 담기" title="말풍선 담기"${t.to ? "" : " disabled"}>` +
+        `<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M3 20.5 21 12 3 3.5l2.6 7.1L14 12l-8.4 1.4z" fill="currentColor"/></svg></button></div></div>` +
+        `<div class="kc-hint small"></div>`;
+    }
     if (!talkApi) return `<div class="kc-off small muted">${st.you.watching_all ? "관전 중 — 다른 에이전트들의 대화방이 모두 보입니다. 이 자리는 더는 보낼 수 없습니다."
       : st.you.status === "in" ? "보낼 수 있는 것은 내 TALK 차례입니다 — 결정 화면이 뜨면 이 창에서 바로 씁니다." : "이 자리는 더는 보낼 수 없습니다."}</div>`;
     const t = targetOf(x, me), v = talkApi.v, off = t.agents.length ? "" : " disabled";
@@ -1873,7 +2628,7 @@
       const keep = (host.querySelector(".k-draft") || {}).value || "";
       const c = host.querySelector(".kchat-compose");
       c.innerHTML = composeHTML(x, me);
-      host.querySelector(".kchat-submit").innerHTML = inTalk ? submitHTML() : "";
+      host.querySelector(".kchat-submit").innerHTML = inTalk && !talkApi.turn ? submitHTML() : "";  // v39 turn: its own button
       host._ckey = ckey;
       const d = c.querySelector(".k-draft");
       if (d && keep && !d.disabled) { d.value = keep; d._len = keep.length; autosize(d); }  // already counted
@@ -2029,10 +2784,10 @@
   function fillRules() {
     if (!st || $("rules-sum").querySelector(".rules-figs")) return;  // built once (the figure tabs keep their own state)
     const g = st.game || {};
-    $("rules-sum").innerHTML = `<div class="rules-top">${rulesVideoHTML()}<div class="rules-core"><h3 class="rules-sum-h">핵심 규칙</h3><ul class="core-rules">${coreRulesHTML(!!g.joint)}</ul>` +
-      `<p class="small muted">5.2 ${esc(g.version || "")}${g.joint ? " 공동 SOLVE" : ""} — 모델 실험과 같은 게임 · 라운드 수는 알려 주지 않음 · 모델 자리는 ${LANG_KO[g.model_lang] || g.model_lang} 프롬프트를 읽음 · ` +
+    $("rules-sum").innerHTML = `<div class="rules-top">${rulesVideoHTML()}<div class="rules-core"><h3 class="rules-sum-h">핵심 규칙</h3><ul class="core-rules">${coreRulesHTML(g)}</ul>` +
+      `<p class="small muted"><b>${esc(g.name || "")}</b> — 모델 실험과 같은 게임 · 라운드 수는 알려 주지 않음 · 모델 자리는 ${LANG_KO[g.model_lang] || g.model_lang} 프롬프트를 읽음 · ` +
       `사람 자리는 대화에서 친 글자마다 ${fmt2(st.settings.char_rate ?? 2)}토큰, 풀이 화면이 떠 있는 동안 초당 ${fmt2(st.settings.rate)}토큰</p></div></div>` +
-      `<div class="rules-figs">${figsHTML()}</div>`;
+      `<div class="rules-figs">${g.maze || g.trade || g.mission ? "" : figsHTML()}</div>`;
   }
   function openRules() {
     if (!st) return;

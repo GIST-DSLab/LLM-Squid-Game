@@ -1,5 +1,5 @@
 """The multiplayer arena (arena.html): rooms of people, bots and model seats playing the model runs' game on the
-experiment engine (engine.py), and the lobby's model seats. Routes: /api/models, /api/rooms... (web/server/app.py lists
+experiment engine (engine.py), and the lobby's model seats. Routes: /api/models, /api/games (v40), /api/rooms... (web/server/app.py lists
 them all). A room's run dir goes to the site's runs root (web/server/runs.py); finished rooms may also go to a bucket
 (archive.py); ``python -m web.pages.arena.export`` writes one from the database.
 """
@@ -18,7 +18,7 @@ from web.server.site import Site, serve_static
 from web.server.store import write_run_dir
 
 from . import engine as _eng  # its public-mode switches are read at call time (tests flip them)
-from .engine import (API_KINDS, LANGS, THINK_LEVELS, VERSION, VERSIONS, HumanSeat, Room, RoomSettings, experiment_seats,
+from .engine import (API_KINDS, ARENA, GAME_DEFAULT, GAME_LIST, GAMES, LANGS, THINK_LEVELS, VERSION, VERSIONS, HumanSeat, Room, RoomSettings, experiment_seats,
                      export_files, new_code, public_events)
 
 SERVER_SETTINGS = ("seed", "rate", "char_rate", "talk_timeout_s", "timeout_s")  # the server's own: a client's values are ignored
@@ -45,6 +45,14 @@ def mount(app: FastAPI, site: Site) -> None:
     def snapshot_seats(room: Room) -> dict:
         return room.seats_info()
 
+    def games() -> list[dict]:
+        """v40: the games the arena plays, in the lobby's order: key, config version and path, ko / en name and rule."""
+        return [{"key": k, **g} for k, g in GAME_LIST.items()]
+
+    @app.get("/api/games")
+    def game_list() -> dict:
+        return {"arena": ARENA, "default": GAME_DEFAULT, "games": games()}
+
     @app.get("/api/models")
     def models(request: Request) -> dict:
         """What the lobby offers for model seats; ``available`` says whether the server holds the key (never its value).
@@ -56,6 +64,12 @@ def mount(app: FastAPI, site: Site) -> None:
                 "think": d.think, "think_levels": list(THINK_LEVELS), "api_key_env": API_KINDS[d.kind], "available": not why,
                 "why": why, "timeout": d.model_timeout, "seat_code": bool(_eng.PUBLIC and _eng.SEATS),
                 "langs": list(LANGS), "version": VERSION, "versions": list(VERSIONS), "seats": seats,
+                "joint": {v: int(GAMES[v].get("solve_quota", 1)) for v in VERSIONS if GAMES[v].get("joint_solve")},  # v36 / v37: its quota
+                "maze": [v for v in VERSIONS if GAMES[v].get("maze")],  # v39: the invisible-wall maze
+                "mines": [v for v in VERSIONS if GAMES[v].get("task") == "mines"],  # v38: the joint minefield
+                "trade": [v for v in VERSIONS if GAMES[v].get("trade")],  # v41: the material trade
+                "mission": [v for v in VERSIONS if GAMES[v].get("mission")],  # v42: the secret mission
+                "arena": ARENA, "game": GAME_DEFAULT, "games": games(),  # v40: the lobby picks one of these, in order
                 "public": _eng.PUBLIC, "models": _eng.PUBLIC_MODELS if _eng.PUBLIC else None, "defaults": {k: v for k, v in asdict(d).items() if k != "seed"}}
 
     # --- rooms -----------------------------------------------------------------------------------------------------

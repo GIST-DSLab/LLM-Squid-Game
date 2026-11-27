@@ -1,0 +1,43 @@
+/* v40: the lobby's game picker (arena.js renderGamePicker). 11-26: the mini games page's cards (a picture and a name, one
+   card per picture), a radio group; under them a box with the picked game's name, version, its variants and its rule. */
+.game-f { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.game-f > span { font-size: 12.5px; color: var(--text-dim); line-height: 1.35; }
+.game-pick { display: flex; flex-direction: column; gap: 12px; }
+.game-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.web5 .game-card {
+  position: relative; display: flex; flex-direction: column; gap: 0; min-width: 0; padding: 0; overflow: hidden; text-align: left; white-space: normal;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 4px; color: var(--text); cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s;
+}
+.web5 .game-card:hover { transform: translateY(-3px); border-color: var(--teal-bright); }
+.web5 .game-card:focus-visible { outline: 2px solid var(--teal-bright); outline-offset: 2px; }
+.web5 .game-card.on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.game-card img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-bottom: 1px solid var(--border); }
+.game-card .game-name { padding: 10px 12px 11px; font-family: var(--font-display); font-size: 15px; line-height: 1.3; }
+.game-detail { display: flex; flex-direction: column; align-items: flex-start; gap: 9px; padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border)); border-radius: 18px 18px 18px 4px;
+  background: linear-gradient(150deg, color-mix(in srgb, var(--accent) 22%, var(--panel)), var(--panel) 75%); }
+.game-detail-head { display: flex; align-items: baseline; gap: 10px; font-family: var(--font-display); font-size: 16px; }
+.game-detail .game-ver { font-size: 11px; color: var(--text-dim); }
+.game-detail .game-rule { margin: 0; font-size: 14.5px; line-height: 1.55; color: var(--text); }
+.game-kin { display: flex; flex-wrap: wrap; gap: 6px; }
+.web5 .game-kin-btn { padding: 5px 13px; font-size: 13px; line-height: 1.3; border-radius: 999px; border: 1px solid var(--border); background: var(--panel-alt); color: var(--text-dim); cursor: pointer; }
+.web5 .game-kin-btn:hover { border-color: var(--teal-bright); color: var(--text); }
+.web5 .game-kin-btn.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.game-more { color: var(--teal-bright); }
+@media (prefers-reduced-motion: reduce) { .web5 .game-card { transition: none; } }
+/* v41: the material trade (arena.js tradeTalkHTML / buildTrade): my cards, the recipes, the SEND row. */
+.tr-panel { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.tr-cards { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.tr-card { padding: 4px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--panel-alt); font-size: 13px; }
+.tr-card.off { opacity: 0.45; }
+.tr-recipes { margin: 4px 0 0 18px; padding: 0; }
+.tr-send { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
+#tr-items { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.web5 .tr-send select, .web5 .tr-send input, .tr-send select, .tr-send input { width: auto; flex: 0 0 auto; min-width: 0; }
+.web5 .tr-send #send-msg, .tr-send #send-msg { flex: 1 1 10em; }
+/* v42: the secret mission (arena.js missionTalkHTML / buildMission): the record of missions, the vote and card rows. */
+.mi-record { margin: 4px 0 0 18px; padding: 0; }
+.mi-record li { margin: 2px 0; }
+.mi-vote, .mi-card { display: flex; flex-wrap: wrap; gap: 10px; margin: 8px 0; }
+.mi-line .mono { padding: 0 2px; }

@@ -41,14 +41,6 @@ Models
 Pages that can come and go (web/pages/<page>)
     each folder adds its own routes and files through ``mount(app, store)``, e.g. the 5.1 probe (web/pages/probe:
     /probe.html, /api/probe); none is named here, so deleting a folder drops that page and nothing else
-Signal task alone (signal.html; stateless, the engine's own puzzles and examples, see server/signal.py)
-    GET  /api/signal/meta                   rounds (R1..R8 of the config's top-share ladder), examples per agent (5),
-                                            each round's top-share ranges, actions, the SOLVE task text
-    POST /api/signal/view                   {seed, round: 1..8, agents: 1..4} -> shape, new signals, the public
-                                            examples shown when that many agents take part (5 each, nested)
-    POST /api/signal/solve                  {seed, round, agents, actions[]} -> solved against the rule drawn among
-                                            those that fit the examples shown (as the engine scores), the drawn rule,
-                                            the consistent-rule shares and the actions left, for agents and for 1..4
 Game logs (tools/monitor inside this app; see server/monitor.py)
     GET  /monitor/                          the viewer page; its API is /monitor/api/{runs,sessions,events,puzzle}
                                             over WEB5_MONITOR_ROOT (default: result/ of the main checkout)

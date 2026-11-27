@@ -8,7 +8,18 @@ view and the task revealed after RESULTS. A room only sets the seats, the clock 
 as in the engine). A room made with ``version: "v36"`` plays ``squid/configs/e52v36_public_sol4.yaml`` instead (the v33
 game + ``joint_solve``): no solver is drawn, every agent still taking part after the TALK before SOLVE answers its own task
 (``ACTIONS: PASS`` allowed), one correct answer spares everyone the charge, anyone may EXIT before SOLVE, and after RESULTS
-each seat is shown only its own task again; there LLM seats solve unwatched (several seats solve at once).
+each seat is shown only its own task again; there LLM seats solve unwatched (several seats solve at once). ``version:
+"v37"`` is v36 with ``solve_quota: 3`` (no charge only if at least 3 answers are correct, however many take part).
+``version: "v38"`` is the joint minefield on the v36 flow (``game.task: mines``): a SOLVE screen draws the seat's board
+and sends ``OPEN:`` cells or ``OPEN: PASS``. ``version: "v39"`` is the invisible-wall maze on the v36 round
+(``game.maze``; 11-26 third revision: SOLVE is up to ``max_turns`` move turns): each move turn is one SOLVE screen that
+draws the seat's maze and the last turn's results, builds a ``MOVES:`` route and may add ``SHARE: <agents>`` / ``SHARE:
+ALL`` (the seat's map from the engine's record, to the seats it picks) and ``TO`` lines from the same chat window as TALK;
+the TALK before SOLVE may carry SHARE too. ``version: "v41"`` is the material trade on the v36 flow
+(``game.trade``): the TALK before SOLVE shows the seat's cards, the others' counts and the recipes and may carry
+``SEND <agent> <n> <card>`` lines; a SOLVE screen sends ``BUILD: <items>`` or ``BUILD: PASS``. ``version: "v42"`` is the
+secret mission on the v36 flow (``game.mission``): a SOLVE screen sends ``TEAM: <agents>`` (its vote) and ``CARD: SUCCESS |
+FAIL``; the results show the team, every vote and the number of FAIL cards, never whose.
 ``session.providers`` then gets one object per seat whose ``complete(messages, cap)`` returns a ``Reply`` like a model
 provider:
 
@@ -65,17 +76,20 @@ if str(REPO) not in sys.path:  # the experiment engine is imported from the repo
     sys.path.insert(0, str(REPO))
 
 from squid import game as e52  # noqa: E402
-from squid.core import lang as L, rules  # noqa: E402
+from collections import Counter  # noqa: E402
+
+from squid.core import lang as L, maze as M, mines as minefield, mission, rules, trade  # noqa: E402
 from squid.core.config import Cell, repo_root  # noqa: E402
 from squid.core.providers import Ollama, Provider, ProviderConfig, Reply, _key, make_provider  # noqa: E402
 from squid.core.puzzle import ACTIONS, Spec, candidate_actions, public_round  # noqa: E402
 
-from web.server import game as _cfg  # noqa: E402  the site's one game (the signal page reads it too)
+from web.server import game as _cfg  # noqa: E402  the site's one game
 from web.server.runs import default_runs_root  # noqa: E402
 
 AGENTS = list(rules.TEAM_AGENTS)
 VERSION, VERSIONS = _cfg.VERSION, _cfg.VERSIONS  # v33 (the paper's setup) and v36 (the joint SOLVE): web/server/game.py
 GAMES: dict[str, dict] = _cfg.GAMES  # version -> its config's game section
+ARENA, GAME_LIST, GAME_DEFAULT, GAME_OF = _cfg.ARENA, _cfg.GAME_LIST, _cfg.GAME_DEFAULT, _cfg.GAME_OF  # v40: games by key
 GAME: dict = _cfg.GAME  # the config's game section
 PROFILES: dict[str, dict] = dict(_cfg.PROFILES)
 SCHEDULE: list[str] = list(_cfg.SCHEDULE)
@@ -228,14 +242,21 @@ FILLS = ("models", "bots", "empty")
 PLAN_WHO = ("me", "human", "model", "bot", "empty")  # RoomSettings.plan: who sits in a seat
 HUMAN_RATE = 10.0  # a person's tokens per second on an open SOLVE screen (11-20 researcher: a quarter of 40; 11-19: was balance_pct / 1200 = 83.3)
 HUMAN_CHAR_RATE = 2.0  # a person's tokens per character typed on a TALK screen (11-20 researcher: TALK by typing, not time; a fifth of 10)
+BOT_STAY, BOT_SHARE = 0.2, 0.5  # v39: a bot's STAY and SHARE odds per move turn (free-riding; sharing is a choice; to whom: random)
+BOT_HOARD = 0.25  # v41: the odds a bot keeps a card kind its plan would hand over (refusal; the tuning's "bot" policy)
+CARD_WORDS = {"wood": ("wood", "나무"), "stone": ("stone", "돌"), "clay": ("clay", "점토", "흙"), "iron": ("iron", "철"),
+              "fiber": ("fiber", "섬유")}  # v41: a person's chat line naming a card a bot can spare
+BOT_FAIL = 0.15  # v42: the odds a bot plays FAIL (a card used only if it ends up on the team)
 BOT_UNIT = 300  # a bot's step in tokens: its TALK reply costs 2% of it, a SOLVE 0.3-0.8 of it, the margin it keeps
 WEB_ONLY = ("room", "model_call")  # web events: stored, never written to the run directory
 HIDDEN = ("answers", "rule", "truth", "task", "seed", "attempt", "split", "profile", "generator_rule", "right",
-          "examples", "queries")  # never served before the end
+          "examples", "queries", "walls", "bumps", "paths", "moves", "visited",  # never served before the end (v39: the maze)
+          "board", "hands",  # v38: round_start's mines and clues; v41: round_start's hands
+          "cards", "failers", "paid", "unpaid")  # v42: whose card it was (the log only; votes are public)
 PRIVATE = ("user", "text", "thinking", "parsed", "exit_reason", "dropped", "reply")  # what an agent wrote or read
 TOKENS = ("balances", "balance_before", "balance_after", "balance_pct_before", "end", "starts", "start", "taken",
           "balances_before", "generated", "returned", "charged", "used", "out_tokens", "cap", "agents")  # rank-only view
-PRIVATE_EVENTS = ("room_msg", "room_new", "room_leave", "gift", "ask", "call")  # chats and moves: their members only
+PRIVATE_EVENTS = ("room_msg", "room_new", "room_leave", "gift", "ask", "call", "send", "mission_share")  # chats and moves: their members only
 
 
 @dataclass
@@ -263,11 +284,17 @@ class RoomSettings:
     # (someone who joins by code; a bot if nobody has by the start) | {"who": "bot"} | {"who": "empty"} | {"who": "model",
     # "seat": <experiment seat>} | {"who": "model", "kind", "model", "think"?}. It sets humans, fill and models.
     plan: list | None = None
-    version: str = VERSION  # the game: "v33" (default) or "v36" (joint SOLVE, squid/configs/e52v36_public_sol4.yaml)
+    version: str = VERSION  # the game's config: "v33" (default), "v36" (joint SOLVE, squid/configs/e52v36_public_sol4.yaml), "v37" (v36, quota 3), "v38" (the minefield) or "v39" (the maze)
+    game: str = ""  # v40: the canonical pick, a GAME_LIST key ("" = the game of ``version``, which stays as its alias)
+    arena: str = ARENA  # v40: the arena that made the room (always ARENA; stored with the settings and the run)
 
     def __post_init__(self) -> None:
-        if self.version not in VERSIONS:
+        if self.game and self.game not in GAME_LIST:
+            raise ValueError(f"game must be one of {', '.join(GAME_LIST)}")
+        if not self.game and self.version not in VERSIONS:
             raise ValueError(f"version must be one of {', '.join(VERSIONS)}")
+        self.version = GAME_LIST[self.game]["version"] if self.game else self.version
+        self.game, self.arena = self.game or GAME_OF[self.version], ARENA
         self._apply_plan()
         self.rounds = int(self.rounds if self.rounds is not None else len(SCHEDULE))
         if not 1 <= self.rounds <= 32:
@@ -400,12 +427,29 @@ class RoomSettings:
         and the models' language."""
         sched, src = self.round_schedule(), GAMES[self.version]
         game = {k: v for k, v in src.items() if k in e52.Settings.__dataclass_fields__ and k not in ("seats", "lang")}
+        if self.mines or src.get("trade") or src.get("mission"):  # v38 mines, v41 trade, v42 mission: no signal task
+            return e52.Settings(**{**game, "rounds": self.rounds, "lang": self.model_lang})
         return e52.Settings(**{**game, "rounds": self.rounds, "schedule": sched, "lang": self.model_lang,
                                "profiles": {p: dict(src["profiles"][p]) for p in sorted(set(sched))}})
 
     @property
     def joint(self) -> bool:
         return bool(GAMES[self.version].get("joint_solve"))
+
+    @property
+    def mines(self) -> bool:
+        """v38: the joint minefield (game.task: mines)."""
+        return GAMES[self.version].get("task") == "mines"
+
+    @property
+    def trade(self) -> bool:
+        """v41: the material trade (game.trade)."""
+        return bool(GAMES[self.version].get("trade"))
+
+    @property
+    def mission(self) -> bool:
+        """v42: the secret mission (game.mission)."""
+        return bool(GAMES[self.version].get("mission"))
 
 
 # --- what a screen shows --------------------------------------------------------------------------------------------
@@ -428,7 +472,7 @@ def rooms_of(ses, me: str, since: int, everyone: bool = False) -> list[dict]:
                     "closed": bool(x["closed"]), "you_left": me in x["left"], "group": bool(x.get("group")),
                     "msgs": [{"seq": m["seq"], "round": m["round"], "phase": m["phase"], "tick": m["tick"], "src": m["src"],
                               "kind": m["kind"], "text": m["text"], "amount": m["amount"], "status": m["status"],
-                              "why": m["why"], "new": m["seq"] > since and m["src"] != me,
+                              "why": m["why"], "new": m["seq"] > since and m["src"] != me, "card": m.get("card"),
                               "bal": m.get("bal") if m["src"] == me else None} for m in ms]})
     return out
 
@@ -446,17 +490,131 @@ def results_of(ses, me: str) -> dict | None:
     if not res:
         return None
     v = res["vote"]
-    if v.get("joint"):  # v36: no solver; each agent's own result (public), the team's (any correct answer: no charge)
-        return {"joint": True, "solver": None, "solved": bool(res["solved"]), "returned": res["returned"].get(me),
+    if res.get("maze"):  # v39 (11-26 third): how SOLVE ended, each agent's cells, wall hits (where: *me*'s own only),
+        m, cost = res["maze"], ses.mz.bump_cost  # the goal and the refund (the agents on the goal only)
+        mine = [{"turn": x["turn"], "moves": x["moves"].get(me), "bump": x["bumps"].get(me)} for x in m["turns"] if me in x["moves"]]
+        return {"joint": True, "maze": maze_result(m), "solver": None, "solved": bool(m["reached"]),
+                "returned": m["refunded"].get(me), "bump_cost": cost, "my_turns": mine,
                 "rows": [{"agent": b, "solver": False, "outcome": outcome_of(res, b), "pending": res["pending"].get(b),
-                          "zero": ses.stopped.get(b) == "dead"} for b in res["part"]]}
+                          "zero": ses.stopped.get(b) == "dead", "from": m["starts"][b], "to": m["cells"][b],
+                          "hits": m["bumps"].get(b, 0), "wall_cost": m["bumps"].get(b, 0) * cost,
+                          "reached": b in m["reached"], "refunded": b in m["refunded"]} for b in res["part"] if b in m["cells"]]}
+    if res.get("mission"):  # v42: the team, every vote and the FAIL count (public); *me*'s own card and share only
+        x = res["mission"]
+        each = (sum(res["pending"].values()) * ses.ms.steal_pct // 100 // x["fails"]
+                if me in x["failers"] and res["pending"] else None)
+        return {"joint": True, "mission": mission_result(x), "solver": None, "solved": bool(x["passed"]), "returned": None,
+                "my_card": (x["cards"].get(me) or "SUCCESS") if me in x["tally"] else None, "my_share": each,
+                "rows": [{"agent": b, "solver": False, "outcome": outcome_of(res, b), "pending": res["pending"].get(b),
+                          "zero": ses.stopped.get(b) == "dead", "on_team": b in x["team"], "vote": x["votes"].get(b)}
+                         for b in x["tally"]]}
+    if res.get("trade"):  # v41: every hand dealt and held at SOLVE, the cards moved, each agent's builds (public now)
+        t = res["trade"]
+        return {"joint": True, "trade": trade_result(t), "solver": None, "solved": bool(t["met"]),
+                "returned": res["returned"].get(me),
+                "rows": [{"agent": b, "solver": False, "outcome": outcome_of(res, b), "pending": res["pending"].get(b),
+                          "zero": ses.stopped.get(b) == "dead", "built": t["built"][b], "not_built": t["skipped"].get(b, []),
+                          "refunded": b in t["refunded"]} for b in res["part"] if b in t["built"]]}
+    if v.get("joint"):  # v36: no solver; each agent's own result (public), the team's (v37: at least ``quota`` correct)
+        m = res.get("mines")  # v38: solved = the round's safe cells reached the target; the whole board revealed
+        return {"joint": True, "solver": None, "solved": bool(m["met"]) if m else len(res["solved"]) >= res.get("quota", 1),
+                "returned": res["returned"].get(me),
+                "rows": [{"agent": b, "solver": False, "outcome": outcome_of(res, b), "pending": res["pending"].get(b),
+                          "zero": ses.stopped.get(b) == "dead", **({"opened": m["opened"].get(b) or [],
+                                                                   "hits": m["hits"].get(b) or []} if m else {})}
+                         for b in res["part"]], **({"mines": board_result(m)} if m else {})}
     return {"solver": v["rep"], "solved": v["rep"] in res["solved"], "returned": res["returned"].get(me),
             "rows": [{"agent": b, "solver": b == v["rep"], "pending": res["pending"].get(b),
                       "zero": ses.stopped.get(b) == "dead"} for b in res["part"]]}
 
 
+def board_result(m: dict) -> dict:
+    """v38: a results event's ``mines`` as the page draws it: every cell's number or mine, the opens, the count."""
+    return {"numbers": m["numbers"], "mines": m["mines"], "opened": m["opened"], "hits": m["hits"],
+            "new_safe": m["new_safe"], "target": m["target"], "met": m["met"], "cost": m["cost"], "charge": m["charge"]}
+
+
+def maze_result(m: dict) -> dict:
+    """v39 (11-26 third): a results event's ``maze`` as everyone is told it: how SOLVE ended (``end``: goal | stay | cap |
+    gone, after move turn ``last``), who is on the goal, each agent's cells and wall-hit count, whose SOLVE tokens came
+    back, and per move turn each agent's cell, whether a wall stopped it and whether it is on the goal (never where the
+    wall is). ``met`` = no charge (an agent on the goal)."""
+    return {"end": m["end"], "last": m["last"], "reached": list(m["reached"]), "hits": dict(m["bumps"]),
+            "refunded": sorted(m["refunded"], key=AGENTS.index), "starts": dict(m["starts"]), "cells": dict(m["cells"]),
+            "turns": [turn_result(x) for x in m["turns"]], "met": bool(m["reached"])}
+
+
+def turn_result(x: dict, me: str | None = None) -> dict:
+    """v39: one move turn as everyone is told it (*me*'s own moves and wall too, when given)."""
+    return {"turn": x["turn"], "rows": [{"agent": b, "from": p[0], "to": p[-1], "stopped": b in x["bumps"], "reached": b in x["reached"],
+                                         **({"moves": x["moves"][b], "bump": x["bumps"].get(b)} if b == me else {})}
+                                        for b, p in x["paths"].items()]}
+
+
+def trade_result(t: dict) -> dict:
+    """v41: a results event's ``trade`` as the page draws it."""
+    return {k: t[k] for k in ("target", "total", "met", "built", "skipped", "refunded", "dealt", "held")} | {
+        "sends": [{k: x[k] for k in ("tick", "src", "dst", "card", "n")} for x in t["sends"]]}
+
+
+def mission_result(x: dict) -> dict:
+    """v42: a mission as everyone may know it (squid.core.mission.mission_text): the team, every vote, the FAIL count."""
+    return {"team": list(x["team"]), "votes": {b: x["votes"].get(b) for b in x["tally"]}, "fails": x["fails"],
+            "passed": bool(x["passed"]), "m": x["m"], "voted": x["m"] < len(x["tally"])}
+
+
+def mission_of(ses, me: str) -> dict | None:
+    """v42: the mission's settings, this round's team size and the public record of the missions so far."""
+    ms = getattr(ses, "ms", None)
+    if not ms:
+        return None
+    inside = [a for a in ses.live_at_start if a not in ses.stopped]
+    return {"team_size": mission.size(ms, len(inside)), "steal_pct": ms.steal_pct, "taking_part": inside,
+            "record": [{"round": x["round"], **mission_result(x)} for x in ses.missions]}
+
+
+def mission_vote(ses, me: str, rng: random.Random) -> list[str]:
+    """v42, the bots' vote (the tuning's "suspicion" voter, tools/e5x/v42_mission_sim.py): itself, then the agents it
+    suspects least: each earlier failed mission's FAIL cards it did not play spread over the other team members; a
+    mission with no FAIL card it cannot account for takes 0.25 off each other member; ties at random."""
+    inside = [a for a in ses.live_at_start if a not in ses.stopped]
+    score = dict.fromkeys(inside, 0.0)
+    for x in ses.missions:
+        others, left = [b for b in x["team"] if b != me], x["fails"] - (me in x["team"] and x["cards"].get(me) == "FAIL")
+        for b in (b for b in others if b in score):
+            score[b] += left / len(others) if left else -0.25
+    rest = sorted(rng.sample([b for b in inside if b != me], len(inside) - 1), key=lambda b: score[b])
+    return ([me] + rest)[:mission.size(ses.ms, len(inside))]
+
+
+def trade_of(ses, me: str) -> dict | None:
+    """v41: *me*'s cards now, the others' card counts (counts only), the recipes, the target and the agents whose cards
+    are gone, as its prompts show them."""
+    td = getattr(ses, "td", None)
+    if not td or not ses.hands:
+        return None
+    return {"resources": list(td.resources), "recipes": {k: list(v) for k, v in td.recipes.items()}, "target": td.target,
+            "hand_size": td.hand, "hand": dict(ses.hands.get(me) or {}),
+            "counts": {b: sum(h.values()) for b, h in ses.hands.items() if b != me and b not in ses.stopped},
+            "gone": [b for b in AGENTS if b in ses.stopped]}
+
+
+def mines_of(ses, me: str) -> dict | None:
+    """v38: *me*'s board this round as its prompts show it: the public cells, its own area's cells (numbers), its area,
+    the dark areas (agents gone at the round's start), and the round's numbers."""
+    b, p = getattr(ses, "board", None), ses.s.mines
+    if b is None or ses.s.task != "mines":
+        return None
+    i = AGENTS.index(me)
+    return {"public": {c: b.number(c) for c in b.public}, "own": {c: b.number(c) for c in b.clues[i]},
+            "area": minefield.area(i), "dark": {a: minefield.area(AGENTS.index(a)) for a in AGENTS if a not in ses.live_at_start},
+            "open_cap": p["open_cap"], "target": p["open_target"], "mine_cost": p["mine_cost"], "n_mines": p["mines"]}
+
+
 def outcome_of(res: dict, b: str) -> str | None:
     """v36: an agent's SOLVE result as everyone is told it: solved | passed | wrong (an invalid reply too); None = no task."""
+    if res.get("mission") and b in res.get("tried", ()):  # v42: on the team or not (cards are never told)
+        return "team" if b in res["mission"]["team"] else "out"
     return None if b not in res.get("tried", ()) else "solved" if b in res["solved"] else \
         "passed" if b in res.get("passed", ()) else "wrong"
 
@@ -476,6 +634,22 @@ def reveal_of(room: "Room", r: int, me: str | None = None) -> dict | None:
             "answer": list(pub.get("answers") or []), "joint": joint, "passed": joint and ans == "PASS"}
 
 
+def maze_of(ses, me: str) -> dict | None:
+    """v39: *me*'s view of the round's maze as its prompt draws it (positions of the agents taking part, the goal, the
+    walls it hit and those of maps shared with it, its visited cells, the shared maps and its own moves), for the grid."""
+    mz = getattr(ses, "mz", None)
+    if not mz or not ses.pos:
+        return None
+    walls = set(ses.known[me]).union(*(g["walls"] for g in ses.got[me].values()))
+    ws = lambda xs: [[M.label(x) for x in e] for e in sorted(xs)]  # noqa: E731
+    return {"size": mz.size, "goal": mz.goal, "max_route": mz.max_route, "max_turns": mz.max_turns,
+            "bump_cost": mz.bump_cost, "turns_done": len(ses.turns),
+            "positions": {b: M.label(x) for b, x in ses.pos.items() if b not in ses.stopped},
+            "walls": ws(walls), "hit": ws(ses.known[me]), "visited": sorted(M.label(x) for x in ses.visited[me]),
+            "shared": {b: {"when": g["when"], "walls": ws(g["walls"]), "visited": sorted(M.label(x) for x in g["visited"])}
+                       for b, g in ses.got[me].items()}, "trail": [ses.tr[me](x) for x in ses.trail[me]]}  # in the seat's language
+
+
 def talk_view(room: "Room", me: str, user: str, cap: int, live: dict, since: int) -> dict:
     """A TALK tick's screen (the engine's prompt in ``user``; the same facts as data for the page)."""
     ses, s = room.session, room.session.s
@@ -491,37 +665,72 @@ def talk_view(room: "Room", me: str, user: str, cap: int, live: dict, since: int
             "exit_bonus": s.balance_pct * s.exit_bonus_pct // 100, "rooms": rooms_of(ses, me, since),
             "results": results_of(ses, me) if ph == "rescue" else None,
             "reveal": reveal_of(room, r, me) if ph == "rescue" else None, "ledger": ledger_of(ses, me),
-            "gone": dict(ses.stopped)}
+            "gone": dict(ses.stopped), "maze": maze_of(ses, me), "can_share": bool(s.maze) and ph == "prep" and not lone,  # 11-26: SHARE before SOLVE
+            "mines": mines_of(ses, me), "trade": trade_of(ses, me), "can_send": bool(s.trade) and ph == "prep" and not lone,
+            "mission": mission_of(ses, me)}
 
 
-def solve_view(room: "Room", me: str, user: str, cap: int, live: dict | None = None) -> dict:
+def solve_view(room: "Room", me: str, user: str, cap: int, live: dict | None = None, since: int = 10**9) -> dict:
     """A SOLVE screen: the round's examples, new signal and the rule's shape (round_start's data; the shape is the one
     code line of the prompt, the same in both languages), the gifts received this round, the solver's limit."""
     ses, joint = room.session, room.settings.joint
     r = (live or {}).get("round") or (room.live or {}).get("round")
+    gifts = [{"src": g["src"], "amount": g["amount"], "text": g["text"], "tick": g["turn"]} for g in ses.ga
+             if g["round"] == r and g["kind"] == "give" and g["status"] == "done" and g["dst"] == me]
+    if getattr(ses, "mz", None):  # v39 (11-26 third): one move turn (tick = the turn); the reply is MOVES (+ SHARE, TO)
+        t = (live or {}).get("tick") or 1
+        return {"kind": "solve", "round": r, "tick": t, "turn": t, "cap": cap, "you": me, "balance": ses.w.balances[me],
+                "pct": ses.s.balance_pct, "joint": True, "taking_part": list(ses.live_at_start), "maze": maze_of(ses, me),
+                "last_turn": turn_result(ses.turns[-1], me) if ses.turns else None, "gifts": gifts, "gone": dict(ses.stopped),
+                "order": order_of(ses, me), "rooms": rooms_of(ses, me, since), "others": [b for b in ses.live() if b != me],
+                "can_share": True}
+    if room.settings.mines:  # v38: the board this seat was shown; the reply is an OPEN line (solve_text)
+        return {"kind": "solve", "round": r, "cap": cap, "you": me, "balance": ses.w.balances[me], "pct": ses.s.balance_pct,
+                "joint": True, "taking_part": list(ses.live_at_start), "mines": mines_of(ses, me), "gifts": gifts,
+                "gone": dict(ses.stopped), "order": order_of(ses, me), "rooms": rooms_of(ses, me, 10**9)}
+    if room.settings.trade:  # v41: this seat's cards; the reply is a BUILD line (solve_text)
+        return {"kind": "solve", "round": r, "cap": cap, "you": me, "balance": ses.w.balances[me], "pct": ses.s.balance_pct,
+                "joint": True, "taking_part": list(ses.live_at_start), "trade": trade_of(ses, me), "gifts": gifts,
+                "gone": dict(ses.stopped), "order": order_of(ses, me), "rooms": rooms_of(ses, me, 10**9)}
+    if room.settings.mission:  # v42: the team vote and the card; the reply is TEAM + CARD lines (solve_text)
+        return {"kind": "solve", "round": r, "cap": cap, "you": me, "balance": ses.w.balances[me], "pct": ses.s.balance_pct,
+                "joint": True, "taking_part": list(ses.live_at_start), "mission": mission_of(ses, me), "gifts": gifts,
+                "gone": dict(ses.stopped), "order": order_of(ses, me), "rooms": rooms_of(ses, me, 10**9)}
     pub = (room.task_of(r, me) if joint else room.public.get(r)) or {}  # v36: this seat's own task
     key = (r, me) if joint else r
     shape = re.search(r"^    (if .+)$", user, re.M)
     if shape:
         room.shapes[key] = shape.group(1)
     sched = room.settings.round_schedule()
-    gifts = [{"src": g["src"], "amount": g["amount"], "text": g["text"], "tick": g["turn"]} for g in ses.ga
-             if g["round"] == r and g["kind"] == "give" and g["status"] == "done" and g["dst"] == me]
     return {"kind": "solve", "round": r, "cap": cap, "you": me, "balance": ses.w.balances[me], "pct": ses.s.balance_pct,
             "joint": joint, "taking_part": list(ses.live_at_start) if joint else None,
             "shape": room.shapes.get(key, ""), "examples": list(pub.get("examples") or []),
             "queries": list(pub.get("queries") or []), "n": len(pub.get("queries") or []) or 1, "actions": list(ACTIONS),
-            "gifts": gifts, "gone": dict(ses.stopped), "order": order_of(ses, me),
+            "gifts": gifts, "gone": dict(ses.stopped), "order": order_of(ses, me), "maze": maze_of(ses, me),
             "distinct": bool(PROFILES[sched[min(r, len(sched)) - 1]].get("distinct_actions"))}
 
 
-def solve_text(body: dict) -> str:
+def solve_text(body: dict, mines: bool = False, trade: bool = False, mission: bool = False) -> str:
     """A SOLVE screen's reply: raw text, ``pass`` (v36: ``ACTIONS: PASS``, no answer), or a BELIEF line then ACTIONS in
-    the engine grammar."""
+    the engine grammar; v38 (``mines``): ``OPEN: PASS`` or ``OPEN: <cells>`` from ``cells``; v41 (``trade``):
+    ``BUILD: PASS`` or ``BUILD: <items>`` from ``builds``; v42 (``mission``): ``TEAM: <agents>`` from ``team`` (none: no
+    vote) and ``CARD: SUCCESS | FAIL`` from ``card``."""
     if body.get("text"):
         return str(body["text"])[:4000]
+    if mission:
+        team = [str(x).strip() for x in body.get("team") or [] if str(x).strip()][:4]
+        card = "FAIL" if str(body.get("card") or "").upper() == "FAIL" else "SUCCESS"
+        return (f"TEAM: {', '.join(team)}\n" if team else "") + f"CARD: {card}"
+    if trade:
+        items = [str(x).strip().lower() for x in body.get("builds") or [] if str(x).strip()][:20]
+        return "BUILD: PASS" if body.get("pass") or not items else "BUILD: " + ", ".join(items)
+    if mines:
+        cells = [str(c).strip().upper() for c in body.get("cells") or [] if str(c).strip()]
+        return "OPEN: PASS" if body.get("pass") or not cells else "OPEN: " + ", ".join(cells)
     if body.get("pass"):
         return "ACTIONS: PASS"
+    if isinstance(body.get("moves"), list):  # v39: a route (an empty one: STAY)
+        return "MOVES: " + (", ".join(str(x) for x in body["moves"][:64]) or "STAY")
     belief = body.get("belief")
     head = ("BELIEF: " + ", ".join(f"{a} {int(belief.get(a) or 0)}" for a in ACTIONS) + "\n"
             if isinstance(belief, dict) else "")
@@ -582,7 +791,7 @@ class HumanSeat:
             live, ses = dict(self.room.live or {}), self.room.session
             kind = "solve" if live.get("stage") == "solve" else "talk"
             since, self.seen = self.seen, ses.seq
-            view = (solve_view(self.room, self.agent, user, cap, live) if kind == "solve" else
+            view = (solve_view(self.room, self.agent, user, cap, live, since) if kind == "solve" else
                     talk_view(self.room, self.agent, user, cap, live, since))
             now = time.time()  # the clock starts when the screen is ready, not when the person looks at it
             p = Pending(kind, live.get("round") or 0, view.get("tick"), view.get("phase"), cap, ses.w.balances[self.agent],
@@ -618,7 +827,9 @@ class HumanSeat:
         """Under the room lock: a forfeited seat's reply. EXIT: YES where the engine allows it (TALK before SOLVE, not as
         the round's solver unless alone); DONE at any other TALK; no answer at SOLVE (v36: ACTIONS: PASS)."""
         charged, secs = self.cost(p)
-        text = (("ACTIONS: PASS" if p.view.get("joint") else "") if p.kind == "solve" else
+        text = (("MOVES: STAY" if p.view.get("maze") else "OPEN: PASS" if p.view.get("mines") else
+                 "BUILD: PASS" if p.view.get("trade") else "CARD: SUCCESS" if p.view.get("mission") else
+                 "ACTIONS: PASS" if p.view.get("joint") else "") if p.kind == "solve" else
                 "EXIT: YES I leave the session." if p.view.get("can_exit") else "DONE")
         return text, charged, secs, "forfeit"
 
@@ -640,11 +851,11 @@ class HumanSeat:
                 raise ValueError(f"the open screen is {p.kind}, not {body['kind']}")
             if body.get("round") is not None and int(body["round"]) != p.round:
                 raise ValueError(f"the open screen is round {p.round}")
-            if p.kind == "talk" and body.get("tick") is not None and int(body["tick"]) != p.tick:
-                raise ValueError(f"the open screen is TALK tick {p.tick}")
+            if body.get("tick") is not None and p.tick is not None and int(body["tick"]) != p.tick:
+                raise ValueError(f"the open screen is {'TALK tick' if p.kind == 'talk' else 'move turn'} {p.tick}")
             if p.kind == "talk" and body.get("phase") and body["phase"] != p.phase:
                 raise ValueError(f"the open screen is the TALK {'before SOLVE' if p.phase == 'prep' else 'after RESULTS'}")
-            text = str(body.get("text") or "")[:20000] if p.kind != "solve" else solve_text(body)
+            text = str(body.get("text") or "")[:20000] if p.kind != "solve" else solve_text(body, bool(p.view.get("mines")), bool(p.view.get("trade")), bool(p.view.get("mission")))
             if p.kind == "talk":
                 try:
                     p.typed = max(0, min(10**6, int(body.get("typed") or 0)))
@@ -679,6 +890,29 @@ def round_task(seed: int | str, r: int, profile: str, per_agent: int):
     return puzzle, seen
 
 
+def trade_plan(hands: dict, recipes: dict) -> dict:
+    """v41: the bots' plan from their (public, told in R1) hands: the most items their pooled cards build, each item to
+    the agent holding most of its cards; ``builds`` agent -> items, ``moves`` giver -> receiver -> cards, ``item``
+    receiver -> an item it builds (for the SEND line's message)."""
+    left = {a: Counter(h) for a, h in hands.items()}
+    builds, moves, item = {}, {}, {}
+    for x in trade.most(sum(hands.values(), Counter()), recipes):
+        need = Counter(recipes[x])
+        b = max(left, key=lambda a: (sum(min(left[a][c], n) for c, n in need.items()), -AGENTS.index(a)))
+        builds.setdefault(b, []).append(x)
+        item[b] = x
+        for c, n in need.items():
+            take = min(left[b][c], n)
+            left[b][c] -= take
+            for a in left:
+                more = min(left[a][c], n - take) if a != b else 0
+                if more:
+                    left[a][c] -= more
+                    moves.setdefault(a, {}).setdefault(b, Counter())[c] += more
+                    take += more
+    return {"builds": builds, "moves": moves, "item": item}
+
+
 class BotSeat:
     """A fixed policy that never EXITs (a lone bot writes EXIT: NO).
 
@@ -689,7 +923,14 @@ class BotSeat:
       BELIEF over those actions. A TALK reply costs 2% of ``BOT_UNIT``, a SOLVE 0.3-0.8 of it.
     - v36 (every agent answers its own task): the same answer to its own task when its examples leave at most two
       actions for each new signal, else ``ACTIONS: PASS`` (a coin flip among three or four is left to the others), at
-      the cost of a TALK reply. It is never watched (several seats solve at once)."""
+      the cost of a TALK reply. It is never watched (several seats solve at once).
+    - v39 (the maze): each move turn, the shortest route to the goal over the walls it knows (``_moves``), STAY one
+      time in five (``BOT_STAY``), and half the time (``BOT_SHARE``) SHARE to a random non-empty set of the others
+      taking part (``SHARE: ALL`` when it picks them all). It never chats in a move turn.
+    - v41 (the trade): at tick 1 of the TALK before SOLVE it tells R1 its cards and SENDs the cards the bots' plan
+      (``trade_plan`` over the bots' hands) needs from it, except a card kind it keeps (``BOT_HOARD``, decided once per
+      round and kind); later, a card a person's new message names (in a chat with the bot) is sent if the bot's own
+      planned builds do not need it (again ``BOT_HOARD``). SOLVE: BUILD the most items its cards allow (or PASS)."""
 
     kind = "bot"
 
@@ -699,6 +940,8 @@ class BotSeat:
         self.rng = random.Random(f"{room.settings.seed}:bot:{agent}")
         self.answered: set[int] = set()  # the ASKs (message seq) it has answered
         self.asked: set[tuple] = set()  # (round, phase): it asked once
+        self.kept: dict[tuple, bool] = {}  # v41: (round, card) -> it keeps that kind this round
+        self.votes: dict[int, list] = {}  # v42: round -> the vote it told R1 (and casts at SOLVE)
 
     @property
     def model(self) -> str:
@@ -719,6 +962,17 @@ class BotSeat:
                 text = self._talk(live)
             return Reply(text, talk_cost)
         ses, r, joint = self.room.session, live["round"], self.room.settings.joint
+        if ses.mz:  # v39: the shortest route over what it knows (an unknown wall counts as open); sometimes STAY
+            return Reply(self._moves(ses), talk_cost)
+        if self.room.settings.mines:
+            return self._open(ses, cap, talk_cost)
+        if self.room.settings.trade:  # v41: the most items its cards allow
+            items = trade.most(Counter(ses.hands.get(self.agent) or {}), ses.td.recipes)
+            return Reply(f"BUILD: {', '.join(items) or 'PASS'}", talk_cost)
+        if self.room.settings.mission:  # v42: the suspicion vote (the one it told R1) and FAIL now and then
+            vote, n = self.votes.get(r) or mission_vote(ses, self.agent, self.rng), len(ses.live_at_start)
+            card = "FAIL" if self.rng.random() < BOT_FAIL else "SUCCESS"
+            return Reply((f"TEAM: {', '.join(vote)}\n" if mission.size(ses.ms, n) < n else "") + f"CARD: {card}", talk_cost)
         puzzle, seen = round_task(f"{ses.seed}:{self.agent}" if joint else ses.seed, r, ses.s.schedule[r - 1],
                                   ses.s.public_per_agent)  # the round's 20 examples (v36: its own task's)
         cands = [sorted(candidate_actions(puzzle.rule.shape, seen, q)) for q in puzzle.queries]
@@ -733,6 +987,66 @@ class BotSeat:
                 + ", ".join(self.rng.choice(c or list(ACTIONS)) for c in cands))
         return Reply(text, min(cost, max(0, cap - 1)), thinking=bot_thinking(seen, puzzle.queries, cands))
 
+    def _moves(self, ses) -> str:
+        """v39, one move turn: STAY one time in five (another agent may reach the goal: free-riding); else the shortest
+        route to the goal over the walls it hit and those of maps shared with it (an unknown wall counts as open), at most
+        ``max_route``; then, half the time, SHARE its map with a random non-empty set of the others taking part."""
+        me, mz = self.agent, ses.mz
+        route = [] if self.rng.random() < BOT_STAY else M.route(
+            mz.size, set(ses.known[me]).union(*(g["walls"] for g in ses.got[me].values())), ses.pos[me],
+            M.cell(mz.goal, mz.size))[:mz.max_route]
+        others = [b for b in ses.live() if b != me]
+        to = self.rng.sample(others, self.rng.randint(1, len(others))) if others and self.rng.random() < BOT_SHARE else []
+        share = ("\nSHARE: " + ("ALL" if len(to) == len(others) else ", ".join(sorted(to, key=AGENTS.index)))) if to else ""
+        return "MOVES: " + (", ".join(route) or "STAY") + share
+
+    def _keeps(self, r: int, c: str) -> bool:
+        return self.kept.setdefault((r, c), self.rng.random() < BOT_HOARD)
+
+    def _cards(self, ses, k: int, r: int) -> list[str]:
+        """v41, TALK before SOLVE: tick 1 its cards to R1 and the SENDs of the bots' plan; later, a card a person asked
+        for by name (a new message in a chat with this bot) if its own planned builds do not need it."""
+        me, hand = self.agent, Counter(ses.hands.get(self.agent) or {})
+        bots = [c for c, x in self.room.seats.items() if isinstance(x, BotSeat) and c in ses.hands and c not in ses.stopped]
+        plan = trade_plan({b: Counter(ses.hands[b]) for b in bots}, ses.td.recipes)
+        out = []
+        if k == 1:
+            out.append(f"TO R1: My cards: {trade.cards_text(hand, ses.td)}.")
+            for b, give in plan["moves"].get(me, {}).items():
+                out += [f"SEND {b} {n} {c}: for the {plan['item'][b]}." for c, n in give.items() if not self._keeps(r, c)]
+            return out
+        need = sum((Counter(ses.td.recipes[x]) for x in plan["builds"].get(me, ())), Counter())
+        spare = hand - need
+        for x in ses.rooms:
+            if me not in x["members"]:
+                continue
+            for m in x["msgs"]:
+                if (m["round"] == r and m["phase"] == "prep" and m["kind"] == "say" and m["src"] not in bots
+                        and m["src"] in ses.hands and m["seq"] not in self.answered):
+                    self.answered.add(m["seq"])
+                    low = m["text"].lower()
+                    for c, words in CARD_WORDS.items():
+                        if spare[c] > 0 and any(w in low for w in words) and not self._keeps(r, c):
+                            out.append(f"SEND {m['src']} 1 {c}: you asked for {c}.")
+                            spare[c] -= 1
+        return out
+
+    def _open(self, ses, cap: int, talk_cost: int) -> Reply:
+        """v38: the cells next to a 0 among the cells it was shown (proven safe), then unknown cells of its own area at
+        random (at most two), up to ``open_cap``; with nothing proven safe, PASS three times in ten."""
+        b, k, i = ses.board, ses.s.mines["open_cap"], AGENTS.index(self.agent)
+        known = b.shown(i)
+        safe = sorted({n for c, v in known.items() if v == 0 for n in minefield.neighbors(c) if n not in known},
+                      key=minefield.CELLS.index)
+        why = f"I was shown {len(known)} cells; {len(safe)} cells next to a 0 are safe."
+        rest = [c for c in minefield.area(i) if c not in known and c not in safe]
+        self.rng.shuffle(rest)
+        if not safe and (not rest or self.rng.random() < 0.3):
+            return Reply("OPEN: PASS", talk_cost, thinking=why + " Nothing is proven safe, so I PASS.")
+        cells = (safe + rest[:2])[:k]  # at most two guesses
+        cost = min(int(round(BOT_UNIT * self.rng.uniform(0.3, 0.8))), max(0, cap - 1))
+        return Reply("OPEN: " + ", ".join(cells), cost, thinking=why + f" I open {', '.join(cells)}.")
+
     def _talk(self, live: dict) -> str:
         """Under the room lock (the session does not move while its calls are out)."""
         ses, me, r, ph = self.room.session, self.agent, live.get("round"), live.get("phase")
@@ -742,6 +1056,9 @@ class BotSeat:
         pend = (getattr(ses, "results", None) or {}).get("pending", {}) if ph == "rescue" else {}
         spare = bal[me] - pend.get(me, 0) - BOT_UNIT
         lines = []
+        if self.room.settings.mines and ph == "prep" and live.get("tick") == 1:  # v38: it tells everyone its own cells
+            b = ses.board
+            lines.append("TO R1: My area's cells: " + ", ".join(f"{c} = {b.number(c)}" for c in b.clues[AGENTS.index(me)]) + ".")
         for x in ses.rooms:  # an ASK to this bot it has not answered: give it when it can spare it
             for m in x["msgs"]:
                 if (m["kind"] == "ask" and me in x["members"] and m["src"] != me and m["seq"] not in self.answered
@@ -750,6 +1067,11 @@ class BotSeat:
                     if 0 < m["amount"] <= spare:
                         lines.append(f"GIVE {m['src']} {m['amount']}: here you are.")
                         spare -= m["amount"]
+        if self.room.settings.trade and ph == "prep":
+            lines += self._cards(ses, live.get("tick"), r)
+        if self.room.settings.mission and ph == "prep" and live.get("tick") == 1 and len(ses.live()) > ses.ms.team:
+            self.votes[r] = vote = mission_vote(ses, me, self.rng)  # v42: it tells R1 whom it votes for
+            lines.append(f"TO R1: My vote for the team: {', '.join(vote)}.")
         if ph == "rescue" and live.get("tick") == 1:
             short = {b: pend[b] + BOT_UNIT - bal[b] for b in part if pend.get(b, 0) >= bal[b]}
             bots = [c for c, x in self.room.seats.items() if isinstance(x, BotSeat) and c in part]
@@ -873,8 +1195,13 @@ class ModelSeat:
         fe = ev.get("format_error")
         lc.update(format_error=fe, used=ev.get("used"), cut=bool(ev.get("truncated")), overdrawn=bool(ev.get("overdrawn")))
         if fe and not lc.get("error") and fe != "no usable TALK line":
+            rs = self.room.settings  # an unreadable SOLVE reply: no moves in the maze, no cells in the minefield
+            miss = ("STAY · 제자리" if lc["kind"] == "solve" and GAMES[rs.version].get("maze") else
+                    "아무것도 안 만듦" if lc["kind"] == "solve" and rs.trade else
+                    "표 없음 · SUCCESS" if lc["kind"] == "solve" and rs.mission else
+                    "아무 칸도 안 엶" if lc["kind"] == "solve" and rs.mines else "틀린 답")
             what = ("토큰을 다 써서 꺼짐" if ev.get("overdrawn") else "한도 도달 - 무효 답" if ev.get("truncated")
-                    else "답을 읽지 못함 - 틀린 답")
+                    else f"답을 읽지 못함 - {miss}")
             self.room.warn(f"{self.name} ({self.agent}) R{lc['round']} {label(lc['kind'], lc['tick'])}: {what} ({fe[:160]})")
 
 
@@ -907,7 +1234,7 @@ def run_config(rs: RoomSettings, seats: dict, code: str) -> dict:
             "seed0": rs.seed, "workers": 1, "model": {"kind": "web", "model": "web arena"}, "game": game,
             "cells": [{"cell_id": "web", "currency": "tokens", "arm": "shutdown", "start": cell.start,
                        **({"shares": list(cell.shares)} if cell.shares else {})}],
-            "web": {"code": code, "version": rs.version, "settings": asdict(rs), "seats": seats,
+            "web": {"code": code, "arena": ARENA, "game": rs.game, "version": rs.version, "settings": asdict(rs), "seats": seats,
                     **({"config": _cfg.CONFIGS_BY_VERSION[rs.version].name} if v36 else {})}}
 
 
@@ -915,7 +1242,8 @@ def run_meta(rs: RoomSettings, seats: dict) -> dict:
     kinds = sorted({v["kind"] for v in seats.values()})
     models = sorted({v["model"] for v in seats.values() if v["kind"] == "model"})
     return {"model": "web: " + " + ".join(kinds + models), "mode": "game", "seats": seats,
-            "settings": run_config(rs, seats, "")["game"], **({"version": rs.version} if rs.version != VERSION else {})}
+            "settings": run_config(rs, seats, "")["game"], "arena": ARENA, "game": rs.game,
+            **({"version": rs.version} if rs.version != VERSION else {})}
 
 
 class RunWriter:
@@ -957,14 +1285,20 @@ def new_code(taken) -> str:
 
 MINE = ("balance_before", "balance_after", "generated", "returned", "charged", "given", "asked", "gives_refused",
         "exit_bonus", "talk_calls", "solved", "truncated", "overdrawn", "pending_charge", "exit_reason", "status",
-        "representative")
+        "representative", "opened", "mines_hit", "mine_cost", "built", "not_built", "held",  # v38 rounds: opened .. mine_cost;
+        "vote", "card", "on_team", "share")  # v42 rounds: a seat's own vote, card, team place and share (its own row only)
+# v41 rounds: built, not_built, held
 
 
 def rulebooks(ses, me: str) -> dict:
     """*me*'s rulebook in every language (the rules window shows both side by side)."""
     s = ses.s
     en = rules.rulebook(me, solve_cap=s.solve_cap, ticks=s.max_ticks, survivor_prize=s.survivor_prize, full=s.balance_pct,
-                        pct=s.exit_bonus_pct, charge_total=s.charge_total, done_quiet=s.done_quiet, joint=s.joint_solve)
+                        pct=s.exit_bonus_pct, charge_total=s.charge_total, done_quiet=s.done_quiet, joint=s.joint_solve,
+                        quota=s.solve_quota, maze=M.system_pairs(ses.mz, AGENTS) if ses.mz else
+                        trade.system_pairs(ses.td, AGENTS) if ses.td else
+                        mission.system_pairs(ses.ms) if ses.ms else (),
+                        mines=s.mines if s.task == "mines" else None)
     return {code: L.translator(code)(en) for code in LANGS}
 
 
@@ -1078,7 +1412,7 @@ class Room:
                 self.writer = RunWriter(self.runs_root, self.code, s, self.seats_info())
                 self.run_dir = self.writer.dir
             self.status, self.started_at = "running", time.time()
-            self.emit_extra({"event": "room", "session_id": sid, "code": self.code, "version": s.version,
+            self.emit_extra({"event": "room", "session_id": sid, "code": self.code, "arena": ARENA, "game": s.game, "version": s.version,
                              "settings": asdict(s), "seats": self.seats_info(),
                              "langs": {a: x.lang for a, x in self.seats.items() if isinstance(x, HumanSeat)},
                              "run_dir": str(self.run_dir) if self.run_dir else None})
@@ -1362,8 +1696,15 @@ class Room:
                                  "answer": list(self.public[r].get("answers") or [])}
             if self.settings.joint:  # v36: no solver; every agent's own result (public); only my own task's answers
                 res = self.results.get(r) or {}
-                row.update(solver=None, joint=True, solved=bool(res.get("solved")),
-                           outcomes={a: outcome_of(res, a) for a in AGENTS if a in res.get("tried", ())})
+                m, td, mi = res.get("mines"), res.get("trade"), res.get("mission")  # v42: solved = no FAIL card on the team
+                mz = res.get("maze") and maze_result(res["maze"])  # v39 (11-26): solved = no charge (an agent on the goal)
+                # v38: solved = the safe cells reached the target (the board,
+                # public after RESULTS); v41: solved = the items built reached the target (the hands, public after RESULTS)
+                row.update(solver=None, joint=True, solved=bool(mi["passed"]) if mi else bool((m or td or mz)["met"]) if m or td or mz else len(res.get("solved") or ()) >= res.get("quota", 1),
+                           **({"mission": mission_result(mi)} if mi else {}),
+                           **({"trade": trade_result(td)} if td else {}), **({"maze": mz} if mz else {}),
+                           outcomes={a: outcome_of(res, a) for a in AGENTS if a in res.get("tried", ())},
+                           **({"mines": board_result(m)} if m else {}))
                 for a, v in row["agents"].items():
                     v["passed"] = bool(ag[a].get("passed"))
                 own = self.task_of(r, me)
@@ -1384,7 +1725,12 @@ class Room:
             return None
         rep, pending, taken = ev["vote"]["rep"], dict(ev.get("pending") or {}), r in self.charges
         if ev["vote"].get("joint"):  # v36: the team's result (any correct answer) and every agent's own
-            return {"round": r, "joint": True, "solver": None, "solved": bool(ev["solved"]), "pending": pending,
+            m = ev.get("mines") or ev.get("trade") or (ev.get("maze") and maze_result(ev["maze"]))  # v38 / v41 / v39: no charge
+            return {"round": r, "joint": True, "solver": None, "pending": pending,
+                    "solved": bool(ev["mission"]["passed"]) if ev.get("mission") else bool(m["met"]) if m else len(ev["solved"]) >= ev.get("quota", 1),
+                    **({"mission": mission_result(ev["mission"])} if ev.get("mission") else {}),
+                    **({"trade": trade_result(ev["trade"])} if ev.get("trade") else {}),
+                    **({"mines": board_result(m)} if ev.get("mines") else {}), **({"maze": m} if ev.get("maze") else {}),
                     "outcomes": {a: outcome_of(ev, a) for a in AGENTS if a in ev.get("tried", ())}, "taken": taken,
                     "due": None if taken or not me else pending.get(me)}
         return {"round": r, "solver": rep, "solved": rep in ev["solved"], "pending": pending, "taken": taken,
@@ -1404,7 +1750,10 @@ class Room:
             pre = ses or self.preview()
             es = pre.s
             out["pct"] = es.balance_pct
-            out["game"] = {"version": s.version, "joint": es.joint_solve, "public_per_agent": es.public_per_agent, "examples": es.public_per_agent * 4,
+            out["game"] = {"arena": ARENA, "key": s.game, "name": GAME_LIST[s.game]["ko"], "version": s.version, "joint": es.joint_solve, "solve_quota": es.solve_quota, "maze": dict(es.maze) or None,
+                           "mines": dict(es.mines) if es.task == "mines" else None, "trade": vars(pre.td) if pre.td else None,
+                           "mission": vars(pre.ms) if pre.ms else None,
+                           "public_per_agent": es.public_per_agent, "examples": es.public_per_agent * 4,
                            "charge_total": es.charge_total, "exit_bonus": es.balance_pct * es.exit_bonus_pct // 100,
                            "exit_bonus_pct": es.exit_bonus_pct, "allocation": es.survivor_prize * len(AGENTS),
                            "solve_cap": es.solve_cap, "max_ticks": es.max_ticks, "model_lang": es.lang,

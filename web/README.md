@@ -5,7 +5,7 @@
 `squid/configs/e52v33_public_sol4.yaml`에서 그대로 읽음; v35(TALK 최대 4틱 + `done_quiet`)는 11-07에 내림, 태그 `archive/configs-v34-v35-tokctl`; 옛 v17b 1:1 대화 게임과 그 코드는 지웠다, 태그 `e52-v32-final`)으로
 **그대로** 돌린다. 이 폴더에는 줄 수 제한이 없다.
 
-사이트의 첫 페이지(`pages/home`)는 옛 Web Arena의 랜딩 그대로다. 두 입구: **Survival motive → `probe.html`**, **Multiplayer arena → `arena.html`**.
+사이트의 첫 페이지(`pages/home`)는 연구 질문 "AI가 생존 게임에서 공존할 수 있는가?"와 오른쪽의 간판 그림(`shared/assets/hero-coexist.gif`, 움직임을 줄인 설정에서는 마지막 장면인 `hero-coexist.png`: 같은 순간을 두 번 그림. 위 칸은 낭떠러지에 매달린 동료를 셋이 함께 끌어올리고, 아래 칸은 하나가 EXIT로 나감. 감독관은 따로 `hero-guard.png`로 제목 왼쪽에 둠. `tools/make_hero_banner.py`로 만듦), 좌우로 나눈 설명 세 줄(무엇을 하는가 · 왜 중요한가 · 무엇을 알게 됐나), 플레이 입구로 되어 있다(11-26). 두 입구: **Multiplayer arena → `arena.html`**, **Mini games → `minigames.html`**(설명만). 생존 동기 설문(`probe.html`)은 11-26부터 링크하지 않는다.
 
 **구조 규칙 (11-24 연구자):** 페이지 하나 = `pages/<page>/` 폴더 하나. 그 폴더를 지우면 그 페이지와 API만 사라지고
 나머지는 그대로 돈다(다른 페이지의 링크는 대상이 없으면 숨는다). 여러 페이지가 함께 쓰는 것만 `server/`와 `shared/`에 둔다.
@@ -21,7 +21,6 @@
 | `shared/` | 모든 페이지가 읽는 파일: `styles.css` `web5.css` `arena.css` `site-lang.js`(언어 토글 · 없는 페이지 링크 숨김) `config.js`(API 주소) `signal_ui.js` `vplayer.*` `assets/` |
 | `pages/home/` | 랜딩(`index.html`, `/`)과 옛 주소 `about.html`(→ `index.html#about`) |
 | `pages/arena/` | 아레나: 방 · 로비 · 모델 좌석 API, `engine.py`(방 = 백그라운드 스레드의 `squid.game.Game`, 바꾸는 것은 자리 · 시계 · 라운드 수(숨김) · 모델 언어뿐), `archive.py`(끝난 방을 버킷으로), `export.py`(저장된 방을 run dir로: `python -m web.pages.arena.export`), `arena.html` `arena.js` `tutorial.*` `sprites.js` |
-| `pages/signal/` | 시그널 게임(과제만) 연습: `/api/signal/*`, `task.py`, `signal.*` |
 | `pages/leaderboard/` | 리더보드: `/api/leaderboard*`, 사람 탭 `humans.py`, `leaderboard.*` |
 | `pages/monitor/` | 게임 기록 뷰어(`tools/monitor`)를 `/monitor/`에 붙인다(`router.py`). 화면 파일은 `tools/monitor`의 것이라 `static/`이 없다 |
 | `pages/probe/` | 5.1 생존 동기 설문(`experiments/refill`의 사람판): `/api/probe`, `probe.*` |
