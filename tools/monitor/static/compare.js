@@ -28,14 +28,15 @@
   const rate = (kn) => (kn && kn[1] ? f2(kn[0] / kn[1]) + ' <span class="dim">(' + kn[1] + ")</span>" : "—");
   const name = (m) => m.display || m.model;
 
+  const API = window.WEB5_API ? window.WEB5_API + "/monitor/" : "";  // the static site asks the backend's viewer
   async function getJSON(u) {
-    const r = await fetch(u, { cache: "no-store" });
+    const r = await fetch(API + u, { cache: "no-store" });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(j.error || r.status);
     return j;
   }
   function card(id, q, read, body) {
-    const href = "api/compare.csv?runs=" + encodeURIComponent(S.picks) + "&chart=" + id;
+    const href = API + "api/compare.csv?runs=" + encodeURIComponent(S.picks) + "&chart=" + id;
     return '<section class="panel cmp-card" id="c-' + id + '"><h2>' + q + ' <a class="btn ghost dl" href="' + href + '" download>다운로드 CSV</a></h2>' + body + '<p class="readme"><b>읽는 법</b> · ' + read + "</p></section>";
   }
   const legend = (ms) => '<div class="glegend">' + ms.map((m, k) => '<span><i class="sw" style="--c:' + col(m.model, k) + '"></i>' + esc(name(m)) +

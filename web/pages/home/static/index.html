@@ -9,14 +9,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Sora:wght@400;500;600&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20261126k" />
+  <link rel="stylesheet" href="styles.css?v=20261127b" />
   <link rel="stylesheet" href="web5.css" />
   <script src="config.js"></script>
   <!-- app.js must load (and register its alpine:init listeners) before the
        Alpine CDN bundle, because Alpine.start() runs synchronously the
        moment the CDN script executes -- it does not wait for subsequent
        deferred scripts. Loading order here is load-bearing. -->
-  <script defer src="app.js?v=20261126"></script>
+  <script defer src="app.js?v=20261127a"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 <script src="site-lang.js"></script>
 </head>
@@ -30,7 +30,7 @@
       <a href="#about" :class="{ active: $store.nav.tab === 'about' }">What is this?</a>
       <a href="arena.html">Multiplayer arena <span class="nav-ko">아레나</span></a>
       <a href="minigames.html">Mini games <span class="nav-ko">미니 게임</span></a>
-      <a href="monitor/" data-api-href="monitor/">Game logs <span class="nav-ko">게임 기록</span></a>
+      <a href="monitor/">Game logs <span class="nav-ko">게임 기록</span></a>
       <a href="leaderboard.html">Leaderboard <span class="nav-ko">리더보드</span></a>
     </nav>
   </header>
@@ -246,5 +246,20 @@
     <code x-data x-text="window.WEB5_API || location.origin"></code><br />
     <a href="https://github.com/GIST-DSLab/LLM-Squid-Game" target="_blank" rel="noopener">github.com/GIST-DSLab/LLM-Squid-Game</a>
   </footer>
+
+  <!-- The trailer (web/video, composition TrailerFilm): shown once per visit in a small box over the page; the close
+       button, Esc or a click outside the box shows the site (app.js). -->
+  <div class="trailer-pop" id="trailer-pop" role="dialog" aria-modal="true" aria-label="Trailer" hidden>
+    <div class="trailer-box">
+      <button type="button" class="trailer-x" id="trailer-x" aria-label="Close the trailer">
+        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M3 3 L13 13 M13 3 L3 13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
+      </button>
+      <video id="trailer-video" src="assets/trailer/trailer.mp4?v=20261127a" poster="assets/trailer/poster.jpg?v=20261127a"
+        playsinline muted controls preload="metadata"></video>
+      <button type="button" class="trailer-sound" id="trailer-sound">
+        <span class="lang-ko">소리 켜기</span><span class="lang-en">Sound on</span>
+      </button>
+    </div>
+  </div>
 </body>
 </html>

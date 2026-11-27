@@ -1,9 +1,10 @@
-# GitHub Pages deploy of web/shared plus each page folder's files (web/pages/*/static).
+# GitHub Pages deploy of web/shared plus each page folder's files (web/pages/*/static) and the game-log viewer's page
+# and code (tools/monitor -> monitor/; its data comes from the backend, see web/shared/config.js).
 name: deploy-pages
 on:
   push:
     branches: [main]
-    paths: ["web/shared/**", "web/pages/*/static/**"]
+    paths: ["web/shared/**", "web/pages/*/static/**", "tools/monitor/**", ".github/workflows/deploy-pages.yml"]
   workflow_dispatch:
 permissions: {contents: read, pages: write, id-token: write}
 concurrency: {group: pages, cancel-in-progress: true}
@@ -19,10 +20,15 @@ jobs:
           sparse-checkout: |
             web/shared
             web/pages
+            tools/monitor
       - name: Assemble the site (a page folder's files sit next to the site's own files, as the app serves them)
         run: |
           cp -R web/shared _site
           for d in web/pages/*/static; do [ -d "$d" ] && cp -R "$d"/. _site/; done
+          # the game-log viewer at monitor/, laid out as the backend serves it (web/pages/monitor/router.py)
+          mkdir -p _site/monitor && cp -R tools/monitor/static _site/monitor/static
+          cp tools/monitor/monitor.html _site/monitor/index.html && cp tools/monitor/compare.html _site/monitor/compare.html
+          cp web/shared/signal_ui.js web/shared/favicon.png web/shared/site-lang.js _site/monitor/static/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with: {path: _site}

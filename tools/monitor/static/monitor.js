@@ -3073,8 +3073,10 @@
   }
 
   // ---------------------------------------------------------------------------------------------------- data: server
+  // On the static site (GitHub Pages) the page is served without its API: the data comes from the backend's viewer.
+  const API = window.WEB5_API ? window.WEB5_API + "/monitor/" : "";
   async function getJSON(url) {
-    const r = await fetch(url, { cache: "no-store" });
+    const r = await fetch(API + url, { cache: "no-store" });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(j.error || r.status + " " + r.statusText);
     return j;

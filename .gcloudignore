@@ -16,3 +16,6 @@
 /.venv
 node_modules
 /web/video
+
+# never upload local secrets with a build
+/.env*

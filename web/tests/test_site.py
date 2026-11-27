@@ -12,5 +12,5 @@ def test_every_page_loads_and_links_the_others(client):
     for page in (h.name for h in pages):
         r = client.get(f"/{page}")
         assert r.status_code == 200 and client.head(f"/{page}").status_code == 200, page
-        assert 'data-api-href="monitor/"' in r.text and 'href="leaderboard.html"' in r.text, page
+        assert 'href="monitor/"' in r.text and "data-api-href" not in r.text and 'href="leaderboard.html"' in r.text, page  # the game log stays on the site
     assert client.head("/no-such-page.html").status_code == 404  # what makes a link to a deleted page hide

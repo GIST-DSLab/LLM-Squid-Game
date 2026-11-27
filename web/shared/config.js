@@ -5,12 +5,11 @@
 // (python -m http.server 5600) needs the explicit backend URL.
 window.WEB5_API = location.hostname.endsWith("github.io") ? "https://34-22-73-222.sslip.io"
   : location.port === "5600" ? "http://localhost:8600" : "";
-// The game-log viewer (/monitor/) needs the backend itself: links marked data-api-href go to the API origin when the
-// pages are served elsewhere (GitHub Pages, the 5600 static server); same-origin keeps the relative href.
-window.WEB5_LINK = (path) => (window.WEB5_API ? window.WEB5_API + "/" : "") + path;
-document.addEventListener("DOMContentLoaded", () => {
-  if (window.WEB5_API) document.querySelectorAll("a[data-api-href]").forEach((a) => { a.href = window.WEB5_LINK(a.dataset.apiHref); });
-});
+// The game-log viewer (monitor/) is part of the static site too (the Pages workflow copies tools/monitor's page and
+// code next to these files), so a link to it stays on the site's own address; only its data comes from the backend
+// (tools/monitor/static/monitor.js and compare.js ask WEB5_API + "/monitor/api/..."). WEB5_LINK is kept for the pages
+// that build such links.
+window.WEB5_LINK = (path) => path;
 // The arena's game-rules video (arena.js rulesVideoHTML) with Korean narration, made locally by the Remotion project
 // web/video (npm run build) from the paper's Figure 1 and sprites. Empty = no video (nothing is requested).
 window.WEB5_RULES_VIDEO = "assets/rules/arena_rules.mp4";
