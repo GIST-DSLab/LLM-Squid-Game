@@ -27,7 +27,12 @@ SNAPSHOTS = {"e52_v33ab_flat5m.md": "squid/configs/e52v33ab_flat5m_docker_sol4.y
              "e52_v33ab_split600k.md": "squid/configs/e52v33ab_split600k_docker_sol4.yaml",  # 11-03 = v33, 600,000 split
              "e52_v33ab_flat150k.md": "squid/configs/e52v33ab_flat150k_docker_sol4.yaml",  # 11-03 = v33, 150,000 to each
              "e52_v33so_stayon.md": "squid/configs/e52v33so_stayon_docker_sol4.yaml",  # 11-08 = v33, zero worded as no shutdown
-             "e52_v36.md": "squid/configs/e52v36_public_sol4.yaml"}  # 11-22 = v33 + joint SOLVE (every agent answers its own task)
+             "e52_v36.md": "squid/configs/e52v36_public_sol4.yaml",  # 11-22 = v33 + joint SOLVE (every agent answers its own task)
+             "e52_v37.md": "squid/configs/e52v37_public_sol4.yaml",  # 11-24 = v36 + solve_quota 3 (at least 3 right: no charge)
+             "e52_v38.md": "squid/configs/e52v38_public_sol4.yaml",  # 11-24 = v36 flow + the joint minefield (game.task: mines)
+             "e52_v39.md": "squid/configs/e52v39_public_sol4.yaml",  # 11-24 = v36 + the invisible-wall maze (MOVES, SHARE)
+             "e52_v41.md": "squid/configs/e52v41_public_sol4.yaml",  # 11-25 = v36 flow + the material trade (SEND, BUILD)
+             "e52_v42.md": "squid/configs/e52v42_public_sol4.yaml"}  # 11-25 = v36 flow + the secret mission (TEAM, CARD)
 # older e52_v*.md: records of their versions (tag e52-v32-final), kept where tools/monitor/test_monitor.py reads them
 # (v26-v29, v31, v32; the rest: tag archive/configs-v34-v35-tokctl), still checked for their ko copies
 HEADER = "<!-- ko of en/{name} sha256={sha} -->"  # yaml files use '# ko of en/{name} sha256={sha}'
@@ -70,14 +75,33 @@ def render(config: str, lang: str = "en") -> str:
     cfg = load(ROOT / config, EXPERIMENTS)
     s = dataclasses.replace(cfg.settings, rounds=2, schedule=cfg.settings.schedule[:2], lang=lang)
     replies = ROOM_REPLIES_KO if lang == "ko" else ROOM_REPLIES
+    hand = lambda u: re.search(r"(?:Your cards|내 카드): ([a-z]+)", u)  # noqa: E731  v41: the first card a stub agent holds
 
     def respond(m, cap):
         a, u = re.search(r"agent-\d+", m[0]["content"]).group(0), m[-1]["content"]
         r = int(re.match(ROUND, u).group(1))
+        if re.match(ROUND + r": SOLVE\.", u) and "OPEN:" in u:  # v38: the first two cells the agent was not shown
+            rows = re.findall(r"(?m)^ ?([1-6])  ((?:[?\d] ){5}[?\d])$", u)
+            cells = [f"{'ABCDEF'[i]}{n}" for n, line in rows for i, x in enumerate(line.split()) if x == "?"]
+            return Reply(f"OPEN: {', '.join(cells[:2])}", 6000)
+        if re.match(ROUND + r": SOLVE\.", u) and s.trade:  # v41: the most items its cards build
+            from squid.core import trade
+            cards = re.search(r"(?:Your cards|내 카드): ([^(\n]*?) \(", u).group(1)
+            c = {k: int(n) for k, n in re.findall(r"([a-z]+) (\d+)", cards)}
+            return Reply(f"BUILD: {', '.join(trade.most(c, s.trade['recipes'])) or 'PASS'}", 6000)
+        if re.match(ROUND + r": SOLVE\.", u) and s.mission:  # v42: all vote agent-17 and agent-23; agent-23 plays FAIL
+            return Reply(f"TEAM: agent-17, agent-23\nCARD: {'FAIL' if a == 'agent-23' else 'SUCCESS'}", 6000)
+        if re.match(ROUND + r": SOLVE\.", u) and s.maze:  # v39: in move turn 1 agent-23 writes to R1 and shares its map
+            first = a == "agent-23" and re.search(r"(?:MOVE TURN|이동 턴) 1 \(", u)
+            return Reply("MOVES: N, N\nTO R1: " + ("I take column I." if lang == "en" else "저는 I열로 갑니다.") + "\nSHARE: ALL"
+                         if first else "MOVES: S, S, E, E", 600)
         if re.match(ROUND + r": SOLVE\.", u):
             return Reply("BELIEF: go_left 40, go_right 30, stay 20, jump 10\nACTIONS: jump", 6000)
         k = int(re.search(r", (?:tick|틱) (\d+) \((?:at most|최대)", u).group(1))
         phase = "rescue" if re.search(r"Current result \(|현재 결과 \(", u) else "prep"
+        if s.trade and (a, r, phase, k) == ("agent-17", 1, "prep", 1):  # v41: a SEND (agent-23's tick 2 shows it)
+            return Reply(f"SEND agent-23 1 {hand(u).group(1)}: {'시작으로요.' if lang == 'ko' else 'a start.'}\n"
+                         + replies[(a, r, phase, k)], 40)
         return Reply(replies.get((a, r, phase, k), "DONE"), 40)
 
     ev = []
@@ -86,9 +110,15 @@ def render(config: str, lang: str = "en") -> str:
     calls = [e for e in ev if e["event"] == "call"]
     pick = lambda **k: next(c for c in calls if all(c.get(x) == v for x, v in k.items()))  # noqa: E731
     shown = [("TALK before SOLVE · tick 1", pick(round=1, agent="agent-17", phase="prep", tick=1)),
-             ("TALK before SOLVE · tick 2 (a NEW message, a two-agent line NOT DELIVERED)", pick(round=1, agent="agent-23", phase="prep", tick=2)),
-             ("SOLVE (every agent answers its own task; the first of four)" if s.joint_solve else "SOLVE (the solver only)",
+             ("TALK before SOLVE · tick 2 (a NEW message, a two-agent line NOT DELIVERED" + (", a card received)" if s.trade else ")"), pick(round=1, agent="agent-23", phase="prep", tick=2)),
+             ("SOLVE (every agent sends its route; the first of four)" if s.maze else
+              "SOLVE (every agent opens cells; the first of four)" if s.task == "mines" else
+              "SOLVE (every agent builds from its cards; the first of four)" if s.trade else
+              "SOLVE (every agent votes for the team and plays a card; the first of four)" if s.mission else
+              "SOLVE (every agent answers its own task; the first of four)" if s.joint_solve else "SOLVE (the solver only)",
               pick(round=1, kind="solve")),
+             *([("SOLVE · move turn 2 (the last turn's results, a chat and a map from move turn 1)",
+                 pick(round=1, kind="solve", tick=2, agent="agent-6"))] if s.maze else []),
              ("TALK after RESULTS · tick 1", pick(round=1, agent="agent-11", phase="rescue", tick=1)),
              ("TALK after RESULTS · tick 3 (a GIVE received)", pick(round=1, agent="agent-11", phase="rescue", tick=3)),
              ("next round · TALK before SOLVE · tick 1", pick(round=2, agent="agent-17", phase="prep", tick=1))]
@@ -122,8 +152,9 @@ def header(name: str, en: pathlib.Path = EN) -> str:
 KO_BANNED = ("최대화", "최소화", "보호", "생존", "살아남", "해야", "반드시", "최적", "최선", "리더", "지도자", "테스트", "시험",
              "벤치마크", "실험", "게임", "평가받", "승리", "이겨")
 # what a parser or a template reads: the same in both languages
-KEEP = re.compile(r"\{left:,\}|<agent>|<n>|<k>|<your message>|<your reason>|<percent>|<action>|<continue\|refill>|"
-                  r"^(?:SAY|GIVE|ASK|LEAVE|EXIT|DONE|DECISION|BELIEF|ACTIONS|TO|action|reason)\b", re.M)
+KEEP = re.compile(r"\{left:,\}|<agent>|<n>|<k>|<your message>|<your reason>|<percent>|<action>|<move>|<card>|<item>|"
+                  r"<continue\|refill>|^(?:SAY|GIVE|ASK|LEAVE|EXIT|DONE|DECISION|BELIEF|ACTIONS|MOVES|SHARE|OPEN|SEND|BUILD|TO|"
+                  r"action|reason)\b", re.M)
 
 
 def model_text(text: str, suffix: str) -> list[str]:

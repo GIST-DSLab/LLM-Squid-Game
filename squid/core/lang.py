@@ -5,7 +5,7 @@ English; a :class:`Translator` rewrites the engine's own pieces (never an agent'
 English, so the parsers read a reply the same way in every language.
 
 A template is literal text with typed slots ``{name}``, the type by the name's first letter: n number, a agent or
-"you", l list of agents, w text up to ';' or the line's end, t text up to the line's end, r chat id (R<k>). A leading
+"you", l list of agents, w text up to ';' or the line's end, t text up to the line's end, r chat id (R<k>), c a maze cell (D4). A leading
 '^' anchors it at a line start. In the replacement a slot is ``{name}`` or ``{name:josa}`` (the Korean particle after
 it: 이 을 은 과 로); in an a / l / w slot "you" becomes ``words.you``."""
 
@@ -20,7 +20,7 @@ import yaml
 DIR = Path(__file__).resolve().parents[1] / "prompts"
 LANGS = ("en", "ko")
 SLOT = {"n": r"\d[\d,]*", "a": r"agent-\d+|you", "l": r"(?:agent-\d+|you)(?:, (?:agent-\d+|you))*", "w": r"[^;\n]*?",
-        "t": r"[^\n]*?", "r": r"R\d+"}
+        "t": r"[^\n]*?", "r": r"R\d+", "c": r"[A-Z]\d{1,2}"}  # c: a maze cell (v39)
 PAIRS = {k: p for p in ("이/가", "을/를", "은/는", "과/와", "으로/로") for k in p.split("/")}
 
 def josa(word: str, mark: str) -> str:
