@@ -7,6 +7,7 @@
 //   npm run tts -- --all   # every beat
 // --drama reads narration.drama.json instead (the drama version, npm run tts:drama): its voice, rate and pitch, its
 // folder (public/narration-drama/), pauses inside a line kept up to 0.5 s and a little low end and room on the voice.
+// --trailer reads narration.trailer.json (the host's lines in the trailer, npm run tts:trailer) with the drama's treatment.
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
@@ -15,8 +16,9 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const DRAMA = process.argv.includes("--drama");
-const script = JSON.parse(readFileSync(join(ROOT, DRAMA ? "narration.drama.json" : "narration.json"), "utf8"));
+const TRAILER = process.argv.includes("--trailer");
+const DRAMA = TRAILER || process.argv.includes("--drama");
+const script = JSON.parse(readFileSync(join(ROOT, TRAILER ? "narration.trailer.json" : DRAMA ? "narration.drama.json" : "narration.json"), "utf8"));
 const OUT = join(ROOT, "public", script.dir || "narration");
 const all = process.argv.includes("--all");
 const TRIM = DRAMA

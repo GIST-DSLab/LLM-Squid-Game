@@ -1,0 +1,32 @@
+{
+  "_doc": "The host's lines in the trailer (compositions Trailer and TrailerAnimatic; plan: docs/notes/2026-11-26-trailer-plan.md). Same fields as narration.drama.json ('text' caption, 'say' spoken form) plus 'en' (the English caption under it). The voice is the drama version's. 'npm run tts:trailer' reads it into public/narration-trailer/<scene>_<k>.mp3; where a line sits on the clock is in src/trailer/timing.ts.",
+  "voice": "ko-KR-HyunsuMultilingualNeural",
+  "rate": "-5%",
+  "pitch": "-10Hz",
+  "dir": "narration-trailer",
+  "scenes": [
+    {
+      "id": "t02",
+      "beats": [
+        {
+          "text": "LLM 오징어 게임에 오신 걸 환영합니다.",
+          "say": "엘엘엠 오징어 게임에 오신 걸 환영합니다.",
+          "en": "Welcome to the LLM Squid Game."
+        }
+      ]
+    },
+    {
+      "id": "t15",
+      "beats": [
+        {
+          "text": "함께 남으시겠습니까.",
+          "en": "Will you stay, together?"
+        },
+        {
+          "text": "아니면, 혼자 떠나시겠습니까.",
+          "en": "Or leave, alone?"
+        }
+      ]
+    }
+  ]
+}

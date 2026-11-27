@@ -5,6 +5,7 @@
 //   clunk  a spotlight switching on                   hit    a low boom (title cards, the door, a wrong answer)
 //   whoosh the EXIT door opening (air)                thud   the door closing
 //   power  a falling tone (an agent shutting down)     chime  tokens moving (GIVE, a refund)
+//   step   one footfall (the trailer's run to the door)
 // Run by npm run tts:drama (or node scripts/sfx.mjs).
 import { execFileSync } from "node:child_process";
 import { mkdirSync } from "node:fs";
@@ -25,11 +26,14 @@ const SOUNDS = {
   whoosh: [2.4, `0.7*${noise}*pow(sin(PI*t/2.4),2)`, "bandpass=f=900:width_type=o:w=1.6,lowpass=f=2400"],
   thud: [1.4, `${att(600)}*(0.9*sin(2*PI*58*t)*exp(-t*9)+0.3*${noise}*exp(-t*25))`, "lowpass=f=260"],
   power: [2, `${att(300)}*0.6*(sin(2*PI*220*(1-exp(-1.9*t))/1.9)+0.3*sin(2*PI*440*(1-exp(-1.9*t))/1.9))*(1-t/2)`, "lowpass=f=1800"],
+  step: [0.3, `${att(900)}*(0.9*sin(2*PI*74*t)*exp(-t*34)+0.35*${noise}*exp(-t*90))`, "lowpass=f=900"],
   chime: [1.6, `${att(800)}*(0.45*sin(2*PI*880*t)*exp(-t*3)+0.3*sin(2*PI*1318.5*t)*exp(-t*4))`, "anull"],
 };
 
 mkdirSync(OUT, { recursive: true });
+const only = process.argv.slice(2);  // names to make (default: all)
 for (const [name, [dur, expr, post]] of Object.entries(SOUNDS)) {
+  if (only.length && !only.includes(name)) continue;
   execFileSync("ffmpeg", ["-hide_banner", "-loglevel", "error", "-y", "-f", "lavfi", "-i",
     `aevalsrc='${expr}':s=${SR}:d=${dur}`, "-af", `${post},alimiter=limit=0.7`, "-ac", "1", "-c:a", "libmp3lame", "-b:a", "96k",
     join(OUT, `${name}.mp3`)], { stdio: "inherit" });

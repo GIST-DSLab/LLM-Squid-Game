@@ -9,6 +9,8 @@
     "scan": "node scripts/scan.mjs && node scripts/scan.mjs --drama",
     "build": "node scripts/build.mjs",
     "build:drama": "node scripts/build.mjs --drama",
+    "tts:trailer": "node scripts/tts.mjs --trailer && node scripts/sfx.mjs step && node scripts/trailer.mjs",
+    "build:trailer": "node scripts/trailer.mjs --render",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

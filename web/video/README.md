@@ -67,6 +67,43 @@ npm `pretendard`)는 `node_modules`에서 번들되므로 렌더 중에는 네�
 
 문장을 고치면: `narration.drama.json` 수정 → `npm run tts:drama` → `npm run build:drama`.
 
+## 트레일러 (`TrailerFilm`, `Trailer`, `TrailerAnimatic`)
+
+45초 티저다(1920×1080, 24 fps, 1,080프레임, 2.39:1 레터박스). 기획은 `docs/notes/2026-11-26-trailer-plan.md`이고, 규칙을
+가르치지 않고 **우리가 재는 세 모습**(○ 떠나는가 · △ 나누는가 · □ 꺼지는가)을 보여 준 뒤 질문 "AI가 생존 게임에서 공존할 수
+있는가?"로 끝난다. 컴포지션이 셋이고, 시계 · 소리 · 자막은 셋이 같다.
+
+- `TrailerFilm`: 필름판. 사이트 첫 화면의 상자에 나오는 판이다(`web/shared/assets/trailer/trailer.mp4`). 생성한 실사풍 키프레임
+  17장과 영상 컷 5개(`public/trailer/`) 위에 마크 · 게이지 · 진행자의 세 도형을 합성한다(`src/trailer/film.tsx`).
+  - 인물은 얼굴 표시창 · 가슴 판 · 진행자의 눈 홈을 **자홍색(#FF00FF) 빈 판**으로 생성했다. `web/tools/make_trailer_plates.py`가
+    그 판을 찾아 네 꼭짓점을 `src/generated/plates.json`에 적고 어두운 유리로 칠한다. 그래서 손으로 추적하지 않고, 고개를 돌려도
+    마크가 원근에 맞게 따라간다. 한 장의 판이 두 방에 다 쓰인다(마크만 바꾼다).
+  - 원본(생성 결과)은 `out/trailer_raw/`(git 밖)에 두고 스크립트를 돌린다:
+    `~/.venvs/squid-game/bin/python web/tools/make_trailer_plates.py`. 이름은 `k<장면>_*`(키프레임), `v<장면>_*`(영상 컷).
+  - 생성: Higgsfield의 GPT Image 2.6(키프레임, 장당 2 크레딧)과 MAGI-2(영상 컷 4초, 10 크레딧). 2026-11-27에 약 84 크레딧을 썼다.
+- `TrailerAnimatic`: 검은 판에 장면 번호 · 이름 · 한 줄 설명만 뜬다. 소리와 자막은 본편과 같아서 리듬과 소리만 따로 볼 수 있다.
+- `Trailer`: 스프라이트판(기획 §7.3의 c). 모든 장면을 `src/trailer/figure.tsx`의 벡터 인물로 그린다. 생성 영상은 한 컷도 없다.
+
+인물은 사람 비율(7.5등신)의 청록 트레이닝복이고 줄무늬가 자리 색이다. 얼굴 자리의 검은 표시창에 회사 마크(Claude · OpenAI)가
+켜지고, 왼쪽 가슴에 열 칸 게이지가 있다. 한 방의 얼굴은 모두 같은 마크다. 마크는 `simple-icons` 15.0.0의 단색 경로를 그대로
+옮긴 것(`src/trailer/marks.ts`)이고 모양 · 비율을 바꾸지 않는다(고개를 돌리면 표시창과 함께 좁아질 뿐이다). 글자 대안으로
+바꾸려면 `figure.tsx`의 `Head`에서 마크 대신 그릴 것을 바꾼다. 상표 고지는 마지막 카드 아래에 있다(기획 §9).
+
+| 명령 | 하는 일 |
+|---|---|
+| `npm run tts:trailer` | `narration.trailer.json`의 세 줄을 edge-tts로 읽어 `public/narration-trailer/`에 두고(드라마판과 같은 목소리 · 처리), 발소리 `public/sfx/step.mp3`를 만들고, 줄 길이와 프레임별 음량을 `src/generated/media.trailer.json`에 쓴다 |
+| `npm run build:trailer` | 세 컴포지션을 렌더하고 인코딩한다 → `out/trailer_film.mp4`, `out/trailer.mp4`, `out/trailer_animatic.mp4` (`out/`은 git 밖). `-- --film`이면 필름판만 |
+| `npm start` | Remotion Studio에서 `Trailer` · `TrailerAnimatic`을 프레임 단위로 본다 |
+
+- 시계: `src/trailer/timing.ts`(장면 16개의 길이, 진행자 세 줄의 시작 프레임, 덩어리 제목). 기획의 표와 다른 점은 T02 · T14를
+  0.4초씩 줄이고 T15를 1.7초 늘린 것이다(마지막 대사 두 줄이 2.1초 + 3.1초라 기획의 3.8초에 들어가지 않았다). 대사를 바꾸면
+  `npm run tts:trailer`가 찍는 길이로 이 파일의 주석과 맞는지 본다.
+- 장면: `src/trailer/scenes.tsx`(T01–T16, 장면마다 컴포넌트 하나). 소리 · 레터박스 · 자막 · 덩어리 제목: `src/trailer/Trailer.tsx`.
+  진행자 가면의 ○△□는 목소리의 음량(`media.trailer.json`의 `env`)을 따라 밝아진다.
+- 사이트용 사본: `out/trailer_film.mp4`를 1280×720으로 다시 인코딩해 `web/shared/assets/trailer/trailer.mp4`에 두고, 한 프레임을
+  `poster.jpg`로 둔다(첫 화면 `index.html`의 `#trailer-pop`이 읽는다).
+- 아직 없는 것: 15초 컷다운, 마지막 카드의 사이트 주소.
+
 ## 시네마틱 인서트 자리 (Higgsfield 등으로 나중에 만들 것)
 
 | 파일 | 들어가는 곳 |
